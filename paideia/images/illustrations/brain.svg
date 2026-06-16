@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Memory / Brain">
+  <path d="M 50 22 Q 38 18 32 26 Q 22 26 22 38 Q 14 42 18 52 Q 14 62 24 66 Q 26 78 38 76 Q 44 84 50 78 Z"></path>
+  <path d="M 50 22 Q 62 18 68 26 Q 78 26 78 38 Q 86 42 82 52 Q 86 62 76 66 Q 74 78 62 76 Q 56 84 50 78 Z"></path>
+  <line x1="50" y1="22" x2="50" y2="78" stroke-opacity="0.35"></line>
+  <path d="M 40 34 Q 34 38 38 44 Q 32 48 38 54" stroke-opacity="0.55"></path>
+  <path d="M 60 34 Q 66 38 62 44 Q 68 48 62 54" stroke-opacity="0.55"></path>
+  <path d="M 42 60 Q 48 64 42 68" stroke-opacity="0.5"></path>
+  <path d="M 58 60 Q 52 64 58 68" stroke-opacity="0.5"></path>
+</svg>

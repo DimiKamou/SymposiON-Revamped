@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Sacred Flame">
+  <path d="M 50 10 Q 38 24 38 38 Q 32 32 30 42 Q 22 38 24 52 Q 22 62 32 72 Q 40 82 50 84 Q 60 82 68 72 Q 78 62 76 52 Q 78 38 70 42 Q 68 32 62 38 Q 62 24 50 10 Z"></path>
+  <path d="M 50 18 Q 44 30 44 42 Q 40 38 38 46 Q 36 56 42 66 Q 48 76 50 78" stroke-opacity="0.55"></path>
+  <path d="M 50 18 Q 56 30 56 42 Q 60 38 62 46 Q 64 56 58 66 Q 52 76 50 78" stroke-opacity="0.55"></path>
+  <path d="M 46 50 Q 50 60 54 50" stroke-opacity="0.45"></path>
+  <path d="M 36 86 L 64 86" stroke-width="1.8"></path>
+  <path d="M 30 90 L 70 90" stroke-opacity="0.4"></path>
+</svg>

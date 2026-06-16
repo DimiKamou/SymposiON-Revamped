@@ -1,76 +1,59 @@
-# SymposiON — Revamped (v2 · "Synthesis")
+# SymposiON — Revamped
 
-A full redesign of the SymposiON educational gaming platform for classical studies
-(Αρχαία Ελληνικά, Ομηρικά Έπη, Τραγωδίες, Λογοτεχνία, Γραμματική, Έκθεση, Ιστορία &
-Λατινικά — learned through play).
+The full **SymposiON** platform (the real app — login, ~47 games, trivia, Live Arena /
+Battle Royale / Άνοδος modes, teacher/admin/parent panels) being **re-skinned to the v2
+"Synthesis" design**.
 
-This repo holds the **revamped "Synthesis" build** as a clean, modular, **separate-file**
-project (no build step — plain HTML/CSS/JS). It is intentionally kept apart from the
-old SymposiON code so the two never get mixed again.
+> Goal: keep the original site's functionality exactly as it is, and make it **look like**
+> the Synthesis redesign (warm-dark classical theme, Oswald/Alegreya/Montserrat type).
 
-## Run it
+## Layout
 
-No install, no bundler. Serve the folder and open the home:
+```
+paideia/                     ← THE APP (ported from DimiKamou/SymposiON-Ver1, as-is)
+  index.html                 ← entry shell (home + all panels + game overlays)
+  css/                       ← 29 stylesheets …
+    synthesis-skin.css       ← ★ the re-skin layer (loaded last; additive; reversible)
+  js/                        ← app core, nav, router, auth, progression, scores …
+  games/                     ← 47 playable games (each = data.js + game.js [+ css])
+  images/                    ← brand, illustrations (104 SVGs), cursors, badges, bg-symbols
+  functions/                 ← Firebase Cloud Functions (Stripe/PayPal, gradeAnswer)
+  firebase.json, *.rules     ← Firebase Hosting / Firestore / Storage config
+design-reference/            ← the v2 "Synthesis" prototype (the design source of truth)
+  home-revamp/               ← token-driven design system (tokens.css = the palette/type)
+  email-automation/
+docs/                        ← migration plans + design approach/brief
+index.html                   ← redirect → paideia/index.html
+```
+
+## Run it locally
+
+The app is a **no-build static site** (Firebase 9 compat SDK from CDN). Serve and open:
 
 ```bash
-# from the repo root
 python3 -m http.server 8000
-# then visit:  http://localhost:8000/            (redirects to the home)
-#        or:  http://localhost:8000/home-revamp/Home%20Revamp.html
+# http://localhost:8000/            → redirects into the app
+# http://localhost:8000/paideia/    → the app directly
 ```
 
-> Opening the HTML straight off disk (`file://`) mostly works, but a local server is
-> recommended so the runtime `fetch()` of optional illustration SVGs resolves cleanly.
+Login and game data come from the project's existing Firebase backend (the web API key in
+`paideia/js/firebase-config.js` is a public client identifier, not a secret).
 
-## Structure
+Deploy (unchanged from the original): `cd paideia && firebase deploy`.
 
-```
-index.html                      → redirect into the app (handy for GitHub Pages)
-home-revamp/
-  Home Revamp.html              → the app entry point (loads the modules below)
-  Agora.html                    → Agora surface (standalone preview)
-  Olympia.html                  → Olympia / Άνοδος climb preview
-  Season & Temple FX Preview.html
-  Change Overview.html
-  SymposiON - Home Revamp (standalone).html   → fully self-contained snapshot
-  SymposiON - Agora (standalone).html         → fully self-contained snapshot
-  css/   tokens · shell · synthesis · screens · previews · stoa · agora · akropolis · olympia · student · system
-  js/    app · data · screens · screens-2 · dir-synthesis · dir-agora · dir-stoa · dir-akropolis ·
-         previews · info-panels · tags · cursors · seasons · mouse-fx · store ·
-         student · consent · system · settings
-images/illustrations/           line-art SVG assets (currentColor)
-email-automation/               standalone email-template artifact (not part of the app)
-docs/                           design approach, temple/Άνοδος brief, change handoff
-```
+## The re-skin — `paideia/css/synthesis-skin.css`
 
-### The "old" content is included
-`home-revamp/js/data.js` is the single source of truth and **mirrors the production home** —
-all of it is here, not stubbed:
+Loaded **last**, so it overrides the original `theme-obsidian` styles. It is **additive and
+fully reversible** (delete the one `<link>` in `paideia/index.html` to restore the original
+look). This first pass establishes the foundation:
 
-- **9 class tracks** — Γυμνάσιο Α–Γ, Λύκειο Α–Γ, plus the Γραμματική · Θεωρία tracks
-  (Αρχαία / Λατινικά / Έκθεση).
-- **Subject panels & game tiles** per class (Οδύσσεια, Ιλιάδα, Ελένη, Αρχαία, Ιστορία,
-  Λατινικά, …), the **game-engine carousel**, **level/Άνοδος** progression, hero **avatars**
-  & **titles**, multiplayer/Live-Arena games, and the trivia ticker.
+- **Type system** — Oswald (display/headings), Montserrat (body/UI), Alegreya (lede/editorial).
+- **Palette** — Synthesis "Theme 4" warm-dark tokens (`#18120A` base, `#241A11` panels,
+  `#D97B5C` terra, `#C9A44A` gold, `#F0EBE0` text), remapped onto the OG app's existing
+  CSS variables (`--terra`, `--gold`, `--dark-base`, `--bg-card`, `--sym-*`, …).
+- **Accent harmonisation** — links, primary buttons/CTAs, selection, scrollbars.
 
-### What the latest session added (the "Additions" layer)
-Overlaid on the base, newest-wins (see `docs/HANDOFF.md` for the full list):
-
-1. **Mobile responsiveness** — nav collapses to a hamburger drawer ≤940px; hero/chips reflow.
-2. **First-visit onboarding** + **Guide (assistant) mode** (`student.js`, philosopher avatar).
-3. **Student homework inbox**, **Parent role + dashboard**.
-4. **Consent / cookies / age-gate** (`consent.js`).
-5. **System layer** — notifications, global search, offline banner, 404/error screens.
-6. **Settings** + **checkout / redeem-code** flow.
-7. **Seasonal cursor FX** + cursor-cosmetic sync.
-8. **Theme-token fix** so body-level popups inherit the classical type/colours.
-
-## Known gaps / follow-ups
-- **Decorative illustration SVGs**: only `images/illustrations/philosopher.svg` shipped in the
-  handoff. The other line-art names referenced in `data.js` load from `images/illustrations/*.svg`
-  and **fall back to empty gracefully** when absent (no broken images). Drop in the full
-  `images/illustrations/` (and `images/bg-symbols/`) set to restore every glyph.
-- **Legal / consent copy** in the consent modals and email templates is placeholder — replace
-  with counsel-approved text.
-- See `docs/HANDOFF.md` → "Open items" for the GDPR guardian-consent decision and unrendered
-  email templates.
+### Still to do (component-level fidelity)
+Matching the prototype screen-for-screen — the film-strip nav, the hero spec card, the
+class-chip rows, the Άνοδος / Rapid-Fire feature cards — is the next phase. Those need
+visual iteration against the running app.

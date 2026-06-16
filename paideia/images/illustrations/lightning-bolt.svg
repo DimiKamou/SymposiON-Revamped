@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Zeus&#39; Thunderbolt">
+  <path d="M 22 14 L 34 32 L 28 36 L 42 56 L 36 60 L 50 86"></path>
+  <path d="M 78 14 L 66 32 L 72 36 L 58 56 L 64 60 L 50 86"></path>
+  <path d="M 22 14 L 78 14" stroke-opacity="0.55"></path>
+  <path d="M 28 36 L 72 36" stroke-opacity="0.55"></path>
+  <path d="M 36 60 L 64 60" stroke-opacity="0.55"></path>
+  <line x1="14" y1="22" x2="6" y2="18" stroke-opacity="0.5"></line>
+  <line x1="86" y1="22" x2="94" y2="18" stroke-opacity="0.5"></line>
+  <line x1="50" y1="86" x2="50" y2="94" stroke-opacity="0.5"></line>
+</svg>

@@ -1,0 +1,628 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · reimagined-palettes.css
+   All 25 [data-sym-theme] palettes — drop-in for the attribute engine.
+   Load AFTER palettes.css, BEFORE app.css.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── CLASSIC: HEARTH ──────────────────────────────────────────────── */
+[data-sym-theme="hearth"] {
+  --sym-bg-dark:   #18120A; --sym-bg-panel:  #261B12; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #221B10; --sym-cream:     #F0EBE0; --sym-stone:     #867660;
+  --sym-terra:     #D97B5C; --sym-terra-dk:  #B05A3E;
+  --sym-gold:      #C4A448; --sym-gold-lt:   #E0C064; --sym-gold-dk:   #907830;
+  --sym-sage:      #6A8752;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #D97B5C; --sym-accent2:   #C4A448; --sym-accent-text: #C4A448;
+  --sym-hairline:  color-mix(in srgb, #D97B5C 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #D97B5C 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="hearth"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #C4A448 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D97B5C 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── CLASSIC: AEGEAN ──────────────────────────────────────────────── */
+[data-sym-theme="aegean"] {
+  --sym-bg-dark:   #0B1018; --sym-bg-panel:  #142030; --sym-bg-light:  #EDE7D8;
+  --sym-ink:       #0F1620; --sym-cream:     #E8E1D0; --sym-stone:     #7C8896;
+  --sym-terra:     #E0894C; --sym-terra-dk:  #B86A35;
+  --sym-gold:      #D2B36A; --sym-gold-lt:   #EAD088; --sym-gold-dk:   #9A8040;
+  --sym-sage:      #5E8B96;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #E0894C; --sym-accent2:   #D2B36A; --sym-accent-text: #D2B36A;
+  --sym-hairline:  color-mix(in srgb, #E0894C 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #E0894C 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="aegean"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D2B36A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #5E8B96 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── CLASSIC: AMPHORA ─────────────────────────────────────────────── */
+[data-sym-theme="amphora"] {
+  --sym-bg-dark:   #15100A; --sym-bg-panel:  #201810; --sym-bg-light:  #EFE3C9;
+  --sym-ink:       #171008; --sym-cream:     #E8D9BA; --sym-stone:     #8A7958;
+  --sym-terra:     #D14A1F; --sym-terra-dk:  #A8341A;
+  --sym-gold:      #D49A2A; --sym-gold-lt:   #EAB848; --sym-gold-dk:   #9E6E16;
+  --sym-sage:      #86793E;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #D14A1F; --sym-accent2:   #D49A2A; --sym-accent-text: #d35228;
+  --sym-hairline:  color-mix(in srgb, #D14A1F 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #D14A1F 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="amphora"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D49A2A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D14A1F 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── BASE: OBSIDIAN (attribute alias for .theme-obsidian) ─────────── */
+[data-sym-theme="obsidian"] {
+  --sym-bg-dark:   #0D0B09; --sym-bg-panel:  #181412; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #161009; --sym-cream:     #EFE9DC; --sym-stone:     #7C6F58;
+  --sym-terra:     #D96B30; --sym-terra-dk:  #B04E1A;
+  --sym-gold:      #C87830; --sym-gold-lt:   #E09E52; --sym-gold-dk:   #9C5E1C;
+  --sym-sage:      #7E9560;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #C87830; --sym-accent2:   #D96B30; --sym-accent-text: #D2A24A;
+  --sym-hairline:  color-mix(in srgb, #C87830 16%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #C87830 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="obsidian"] {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in srgb, #C87830 9%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in srgb, #C87830 5%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── BASE: ALABASTER (attribute alias for .theme-alabaster) ───────── */
+[data-sym-theme="alabaster"] {
+  --sym-bg-dark:   #FAF7F0; --sym-bg-panel:  #F1ECE0; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #1A140C; --sym-cream:     #FAF7F0; --sym-stone:     #746a5b;
+  --sym-terra:     #C5572F; --sym-terra-dk:  #9C3F1F;
+  --sym-gold:      #9C8238; --sym-gold-lt:   #BEAA5A; --sym-gold-dk:   #74601C;
+  --sym-sage:      #5B7544;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #C5572F; --sym-accent2:   #9C8238; --sym-accent-text: #bb532b;
+  --sym-hairline:  color-mix(in srgb, #C5572F 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #C5572F 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="alabaster"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #C5572F 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #9C8238 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* Soften logo glow on alabaster and all new light themes */
+[data-sym-theme="alabaster"] .logo > span,
+[data-sym-theme="alabaster"] .footer-logo > span { text-shadow: none; }
+
+/* ─── KATABASIS · obsidian · Halloween ─────────────────────────────── */
+[data-sym-theme="obsidian-katabasis"] {
+  --sym-bg-dark:   #0C0810; --sym-bg-panel:  #181122; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #0C0810; --sym-cream:     #F2E7D8; --sym-stone:     #8A7596;
+  --sym-terra:     #ED7A28; --sym-terra-dk:  #C05E0E;
+  --sym-gold:      #D2A24A; --sym-gold-lt:   #F2CD78; --sym-gold-dk:   #9E7322;
+  --sym-sage:      #8A63B6;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #181122;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #ED7A28; --sym-accent2:   #8A63B6; --sym-accent-text: #ED7A28;
+  --sym-hairline:  color-mix(in srgb, #ED7A28 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #ED7A28 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="obsidian-katabasis"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D2A24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #8A63B6 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── SOLSTICE · obsidian · Christmas ──────────────────────────────── */
+[data-sym-theme="obsidian-solstice"] {
+  --sym-bg-dark:   #080B08; --sym-bg-panel:  #121710; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #080B08; --sym-cream:     #EFEAD9; --sym-stone:     #7E876E;
+  --sym-terra:     #C23A2E; --sym-terra-dk:  #9A2A20;
+  --sym-gold:      #D8B45A; --sym-gold-lt:   #F0D688; --sym-gold-dk:   #A6862A;
+  --sym-sage:      #3C8459;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #121710;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #C23A2E; --sym-accent2:   #3C8459; --sym-accent-text: #c95247;
+  --sym-hairline:  color-mix(in srgb, #C23A2E 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #C23A2E 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="obsidian-solstice"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D8B45A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #3C8459 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── NOCTURNE BLOOM · obsidian · Easter ───────────────────────────── */
+[data-sym-theme="obsidian-bloom"] {
+  --sym-bg-dark:   #0A0F0A; --sym-bg-panel:  #141C14; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #0A0F0A; --sym-cream:     #EDEBD8; --sym-stone:     #7F8A72;
+  --sym-terra:     #D98A6F; --sym-terra-dk:  #AA6452;
+  --sym-gold:      #CBB44E; --sym-gold-lt:   #E8D680; --sym-gold-dk:   #93812A;
+  --sym-sage:      #D98A6F;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #141C14;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #84B86E; --sym-accent2:   #D98A6F; --sym-accent-text: #84B86E;
+  --sym-hairline:  color-mix(in srgb, #84B86E 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #84B86E 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="obsidian-bloom"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #CBB44E 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D98A6F 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── GILDED REVEL · obsidian · Carnival ───────────────────────────── */
+[data-sym-theme="obsidian-revel"] {
+  --sym-bg-dark:   #0B0810; --sym-bg-panel:  #171022; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #0B0810; --sym-cream:     #F1E8DC; --sym-stone:     #8C7C96;
+  --sym-terra:     #D4499A; --sym-terra-dk:  #A83070;
+  --sym-gold:      #E3BB4B; --sym-gold-lt:   #F6DC8C; --sym-gold-dk:   #B68F22;
+  --sym-sage:      #D4499A;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #171022;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #E3BB4B; --sym-accent2:   #D4499A; --sym-accent-text: #E3BB4B;
+  --sym-hairline:  color-mix(in srgb, #E3BB4B 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #E3BB4B 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="obsidian-revel"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #E3BB4B 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D4499A 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── PALE ASPHODEL · alabaster · Halloween ────────────────────────── */
+[data-sym-theme="alabaster-asphodel"] {
+  --sym-bg-dark:   #EFEAE0; --sym-bg-panel:  #FAF6EF; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #2A2030; --sym-cream:     #2A2030; --sym-stone:     #736577;
+  --sym-terra:     #C8631E; --sym-terra-dk:  #9E4810;
+  --sym-gold:      #A6802E; --sym-gold-lt:   #CDA64E; --sym-gold-dk:   #6F5418;
+  --sym-sage:      #6E4E94;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #C8631E; --sym-accent2:   #6E4E94; --sym-accent-text: #b1591c;
+  --sym-hairline:  color-mix(in srgb, #C8631E 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #C8631E 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="alabaster-asphodel"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #C8631E 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #6E4E94 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+[data-sym-theme="alabaster-asphodel"] .logo > span,
+[data-sym-theme="alabaster-asphodel"] .footer-logo > span { text-shadow: none; }
+
+/* ─── MARBLE NOËL · alabaster · Christmas ──────────────────────────── */
+[data-sym-theme="alabaster-noel"] {
+  --sym-bg-dark:   #FAF5EE; --sym-bg-panel:  #FFFFFF; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #2A1713; --sym-cream:     #2A1713; --sym-stone:     #866b5f;
+  --sym-terra:     #B5302A; --sym-terra-dk:  #8C2018;
+  --sym-gold:      #BC9438; --sym-gold-lt:   #DEBA5E; --sym-gold-dk:   #8A6B1E;
+  --sym-sage:      #2F6B47;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #B5302A; --sym-accent2:   #2F6B47; --sym-accent-text: #B5302A;
+  --sym-hairline:  color-mix(in srgb, #B5302A 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #B5302A 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="alabaster-noel"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #B5302A 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #2F6B47 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+[data-sym-theme="alabaster-noel"] .logo > span,
+[data-sym-theme="alabaster-noel"] .footer-logo > span { text-shadow: none; }
+
+/* ─── ANASTASI · alabaster · Easter ────────────────────────────────── */
+[data-sym-theme="alabaster-anastasi"] {
+  --sym-bg-dark:   #F6F6EC; --sym-bg-panel:  #FFFFFF; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #243218; --sym-cream:     #243218; --sym-stone:     #6f735a;
+  --sym-terra:     #D9694F; --sym-terra-dk:  #AA4A38;
+  --sym-gold:      #C9A93F; --sym-gold-lt:   #E4CC72; --sym-gold-dk:   #94781E;
+  --sym-sage:      #5FA05A;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #D9694F; --sym-accent2:   #5FA05A; --sym-accent-text: #b95b44;
+  --sym-hairline:  color-mix(in srgb, #D9694F 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #D9694F 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="alabaster-anastasi"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #D9694F 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #5FA05A 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+[data-sym-theme="alabaster-anastasi"] .logo > span,
+[data-sym-theme="alabaster-anastasi"] .footer-logo > span { text-shadow: none; }
+
+/* ─── MARBLE APOKRIES · alabaster · Carnival ───────────────────────── */
+[data-sym-theme="alabaster-apokries"] {
+  --sym-bg-dark:   #F4EEF3; --sym-bg-panel:  #FFFFFF; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #241726; --sym-cream:     #241726; --sym-stone:     #796879;
+  --sym-terra:     #C23A8C; --sym-terra-dk:  #982878;
+  --sym-gold:      #C9A93F; --sym-gold-lt:   #E4CC72; --sym-gold-dk:   #94781E;
+  --sym-sage:      #6E5AC8;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #C23A8C; --sym-accent2:   #6E5AC8; --sym-accent-text: #C23A8C;
+  --sym-hairline:  color-mix(in srgb, #C23A8C 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #C23A8C 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="alabaster-apokries"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #C23A8C 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #6E5AC8 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+[data-sym-theme="alabaster-apokries"] .logo > span,
+[data-sym-theme="alabaster-apokries"] .footer-logo > span { text-shadow: none; }
+
+/* ─── VENETIAN · purple · gold · magenta ───────────────────────────── */
+[data-sym-theme="venetian"] {
+  --sym-bg-dark:   #160A1E; --sym-bg-panel:  #241036; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #160A1E; --sym-cream:     #F1E6F0; --sym-stone:     #9A7FA8;
+  --sym-terra:     #D4499A; --sym-terra-dk:  #A83070;
+  --sym-gold:      #E3BB4B; --sym-gold-lt:   #F4D98A; --sym-gold-dk:   #B68F22;
+  --sym-sage:      #5E73D6;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #241036;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #D4499A; --sym-accent2:   #5E73D6; --sym-accent-text: #D4499A;
+  --sym-hairline:  color-mix(in srgb, #D4499A 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #D4499A 30%, transparent);
+  --sym-font-display: 'Cinzel', Georgia, serif;
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="venetian"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #E3BB4B 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #5E73D6 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── OLIVE GROVE · green · gold ───────────────────────────────────── */
+[data-sym-theme="olive"] {
+  --sym-bg-dark:   #14180E; --sym-bg-panel:  #1F2614; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #14180E; --sym-cream:     #ECE8D6; --sym-stone:     #8A916F;
+  --sym-terra:     #8AA84E; --sym-terra-dk:  #638030;
+  --sym-gold:      #C7B24A; --sym-gold-lt:   #E6D77E; --sym-gold-dk:   #93812A;
+  --sym-sage:      #C7B24A;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #1F2614;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #8AA84E; --sym-accent2:   #C7B24A; --sym-accent-text: #8AA84E;
+  --sym-hairline:  color-mix(in srgb, #8AA84E 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #8AA84E 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="olive"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #C7B24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #C7B24A 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── ROSE SYMPOSIUM · pink · amber ────────────────────────────────── */
+[data-sym-theme="rose"] {
+  --sym-bg-dark:   #1B0F14; --sym-bg-panel:  #2A1620; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #1B0F14; --sym-cream:     #F6E6EC; --sym-stone:     #B089A0;
+  --sym-terra:     #E36A98; --sym-terra-dk:  #B84870;
+  --sym-gold:      #E0A24A; --sym-gold-lt:   #F4C97E; --sym-gold-dk:   #A8731F;
+  --sym-sage:      #C97FB0;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #2A1620;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #E36A98; --sym-accent2:   #C97FB0; --sym-accent-text: #E36A98;
+  --sym-hairline:  color-mix(in srgb, #E36A98 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #E36A98 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="rose"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #E0A24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #C97FB0 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── SAFFRON · orange · amber ──────────────────────────────────────── */
+[data-sym-theme="saffron"] {
+  --sym-bg-dark:   #1A1006; --sym-bg-panel:  #271709; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #1A1006; --sym-cream:     #F8E9D2; --sym-stone:     #B0906A;
+  --sym-terra:     #E8732A; --sym-terra-dk:  #B85518;
+  --sym-gold:      #E8A23A; --sym-gold-lt:   #FBC97E; --sym-gold-dk:   #B0701C;
+  --sym-sage:      #D6A93E;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #271709;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #E8862A; --sym-accent2:   #D6A93E; --sym-accent-text: #E8862A;
+  --sym-hairline:  color-mix(in srgb, #E8862A 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #E8862A 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="saffron"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #E8A23A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D6A93E 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── AMETHYST · violet · rose ──────────────────────────────────────── */
+[data-sym-theme="amethyst"] {
+  --sym-bg-dark:   #120C1C; --sym-bg-panel:  #1E1430; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #120C1C; --sym-cream:     #ECE4F6; --sym-stone:     #9486AE;
+  --sym-terra:     #9B6FD6; --sym-terra-dk:  #6E4AA8;
+  --sym-gold:      #C9A24A; --sym-gold-lt:   #E6C878; --sym-gold-dk:   #8E6E20;
+  --sym-sage:      #D46AA8;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #1E1430;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #9B6FD6; --sym-accent2:   #D46AA8; --sym-accent-text: #9B6FD6;
+  --sym-hairline:  color-mix(in srgb, #9B6FD6 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #9B6FD6 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="amethyst"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #C9A24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #D46AA8 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── CYPRUS TEAL · teal · brass ───────────────────────────────────── */
+[data-sym-theme="cyprus"] {
+  --sym-bg-dark:   #07181A; --sym-bg-panel:  #0F2A2C; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #07181A; --sym-cream:     #DDEAE6; --sym-stone:     #6F9893;
+  --sym-terra:     #2FA89A; --sym-terra-dk:  #1E7A6E;
+  --sym-gold:      #C9B25A; --sym-gold-lt:   #E6D484; --sym-gold-dk:   #937F2E;
+  --sym-sage:      #C9B25A;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #0F2A2C;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #2FA89A; --sym-accent2:   #C9B25A; --sym-accent-text: #2FA89A;
+  --sym-hairline:  color-mix(in srgb, #2FA89A 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #2FA89A 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="cyprus"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #C9B25A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #C9B25A 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── CORAL AEGEAN · coral · sea blue ──────────────────────────────── */
+[data-sym-theme="coral"] {
+  --sym-bg-dark:   #0C1620; --sym-bg-panel:  #152636; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #0C1620; --sym-cream:     #E9E6DC; --sym-stone:     #7E8C96;
+  --sym-terra:     #E37A5C; --sym-terra-dk:  #B85840;
+  --sym-gold:      #D8B86A; --sym-gold-lt:   #EDD18C; --sym-gold-dk:   #9E8038;
+  --sym-sage:      #5E97A8;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #152636;
+  --sym-bg-raise:  #1b3044;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #E37A5C; --sym-accent2:   #5E97A8; --sym-accent-text: #E37A5C;
+  --sym-hairline:  color-mix(in srgb, #E37A5C 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #E37A5C 30%, transparent);
+  --sym-gold-grad: linear-gradient(135deg, var(--sym-gold-lt), var(--sym-gold) 46%, var(--sym-gold-dk));
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="coral"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D8B86A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #5E97A8 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── PORPHYRY · oxblood · plum ─────────────────────────────────────── */
+[data-sym-theme="porphyry"] {
+  --sym-bg-dark:   #160A0E; --sym-bg-panel:  #25121A; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #160A0E; --sym-cream:     #F0E2E2; --sym-stone:     #A07F86;
+  --sym-terra:     #B0395A; --sym-terra-dk:  #882840;
+  --sym-gold:      #C99A4A; --sym-gold-lt:   #E6C078; --sym-gold-dk:   #946C1E;
+  --sym-sage:      #7E4A86;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #25121A;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #B0395A; --sym-accent2:   #7E4A86; --sym-accent-text: #bd5a75;
+  --sym-hairline:  color-mix(in srgb, #B0395A 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #B0395A 30%, transparent);
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="porphyry"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #C99A4A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #7E4A86 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── TYRIAN PURPLE [LOCKED] ────────────────────────────────────────── */
+[data-sym-theme="tyrian"] {
+  --sym-bg-dark:   #120816; --sym-bg-panel:  #1F0F2A; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #120816; --sym-cream:     #EFE2F2; --sym-stone:     #9A7FA8;
+  --sym-terra:     #7B2D86; --sym-terra-dk:  #5A1860;
+  --sym-gold:      #D9B24A; --sym-gold-lt:   #F0D284; --sym-gold-dk:   #A8861E;
+  --sym-sage:      #C24A8C;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #1F0F2A;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #9C3D9E; --sym-accent2:   #C24A8C; --sym-accent-text: #ab5bad;
+  --sym-hairline:  color-mix(in srgb, #9C3D9E 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #9C3D9E 30%, transparent);
+  --sym-font-display: 'Cinzel', Georgia, serif;
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="tyrian"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #D9B24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #C24A8C 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── GOLDEN FLEECE [LOCKED] ────────────────────────────────────────── */
+[data-sym-theme="golden-fleece"] {
+  --sym-bg-dark:   #1C1404; --sym-bg-panel:  #2C2008; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #1C1404; --sym-cream:     #FBEFCF; --sym-stone:     #BBA068;
+  --sym-terra:     #E8A53A; --sym-terra-dk:  #B87C22;
+  --sym-gold:      #F0C24A; --sym-gold-lt:   #FFE08C; --sym-gold-dk:   #BC8C1E;
+  --sym-sage:      #E8A53A;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #2C2008;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #F0C24A; --sym-accent2:   #E8A53A; --sym-accent-text: #F0C24A;
+  --sym-hairline:  color-mix(in srgb, #F0C24A 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #F0C24A 30%, transparent);
+  --sym-font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="golden-fleece"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #F0C24A 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #E8A53A 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── ORPHIC NIGHT [LOCKED] ─────────────────────────────────────────── */
+[data-sym-theme="orphic"] {
+  --sym-bg-dark:   #06080C; --sym-bg-panel:  #0F1422; --sym-bg-light:  #F6F2EB;
+  --sym-ink:       #06080C; --sym-cream:     #E6E8F0; --sym-stone:     #7C84A0;
+  --sym-terra:     #6FA8C9; --sym-terra-dk:  #4A7A98;
+  --sym-gold:      #B9A6E0; --sym-gold-lt:   #D8CCF2; --sym-gold-dk:   #7C6CA8;
+  --sym-sage:      #6FC9B0;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #0F1422;
+  --sym-bg-raise:  #161d30;
+  --sym-fg:        var(--sym-cream);   --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    #8E7FD6; --sym-accent2:   #6FC9B0; --sym-accent-text: #8E7FD6;
+  --sym-hairline:  color-mix(in srgb, #8E7FD6 18%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, #8E7FD6 30%, transparent);
+  --sym-gold-grad: linear-gradient(135deg, var(--sym-gold-lt), var(--sym-gold) 46%, var(--sym-gold-dk));
+  --sym-font-display: 'Cinzel', Georgia, serif;
+  background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="orphic"] {
+  background-image:
+    radial-gradient(ellipse 80% 56% at 50% -12%, color-mix(in srgb, #B9A6E0 11%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 106%, color-mix(in srgb, #6FC9B0 9%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ─── ELYSIUM [LOCKED] ──────────────────────────────────────────────── */
+[data-sym-theme="elysium"] {
+  --sym-bg-dark:   #F2F4E6; --sym-bg-panel:  #FBFCF2; --sym-bg-light:  #FFFFFF;
+  --sym-ink:       #2C3320; --sym-cream:     #2C3320; --sym-stone:     #62664f;
+  --sym-terra:     #C98A6A; --sym-terra-dk:  #9A6248;
+  --sym-gold:      #B2A23E; --sym-gold-lt:   #D6C868; --sym-gold-dk:   #756619;
+  --sym-sage:      #C9A93F;
+  --sym-bg:        var(--sym-bg-dark); --sym-bg-card:   #FFFFFF;
+  --sym-fg:        var(--sym-ink);     --sym-fg-muted:  var(--sym-stone);
+  /* deepened green accent so it keeps contrast on the near-white card */
+  --sym-accent:    #5F9268; --sym-accent2:   #C9A93F; --sym-accent-text: #51704f;
+  --sym-hairline:  color-mix(in srgb, #7FAE84 16%, transparent);
+  --sym-glow-gold: 0 12px 32px color-mix(in srgb, #7FAE84 14%, transparent);
+  color-scheme: light; background: var(--sym-bg); color: var(--sym-fg);
+}
+[data-sym-theme="elysium"] {
+  background-image:
+    radial-gradient(ellipse 72% 50% at 50% -10%, color-mix(in srgb, #7FAE84 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 60% 50% at 100% 104%, color-mix(in srgb, #C9A93F 6%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+[data-sym-theme="elysium"] .logo > span,
+[data-sym-theme="elysium"] .footer-logo > span { text-shadow: none; }
+
+/* ── Light-theme picker adjustments ─────────────────────────────────── */
+[data-sym-theme="alabaster"] .theme-picker__panel,
+[data-sym-theme="alabaster-asphodel"] .theme-picker__panel,
+[data-sym-theme="alabaster-noel"] .theme-picker__panel,
+[data-sym-theme="alabaster-anastasi"] .theme-picker__panel,
+[data-sym-theme="alabaster-apokries"] .theme-picker__panel,
+[data-sym-theme="elysium"] .theme-picker__panel {
+  background: #FFFFFF;
+  border-color: rgba(34,27,16,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+[data-sym-theme="alabaster"] .theme-opt,
+[data-sym-theme="alabaster-asphodel"] .theme-opt,
+[data-sym-theme="alabaster-noel"] .theme-opt,
+[data-sym-theme="alabaster-anastasi"] .theme-opt,
+[data-sym-theme="alabaster-apokries"] .theme-opt,
+[data-sym-theme="elysium"] .theme-opt {
+  color: var(--sym-ink);
+}
+[data-sym-theme="alabaster"] .theme-opt:hover,
+[data-sym-theme="alabaster-asphodel"] .theme-opt:hover,
+[data-sym-theme="alabaster-noel"] .theme-opt:hover,
+[data-sym-theme="alabaster-anastasi"] .theme-opt:hover,
+[data-sym-theme="alabaster-apokries"] .theme-opt:hover,
+[data-sym-theme="elysium"] .theme-opt:hover {
+  background: rgba(34,27,16,0.04);
+}
+
+/* ─── UNIVERSAL LEGACY VARIABLE BRIDGE ─────────────────────────────── */
+/* Maps --sym-* tokens to the old-style CSS vars so every component
+   (nav, cards, game hero, grade buttons, footer…) also reacts to
+   [data-sym-theme] and .season-* changes.  One rule covers ALL themes.  */
+[data-sym-theme] {
+  --dark-base:   var(--sym-bg-dark,  #18100A);
+  --dark-panel:  var(--sym-bg-panel, #201408);
+  --dark-border: var(--sym-hairline, rgba(195,165,105,0.14));
+  --gold:        var(--sym-gold,     #9C8238);
+  --gold-light:  var(--sym-gold-lt,  #C4A448);
+  --sage:        var(--sym-sage,     #6A8752);
+  --sage-dark:   color-mix(in srgb, var(--sym-sage, #6A8752) 75%, #000000);
+  --sage-light:  color-mix(in srgb, var(--sym-sage, #6A8752) 60%, #ffffff);
+  --stone:       var(--sym-stone,    #867660);
+  --espresso:    var(--sym-ink,      #221B10);
+  --charcoal:    color-mix(in srgb, var(--sym-ink, #221B10) 65%, var(--sym-fg, #F0EBE0));
+  --alabaster:   var(--sym-bg-light, #F6F2EB);
+  --linen:       color-mix(in srgb, var(--sym-bg-light, #EBE5D7) 80%, var(--sym-stone, #867660));
+  --parchment:   color-mix(in srgb, var(--sym-bg-light, #D9D0BE) 60%, var(--sym-stone, #867660));
+  --warm-white:  var(--sym-bg-panel, #201408);
+}

@@ -1,0 +1,35 @@
+{
+  "name": "SymposiON",
+  "short_name": "SymposiON",
+  "description": "Διαδραστικά εκπαιδευτικά παιχνίδια — Γραμματική, Ιστορία, Επική Ποίηση.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0D0A06",
+  "background_color": "#0D0A06",
+  "lang": "el",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Εξερεύνησε παιχνίδια",
+      "short_name": "Browse",
+      "url": "/?page=browse",
+      "description": "Δες όλα τα εκπαιδευτικά παιχνίδια"
+    }
+  ]
+}

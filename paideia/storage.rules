@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Helper: is the caller the site admin? ──
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email == 'dimikamou@gmail.com';
+    }
+
+    // ── /system_icons/{fileName} ──
+    // Admin uploads brand icons here from the Dynamic Asset & Styling Manager.
+    // Public read so subject/class cards on the student UI can display the icons.
+    match /system_icons/{fileName} {
+      allow read:   if true;
+      allow write:  if isAdmin()
+                 && request.resource.size < 2 * 1024 * 1024   // 2 MB max
+                 && request.resource.contentType.matches('image/(png|webp|svg\\+xml)');
+    }
+
+    // ── /user_profiles/{uid}/avatar.webp ──
+    // Users upload their own profile picture. Public read (used in nav avatars
+    // and leaderboards). Write is gated: only the matching authenticated user,
+    // 5 MB cap, png/webp only.
+    match /user_profiles/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                && request.auth.uid == uid
+                && request.resource.size < 5 * 1024 * 1024
+                && request.resource.contentType.matches('image/(png|webp)');
+    }
+
+    // ── All other paths: deny by default ──
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Cipher Lock">
+  <circle cx="50" cy="50" r="32"></circle>
+  <circle cx="50" cy="50" r="24" stroke-opacity="0.55"></circle>
+  <circle cx="50" cy="50" r="6"></circle>
+  <line x1="50" y1="18" x2="50" y2="26"></line>
+  <line x1="82" y1="50" x2="74" y2="50"></line>
+  <line x1="50" y1="82" x2="50" y2="74"></line>
+  <line x1="18" y1="50" x2="26" y2="50"></line>
+  <line x1="72" y1="28" x2="66" y2="34" stroke-opacity="0.6"></line>
+  <line x1="72" y1="72" x2="66" y2="66" stroke-opacity="0.6"></line>
+  <line x1="28" y1="72" x2="34" y2="66" stroke-opacity="0.6"></line>
+  <line x1="28" y1="28" x2="34" y2="34" stroke-opacity="0.6"></line>
+  <text x="50" y="46" text-anchor="middle" font-family="Cinzel,serif" font-size="10" font-weight="700" fill="currentColor" stroke="none">α</text>
+  <text x="50" y="60" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="currentColor" stroke="none" opacity="0.7">01</text>
+</svg>

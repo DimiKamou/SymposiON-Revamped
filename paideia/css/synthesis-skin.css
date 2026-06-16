@@ -1,0 +1,103 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON — "Synthesis" re-skin layer
+   ────────────────────────────────────────────────────────────────────
+   Applies the look of the v2 "Synthesis" revamp prototype on top of the
+   original app, WITHOUT changing any behaviour. Loaded LAST in index.html
+   so it overrides earlier theme CSS. Purely additive / fully reversible
+   (delete this <link> to restore the original obsidian skin).
+
+   Source of truth for the palette + type:
+     design-reference/home-revamp/css/tokens.css  (Synthesis "Theme 4" — the
+     warm dark theme shown in the redesign screenshots).
+   ════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* ── Synthesis Theme-4 palette (warm dark) ─────────────────────── */
+  --syn-bg:        #18120A;   /* page base            */
+  --syn-bg-2:      #120D07;   /* deeper base          */
+  --syn-panel:     #241A11;   /* cards / panels       */
+  --syn-panel-2:   #2C2015;   /* raised panel         */
+  --syn-cream:     #F0EBE0;   /* primary text         */
+  --syn-stone:     #95826A;   /* muted text           */
+  --syn-terra:     #D97B5C;   /* primary accent       */
+  --syn-terra-dk:  #C05535;   /* accent pressed       */
+  --syn-terra-lt:  #E89A7C;   /* accent hover         */
+  --syn-gold:      #C9A44A;   /* secondary accent     */
+  --syn-gold-lt:   #DFC06A;
+  --syn-sage:      #87A06B;
+  --syn-line:      rgba(201,164,74,0.14);
+
+  /* ── Type system ──────────────────────────────────────────────── */
+  --syn-disp:  'Oswald','Montserrat',sans-serif;   /* display / headings */
+  --syn-sans:  'Montserrat',system-ui,sans-serif;  /* body / UI          */
+  --syn-serif: 'Alegreya',Georgia,serif;           /* lede / editorial   */
+
+  /* ── Remap the OG app's theme variables onto Synthesis ─────────── */
+  --dark-base:    var(--syn-bg);
+  --dark-panel:   var(--syn-panel);
+  --dark-border:  var(--syn-line);
+  --bg-master:    var(--syn-bg);
+  --bg-card:      var(--syn-panel);
+
+  --terra:        var(--syn-terra);
+  --terra-light:  var(--syn-terra-lt);
+  --terra-dark:   var(--syn-terra-dk);
+  --gold:         var(--syn-gold);
+  --gold-light:   var(--syn-gold-lt);
+
+  --text-core:    var(--syn-terra);
+  --text-subtle:  var(--syn-stone);
+  --glow-active:  var(--syn-terra-lt);
+
+  --og-font:      var(--syn-sans);
+
+  /* shared "sym/mediterranean" namespace used across both codebases */
+  --sym-terra:    var(--syn-terra);
+  --sym-terra-dk: var(--syn-terra-dk);
+  --sym-gold:     var(--syn-gold);
+  --sym-fg:       var(--syn-cream);
+  --sym-fg-muted: var(--syn-stone);
+  --sym-bg:       var(--syn-bg);
+  --sym-bg-card:  var(--syn-panel);
+}
+
+/* ── Apply the type system to the app chrome (not game canvases) ──── */
+body,
+.theme-obsidian,
+[data-theme] {
+  font-family: var(--syn-sans);
+}
+
+h1, h2, h3, h4,
+.page-title, .panel-title, .section-title,
+.hero-title, .brand-name, .nav-brand,
+[class*="-title"], [class*="heading"] {
+  font-family: var(--syn-disp);
+  letter-spacing: .005em;
+  font-weight: 600;
+}
+
+.lede, .hero-lede, .subtitle, .intro, .editorial,
+blockquote, .quote {
+  font-family: var(--syn-serif);
+}
+
+/* ── Accent harmonisation on the most visible chrome ─────────────── */
+a { color: var(--syn-terra-lt); }
+a:hover { color: var(--syn-terra); }
+
+.btn-primary, .cta, .btn--primary, button.primary {
+  background: var(--syn-terra);
+  border-color: var(--syn-terra-dk);
+  color: #1b120c;
+}
+.btn-primary:hover, .cta:hover, .btn--primary:hover, button.primary:hover {
+  background: var(--syn-terra-lt);
+}
+
+::selection { background: color-mix(in srgb, var(--syn-terra) 35%, transparent); }
+
+/* Keep scrollbars on-theme */
+* { scrollbar-color: var(--syn-terra-dk) transparent; }

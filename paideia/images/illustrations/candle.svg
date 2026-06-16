@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Candle">
+  <path d="M 50 22 Q 46 30 50 34 Q 54 30 50 22" fill="currentColor" fill-opacity="0.15"></path>
+  <line x1="50" y1="34" x2="50" y2="38" opacity="0.6"></line>
+  <rect x="40" y="38" width="20" height="38" rx="2"></rect>
+  <path d="M 36 76 L 64 76 L 62 82 L 38 82 Z"></path>
+  <line x1="46" y1="46" x2="46" y2="68" opacity="0.4"></line>
+</svg>

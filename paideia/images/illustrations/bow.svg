@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Bow and Arrow">
+  <path d="M 28 14 Q 76 50 28 86"></path>
+  <path d="M 28 14 Q 24 30 26 50 Q 24 70 28 86" stroke-opacity="0.45"></path>
+  <line x1="28" y1="14" x2="28" y2="22"></line>
+  <line x1="28" y1="86" x2="28" y2="78"></line>
+  <line x1="28" y1="22" x2="78" y2="50" stroke-opacity="0.6"></line>
+  <line x1="28" y1="78" x2="78" y2="50" stroke-opacity="0.6"></line>
+  <line x1="38" y1="50" x2="90" y2="50"></line>
+  <path d="M 90 50 L 84 46 M 90 50 L 84 54"></path>
+  <path d="M 38 50 L 32 46 M 38 50 L 32 54" stroke-opacity="0.6"></path>
+  <line x1="42" y1="48" x2="42" y2="52" stroke-opacity="0.5"></line>
+</svg>

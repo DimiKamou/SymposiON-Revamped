@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Επίθετα — Θεωρία & Μελέτη</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ok:#27ae60; --err:#c0392b;
+  /* gender accents — set per-theme in JS (applyTheme); fallbacks below */
+  --g-m:oklch(0.71 0.055 248);  /* αρσενικό  – cool blue  */
+  --g-f:oklch(0.71 0.055 22);   /* θηλυκό    – warm rose  */
+  --g-n:oklch(0.71 0.055 150);  /* ουδέτερο  – sage green */
+  --g-mf:oklch(0.73 0.055 90);  /* αρσ/θηλ   – amber      */
+  --g-x:oklch(0.62 0.012 80);   /* αόριστο   – neutral    */
+  /* per-case tablet colours (row coding) — set per-theme in applyTheme; fallbacks below */
+  --c0:oklch(0.70 0.07 30); --c1:oklch(0.70 0.07 90); --c2:oklch(0.70 0.07 150);
+  --c3:oklch(0.70 0.07 210); --c4:oklch(0.70 0.07 272); --c5:oklch(0.70 0.07 330);
+  --tint:10%;          /* gender column wash (dir A)  */
+  --tint-strong:14%;   /* gender tile wash  (dir B)  */
+  --radius:14px;
+  --serif:'Cinzel',Georgia,serif;
+  --lat:'Cormorant Garamond',Georgia,serif;   /* Latin forms/lemmas — REAL lowercase italics */
+  --sans:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+  --mono:'SFMono-Regular',ui-monospace,'Cascadia Mono',Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  /* chrome — driven by SymposiON --sym-* tokens (host copies these onto <body>), with fallbacks. */
+  --bg:var(--sym-bg,#1a1610);
+  --panel:var(--sym-bg-card,#241e16);
+  --panel2:var(--sym-bg-raise,#2c2418);
+  --gold:var(--sym-gold,#c9a44a);
+  --gold-lt:var(--sym-gold-lt,#e8c87a);
+  --txt:var(--sym-fg,#e8dcc8);
+  --muted:var(--sym-fg-muted,#8a7a60);
+  --border:color-mix(in srgb,var(--gold) 22%,var(--panel));
+  background:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--gold) 6%,var(--bg)), transparent 60%),
+    var(--bg);
+  color:var(--txt); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; min-height:100vh; line-height:1.5;
+}
+.lat{font-family:var(--lat); font-style:italic; font-weight:600; letter-spacing:.2px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:2.4px; text-transform:uppercase; color:var(--muted)}
+button{font-family:inherit; cursor:pointer}
+::selection{background:color-mix(in srgb,var(--gold) 38%,transparent); color:var(--gold-lt)}
+:focus-visible{outline:2px solid var(--gold-lt); outline-offset:2px; border-radius:6px}
+
+/* ─── shell ─── */
+.wrap{max-width:1080px; margin:0 auto; padding:34px 22px 80px}
+header.app{margin-bottom:26px}
+header.app h1{font-family:var(--serif); font-weight:600; font-size:34px; letter-spacing:.5px; margin:8px 0 4px; color:var(--gold-lt)}
+header.app p{margin:0; color:var(--muted); max-width:64ch}
+.theme-row{display:none}
+
+.tabbar{display:flex; flex-wrap:wrap; gap:8px; margin:24px 0 28px; border-bottom:1px solid var(--border); padding-bottom:0}
+.tab{
+  appearance:none; border:1px solid transparent; border-bottom:none; background:transparent;
+  color:var(--muted); padding:13px 18px 12px; font-size:14.5px; font-weight:600;
+  border-radius:12px 12px 0 0; position:relative; top:1px; transition:color .18s, background .18s;
+  display:flex; align-items:center; gap:9px;
+}
+.tab .num{font-family:var(--mono); font-size:11px; opacity:.7}
+.tab:hover{color:var(--txt)}
+.tab[aria-selected="true"]{
+  color:var(--gold-lt); background:var(--panel); border-color:var(--border);
+  box-shadow:0 -2px 0 var(--gold) inset;
+}
+
+/* ─── controls / chrome ─── */
+.toolbar{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:20px}
+.field{display:flex; flex-direction:column; gap:6px}
+.field > label{font-family:var(--mono); font-size:10px; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted)}
+select, .sellike{
+  font-family:var(--sans); font-size:14.5px; color:var(--txt); background:var(--panel2);
+  border:1px solid var(--border); border-radius:10px; padding:10px 13px; min-width:230px;
+}
+select{appearance:none; background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px}
+.btn{
+  background:var(--panel2); border:1px solid var(--border); color:var(--txt);
+  padding:10px 16px; border-radius:10px; font-size:13.5px; font-weight:600; transition:.16s;
+}
+.btn:hover{border-color:var(--gold); color:var(--gold-lt)}
+.btn.gold{background:linear-gradient(180deg,var(--gold-lt),var(--gold)); color:#231a08; border-color:var(--gold-lt)}
+.btn.gold:hover{filter:brightness(1.06)}
+.btn.sm{padding:7px 11px; font-size:12px}
+.btn:disabled{opacity:.4; cursor:not-allowed}
+.btn[aria-pressed="true"]{border-color:var(--gold); color:var(--gold-lt); background:color-mix(in srgb,var(--gold) 14%,var(--panel2))}
+
+.seg{display:inline-flex; background:var(--panel2); border:1px solid var(--border); border-radius:11px; padding:4px; gap:4px}
+.seg button{appearance:none; border:none; background:transparent; color:var(--muted); padding:8px 15px; border-radius:8px; font-size:13.5px; font-weight:600; transition:.16s}
+.seg button[aria-pressed="true"]{background:color-mix(in srgb,var(--gold) 18%,var(--panel2)); color:var(--gold-lt); box-shadow:0 1px 0 color-mix(in srgb,var(--gold) 40%,transparent) inset}
+.seg button:disabled{opacity:.35; cursor:not-allowed}
+
+.pill{font-family:var(--mono); font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; padding:5px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted)}
+
+.lemma-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin:4px 0 12px}
+.lemma-head .l{font-family:var(--lat); font-style:italic; font-weight:600; font-size:30px; color:var(--gold-lt); white-space:nowrap}
+.lemma-head .cat{font-family:var(--mono); font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted)}
+.lemma-head .mean{font-family:var(--sans); font-size:13.5px; color:var(--muted); font-style:italic}
+
+/* degree summary strip */
+.degbar{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 16px}
+.degcell{flex:1; min-width:150px; background:var(--panel2); border:1px solid var(--border); border-radius:11px; padding:10px 13px}
+.degcell .dl{font-family:var(--mono); font-size:9.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); margin-bottom:4px}
+.degcell .dv{font-family:var(--lat); font-style:italic; font-weight:600; font-size:18px; color:var(--gold-lt)}
+.degcell .dv.none{font-family:var(--sans); font-style:italic; font-size:13px; color:var(--muted)}
+.degnote{flex-basis:100%; font-size:12.5px; color:var(--muted); font-style:italic}
+
+.legend{display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin:2px 0 18px; font-size:12.5px; color:var(--muted)}
+.legend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:7px; vertical-align:-1px}
+
+/* ─── tables base ─── */
+.grid-card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:6px 18px 18px; overflow-x:auto}
+table.par{border-collapse:separate; border-spacing:0; width:100%}
+table.par th, table.par td{padding:0}
+.grouphead{font-family:var(--serif); font-size:13px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold); text-align:center; padding:12px 0 12px}
+.corner{width:1%; position:sticky; left:0; z-index:3; background:var(--panel)}
+.caselab{text-align:right; white-space:nowrap; padding:0 18px 0 6px; width:1%; vertical-align:middle; position:sticky; left:0; z-index:2; background:var(--panel)}
+.ctab{display:inline-block; font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.2px; white-space:nowrap;
+  padding:5px 13px; border-radius:999px;
+  background:color-mix(in srgb,var(--cc,var(--muted)) 20%,var(--panel2));
+  border:1px solid color-mix(in srgb,var(--cc,var(--border)) 48%,var(--border));
+  color:color-mix(in srgb,var(--cc,var(--txt)) 50%,var(--txt));}
+.c0{--cc:var(--c0)} .c1{--cc:var(--c1)} .c2{--cc:var(--c2)} .c3{--cc:var(--c3)} .c4{--cc:var(--c4)} .c5{--cc:var(--c5)}
+.grp-sep{width:22px}
+
+/* gender tint helpers */
+.gm{--gc:var(--g-m)} .gf{--gc:var(--g-f)} .gn{--gc:var(--g-n)} .gmf{--gc:var(--g-mf)} .gx{--gc:var(--g-x)}
+.colhead{font-family:var(--serif); font-style:italic; font-size:14.5px; text-align:center; padding:0 6px 9px; color:var(--gc,var(--txt)); white-space:nowrap}
+.colhead small{display:block; font-family:var(--mono); font-style:normal; font-size:9px; letter-spacing:1.3px; text-transform:uppercase; color:var(--muted); margin-top:2px}
+
+/* DIRECTION A — Ledger / stele */
+.dirA table.par td.cell{
+  background:color-mix(in srgb,var(--gc,var(--muted)) var(--tint),var(--panel2));
+  border-top:1px solid var(--border);
+  text-align:center; padding:11px 16px; font-family:var(--lat); font-style:italic; font-size:19px; color:var(--txt);
+  position:relative; min-width:84px;
+}
+.dirA .colhead{border-bottom:2px solid color-mix(in srgb,var(--gc) 55%,transparent)}
+.dirA td.cell.dash{color:var(--muted); font-style:normal; opacity:.5}
+.dirA .grp-sep{background:transparent; border:none}
+
+/* study (reveal) mode cells */
+td.cell.hide{cursor:pointer; color:transparent; user-select:none}
+.dirA td.cell.hide{background:repeating-linear-gradient(45deg,var(--panel2),var(--panel2) 6px,color-mix(in srgb,var(--gold) 8%,var(--panel2)) 6px,color-mix(in srgb,var(--gold) 8%,var(--panel2)) 12px)}
+td.cell.hide::after{content:'?'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-family:var(--mono); font-style:normal; font-size:15px; opacity:.6}
+td.cell.dash.hide{cursor:default}
+td.cell.revealed{animation:pop .28s ease}
+@keyframes pop{0%{transform:scale(.9); opacity:.3} 60%{transform:scale(1.04)} 100%{transform:scale(1)}}
+td.cell.revealed{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--ok) 55%,transparent) inset !important}
+
+.counter{font-family:var(--mono); font-size:12px; color:var(--muted)}
+.counter b{color:var(--gold-lt)}
+
+/* fill inputs */
+td.cell.fillcell{padding:6px; background:var(--panel2)}
+.dirA td.cell.fillcell{background:color-mix(in srgb,var(--gc) 5%,var(--panel2)); padding:6px}
+td.cell input.fin{
+  width:100%; min-width:96px; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  padding:9px 8px; text-align:center; color:var(--txt); font-family:var(--lat); font-style:italic; font-size:18px;
+}
+td.cell input.fin:focus{border-color:var(--gold); outline:none}
+td.cell.fillcell.dash input{opacity:.4}
+input.fin.good{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 14%,var(--bg)); color:var(--gold-lt)}
+input.fin.bad{border-color:var(--err); background:color-mix(in srgb,var(--err) 13%,var(--bg))}
+.corr{display:block; margin-top:4px; font-family:var(--lat); font-style:italic; font-size:14.5px; color:var(--ok)}
+.scorebar{display:flex; align-items:center; gap:14px; margin-top:18px; flex-wrap:wrap}
+.scorebar .score{font-family:var(--serif); font-size:20px; color:var(--gold-lt)}
+
+/* parse */
+.parse-stage{display:grid; grid-template-columns:1fr; gap:22px; max-width:760px}
+.formbox{
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+  padding:34px 24px; text-align:center; position:relative; overflow:hidden;
+}
+.formbox .word{font-family:var(--lat); font-style:italic; font-weight:600; font-size:56px; color:var(--gold-lt); letter-spacing:1px}
+.formbox .q{font-size:13px; color:var(--muted); margin-bottom:6px}
+.parse-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px}
+@media(max-width:560px){.parse-grid{grid-template-columns:1fr}}
+.parse-grid .field > label{margin-bottom:2px}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{appearance:none; background:var(--panel2); border:1px solid var(--border); color:var(--txt); padding:9px 13px; border-radius:999px; font-size:13.5px; font-weight:600; transition:.15s}
+.chip:hover{border-color:var(--gold)}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--gold) 20%,var(--panel2)); border-color:var(--gold); color:var(--gold-lt)}
+.verdict{border-radius:12px; padding:15px 18px; font-size:14.5px; display:none}
+.verdict.show{display:block}
+.verdict.ok{background:color-mix(in srgb,var(--ok) 16%,var(--panel)); border:1px solid color-mix(in srgb,var(--ok) 50%,var(--border)); color:#bfe6c8}
+.verdict.no{background:color-mix(in srgb,var(--err) 14%,var(--panel)); border:1px solid color-mix(in srgb,var(--err) 45%,var(--border)); color:#eccac4}
+.verdict .lat{color:var(--gold-lt)}
+
+/* rule flip cards */
+.rules-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:18px}
+.flip{perspective:1400px; height:240px}
+.flip-inner{position:relative; width:100%; height:100%; transition:transform .6s cubic-bezier(.4,.16,.2,1); transform-style:preserve-3d; cursor:pointer}
+.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:var(--radius); border:1px solid var(--border); padding:22px; display:flex; flex-direction:column; overflow:hidden}
+.face.front{background:linear-gradient(160deg,var(--panel2),var(--panel))}
+.face.back{background:linear-gradient(160deg,color-mix(in srgb,var(--gold) 10%,var(--panel)),var(--panel)); transform:rotateY(180deg); border-color:color-mix(in srgb,var(--gold) 30%,var(--border))}
+.face .rtag{font-family:var(--mono); font-size:10px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold); margin-bottom:12px}
+.face .rule{font-family:var(--serif); font-size:17px; line-height:1.36; color:var(--txt); flex:1}
+.face .rule .lat{color:var(--gold-lt)}
+.face .flip-hint{font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-top:10px}
+.face.back .ex-label{font-family:var(--mono); font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); margin-bottom:8px}
+.face.back .ex{font-family:var(--serif); font-size:15.5px; line-height:1.5; color:var(--txt)}
+.face.back .ex .lat{color:var(--gold-lt); font-weight:600}
+.face.back .arrow{color:var(--gold); font-style:normal}
+
+.hint{font-size:12.5px; color:var(--muted); margin-top:14px}
+.hint kbd{font-family:var(--mono); font-size:11px; background:var(--panel2); border:1px solid var(--border); border-bottom-width:2px; border-radius:5px; padding:1px 6px; color:var(--txt)}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <div class="eyebrow">Λατινικά · Γραμματική · Επίθετα</div>
+    <h1>Κλίση &amp; Παραθετικά Επιθέτων</h1>
+    <p>Τέσσερις τρόποι ενεργητικής μελέτης — αποκάλυψε, συμπλήρωσε, αναγνώρισε, θυμήσου. Διάλεξε επίθετο και βαθμό (Θετικό · Συγκριτικό · Υπερθετικό).</p>
+    <div class="theme-row" hidden style="display:none">
+      <label for="theme-pick">Θέμα</label>
+      <select id="theme-pick" aria-label="Επιλογή χρωματικού θέματος"></select>
+      <span class="theme-swatch" id="theme-swatch" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <div class="tabbar" role="tablist" aria-label="Μορφές μελέτης">
+    <button class="tab" role="tab" id="tab-0" aria-controls="p-0" aria-selected="true"><span class="num">01</span> Πίνακας Κλίσης</button>
+    <button class="tab" role="tab" id="tab-1" aria-controls="p-1" aria-selected="false"><span class="num">02</span> Συμπλήρωση Πίνακα</button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="p-2" aria-selected="false"><span class="num">03</span> Αναγνώριση Τύπου</button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="p-3" aria-selected="false"><span class="num">04</span> Κανόνες</button>
+  </div>
+
+  <div id="host"></div>
+</div>
+
+<!-- single source of truth: the verified adjective dataset (LATEK_DB) -->
+<script src="data.js"></script>
+<script>
+/* ════════════════════════ DATA ════════════════════════ */
+const CASES = ['Ονομαστική','Γενική','Δοτική','Αιτιατική','Κλητική','Αφαιρετική'];
+const CASE_ABBR = ['Ονομ.','Γεν.','Δοτ.','Αιτ.','Κλητ.','Αφαιρ.'];
+/* lemma dropdown categories = κλίση (sub) */
+const CATS = [
+  {k:'2us',    name:'Β΄ Κλίση (-us/-a/-um)'},
+  {k:'2er',    name:'Β΄ Κλίση (-er)'},
+  {k:'3two',   name:'Γ΄ Κλίση δικατάληκτα (-is/-e)'},
+  {k:'3three', name:'Γ΄ Κλίση τρικατάληκτα (-er)'},
+  {k:'3one',   name:'Γ΄ Κλίση μονοκατάληκτα'},
+];
+const GEN = {
+  'αρσενικό':{cls:'gm', v:'--g-m', set:['m'], short:'αρσ.'},
+  'θηλυκό':  {cls:'gf', v:'--g-f', set:['f'], short:'θηλ.'},
+  'ουδέτερο':{cls:'gn', v:'--g-n', set:['n'], short:'ουδ.'},
+};
+const DEGS = [
+  {k:'pos',    name:'Θετικός'},
+  {k:'comp',   name:'Συγκριτικός'},
+  {k:'superl', name:'Υπερθετικός'},
+];
+const degName = k => (DEGS.find(d=>d.k===k)||{}).name || k;
+const GENROW = [['αρσενικό','m'],['θηλυκό','f'],['ουδέτερο','n']];
+const cellStr = v => Array.isArray(v) ? v.join(', ') : v;   // arrays of alternates → comma string
+
+/* Adapter: LATEK_DB → flat entries {l,t,sub,cat,deg,meaning,s[],p[]} (one per lemma×degree×gender).
+   PRIMARY SOURCE: the verified shared dataset (games/lat-epitheta-kata/data.js → LATEK_DB). */
+const DATA = (() => {
+  const out = [];
+  if (typeof LATEK_DB === 'undefined') return out;
+  LATEK_DB.forEach(a => {
+    const push = (deg, decl) => {
+      if (!decl) return;
+      GENROW.forEach(([t,g]) => {
+        out.push({ l:a.l, t, sub:a.sub, cat:a.sub, deg, meaning:a.m,
+                   comp:a.comp, superl:a.superl, peri:!!a.peri, degNote:a.degNote||'',
+                   s: decl[g].s.map(cellStr), p: decl[g].p.map(cellStr) });
+      });
+    };
+    push('pos', a.decl);
+    push('comp', a.compDecl);
+    push('superl', a.superlDecl);
+  });
+  return out;
+})();
+
+const catName = k => (CATS.find(c=>c.k===k)||{}).name || k;
+
+/* group by lemma, preserving order; keep degree+meta */
+function paradigms(){
+  const map = new Map();
+  DATA.forEach(e=>{
+    if(!map.has(e.l)) map.set(e.l,{l:e.l, sub:e.sub, cat:e.cat, meaning:e.meaning,
+                                   comp:e.comp, superl:e.superl, peri:e.peri, degNote:e.degNote, entries:[]});
+    map.get(e.l).entries.push(e);
+  });
+  return [...map.values()];
+}
+const PARS = paradigms();
+const defLemma = (PARS.find(p=>p.l.indexOf('clarus')===0) || PARS[0] || {l:''}).l;
+
+/* degrees available for a paradigm, in canonical order */
+function degsOf(par){ return DEGS.map(d=>d.k).filter(k => par.entries.some(e=>e.deg===k)); }
+function entriesFor(par, deg){ return par.entries.filter(e=>e.deg===deg); }
+
+/* parse index: surface form -> [{lemma,deg,ci,num,gset,t}] */
+const FORM_INDEX = (()=>{
+  const idx = new Map();
+  DATA.forEach(e=>{
+    const gset = GEN[e.t].set;
+    ['s','p'].forEach(num=>{
+      e[num].forEach((cell,ci)=>{
+        if(cell==='-'||!cell) return;
+        cell.split(',').map(s=>s.trim()).forEach(form=>{
+          const key = form.toLowerCase();
+          if(!idx.has(key)) idx.set(key,[]);
+          idx.get(key).push({lemma:e.l, deg:e.deg, ci, num, gset, t:e.t});
+        });
+      });
+    });
+  });
+  return idx;
+})();
+
+/* ════════════════════════ HELPERS ════════════════════════ */
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (tag,cls,html)=>{const n=document.createElement(tag); if(cls)n.className=cls; if(html!=null)n.innerHTML=html; return n;};
+const norm = s => s.toLowerCase().replace(/[āēīōūăĕĭŏŭ]/g,m=>({'ā':'a','ă':'a','ē':'e','ĕ':'e','ī':'i','ĭ':'i','ō':'o','ŏ':'o','ū':'u','ŭ':'u'}[m])).replace(/[^a-z]/g,'').trim();
+const alts = cell => cell.split(',').map(s=>s.trim());
+const rint = n => Math.floor(Math.random()*n);
+const sample = arr => arr[rint(arr.length)];
+
+/* grouped <select> of paradigms */
+function paradigmSelect(onChange, sel){
+  const s = el('select'); s.setAttribute('aria-label','Επιλογή επιθέτου');
+  CATS.forEach(c=>{
+    const grp = PARS.filter(p=>p.cat===c.k);
+    if(!grp.length) return;
+    const og = el('optgroup'); og.label = c.name;
+    grp.forEach(p=>{ const o=el('option'); o.value=p.l; o.textContent=p.l; og.appendChild(o); });
+    s.appendChild(og);
+  });
+  if(sel) s.value=sel;
+  s.addEventListener('change',()=>onChange(s.value));
+  return s;
+}
+
+/* βαθμός segmented control; disables degrees absent for this paradigm */
+function degreeSeg(par, cur, onChange){
+  const seg = el('div','seg'); seg.setAttribute('aria-label','Βαθμός');
+  const avail = degsOf(par);
+  DEGS.forEach(d=>{
+    const b = el('button',null,d.name);
+    const ok = avail.includes(d.k);
+    b.setAttribute('aria-pressed', d.k===cur);
+    if(!ok){ b.disabled = true; b.title = 'Δε σχηματίζεται / δεν κλίνεται'; }
+    else b.onclick = ()=>onChange(d.k);
+    seg.append(b);
+  });
+  return seg;
+}
+
+/* degree summary strip (θετικός → συγκρ. → υπερθ.) */
+function degBar(par){
+  const bar = el('div','degbar');
+  const cell = (lbl,val)=>{ const c=el('div','degcell');
+    c.append(el('div','dl',lbl), el('div', val?'dv':'dv none', val||'— δεν σχηματίζεται')); return c; };
+  bar.append(cell('Θετικός', par.l.split(',')[0]));
+  bar.append(cell('Συγκριτικός', par.comp ? cellStr(par.comp) : ''));
+  bar.append(cell('Υπερθετικός', par.superl ? cellStr(par.superl) : ''));
+  if(par.degNote) bar.append(el('div','degnote','⚠️ '+par.degNote));
+  return bar;
+}
+
+/* ════════════════════════ FORMAT 1 — PARADIGM EXPLORER ════════════════════════ */
+const F1 = { lemma:defLemma, deg:'pos', mode:'ref', revealed:new Set() };
+
+function renderF1(host){
+  host.innerHTML='';
+  let par = PARS.find(p=>p.l===F1.lemma) || PARS[0];
+  if(!degsOf(par).includes(F1.deg)) F1.deg='pos';
+
+  const tb = el('div','toolbar');
+  const fLemma = el('div','field'); fLemma.append(el('label',null,'Επίθετο'));
+  fLemma.append(paradigmSelect(v=>{F1.lemma=v; F1.deg='pos'; F1.revealed=new Set(); renderF1(host);}, F1.lemma));
+  tb.append(fLemma);
+
+  const fDeg = el('div','field'); fDeg.append(el('label',null,'Βαθμός'));
+  fDeg.append(degreeSeg(par, F1.deg, k=>{F1.deg=k; F1.revealed=new Set(); renderF1(host);}));
+  tb.append(fDeg);
+
+  const fMode = el('div','field'); fMode.append(el('label',null,'Λειτουργία'));
+  const seg = el('div','seg');
+  const bRef = el('button',null,'Αναφορά'); bRef.setAttribute('aria-pressed', F1.mode==='ref');
+  const bStu = el('button',null,'Μελέτη');  bStu.setAttribute('aria-pressed', F1.mode==='study');
+  bRef.onclick=()=>{F1.mode='ref'; renderF1(host);};
+  bStu.onclick=()=>{F1.mode='study'; F1.revealed=new Set(); renderF1(host);};
+  seg.append(bRef,bStu); fMode.append(seg); tb.append(fMode);
+  host.append(tb);
+
+  const head = el('div','lemma-head');
+  head.append(el('span','l',par.l), el('span','cat',catName(par.cat)), el('span','mean',par.meaning));
+  host.append(head);
+  host.append(degBar(par));
+
+  const leg = el('div','legend');
+  GENROW.forEach(([t])=>{ const g=GEN[t]; leg.append(el('span',null,`<i style="background:var(${g.v})"></i>${t}`)); });
+  host.append(leg);
+
+  let counterEl=null;
+  if(F1.mode==='study'){
+    const bar = el('div','scorebar'); bar.style.margin='0 0 16px';
+    counterEl = el('span','counter');
+    const total = countHidden(par);
+    counterEl.innerHTML = `Αποκαλύφθηκαν <b>${F1.revealed.size}</b> / ${total}`;
+    const ra = el('button','btn sm','Αποκάλυψη όλων');
+    ra.onclick=()=>{ revealAll(par); renderF1(host); };
+    const rs = el('button','btn sm','Επανέναρξη');
+    rs.onclick=()=>{ F1.revealed=new Set(); renderF1(host); };
+    bar.append(counterEl,ra,rs); host.append(bar);
+  }
+
+  host.append(buildGrid(par, F1.deg, {counterEl}));
+}
+
+function countHidden(par){
+  let n=0;
+  entriesFor(par,F1.deg).forEach(e=>['s','p'].forEach(num=>e[num].forEach(c=>{ if(c!=='-'&&c) n++; })));
+  return n;
+}
+function revealAll(par){
+  entriesFor(par,F1.deg).forEach((e,ei)=>['s','p'].forEach(num=>e[num].forEach((c,ci)=>{ if(c!=='-'&&c) F1.revealed.add(`${ei}-${num}-${ci}`); })));
+}
+
+/* shared grid builder — rows = πτώσεις, columns = [Ενικός: γένη] | [Πληθυντικός: γένη] */
+function buildGrid(par, deg, opts={}){
+  const fill = !!opts.fill;
+  const card = el('div', `grid-card dirA`);
+  const table = el('table','par');
+  const ents = entriesFor(par, deg), ng = ents.length;
+
+  const thead = el('thead');
+  const r1 = el('tr');
+  r1.append(el('th','corner'));
+  const sgh = el('th','grouphead'); sgh.colSpan=ng; sgh.textContent='Ενικός'; r1.append(sgh);
+  r1.append(el('th','grp-sep'));
+  const plh = el('th','grouphead'); plh.colSpan=ng; plh.textContent='Πληθυντικός'; r1.append(plh);
+  thead.append(r1);
+  const r2 = el('tr');
+  r2.append(el('th','corner'));
+  ['s','p'].forEach(num=>{
+    ents.forEach(e=>{
+      const g=GEN[e.t];
+      const th=el('th',`colhead ${g.cls}`);
+      th.innerHTML=`${shortGender(e.t)}<small>${g.short}</small>`;
+      r2.append(th);
+    });
+    if(num==='s') r2.append(el('th','grp-sep'));
+  });
+  thead.append(r2); table.append(thead);
+
+  const tbody = el('tbody');
+  CASES.forEach((cs,ci)=>{
+    const tr = el('tr');
+    const lab = el('td','caselab'); lab.append(el('span',`ctab c${ci}`, cs.toLowerCase()));
+    tr.append(lab);
+    ['s','p'].forEach(num=>{
+      ents.forEach((e,ei)=>tr.append(makeCell(e,ei,num,ci,cs,par,fill,opts)));
+      if(num==='s') tr.append(el('td','grp-sep'));
+    });
+    tbody.append(tr);
+  });
+  table.append(tbody);
+  card.append(table);
+
+  if(!ents.some(e=>e.p.some(c=>c!=='-'&&c)))
+    card.append(el('div','hint','Δεν σχηματίζει πληθυντικό — οι τύποι δηλώνονται με «—».'));
+  return card;
+}
+
+function makeCell(e,ei,num,ci,cs,par,fill,opts){
+  const raw = e[num][ci], g = GEN[e.t];
+  const td = el('td',`cell ${g.cls}`);
+  td.dataset.case = CASE_ABBR[ci];
+  if(raw==='-'||!raw){ td.classList.add('dash'); td.textContent='—'; return td; }
+  if(fill){
+    td.classList.add('fillcell');
+    const inp=el('input'); inp.className='fin'; inp.type='text';
+    inp.setAttribute('aria-label',`${cs} ${num==='s'?'ενικός':'πληθ.'} ${e.t}`);
+    inp.autocapitalize='off'; inp.autocomplete='off'; inp.spellcheck=false;
+    inp.dataset.answer=raw; td.append(inp); return td;
+  }
+  if(F1.mode==='study'){
+    const key=`${ei}-${num}-${ci}`;
+    if(F1.revealed.has(key)){ td.textContent=raw; return td; }
+    td.classList.add('hide'); td.tabIndex=0; td.setAttribute('role','button');
+    td.setAttribute('aria-label','Κρυμμένος τύπος — πάτησε για αποκάλυψη');
+    const reveal=()=>{
+      F1.revealed.add(key); td.classList.remove('hide'); td.classList.add('revealed');
+      td.removeAttribute('tabindex'); td.textContent=raw;
+      if(opts.counterEl){ const tot=countHidden(par); opts.counterEl.innerHTML=`Αποκαλύφθηκαν <b>${F1.revealed.size}</b> / ${tot}`; }
+    };
+    td.onclick=reveal;
+    td.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault(); reveal();} };
+    return td;
+  }
+  td.textContent=raw; return td;
+}
+function shortGender(t){
+  return {'αρσενικό':'Αρσενικό','θηλυκό':'Θηλυκό','ουδέτερο':'Ουδέτερο'}[t]||t;
+}
+
+/* ════════════════════════ FORMAT 2 — FILL THE PARADIGM ════════════════════════ */
+const F2 = { lemma:defLemma, deg:'pos' };
+
+function renderF2(host){
+  host.innerHTML='';
+  let par = PARS.find(p=>p.l===F2.lemma) || PARS[0];
+  if(!degsOf(par).includes(F2.deg)) F2.deg='pos';
+
+  const tb = el('div','toolbar');
+  const fLemma=el('div','field'); fLemma.append(el('label',null,'Επίθετο'));
+  fLemma.append(paradigmSelect(v=>{F2.lemma=v; F2.deg='pos'; renderF2(host);}, F2.lemma));
+  tb.append(fLemma);
+  const fDeg = el('div','field'); fDeg.append(el('label',null,'Βαθμός'));
+  fDeg.append(degreeSeg(par, F2.deg, k=>{F2.deg=k; renderF2(host);}));
+  tb.append(fDeg);
+  host.append(tb);
+
+  const head=el('div','lemma-head');
+  head.append(el('span','l',par.l), el('span','cat',catName(par.cat)),
+              el('span','pill','Συμπλήρωσε — '+degName(F2.deg)));
+  host.append(head);
+  host.append(el('div','hint','Δέξιμο εναλλακτικών: γράψε έναν αποδεκτό τύπο (π.χ. <i>omnes</i> ή <i>omnis</i>). Τα μακρά δε χρειάζονται.'));
+
+  const gridWrap = el('div'); gridWrap.style.marginTop='14px';
+  gridWrap.append(buildGrid(par, F2.deg, {fill:true}));
+  host.append(gridWrap);
+
+  const bar=el('div','scorebar');
+  const check=el('button','btn gold','Έλεγχος');
+  const reset=el('button','btn','Καθαρισμός');
+  const score=el('span','score'); score.style.display='none';
+  check.onclick=()=>{ const r=checkFill(gridWrap); score.style.display='inline'; score.textContent=`Σκορ: ${r.ok} / ${r.total}`; };
+  reset.onclick=()=>{ renderF2(host); };
+  bar.append(check,reset,score);
+  host.append(bar);
+}
+
+function checkFill(scope){
+  let ok=0, total=0;
+  scope.querySelectorAll('input.fin').forEach(inp=>{
+    total++;
+    inp.classList.remove('good','bad');
+    const td=inp.closest('td');
+    td.querySelectorAll('.corr').forEach(n=>n.remove());
+    const ans = inp.dataset.answer;
+    const accepted = alts(ans).map(norm);
+    const val = norm(inp.value);
+    if(val && accepted.includes(val)){ inp.classList.add('good'); ok++; }
+    else {
+      inp.classList.add('bad');
+      td.append(el('span','corr', alts(ans).join(' / ')));
+    }
+  });
+  return {ok,total};
+}
+
+/* ════════════════════════ FORMAT 3 — PARSE THE FORM ════════════════════════ */
+const F3 = { q:null, sel:{lemma:null,deg:null,ci:null,num:null,gen:null} };
+
+function newParseQ(){
+  const keys=[...FORM_INDEX.keys()];
+  const ambiguous = keys.filter(k=>FORM_INDEX.get(k).length>1);
+  const form = Math.random()<0.6 && ambiguous.length ? sample(ambiguous) : sample(keys);
+  F3.q = { form };
+  F3.sel = {lemma:null,deg:null,ci:null,num:null,gen:null};
+}
+
+function renderF3(host){
+  if(!F3.q) newParseQ();
+  host.innerHTML='';
+  const stage=el('div','parse-stage');
+
+  const head=el('div','lemma-head'); head.style.margin='0';
+  head.append(el('span','pill','Ανάλυσε τον τύπο'));
+  const nb=el('button','btn sm','Νέος τύπος ↻'); nb.style.marginInlineStart='auto';
+  nb.onclick=()=>{ newParseQ(); renderF3(host); };
+  head.append(nb); stage.append(head);
+
+  const fb=el('div','formbox');
+  fb.append(el('div','q','Σε ποιο επίθετο / βαθμό / πτώση / αριθμό / γένος ανήκει;'));
+  fb.append(el('div','word',F3.q.form));
+  stage.append(fb);
+
+  const grid=el('div','parse-grid');
+
+  // lemma select
+  const fl=el('div','field'); fl.append(el('label',null,'Επίθετο (λήμμα)'));
+  const ls=el('select'); ls.setAttribute('aria-label','Λήμμα');
+  ls.append(new Option('— επίλεξε —',''));
+  CATS.forEach(c=>{ const grp=PARS.filter(p=>p.cat===c.k); if(!grp.length) return;
+    const og=el('optgroup'); og.label=c.name; grp.forEach(p=>og.append(new Option(p.l,p.l))); ls.append(og); });
+  ls.onchange=()=>{F3.sel.lemma=ls.value||null;};
+  fl.append(ls); grid.append(fl);
+
+  // degree chips
+  const fd=el('div','field'); fd.append(el('label',null,'Βαθμός'));
+  const dch=el('div','chips');
+  DEGS.forEach(d=>{ const b=el('button','chip',d.name); b.type='button';
+    b.onclick=()=>{F3.sel.deg=d.k; [...dch.children].forEach(c=>c.setAttribute('aria-pressed',c===b));};
+    dch.append(b); });
+  fd.append(dch); grid.append(fd);
+
+  // number chips
+  const fn=el('div','field'); fn.append(el('label',null,'Αριθμός'));
+  const nch=el('div','chips');
+  [['s','Ενικός'],['p','Πληθυντικός']].forEach(([v,lab])=>{
+    const b=el('button','chip',lab); b.type='button';
+    b.onclick=()=>{F3.sel.num=v; [...nch.children].forEach(c=>c.setAttribute('aria-pressed',c===b));};
+    nch.append(b);
+  });
+  fn.append(nch); grid.append(fn);
+
+  // case chips
+  const fc=el('div','field'); fc.append(el('label',null,'Πτώση'));
+  const cch=el('div','chips');
+  CASES.forEach((cs,ci)=>{
+    const b=el('button','chip',cs); b.type='button';
+    b.onclick=()=>{F3.sel.ci=ci; [...cch.children].forEach(c=>c.setAttribute('aria-pressed',c===b));};
+    cch.append(b);
+  });
+  fc.append(cch); grid.append(fc);
+
+  // gender chips
+  const fg=el('div','field'); fg.append(el('label',null,'Γένος'));
+  const gch=el('div','chips');
+  [['m','Αρσενικό'],['f','Θηλυκό'],['n','Ουδέτερο']].forEach(([v,lab])=>{
+    const b=el('button','chip',lab); b.type='button';
+    b.onclick=()=>{F3.sel.gen=v; [...gch.children].forEach(c=>c.setAttribute('aria-pressed',c===b));};
+    gch.append(b);
+  });
+  fg.append(gch); grid.append(fg);
+  stage.append(grid);
+
+  const submit=el('button','btn gold','Έλεγχος ανάλυσης'); submit.style.alignSelf='start';
+  const verdict=el('div','verdict');
+  submit.onclick=()=>{ judgeParse(verdict); };
+  stage.append(submit, verdict);
+
+  host.append(stage);
+}
+
+function judgeParse(verdict){
+  const {lemma,deg,ci,num,gen}=F3.sel;
+  verdict.className='verdict show';
+  if(!lemma||!deg||ci==null||!num||!gen){
+    verdict.classList.add('no'); verdict.innerHTML='Συμπλήρωσε και τα πέντε πεδία (λήμμα, βαθμός, πτώση, αριθμός, γένος).'; return;
+  }
+  const analyses = FORM_INDEX.get(F3.q.form)||[];
+  const hit = analyses.find(a=> a.lemma===lemma && a.deg===deg && a.ci===ci && a.num===num && a.gset.includes(gen));
+  if(hit){
+    verdict.classList.add('ok');
+    const others = analyses.length-1;
+    verdict.innerHTML = `✓ Σωστά! Ο τύπος <span class="lat">${F3.q.form}</span> αναλύεται έτσι.`
+      + (others>0 ? `<div style="margin-top:6px;color:var(--muted);font-size:13px">Ο τύπος είναι συγκρητικός — δέχεται ${analyses.length} έγκυρες αναλύσεις.</div>` : '');
+  } else {
+    const a = analyses[0];
+    const g = a.gset.map(x=>({m:'αρσενικό',f:'θηλυκό',n:'ουδέτερο'}[x])).join(' / ');
+    verdict.classList.add('no');
+    verdict.innerHTML = `✗ Όχι ακριβώς. Μία σωστή ανάλυση: <span class="lat">${a.lemma}</span> · `
+      + `${degName(a.deg)} · ${CASES[a.ci]} · ${a.num==='s'?'Ενικός':'Πληθυντικός'} · ${g}.`;
+  }
+}
+
+/* ════════════════════════ FORMAT 4 — RULE CARDS ════════════════════════ */
+const RULES = [
+  { tag:'Σχηματισμός συγκριτικού', rule:'Στο <span class="lat">θέμα</span> προσθέτουμε <span class="lat">-ior</span> (αρσ. &amp; θηλ.) και <span class="lat">-ius</span> (ουδ.). Θέμα = γενική ενικού χωρίς <span class="lat">-i</span> (2κλιτα) ή <span class="lat">-is</span> (3κλιτα).',
+    ex:'<span class="lat">clarus</span> <span class="arrow">→</span> <span class="lat">clarior, clarius</span> <span class="arrow">·</span> <span class="lat">fortis</span> <span class="arrow">→</span> <span class="lat">fortior, fortius</span>' },
+  { tag:'Σχηματισμός υπερθετικού', rule:'Στο θέμα της γενικής προσθέτουμε <span class="lat">-issimus, -issima, -issimum</span>.',
+    ex:'<span class="lat">clarus</span> <span class="arrow">→</span> <span class="lat">clarissimus</span> <span class="arrow">·</span> <span class="lat">fortis</span> <span class="arrow">→</span> <span class="lat">fortissimus</span>' },
+  { tag:'Επίθετα σε -er → -rimus', rule:'Όσα έχουν αρσενικό ονομ. ενικού σε <span class="lat">-er</span> σχηματίζουν υπερθετικό με <span class="lat">-rimus, -rima, -rimum</span> στην ονομ. εν. αρσενικού.',
+    ex:'<span class="lat">pulcher</span> <span class="arrow">→</span> <span class="lat">pulcherrimus</span> <span class="arrow">·</span> <span class="lat">liber</span> <span class="arrow">→</span> <span class="lat">liberrimus</span> <span class="arrow">·</span> <span class="lat">celer</span> <span class="arrow">→</span> <span class="lat">celerrimus</span>' },
+  { tag:'facilis &amp; similis → -limus', rule:'Λίγα επίθετα σχηματίζουν υπερθετικό σε <span class="lat">-limus, -a, -um</span> (στο θέμα του θετικού). Ο συγκριτικός μένει ομαλός.',
+    ex:'<span class="lat">facilis</span> <span class="arrow">→</span> <span class="lat">facillimus</span> <span class="arrow">·</span> <span class="lat">similis</span> <span class="arrow">→</span> <span class="lat">simillimus</span>' },
+  { tag:'Ανώμαλος σχηματισμός', rule:'Λίγα συχνά επίθετα σχηματίζουν τελείως ανώμαλα παραθετικά — τα μαθαίνουμε απ\' έξω.',
+    ex:'<span class="lat">bonus → melior → optimus</span> <span class="arrow">·</span> <span class="lat">magnus → maior → maximus</span> <span class="arrow">·</span> <span class="lat">parvus → minor → minimus</span> <span class="arrow">·</span> <span class="lat">multi → plures → plurimi</span>' },
+  { tag:'Χωρίς θετικό βαθμό', rule:'Μερικά παραθετικά προέρχονται από προθέσεις/επιρρήματα και δεν έχουν θετικό.',
+    ex:'<span class="lat">prior → primus</span> <span class="arrow">·</span> <span class="lat">propior → proximus</span> <span class="arrow">·</span> <span class="lat">ulterior → ultimus</span> <span class="arrow">·</span> <span class="lat">interior → intimus</span>' },
+  { tag:'Δε σχηματίζουν παραθετικά', rule:'Όσα δηλώνουν ύλη, τόπο, χρόνο, συγγένεια/καταγωγή, τέλεια/αρνητική έννοια, όσα προέρχονται από ουσιαστικά, ή έχουν α΄ συνθετικό <span class="lat">super-, per-, prae-</span>.',
+    ex:'<span class="lat">marinus · ligneus · immortalis · sonorus</span> <span class="arrow">·</span> εξαίρεση το <span class="lat">superbus</span>' },
+  { tag:'Περιφραστικά (e/i/u + -us)', rule:'Τα δευτερόκλιτα με φωνήεν <span class="lat">e, i, u</span> πριν το <span class="lat">-us</span> σχηματίζουν παραθετικά περιφραστικά (με <span class="lat">magis / maxime</span>). Όμως τα σε <span class="lat">-quus</span> κανονικά.',
+    ex:'<span class="lat">nimius → magis nimius → maxime nimius</span> <span class="arrow">·</span> ΑΛΛΑ <span class="lat">aequus → aequior → aequissimus</span>' },
+  { tag:'Κλίση συγκριτικού', rule:'Κλίνεται όπως τα <span class="lat">τριτόκλιτα δικατάληκτα</span>, ΑΛΛΑ: αφαιρ. ενικού <span class="lat">-e</span>, ονομ./αιτ./κλητ. πληθ. ουδ. <span class="lat">-a</span>, γενική πληθ. (όλων) <span class="lat">-um</span>.',
+    ex:'<span class="lat">meliore</span> (αφαιρ. εν.) <span class="arrow">·</span> <span class="lat">meliora</span> (ουδ. πληθ.) <span class="arrow">·</span> <span class="lat">meliorum</span> (γεν. πληθ.)' },
+  { tag:'Κλίση υπερθετικού', rule:'Ο υπερθετικός κλίνεται όπως τα <span class="lat">δευτερόκλιτα τρικατάληκτα</span> επίθετα — δηλαδή όπως το <span class="lat">bonus, -a, -um</span>.',
+    ex:'<span class="lat">clarissimus, -a, -um</span> <span class="arrow">·</span> <span class="lat">fortissimus, -a, -um</span>' },
+];
+
+function renderF4(host){
+  host.innerHTML='';
+  host.append(el('div','hint','Πάτησε μια κάρτα για να δεις το παράδειγμα. <kbd>Enter</kbd> / <kbd>Space</kbd> για αναποδογύρισμα.'));
+  const grid=el('div','rules-grid'); grid.style.marginTop='14px';
+  RULES.forEach((r)=>{
+    const flip=el('div','flip');
+    const inner=el('div','flip-inner'); inner.tabIndex=0; inner.setAttribute('role','button');
+    inner.setAttribute('aria-label',`Κανόνας: ${r.tag.replace(/<[^>]+>/g,'')}. Πάτησε για παράδειγμα.`);
+    const front=el('div','face front');
+    front.append(el('div','rtag',r.tag), el('div','rule',r.rule), el('div','flip-hint','▸ Παράδειγμα'));
+    const back=el('div','face back');
+    back.append(el('div','ex-label','Παράδειγμα'), el('div','ex',r.ex), el('div','flip-hint','◂ Κανόνας'));
+    inner.append(front,back); flip.append(inner);
+    const toggle=()=>flip.classList.toggle('flipped');
+    inner.onclick=toggle;
+    inner.onkeydown=ev=>{ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault(); toggle();} };
+    grid.append(flip);
+  });
+  host.append(grid);
+}
+
+/* ════════════════════════ TAB ROUTER ════════════════════════ */
+const RENDERERS=[renderF1,renderF2,renderF3,renderF4];
+const tabs=[...document.querySelectorAll('.tab')];
+function selectTab(i){
+  tabs.forEach((t,j)=>t.setAttribute('aria-selected', j===i));
+  const host=$('#host');
+  const panel=el('div','panel-host'); panel.id=`p-${i}`; panel.setAttribute('role','tabpanel'); panel.setAttribute('aria-labelledby',`tab-${i}`);
+  host.innerHTML=''; host.append(panel);
+  RENDERERS[i](panel);
+  history.replaceState(null,'',`#${i}`);
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>selectTab(i));
+  t.addEventListener('keydown',ev=>{
+    if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){
+      ev.preventDefault();
+      const ni=(i+(ev.key==='ArrowRight'?1:tabs.length-1))%tabs.length;
+      tabs[ni].focus(); selectTab(ni);
+    }
+  });
+});
+function initFromHash(){
+  const qs = new URLSearchParams(location.search);
+  const m = qs.get('m'); if(m==='ref'||m==='study') F1.mode=m;
+  const hashT = parseInt((location.hash||'').replace('#',''));
+  const i = Math.max(0, Math.min(3, (isNaN(hashT)?parseInt(qs.get('t')):hashT)||0));
+  selectTab(i);
+}
+window.addEventListener('hashchange', initFromHash);
+
+/* ════════════════════════ THEME — SymposiON --sym-* tokens ════════════════════════ */
+function applyTheme(id){
+  const light = document.body.classList.contains('is-light');
+  const L = light ? 0.55 : 0.71, C = light ? 0.095 : 0.055;
+  const set=(k,h)=>document.body.style.setProperty(k, `oklch(${L} ${C} ${h})`);
+  set('--g-m',248); set('--g-f',22); set('--g-n',150); set('--g-mf',90);
+  document.body.style.setProperty('--g-x', `oklch(${light?0.5:0.62} 0.012 80)`);
+  const cl = light?0.52:0.70, cc = light?0.095:0.07;
+  [30,90,150,210,272,330].forEach((h,i)=>document.body.style.setProperty('--c'+i, `oklch(${cl} ${cc} ${h})`));
+  document.body.style.setProperty('--tint', light?'20%':'10%');
+  document.body.style.setProperty('--tint-strong', light?'30%':'14%');
+}
+applyTheme();
+initFromHash();
+</script>
+</body>
+</html>

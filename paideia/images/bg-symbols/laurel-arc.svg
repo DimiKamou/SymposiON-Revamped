@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Laurel Arc">
+  <path d="M 20 70 Q 60 20 100 16 Q 140 20 180 70"></path>
+  <ellipse cx="40" cy="52" rx="7" ry="3.5" transform="rotate(-40 40 52)" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="56" cy="38" rx="7" ry="3.5" transform="rotate(-30 56 38)" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="76" cy="26" rx="7" ry="3.5" transform="rotate(-15 76 26)" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="100" cy="22" rx="7" ry="3.5" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="124" cy="26" rx="7" ry="3.5" transform="rotate(15 124 26)" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="144" cy="38" rx="7" ry="3.5" transform="rotate(30 144 38)" stroke-opacity="0.85"></ellipse>
+  <ellipse cx="160" cy="52" rx="7" ry="3.5" transform="rotate(40 160 52)" stroke-opacity="0.85"></ellipse>
+  <circle cx="100" cy="14" r="2" fill="currentColor" stroke="none"></circle>
+</svg>

@@ -1,0 +1,151 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON — landing-hero.css
+   Companion CSS for the .sym-hero section on index.html
+   ════════════════════════════════════════════════════════════════════ */
+
+.sym-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--sym-bg, #0D0A06);
+  color: var(--sym-fg, #F0EBE0);
+  padding: clamp(64px, 8vw, 120px) clamp(28px, 6vw, 80px) clamp(80px, 9vw, 140px);
+  isolation: isolate;
+}
+
+/* Faint background illustration anchored bottom-right */
+.sym-hero .sym-hero__ornament {
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: clamp(360px, 50vw, 620px);
+  height: clamp(360px, 50vw, 620px);
+  color: var(--sym-fg, #F0EBE0);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  transform: translateZ(0);
+  will-change: transform;
+}
+.sym-hero .sym-hero__ornament svg,
+.sym-hero .sym-hero__ornament .illu { width: 100%; height: 100%; }
+
+/* Content column */
+.sym-hero .sym-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+}
+
+.sym-hero .sym-hero__eyebrow {
+  font-family: var(--sym-font-sans, 'Inter', sans-serif);
+  font-size: 10.5px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--sym-fg-muted, #867660);
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+
+/* .sym-hero .sym-hero__title wins over .hero h1 in main-upgrade.css */
+.sym-hero .sym-hero__title {
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', Georgia, serif);
+  font-weight: 400;
+  font-size: clamp(40px, 6.4vw, 88px);
+  line-height: 1.06;
+  letter-spacing: -1.1px;
+  margin: 0;
+  color: var(--sym-fg, #F0EBE0);
+  text-wrap: pretty;
+}
+.sym-hero .sym-hero__title em {
+  color: var(--sym-terra, #D97B5C);
+  font-style: italic;
+  font-weight: 500;
+  text-shadow:
+    0 0 22px color-mix(in srgb, var(--sym-terra, #D97B5C) 50%, transparent),
+    0 0 44px color-mix(in srgb, var(--sym-terra, #D97B5C) 22%, transparent);
+}
+.theme-alabaster .sym-hero .sym-hero__title em { text-shadow: none; }
+
+.sym-hero .sym-hero__lede {
+  font-family: var(--sym-font-sans, 'Inter', sans-serif);
+  margin-top: 22px;
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.62;
+  color: var(--sym-fg-muted, #867660);
+  max-width: 520px;
+}
+
+/* CTA row */
+.sym-hero .sym-hero__cta {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sym-cta {
+  font-family: var(--sym-font-sans, 'Inter', sans-serif);
+  font-size: 11.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 13px 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: background .2s, border-color .2s, color .2s, box-shadow .25s, transform .25s;
+  background: none;
+}
+.sym-cta--primary {
+  background: var(--sym-terra, #D97B5C);
+  color: var(--sym-ink, #221B10);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--sym-terra, #D97B5C) 40%, transparent);
+}
+.sym-cta--primary:hover {
+  background: var(--sym-terra-dk, #C05535);
+  transform: translateY(-1px);
+  box-shadow: 0 0 36px color-mix(in srgb, var(--sym-terra, #D97B5C) 60%, transparent);
+}
+.sym-cta--ghost {
+  background: transparent;
+  border-color: var(--sym-fg-muted, #867660);
+  color: var(--sym-fg-muted, #867660);
+}
+.sym-cta--ghost:hover {
+  color: var(--sym-fg, #F0EBE0);
+  border-color: var(--sym-fg, #F0EBE0);
+}
+
+/* Power icon inside primary CTA */
+.sym-cta__power {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Meta row — subject pill list */
+.sym-hero .sym-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 42px;
+  flex-wrap: wrap;
+  font-family: var(--sym-font-mono, 'JetBrains Mono', monospace);
+  font-size: 10.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--sym-fg-muted, #867660);
+}
+.sym-hero .sym-hero__meta-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--sym-fg-muted, #867660);
+  border-radius: 50%;
+  opacity: 0.5;
+  flex-shrink: 0;
+}

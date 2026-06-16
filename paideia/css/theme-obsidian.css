@@ -1,0 +1,160 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · OBSIDIAN theme  —  black + gold (dark-luxury)
+   ────────────────────────────────────────────────────────────────────
+   A higher-contrast, near-black surface with gold as the primary accent
+   and terra reserved for the "ON" power pivot. Drop-in companion to
+   identity.css + palettes.css. Apply `.theme-obsidian` on <body>.
+   ════════════════════════════════════════════════════════════════════ */
+
+.theme-obsidian {
+  /* ─── Surfaces — near-black graduating to warm charcoal ─────────── */
+  --sym-bg-dark:    #0D0B09;   /* page void */
+  --sym-bg-panel:   #181412;   /* card */
+  --sym-bg-raise:   #201D1A;   /* raised card / hover */
+  --sym-bg-light:   #F6F2EB;
+
+  /* ─── Ink ───────────────────────────────────────────────────────── */
+  --sym-ink:        #161009;
+  --sym-cream:      #EFE9DC;
+  --sym-stone:      #7C6F58;   /* muted gold-grey for meta text */
+
+  /* ─── Amber-gold — orange-brown, not yellow ────────────────────── */
+  --sym-gold:       #C87830;   /* burnt amber — the primary accent */
+  --sym-gold-dk:    #9C5E1C;   /* hover / pressed */
+  --sym-gold-lt:    #E09E52;   /* highlights, focus ring */
+  --sym-gold-deep:  #7A4418;   /* hairline borders, inactive */
+
+  /* ─── Terra — the "ON" power pivot ─────────────────────────────── */
+  --sym-terra:      #D96B30;   /* deeper burnt orange — distinct from amber */
+  --sym-terra-dk:   #B04E1A;
+
+  --sym-sage:       #7E9560;
+  --sym-aegean:     #5E8B96;
+
+  /* ─── Semantic mappings ─────────────────────────────────────────── */
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    var(--sym-bg-panel);
+  --sym-fg:         var(--sym-cream);
+  --sym-fg-muted:   var(--sym-stone);
+  --sym-accent:     var(--sym-gold);
+
+  /* ─── Gold gradients + hairlines used across components ─────────── */
+  --sym-gold-grad:  linear-gradient(135deg, var(--sym-gold-lt) 0%, var(--sym-gold) 45%, var(--sym-gold-dk) 100%);
+  --sym-hairline:   color-mix(in srgb, var(--sym-gold) 16%, transparent);
+  --sym-hairline-soft: color-mix(in srgb, var(--sym-gold) 8%, transparent);
+  --sym-glow-gold:  0 0 24px color-mix(in srgb, var(--sym-gold) 30%, transparent);
+
+  color-scheme: dark;
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+
+/* ─── Subtle vignette + gold dust on the page void ──────────────────
+   Pure CSS, no asset. Keeps the black from feeling flat.  */
+.theme-obsidian {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, color-mix(in srgb, var(--sym-gold) 9%, transparent), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in srgb, var(--sym-gold) 5%, transparent), transparent 55%),
+    var(--sym-bg);
+  background-attachment: fixed;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Component skins — opt-in classes. Use alongside your existing markup.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── Gold hairline card ───────────────────────────────────────────── */
+.theme-obsidian .ob-card {
+  background: var(--sym-bg-card);
+  border: 1px solid var(--sym-hairline);
+  position: relative;
+  transition: border-color .3s ease, transform .35s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+}
+.theme-obsidian .ob-card:hover {
+  border-color: color-mix(in srgb, var(--sym-gold) 45%, transparent);
+  box-shadow: var(--sym-glow-gold);
+  transform: translateY(-3px);
+}
+/* gold top-edge that lights on hover */
+.theme-obsidian .ob-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 1px;
+  background: var(--sym-gold-grad); opacity: 0; transition: opacity .3s;
+}
+.theme-obsidian .ob-card:hover::before { opacity: 1; }
+
+/* ─── Gold-leaf text (headings / numerals) ─────────────────────────── */
+.theme-obsidian .ob-gold {
+  background: var(--sym-gold-grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* ─── Primary gold button ──────────────────────────────────────────── */
+.theme-obsidian .ob-btn {
+  background: var(--sym-gold-grad);
+  color: #1A1304;
+  border: none;
+  font-family: var(--sym-font-mono);
+  font-size: 11px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;
+  padding: 14px 22px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: transform .25s, box-shadow .25s, filter .25s;
+}
+.theme-obsidian .ob-btn:hover { transform: translateY(-2px); box-shadow: var(--sym-glow-gold); filter: brightness(1.06); }
+
+/* ─── Ghost (outline-gold) button ──────────────────────────────────── */
+.theme-obsidian .ob-btn-ghost {
+  background: transparent; color: var(--sym-gold);
+  border: 1px solid color-mix(in srgb, var(--sym-gold) 40%, transparent);
+  font-family: var(--sym-font-mono);
+  font-size: 11px; letter-spacing: 2px; font-weight: 600; text-transform: uppercase;
+  padding: 13px 20px; cursor: pointer;
+  transition: background .25s, border-color .25s, color .25s;
+}
+.theme-obsidian .ob-btn-ghost:hover {
+  background: color-mix(in srgb, var(--sym-gold) 12%, transparent);
+  border-color: var(--sym-gold);
+}
+
+/* ─── Hairline / divider ───────────────────────────────────────────── */
+.theme-obsidian .ob-rule { height: 1px; border: none; background: var(--sym-hairline); }
+.theme-obsidian .ob-rule-grad { height: 1px; border: none;
+  background: linear-gradient(90deg, transparent, var(--sym-gold), transparent); opacity: .6; }
+
+/* ─── Mono eyebrow label ───────────────────────────────────────────── */
+.theme-obsidian .ob-eyebrow {
+  font-family: var(--sym-font-mono);
+  font-size: 11px; letter-spacing: 2.6px; text-transform: uppercase;
+  color: var(--sym-gold);
+}
+
+/* ─── Focus ring (a11y) ────────────────────────────────────────────── */
+.theme-obsidian :focus-visible {
+  outline: 2px solid var(--sym-gold-lt);
+  outline-offset: 2px;
+}
+
+/* ─── The "ON" power pivot keeps its terra glow in Obsidian ───────── */
+.theme-obsidian .logo > span,
+.theme-obsidian .logo .logo__text > span,
+.theme-obsidian .logo .logo__wordmark > span,
+.theme-obsidian .footer-logo > span,
+.theme-obsidian .auth-modal-logo > span {
+  color: var(--sym-terra);
+  text-shadow: 0 0 14px rgba(224,132,86,.55), 0 0 30px rgba(224,132,86,.22);
+}
+
+/* Override the #page-home gold rule in identity.css (higher specificity via ID) */
+.theme-obsidian #page-home .logo > span,
+.theme-obsidian #page-home .logo .logo__wordmark > span {
+  color: var(--sym-terra);
+  text-shadow: 0 0 14px rgba(224,132,86,.55), 0 0 30px rgba(224,132,86,.22);
+}
+
+/* ─── Background-symbol watermark helper ───────────────────────────── */
+.theme-obsidian .ob-watermark {
+  color: var(--sym-gold);
+  opacity: .05;
+  pointer-events: none;
+  position: absolute;
+}

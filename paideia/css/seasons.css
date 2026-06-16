@@ -1,0 +1,204 @@
+﻿/* ════════════════════════════════════════════════════════════════════
+   SymposiON · seasons.css   —  seasonal theme overlays  (OFF by default)
+   ────────────────────────────────────────────────────────────────────
+   Each season is a class you opt into on <body> (or any wrapper):
+       .season-halloween   ·  mythic underworld — dark + pumpkin orange
+       .season-christmas   ·  winter — light cream + red / gold / pine
+       .season-easter      ·  spring — light pastel + bloom
+       .season-carnival    ·  Apokries — Venetian purple + gold + magenta
+   They override the same --sym-* tokens the base palettes use, so every
+   panel / avatar / animation re-tints automatically. Nothing changes
+   until you add the class — safe to ship and flip on later.
+
+   Also exposed as [data-season="…"] for JS that prefers attributes.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────
+   HALLOWEEN · mythic underworld   (dark, pumpkin-orange forward)
+───────────────────────────────────────────────────────────────────── */
+.season-halloween, [data-season="halloween"] {
+  --sym-bg-dark:   #120A18;
+  --sym-bg-panel:  #1C1226;
+  --sym-bg-light:  #F3E9DD;
+
+  --sym-ink:       #160B14;
+  --sym-cream:     #F2E7D8;
+  --sym-stone:     #8A7596;
+
+  --sym-terra:     #ED7A28;   /* pumpkin — the lit ON */
+  --sym-terra-dk:  #C85E12;
+  --sym-gold:      #E0962E;   /* ember */
+  --sym-sage:      #6E9450;
+  --sym-aegean:    #7E5AA6;   /* underworld violet */
+
+  --sym-bg:        var(--sym-bg-dark);
+  --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);
+  --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    var(--sym-terra);
+  --sym-hairline:  color-mix(in srgb, var(--sym-terra) 20%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, var(--sym-terra) 34%, transparent);
+  color-scheme: dark;
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+.season-halloween, [data-season="halloween"] {
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% -10%, color-mix(in srgb, var(--sym-terra) 16%, transparent), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 100% 100%, color-mix(in srgb, var(--sym-aegean) 22%, transparent), transparent 55%),
+    var(--sym-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   CHRISTMAS · winter   (LIGHT — snow cream, red + gold + pine)
+───────────────────────────────────────────────────────────────────── */
+.season-christmas, [data-season="christmas"] {
+  --sym-bg-dark:   #FAF5EE;   /* "primary surface" is light here */
+  --sym-bg-panel:  #FFFFFF;
+  --sym-bg-light:  #FFFFFF;
+
+  --sym-ink:       #2A1713;
+  --sym-cream:     #2A1713;   /* fg-on-light reads as ink */
+  --sym-stone:     #8A6F62;
+
+  --sym-terra:     #B5302A;   /* christmas red — the lit ON */
+  --sym-terra-dk:  #8E211D;
+  --sym-gold:      #BC9438;
+  --sym-sage:      #2F6B47;   /* pine */
+  --sym-aegean:    #3E6B7A;
+
+  --sym-bg:        var(--sym-bg-dark);
+  --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-ink);
+  --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    var(--sym-terra);
+  --sym-hairline:  color-mix(in srgb, var(--sym-terra) 22%, transparent);
+  --sym-glow-gold: 0 6px 22px color-mix(in srgb, var(--sym-terra) 20%, transparent);
+  color-scheme: light;
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+.season-christmas, [data-season="christmas"] {
+  background-image:
+    radial-gradient(circle 1.5px at 12% 18%, color-mix(in srgb, var(--sym-gold) 50%, transparent) 50%, transparent 51%),
+    radial-gradient(circle 1.5px at 72% 30%, color-mix(in srgb, var(--sym-terra) 30%, transparent) 50%, transparent 51%),
+    radial-gradient(circle 1.5px at 44% 70%, color-mix(in srgb, var(--sym-sage) 35%, transparent) 50%, transparent 51%),
+    radial-gradient(circle 1.5px at 88% 82%, color-mix(in srgb, var(--sym-gold) 45%, transparent) 50%, transparent 51%),
+    linear-gradient(180deg, #FFFDF9, var(--sym-bg-dark));
+  background-size: 220px 220px, 260px 260px, 300px 300px, 240px 240px, 100% 100%;
+}
+/* on a light season, the wordmark "ON" softens (no heavy glow) */
+.season-christmas .logo > span, [data-season="christmas"] .logo > span,
+.season-easter .logo > span, [data-season="easter"] .logo > span {
+  text-shadow: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   EASTER · spring   (LIGHT — bloom cream, fresh green + coral + lilac)
+───────────────────────────────────────────────────────────────────── */
+.season-easter, [data-season="easter"] {
+  --sym-bg-dark:   #F6F6EC;
+  --sym-bg-panel:  #FFFFFF;
+  --sym-bg-light:  #FFFFFF;
+
+  --sym-ink:       #243218;
+  --sym-cream:     #243218;
+  --sym-stone:     #7E8568;
+
+  --sym-terra:     #DE7E6A;   /* warm coral — the lit ON */
+  --sym-terra-dk:  #C25C48;
+  --sym-gold:      #C9A93F;
+  --sym-sage:      #5FA05A;   /* spring green */
+  --sym-aegean:    #9277B8;   /* lilac */
+
+  --sym-bg:        var(--sym-bg-dark);
+  --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-ink);
+  --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    var(--sym-terra);
+  --sym-hairline:  color-mix(in srgb, var(--sym-sage) 26%, transparent);
+  --sym-glow-gold: 0 6px 22px color-mix(in srgb, var(--sym-sage) 22%, transparent);
+  color-scheme: light;
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+.season-easter, [data-season="easter"] {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 0% 0%, color-mix(in srgb, var(--sym-sage) 14%, transparent), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in srgb, var(--sym-aegean) 14%, transparent), transparent 55%),
+    var(--sym-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   CARNIVAL · Apokries   (Venetian — deep purple, gold, festive magenta)
+───────────────────────────────────────────────────────────────────── */
+.season-carnival, [data-season="carnival"] {
+  --sym-bg-dark:   #160A1E;
+  --sym-bg-panel:  #241036;
+  --sym-bg-light:  #F2E9F2;
+
+  --sym-ink:       #170A1E;
+  --sym-cream:     #F1E6F0;
+  --sym-stone:     #9A7FA8;
+
+  --sym-terra:     #D4499A;   /* festive magenta — the lit ON */
+  --sym-terra-dk:  #B12F7E;
+  --sym-gold:      #E3BB4B;
+  --sym-sage:      #3FA396;   /* teal */
+  --sym-aegean:    #5E73D6;   /* indigo */
+
+  --sym-bg:        var(--sym-bg-dark);
+  --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);
+  --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    var(--sym-terra);
+  --sym-hairline:  color-mix(in srgb, var(--sym-gold) 22%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, var(--sym-gold) 30%, transparent);
+  color-scheme: dark;
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+.season-carnival, [data-season="carnival"] {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 12% 0%, color-mix(in srgb, var(--sym-terra) 22%, transparent), transparent 55%),
+    radial-gradient(ellipse 55% 50% at 92% 12%, color-mix(in srgb, var(--sym-sage) 20%, transparent), transparent 52%),
+    radial-gradient(ellipse 60% 60% at 70% 100%, color-mix(in srgb, var(--sym-aegean) 24%, transparent), transparent 58%),
+    var(--sym-bg);
+}
+
+/* ─── SEASON → LEGACY VARIABLE BRIDGE ─────────────────────────────── */
+/* Same mapping as reimagined-palettes.css so .season-* classes also
+   update the old-style vars used across main.css components.           */
+.season-halloween, .season-christmas, .season-easter, .season-carnival,
+[data-season="halloween"], [data-season="christmas"],
+[data-season="easter"],    [data-season="carnival"] {
+  --dark-base:   var(--sym-bg-dark,  #18100A);
+  --dark-panel:  var(--sym-bg-panel, #201408);
+  --dark-border: var(--sym-hairline, rgba(195,165,105,0.14));
+  --gold:        var(--sym-gold,     #9C8238);
+  --gold-light:  var(--sym-gold-lt,  #C4A448);
+  --sage:        var(--sym-sage,     #6A8752);
+  --sage-dark:   color-mix(in srgb, var(--sym-sage, #6A8752) 75%, #000000);
+  --sage-light:  color-mix(in srgb, var(--sym-sage, #6A8752) 60%, #ffffff);
+  --stone:       var(--sym-stone,    #867660);
+  --espresso:    var(--sym-ink,      #221B10);
+  --charcoal:    color-mix(in srgb, var(--sym-ink, #221B10) 65%, var(--sym-fg, #F0EBE0));
+  --alabaster:   var(--sym-bg-light, #F6F2EB);
+  --linen:       color-mix(in srgb, var(--sym-bg-light, #EBE5D7) 80%, var(--sym-stone, #867660));
+  --parchment:   color-mix(in srgb, var(--sym-bg-light, #D9D0BE) 60%, var(--sym-stone, #867660));
+  --warm-white:  var(--sym-bg-panel, #201408);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Shared seasonal flourishes (apply to any season wrapper)
+───────────────────────────────────────────────────────────────────── */
+/* a ribbon "in season" chip you can drop on panels */
+[class*="season-"] .sym-season-chip, [data-season] .sym-season-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--sym-font-mono, monospace); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--sym-accent); border: 1px solid color-mix(in srgb, var(--sym-accent) 45%, transparent);
+  padding: 5px 11px;
+}
+[class*="season-"] .sym-season-chip::before, [data-season] .sym-season-chip::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--sym-accent);
+}

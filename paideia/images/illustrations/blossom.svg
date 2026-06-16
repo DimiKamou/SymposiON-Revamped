@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Blossom">
+  <circle cx="50" cy="50" r="6"></circle>
+  <path d="M 50 44 Q 44 30 50 26 Q 56 30 50 44"></path>
+  <path d="M 56 50 Q 70 44 74 50 Q 70 56 56 50"></path>
+  <path d="M 50 56 Q 56 70 50 74 Q 44 70 50 56"></path>
+  <path d="M 44 50 Q 30 56 26 50 Q 30 44 44 50"></path>
+  <circle cx="50" cy="50" r="2" fill="currentColor" stroke="none"></circle>
+  <path d="M 50 56 L 50 84" opacity="0.5"></path><path d="M 50 72 Q 58 68 62 74" opacity="0.5"></path>
+</svg>

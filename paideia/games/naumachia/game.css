@@ -1,0 +1,589 @@
+/* ============================================================
+   NAUMACHIA — Ναυμαχία  |  game.css
+   Dark earth tones: deep browns, olive greens, dark terracotta.
+   NO beige. Fonts: Raleway (UI) · Cormorant Garamond (display)
+   ============================================================ */
+
+/* ── CSS Variables ──────────────────────────────────────────── */
+#naumachia-overlay {
+  --nc:     34px;             /* cell size */
+  --ng:      2px;             /* grid gap */
+
+  /* Chrome derives from the live front-page theme (--sym-*) so the game
+     background + surfaces + gold accent follow the chosen theme. Gameplay
+     colours (water/ship/hit/…) stay fixed below for legibility. */
+  --nau-bg:     var(--sym-bg, #0C0804);
+  --nau-bg2:    color-mix(in srgb, var(--sym-bg, #110A04) 88%, #000 12%);
+  --nau-surf:   var(--sym-bg-card, #1A1108);
+  --nau-sur2:   color-mix(in srgb, var(--sym-bg-card, #22160A) 82%, var(--sym-fg, #fff) 7%);
+  --nau-brd:    color-mix(in srgb, var(--sym-gold, #b47d32) 22%, transparent);
+  --nau-brdh:   color-mix(in srgb, var(--sym-gold, #c89646) 42%, transparent);
+
+  --nau-txt:    var(--sym-fg, #DDD0AA);
+  --nau-txtm:   var(--sym-stone, #7A6A4A);
+  --nau-txts:   color-mix(in srgb, var(--sym-fg, #9A8A64) 64%, transparent);
+
+  --nau-olive:  #3A4D1E;
+  --nau-olivl:  #506831;
+  --nau-terra:  #622415;
+  --nau-terrl:  #833C26;
+
+  --nau-gold:   var(--sym-gold, #C9A44A);
+  --nau-goldl:  color-mix(in srgb, var(--nau-gold) 78%, #fff 22%);
+  --nau-goldd:  color-mix(in srgb, var(--nau-gold) 60%, #000 40%);
+
+  --nau-water:  #0D1D2C;
+  --nau-watl:   #132535;
+
+  --nau-hit:    #B83020;
+  --nau-miss:   #1A2E3E;
+  --nau-ship:   #2C1D0A;
+  --nau-sunk:   #6A1E10;
+
+  --nau-ok:     #3A6025;
+  --nau-bad:    #6A2020;
+
+  --nau-prev-ok:  rgba(58, 96, 37, 0.50);
+  --nau-prev-bad: rgba(106, 32, 32, 0.55);
+}
+
+/* ── Root ───────────────────────────────────────────────────── */
+.nau-root {
+  width: 100%; height: 100%;
+  background: var(--nau-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Raleway', sans-serif;
+  color: var(--nau-txt);
+}
+
+/* ── Phases ─────────────────────────────────────────────────── */
+.nau-phase {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+.nau-phase.active { display: flex; }
+
+/* ── Menu ───────────────────────────────────────────────────── */
+.nau-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.nau-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: var(--nau-gold);
+  text-align: center;
+  line-height: 1;
+  margin: 0;
+  text-shadow: 0 0 60px color-mix(in srgb, var(--nau-gold) 25%, transparent);
+}
+
+.nau-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--nau-txtm);
+  letter-spacing: 0.14em;
+  margin: -14px 0 0;
+  text-align: center;
+}
+
+.nau-hr {
+  width: 72px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--nau-goldd), transparent);
+}
+
+.nau-menu-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.nau-btn {
+  padding: 12px 24px;
+  border: 1px solid var(--nau-brd);
+  background: var(--nau-surf);
+  color: var(--nau-txt);
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.16s, border-color 0.16s, color 0.16s;
+  text-align: center;
+  width: 100%;
+}
+.nau-btn:hover:not(:disabled) {
+  background: var(--nau-sur2);
+  border-color: var(--nau-brdh);
+  color: var(--nau-goldl);
+}
+.nau-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.nau-btn-primary {
+  background: var(--nau-olive);
+  border-color: var(--nau-olivl);
+}
+.nau-btn-primary:hover:not(:disabled) {
+  background: var(--nau-olivl);
+  border-color: rgba(80,104,49,0.8);
+  color: var(--nau-txt);
+}
+
+.nau-btn-sm { padding: 8px 16px; font-size: 0.76rem; width: auto; }
+
+.nau-btn-danger { border-color: rgba(150,50,30,0.35); }
+.nau-btn-danger:hover:not(:disabled) {
+  background: var(--nau-terra);
+  border-color: var(--nau-terrl);
+  color: #f0cfc0;
+}
+
+/* ── Matchmaking ─────────────────────────────────────────────── */
+.nau-matchmaking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  text-align: center;
+  max-width: 360px;
+}
+
+.nau-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid var(--nau-brd);
+  border-top-color: var(--nau-gold);
+  border-radius: 50%;
+  animation: nauSpin 0.85s linear infinite;
+}
+@keyframes nauSpin { to { transform: rotate(360deg); } }
+
+.nau-code-box {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  letter-spacing: 0.35em;
+  color: var(--nau-gold);
+  background: var(--nau-surf);
+  border: 1px solid var(--nau-brd);
+  padding: 10px 28px;
+  border-radius: 2px;
+}
+
+/* ── Placement ───────────────────────────────────────────────── */
+.nau-place-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 700px;
+}
+
+.nau-place-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.nau-place-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--nau-gold);
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+.nau-place-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.nau-place-body {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* ── Ship Dock ───────────────────────────────────────────────── */
+.nau-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 155px;
+}
+.nau-dock-hd {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nau-txtm);
+  margin-bottom: 2px;
+}
+
+.nau-dock-ship {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--nau-surf);
+  border: 1px solid var(--nau-brd);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+}
+.nau-dock-ship:hover:not(.nau-placed):not(.nau-selected) {
+  background: var(--nau-sur2);
+  border-color: var(--nau-brdh);
+}
+.nau-dock-ship.nau-selected {
+  border-color: var(--nau-gold);
+  background: color-mix(in srgb, var(--nau-gold) 8%, transparent);
+}
+.nau-dock-ship.nau-placed {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+.nau-dock-name {
+  font-size: 0.8rem;
+  color: var(--nau-txt);
+  min-width: 72px;
+  font-weight: 500;
+}
+.nau-dock-blocks { display: flex; gap: 3px; }
+.nau-dock-block {
+  width: 12px; height: 12px;
+  background: var(--nau-olivl);
+  border-radius: 1px;
+}
+
+/* ── Grid ────────────────────────────────────────────────────── */
+.nau-board-sec {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.nau-board-lbl {
+  font-size: 0.62rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--nau-txtm);
+  font-weight: 600;
+}
+
+.nau-grid-outer {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  grid-template-rows: 16px 1fr;
+  gap: 2px;
+}
+
+.nau-col-labels {
+  grid-column: 2; grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(10, var(--nc));
+  gap: var(--ng);
+}
+.nau-row-labels {
+  grid-column: 1; grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(10, var(--nc));
+  gap: var(--ng);
+}
+.nau-ax-lbl {
+  font-size: 0.58rem;
+  color: var(--nau-txtm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Raleway', sans-serif;
+  letter-spacing: 0;
+}
+
+.nau-grid-wrap {
+  grid-column: 2; grid-row: 2;
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.nau-grid {
+  display: grid;
+  grid-template-columns: repeat(10, var(--nc));
+  grid-template-rows: repeat(10, var(--nc));
+  gap: var(--ng);
+  background: var(--nau-water);
+  padding: var(--ng);
+  border: 1px solid var(--nau-brd);
+}
+
+/* ── Cells ───────────────────────────────────────────────────── */
+.nau-cell {
+  width: var(--nc); height: var(--nc);
+  background: var(--nau-watl);
+  border-radius: 1px;
+  transition: background 0.1s;
+  position: relative;
+  cursor: default;
+  box-sizing: border-box;
+}
+
+.nau-cell.ship      { background: var(--nau-ship); border: 1px solid rgba(160,110,50,0.22); }
+.nau-cell.hit       { background: var(--nau-hit); }
+.nau-cell.miss      { background: var(--nau-miss); }
+.nau-cell.sunk      { background: var(--nau-sunk); }
+.nau-cell.prev-ok   { background: var(--nau-prev-ok) !important; }
+.nau-cell.prev-bad  { background: var(--nau-prev-bad) !important; }
+
+.nau-cell.hit::after {
+  content: '×';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 700;
+  color: rgba(255, 175, 140, 0.9);
+}
+.nau-cell.miss::after {
+  content: '·';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; line-height: 1;
+  color: rgba(90, 150, 190, 0.45);
+}
+.nau-cell.sunk::after {
+  content: '⚓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.nau-cell.fire {
+  cursor: crosshair;
+}
+.nau-cell.fire:hover {
+  background: color-mix(in srgb, var(--nau-gold) 15%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--nau-gold) 38%, transparent);
+  outline-offset: -1px;
+}
+
+/* ── Particle canvas ─────────────────────────────────────────── */
+.nau-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* ── Screen shake ─────────────────────────────────────────────── */
+@keyframes nauShake {
+  0%,100% { transform: translate(0,0) rotate(0deg); }
+  15%     { transform: translate(-5px, 3px) rotate(-0.4deg); }
+  30%     { transform: translate(4px, -4px) rotate(0.3deg); }
+  50%     { transform: translate(-4px, 4px) rotate(-0.3deg); }
+  70%     { transform: translate(5px, -2px) rotate(0.2deg); }
+  85%     { transform: translate(-3px, 3px) rotate(-0.2deg); }
+}
+.nau-shake { animation: nauShake 0.38s ease-out; }
+
+/* ── Combat phase ────────────────────────────────────────────── */
+.nau-combat-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.nau-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 820px;
+  width: 100%;
+  padding: 9px 16px;
+  background: var(--nau-surf);
+  border: 1px solid var(--nau-brd);
+  border-radius: 2px;
+  flex-wrap: wrap;
+  gap: 8px;
+  box-sizing: border-box;
+}
+.nau-status-txt {
+  font-size: 0.82rem;
+  letter-spacing: 0.07em;
+  transition: color 0.3s;
+}
+.nau-status-txt.myturn  { color: var(--nau-goldl); }
+.nau-status-txt.waiting { color: var(--nau-txtm); }
+.nau-status-txt.wrong   { color: var(--nau-terrl); }
+
+.nau-ships-rem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.76rem;
+}
+.nau-ships-rem .me    { color: var(--nau-olivl); }
+.nau-ships-rem .vs    { color: var(--nau-txtm); }
+.nau-ships-rem .them  { color: var(--nau-terrl); }
+
+.nau-boards-wrap {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ── Question modal ───────────────────────────────────────────── */
+.nau-q-overlay {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--sym-bg, #080502) 88%, transparent);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+}
+.nau-q-overlay.active { display: flex; }
+
+.nau-q-modal {
+  background: var(--nau-surf);
+  border: 1px solid var(--nau-brdh);
+  border-radius: 3px;
+  padding: 26px 28px;
+  max-width: 430px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: nauModalIn 0.22s ease-out both;
+}
+@keyframes nauModalIn {
+  from { transform: scale(0.93) translateY(8px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.nau-q-hd {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  color: var(--nau-gold);
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 1px solid var(--nau-brd);
+  padding-bottom: 12px;
+}
+
+.nau-q-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.18rem;
+  line-height: 1.55;
+  color: var(--nau-txt);
+  text-align: center;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.nau-q-opts { display: flex; flex-direction: column; gap: 7px; }
+
+.nau-q-opt {
+  padding: 10px 14px;
+  background: var(--nau-sur2);
+  border: 1px solid var(--nau-brd);
+  border-radius: 2px;
+  color: var(--nau-txt);
+  font-family: 'Noto Serif', 'Cormorant Garamond', serif;
+  font-size: 0.97rem;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.nau-q-opt:hover { background: color-mix(in srgb, var(--nau-sur2) 80%, transparent); border-color: var(--nau-brdh); }
+.nau-q-opt.correct {
+  background: rgba(48, 88, 30, 0.45);
+  border-color: rgba(80, 140, 50, 0.6);
+  color: #b8e898;
+}
+.nau-q-opt.wrong {
+  background: rgba(90, 28, 28, 0.45);
+  border-color: rgba(150, 50, 50, 0.6);
+  color: #e8a0a0;
+}
+.nau-q-opt:disabled { cursor: default; }
+
+/* ── Game over ───────────────────────────────────────────────── */
+.nau-over {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  max-width: 380px;
+}
+.nau-over-icon  { font-size: 3.8rem; line-height: 1; }
+.nau-over-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--nau-gold);
+  margin: 0;
+  letter-spacing: 0.1em;
+}
+.nau-over-msg {
+  color: var(--nau-txtm);
+  font-size: 0.88rem;
+  margin: 0;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+}
+.nau-over-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  #naumachia-overlay { --nc: 30px; }
+  .nau-boards-wrap   { gap: 16px; }
+  .nau-place-body    { flex-direction: column; align-items: center; }
+}
+
+/* On phones, stack boards vertically so cells stay ≥ 34 px (touch-friendly).
+   Two 10×10 grids side-by-side at 30 px = ≈ 628 px — wider than a phone screen.
+   Stacking them gives each board its own full-width row.                      */
+@media (max-width: 520px) {
+  #naumachia-overlay { --nc: 34px; }   /* restore near-desktop cell size */
+  .nau-boards-wrap {
+    flex-direction: column;            /* YOUR board on top, ENEMY below  */
+    gap: 20px;
+    align-items: center;
+  }
+  .nau-q-modal { padding: 18px 14px; }
+}

@@ -1,0 +1,51 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "custom_games",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "creatorId", "order": "ASCENDING"  },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "global_leaderboards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "configId", "order": "ASCENDING"  },
+        { "fieldPath": "score",    "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "global_leaderboards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "configId", "order": "ASCENDING"  },
+        { "fieldPath": "uid",      "order": "ASCENDING"  },
+        { "fieldPath": "score",    "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "global_leaderboards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "configId",  "order": "ASCENDING"  },
+        { "fieldPath": "uid",       "order": "ASCENDING"  },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "naumachia_matches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",    "order": "ASCENDING"  },
+        { "fieldPath": "createdAt", "order": "ASCENDING"  }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Torch">
+  <path d="M 50 14 Q 40 24 42 36 Q 36 32 38 42 Q 30 36 32 50 Q 38 60 50 60 Q 62 60 68 50 Q 70 36 62 42 Q 64 32 58 36 Q 60 24 50 14 Z"></path>
+  <path d="M 46 30 Q 44 38 48 46" stroke-opacity="0.5"></path>
+  <path d="M 54 30 Q 56 38 52 46" stroke-opacity="0.5"></path>
+  <rect x="42" y="60" width="16" height="6"></rect>
+  <rect x="44" y="66" width="12" height="22"></rect>
+  <line x1="44" y1="72" x2="56" y2="72" stroke-opacity="0.5"></line>
+  <line x1="44" y1="78" x2="56" y2="78" stroke-opacity="0.5"></line>
+  <rect x="40" y="88" width="20" height="4"></rect>
+  <line x1="38" y1="48" x2="32" y2="44" stroke-opacity="0.5"></line>
+  <line x1="62" y1="48" x2="68" y2="44" stroke-opacity="0.5"></line>
+  <line x1="50" y1="18" x2="50" y2="10" stroke-opacity="0.7"></line>
+</svg>

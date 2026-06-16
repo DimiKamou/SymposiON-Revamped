@@ -1,0 +1,43 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · mediterranean.css
+   Warm-coast accent layer. Load AFTER theme-obsidian.css. Adds accent
+   tokens + texture utilities. Gold + terra remain the brand spine;
+   these are for banners, seasonal moments, subject moods, charts.
+   ════════════════════════════════════════════════════════════════════ */
+.theme-obsidian,
+:root {
+  --med-aegean:     #4E8A99;
+  --med-aegean-lt:  #6FB0BE;
+  --med-terracotta: #C96A45;
+  --med-olive:      #7E8C4A;
+  --med-sun:        #E6B84C;
+  --med-limewash:   #EDE6D4;
+  --med-wine:       #7A2E33;
+}
+
+/* Texture utilities — pure CSS, but two reference bg-symbols for the
+   sea + sun overlays. Apply as a class on any block. */
+.med-tex-plaster {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.06), transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(0,0,0,.18), transparent 50%),
+    linear-gradient(135deg, var(--med-limewash), #D8CFB8);
+}
+.med-tex-sea {
+  background: linear-gradient(180deg, #10222E, var(--med-aegean));
+  position: relative;
+}
+.med-tex-sea::before {
+  content: ""; position: absolute; inset: 0; opacity: .25; color: #BFE0E8;
+  background-image: url('../images/bg-symbols/wave-band.svg');
+  background-repeat: repeat; background-size: 160px auto; pointer-events: none;
+}
+.med-tex-sun {
+  background: radial-gradient(circle at 50% 120%, var(--med-sun), var(--med-terracotta) 70%);
+  position: relative;
+}
+.med-tex-sun::before {
+  content: ""; position: absolute; inset: 0; opacity: .18; color: #fff;
+  background-image: url('../images/bg-symbols/sunburst.svg');
+  background-position: center 130%; background-size: 200px; background-repeat: no-repeat; pointer-events: none;
+}

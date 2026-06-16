@@ -1,0 +1,1159 @@
+/* ══════════════════════════════════════════════════════════════════════
+   paideia/css/subject-page.css
+   Inner subject page — sx-* component system.
+   Companion to subject-panel.css. Loaded after it in index.html.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Per-subject tint routing ──────────────────────────────────────── */
+.subject-page { --tint: var(--sym-gold, #C4A448); }
+
+.subject-page[data-subject="odyssey"]      { --tint: var(--sym-terra, #D97B5C); }
+.subject-page[data-subject="history"]      { --tint: var(--sym-sage,  #6A8752); }
+.subject-page[data-subject="modern-greek"] { --tint: var(--sym-sage,  #6A8752); }
+.subject-page[data-subject="tragedy"]      { --tint: var(--sym-terra, #D97B5C); }
+.subject-page[data-subject="latin"]        { --tint: #9E8A4E; }
+.subject-page[data-subject="literature"]   { --tint: #9E8A4E; }
+
+/* ── Reset old chrome when subject-page is active ──────────────────── */
+.subject-page #subject-hero-el        { display: none !important; }
+.subject-page .games-content          { background: transparent !important;
+                                        padding: 0 !important;
+                                        max-width: none !important; }
+.subject-page .games-content .games-grid { display: none !important; }
+
+/* ── Page shell — block stacking, no flex (prevents grid auto-fill collapse) */
+.subject-page .games-content {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-hero {
+  background: var(--sym-bg-card, #1A130C);
+  border: 1px solid color-mix(in srgb, var(--tint) 20%, transparent);
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sx-hero-main {
+  padding: 46px 52px 42px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  border-right: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+}
+
+.sx-hero-crumb {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #867660;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sx-hero-crumb .sep  { opacity: 0.5; }
+.sx-hero-crumb .here { color: var(--tint); }
+
+.sx-hero-roman {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--tint);
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sx-hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 62px;
+  line-height: 0.95;
+  margin: 0 0 6px;
+  letter-spacing: -1.5px;
+  color: var(--sym-fg, #F0EBE0);
+}
+
+.sx-hero .latin {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  color: color-mix(in srgb, var(--tint) 75%, white 25%);
+  font-size: 20px;
+  margin: 0 0 22px;
+}
+
+.sx-hero .summary {
+  color: rgba(240, 235, 224, 0.78);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0;
+}
+
+.sx-hero-stats {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+  border-top: 1px solid color-mix(in srgb, var(--tint) 20%, transparent);
+  padding-top: 24px;
+}
+
+.sx-hero-stat {
+  padding-right: 32px;
+  border-right: 1px dashed rgba(196, 164, 72, 0.18);
+  margin-right: 32px;
+}
+.sx-hero-stat:last-child { border: none; margin: 0; padding: 0; }
+
+/* ── QR / Share button in hero stats ── */
+.sx-qr-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  background: color-mix(in srgb, var(--tint) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+  color: var(--tint);
+  padding: 9px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+  white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.sx-qr-btn:hover {
+  background: color-mix(in srgb, var(--tint) 20%, transparent);
+  border-color: var(--tint);
+}
+.sx-qr-btn svg { flex-shrink: 0; }
+
+.sx-hero-stat .n {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-weight: 500;
+  color: var(--tint);
+  line-height: 1;
+}
+
+.sx-hero-stat .l {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #867660;
+  margin-top: 8px;
+}
+
+/* Ornament column */
+.sx-hero-orn {
+  position: relative;
+  padding: 42px;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 60% 30%, color-mix(in srgb, var(--tint) 18%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--tint) 8%, transparent), transparent);
+  overflow: hidden;
+}
+
+.sx-hero-orn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0 18px,
+    color-mix(in srgb, var(--tint) 4%, transparent) 18px 19px
+  );
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.sx-hero-orn .glyph {
+  position: absolute;
+  right: -30px;
+  bottom: -30px;
+  width: 280px;
+  height: 280px;
+  color: var(--tint);
+  opacity: 0.16;
+  transform: rotate(-8deg);
+}
+
+.sx-hero-orn .glyph svg,
+.sx-hero-orn .glyph-fg svg {
+  width: 100%;
+  height: 100%;
+  color: inherit;
+}
+
+.sx-hero-orn .glyph-fg {
+  position: relative;
+  z-index: 2;
+  width: 96px;
+  height: 96px;
+  color: var(--tint);
+  margin: auto auto 0 0;
+}
+
+.sx-hero-orn .tag {
+  position: relative;
+  z-index: 2;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 2.4px;
+  color: var(--tint);
+  text-transform: uppercase;
+  font-weight: 600;
+  align-self: flex-end;
+  border: 1px solid color-mix(in srgb, var(--tint) 40%, transparent);
+  padding: 5px 10px;
+}
+
+.sx-hero-orn .play-all {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  background: var(--tint);
+  color: #1A1208;
+  border: none;
+  padding: 14px 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform .25s, background .25s;
+  width: 100%;
+}
+.sx-hero-orn .play-all:hover { background: #fff; transform: translateX(4px); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FILTER STRIP (optional)
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-filter {
+  margin-top: 18px;
+  background: var(--sym-bg-card, #1A130C);
+  border: 1px solid rgba(196, 164, 72, 0.14);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-items: center;
+}
+
+.sx-filter-label {
+  padding: 14px 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #867660;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(196, 164, 72, 0.14);
+}
+
+.sx-filter-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  color: rgba(240, 235, 224, 0.65);
+  font-family: 'Inter', inherit;
+  font-size: 13px;
+  border-right: 1px solid rgba(196, 164, 72, 0.08);
+  letter-spacing: 0.2px;
+  transition: color .2s, background .2s;
+}
+.sx-filter-btn:hover { color: #F0EBE0; background: rgba(196, 164, 72, 0.05); }
+.sx-filter-btn.active {
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 10%, transparent);
+  border-bottom: 2px solid var(--tint);
+}
+.sx-filter-btn .count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  margin-left: 8px;
+  opacity: 0.55;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TILES GRID
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-tiles-wrap {
+  margin-top: 30px;
+  padding: 0 0 60px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sx-tiles-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sx-tiles-header h2 {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: -0.3px;
+  color: var(--sym-fg, #F0EBE0);
+}
+
+.sx-tiles-header .meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #867660;
+}
+
+.sx-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 1100px) {
+  .sx-tiles { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  /* 2-col on landscape phones / small tablets, 1-col in portrait */
+  .sx-tiles { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+}
+@media (max-width: 400px) {
+  .sx-tiles { grid-template-columns: 1fr; }
+}
+
+/* ── Individual sx-tile ────────────────────────────────────────────── */
+.sx-tile {
+  background: var(--sym-bg-card, #1A130C);
+  border: 1px solid color-mix(in srgb, var(--tint) 22%, transparent);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: transform .35s cubic-bezier(.16, 1, .3, 1), border-color .3s, box-shadow .3s;
+  overflow: hidden;
+  position: relative;
+}
+.sx-tile:hover {
+  transform: translateY(-4px);
+  border-color: var(--tint);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--tint) 22%, transparent);
+}
+.sx-tile::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: var(--tint);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.sx-tile:hover::before { opacity: 1; }
+
+/* Banner */
+.sx-tile-banner {
+  height: 140px;
+  background:
+    radial-gradient(circle at 70% 40%, color-mix(in srgb, var(--tint) 22%, transparent) 0%, transparent 60%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--tint) 6%, transparent) 0%,
+      color-mix(in srgb, var(--tint) 16%, transparent) 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--tint) 18%, transparent);
+  color: var(--tint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.sx-tile-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 22px,
+    color-mix(in srgb, var(--tint) 4%, transparent) 22px 23px
+  );
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.sx-tile-banner .glyph {
+  width: 80px;
+  height: 80px;
+  color: var(--tint);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sx-tile-banner .glyph svg {
+  width: 100%;
+  height: 100%;
+  color: inherit;
+}
+
+.sx-tile-banner .num {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--tint);
+  opacity: 0.7;
+  z-index: 2;
+}
+
+.sx-tile-banner .tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 1.8px;
+  color: var(--tint);
+  text-transform: uppercase;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--tint) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+  padding: 3px 7px;
+  z-index: 2;
+}
+
+/* Body */
+.sx-tile-body {
+  padding: 20px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sx-tile-body h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.3px;
+  margin: 0;
+  line-height: 1.15;
+  color: var(--sym-fg, #F0EBE0);
+}
+
+.sx-tile-body .latin {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  color: color-mix(in srgb, var(--tint) 75%, white 25%);
+  font-size: 13px;
+  margin: 0;
+}
+
+.sx-tile-body .desc {
+  color: rgba(240, 235, 224, 0.65);
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+
+/* CTA strip */
+.sx-tile-cta {
+  margin-top: auto;
+  padding: 14px 22px;
+  border-top: 1px solid color-mix(in srgb, var(--tint) 14%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--tint);
+  text-transform: uppercase;
+}
+
+.sx-tile-cta .arrow { transition: transform .25s; }
+.sx-tile:hover .sx-tile-cta .arrow { transform: translateX(4px); }
+
+.sx-tile-cta .meta {
+  font-weight: 400;
+  letter-spacing: 1.4px;
+  color: rgba(240, 235, 224, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RESPONSIVE — subject page hero + tiles
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .sx-hero-main { padding: 36px 32px 32px; }
+  .sx-hero h1   { font-size: 50px; }
+  .sx-hero-orn  { padding: 32px; }
+}
+@media (max-width: 600px) {
+  .sx-hero { grid-template-columns: 1fr; }
+  .sx-hero-orn {
+    min-height: 140px;
+    border-right: none;
+    border-top: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+  }
+  .sx-hero-main { padding: 28px 20px 24px; border-right: none; }
+  .sx-hero h1   { font-size: 42px; }
+  .sx-hero-orn .glyph-fg { width: 56px; height: 56px; }
+  .sx-tiles-wrap { padding-bottom: 40px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   BROWSE PAGE — sx-* overrides
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Tint by category (set via root.dataset.browse in renderBrowseSx) */
+.browse-sx                           { --tint: var(--sym-gold,  #C4A448); }
+.browse-sx[data-browse="lykeio"],
+.browse-sx[data-browse="lyk-a"],
+.browse-sx[data-browse="lyk-b"],
+.browse-sx[data-browse="lyk-c"]      { --tint: var(--sym-terra, #D97B5C); }
+.browse-sx[data-browse="grammatiki"],
+.browse-sx[data-browse="gram-nea"],
+.browse-sx[data-browse="gram-arch"],
+.browse-sx[data-browse="gram-lat"]   { --tint: var(--sym-sage,  #6A8752); }
+
+/* Hide old chrome */
+.browse-sx .browse-header        { display: none !important; }
+.browse-sx .browse-section-label { display: none !important; }
+
+/* Body padding — hero + grid sit flush */
+.browse-sx .browse-body { padding: 0 40px 80px; }
+
+/* Back button — mono breadcrumb style */
+.browse-sx .browse-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  background: transparent; border: none; color: #867660;
+  cursor: pointer; padding: 28px 0 0; transition: color .2s;
+}
+.browse-sx .browse-back:hover { color: var(--tint); }
+
+/* Hero on browse page */
+.bx-hero { margin-bottom: 28px; }
+
+/* Grid: overridden to sx spacing (JS also sets gridTemplateColumns) */
+.browse-sx .browse-grid {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+/* Browse tile tints per key */
+.bx-tile                              { --tint: var(--sym-gold,  #C4A448); }
+.bx-tile[data-bx-key="lykeio"],
+.bx-tile[data-bx-key="lyk-a"],
+.bx-tile[data-bx-key="lyk-b"],
+.bx-tile[data-bx-key="lyk-c"]        { --tint: var(--sym-terra, #D97B5C); }
+.bx-tile[data-bx-key="grammatiki"],
+.bx-tile[data-bx-key="gram-nea"],
+.bx-tile[data-bx-key="gram-arch"],
+.bx-tile[data-bx-key="gram-lat"]     { --tint: var(--sym-sage,  #6A8752); }
+
+.bx-tile.bx-disabled {
+  opacity: 0.35 !important;
+  pointer-events: none !important;
+}
+.bx-tile.bx-disabled .sx-tile-cta { display: none; }
+
+@media (max-width: 640px) {
+  .browse-sx .browse-body { padding: 0 20px 60px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TRIVIA PAGE — sx-* overrides
+   (Keeps existing static HTML; CSS transforms it to match design system)
+   ═══════════════════════════════════════════════════════════════════════ */
+#page-trivia { --tint: var(--sym-gold, #C4A448); }
+
+/* Hero banner */
+#page-trivia .game-hero {
+  background: var(--sym-bg-card, #1A130C) !important;
+  border: 1px solid color-mix(in srgb, var(--tint) 20%, transparent);
+  border-radius: 0 !important;
+  padding: 46px 52px 36px !important;
+}
+#page-trivia .game-hero .grade-pill {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important; letter-spacing: 2.5px !important;
+  text-transform: uppercase; color: var(--tint) !important;
+  background: transparent !important; border: none !important;
+  padding: 0 !important; margin: 0 0 12px !important;
+  display: block !important; border-radius: 0 !important;
+}
+#page-trivia .game-hero h1 {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-weight: 500 !important; font-size: 60px !important;
+  line-height: 0.95 !important; color: #F0EBE0 !important;
+  margin: 0 0 12px !important;
+}
+#page-trivia .game-hero > p {
+  font-size: 14px !important; color: rgba(240,235,224,0.65) !important;
+  margin: 0 0 26px !important; line-height: 1.6 !important;
+}
+#page-trivia .game-hero .filter-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--tint) 15%, transparent);
+  margin: 0 !important;
+}
+#page-trivia .game-hero .ftab {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important; letter-spacing: 2px !important;
+  text-transform: uppercase; padding: 10px 20px !important;
+  color: rgba(240,235,224,0.5) !important;
+  background: transparent !important; border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important; cursor: pointer; margin-bottom: -1px;
+  transition: color .2s, border-color .2s;
+}
+#page-trivia .game-hero .ftab.active {
+  color: var(--tint) !important;
+  border-bottom-color: var(--tint) !important;
+}
+
+/* Tab content */
+#page-trivia .tab-content  { padding: 28px 0; }
+#page-trivia .levels-label {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important; letter-spacing: 2.5px !important;
+  text-transform: uppercase; color: #867660 !important;
+  padding: 0 0 20px !important; margin: 0 !important; display: block;
+}
+#page-trivia .levels-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+/* Level cards → sx-tile look */
+#page-trivia .level-card {
+  background: var(--sym-bg-card, #1A130C) !important;
+  border: 1px solid color-mix(in srgb, var(--tint) 22%, transparent) !important;
+  border-radius: 0 !important; box-shadow: none !important;
+  display: flex !important; flex-direction: column !important;
+  cursor: pointer; overflow: hidden; position: relative;
+  padding: 0 !important;
+  transition: transform .35s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s;
+}
+#page-trivia .level-card:hover:not(.locked) {
+  transform: translateY(-4px) !important;
+  border-color: var(--tint) !important;
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--tint) 22%, transparent) !important;
+}
+#page-trivia .level-card.locked { opacity: 0.5 !important; cursor: not-allowed; }
+#page-trivia .level-card .lock-icon {
+  position: absolute; top: 14px; right: 14px; font-size: 14px; z-index: 2;
+}
+/* level-num = tile banner area */
+#page-trivia .level-card .level-num {
+  padding: 16px 20px 14px !important; margin: 0 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10px !important; letter-spacing: 2.5px !important;
+  text-transform: uppercase; color: var(--tint) !important;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--tint)  6%, transparent),
+    color-mix(in srgb, var(--tint) 16%, transparent)) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--tint) 12%, transparent);
+  min-height: 60px; display: flex !important; align-items: flex-end;
+}
+#page-trivia .level-card .level-title {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-weight: 500 !important; font-size: 21px !important;
+  line-height: 1.1 !important; color: #F0EBE0 !important;
+  padding: 16px 20px 6px !important; margin: 0 !important;
+}
+#page-trivia .level-card .level-desc {
+  font-size: 13px !important; line-height: 1.55 !important;
+  color: rgba(240,235,224,0.6) !important;
+  padding: 0 20px 16px !important; margin: 0 !important; flex: 1;
+}
+#page-trivia .level-card .level-footer {
+  display: flex !important; align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 20px !important; margin: 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--tint) 12%, transparent);
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px;
+}
+#page-trivia .level-card .level-meta {
+  display: flex; gap: 8px; align-items: center;
+}
+#page-trivia .level-card .tag-g {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 9px !important; letter-spacing: 1.5px !important;
+  padding: 2px 8px !important; border-radius: 0 !important; text-transform: uppercase;
+  background: color-mix(in srgb, var(--tint) 12%, transparent) !important;
+  color: var(--tint) !important;
+  border: 1px solid color-mix(in srgb, var(--tint) 28%, transparent) !important;
+}
+#page-trivia .level-card .tag-g.green {
+  background: rgba(100,180,80,0.12) !important;
+  color: #7AC060 !important;
+  border-color: rgba(100,180,80,0.28) !important;
+}
+#page-trivia .level-card .level-action {
+  color: var(--tint) !important; font-size: 14px !important;
+  transition: transform .25s;
+}
+#page-trivia .level-card:hover:not(.locked) .level-action {
+  transform: translateX(4px);
+}
+
+@media (max-width: 900px) {
+  #page-trivia .levels-grid  { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 600px) {
+  #page-trivia .levels-grid  { grid-template-columns: 1fr !important; }
+  #page-trivia .game-hero    { padding: 32px 24px 28px !important; }
+  #page-trivia .game-hero h1 { font-size: 44px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GAMES PANEL — mechanics-grid sx-* overrides
+   ═══════════════════════════════════════════════════════════════════════ */
+#mechanics-grid {
+  display: grid !important;
+  gap: 14px !important;
+}
+#mechanics-grid .sx-tile { --tint: var(--sym-gold, #C4A448); }
+
+@media (max-width: 900px) {
+  #mechanics-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 600px) {
+  #mechanics-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SUBJECT PAGE TAB BAR
+   Reuses .home-tab-bar / .home-tab from main.css.
+   Override sticky top to sit below the nav (62px) + below the sx-hero
+   is handled naturally since sx-hero is not sticky.
+   ═══════════════════════════════════════════════════════════════════════ */
+.subject-page .sx-tab-bar {
+  /* Stick just below the global nav (62px) */
+  top: 62px;
+  /* Bleed to full page width — games-content has no padding */
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ZONE WRAPPER  ·  inner padding for all three zones (sx-tile style)
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-zone-wrap {
+  padding: 2rem 0 4rem;
+}
+
+@media (max-width: 900px) { .sx-zone-wrap { padding: 1.5rem 0 3rem; } }
+@media (max-width: 640px)  { .sx-zone-wrap { padding: 1rem 0 2.5rem; } }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LOCKED TILE  ·  pro-gated sx-tiles
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-tile--locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.sx-tile--locked:hover {
+  transform: none !important;
+  border-color: color-mix(in srgb, var(--tint) 22%, transparent) !important;
+  box-shadow: none !important;
+}
+.sx-tile-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  background: rgba(0,0,0,0.35);
+  z-index: 4;
+}
+
+/* ── Pro badge inside the tile banner ─────────────────────────────── */
+.sx-tile-pro {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--tint) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 40%, transparent);
+  color: var(--tint);
+  padding: 2px 6px;
+  z-index: 3;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EMPTY STATE  ·  shown when a subject has no content yet
+   ═══════════════════════════════════════════════════════════════════════ */
+.sx-empty-state {
+  padding: 5rem 2.5rem 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+}
+
+.sx-empty-inner {
+  text-align: center;
+  max-width: 420px;
+}
+
+.sx-empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1.2rem;
+  opacity: 0.7;
+}
+
+.sx-empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--tint);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.sx-empty-sub {
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--tint) 50%, transparent);
+  line-height: 1.65;
+}
+
+@media (max-width: 640px) {
+  .sx-empty-state { padding: 3rem 1.5rem 4rem; }
+  .sx-empty-title { font-size: 1.6rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SX LAYOUT REDESIGN  ·  density / grouping / favourites
+   Everything below resolves to live --sym-* / --tint tokens so each
+   layout re-skins automatically with the front-page theme.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Toolbar + body container ──────────────────────────────────────── */
+.sx-subject-body { margin-top: 22px; padding-bottom: 60px; }
+
+.sx-toolbar {
+  display: flex; justify-content: flex-end; align-items: center;
+  margin-top: 16px;
+}
+
+/* ── Layout switcher (⋯ Διάταξη popover) ───────────────────────────── */
+.sx-layout-ctl { position: relative; }
+.sx-layout-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 700;
+  padding: 9px 14px; cursor: pointer;
+  background: color-mix(in srgb, var(--tint) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 28%, transparent);
+  color: var(--tint);
+  transition: background .2s, border-color .2s;
+}
+.sx-layout-btn:hover { background: color-mix(in srgb, var(--tint) 16%, transparent); border-color: var(--tint); }
+.sx-layout-btn .dots { font-size: 14px; line-height: 0; letter-spacing: 0; }
+
+.sx-layout-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 60;
+  min-width: 268px;
+  background: var(--sym-bg-card, #1A130C);
+  border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  padding: 16px 16px 18px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.sx-layout-menu[hidden] { display: none; }
+.sx-layout-grouplabel {
+  display: block; margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--sym-stone, #867660);
+}
+.sx-seg { display: flex; border: 1px solid color-mix(in srgb, var(--tint) 24%, transparent); }
+.sx-seg button {
+  flex: 1; cursor: pointer; padding: 8px 10px;
+  background: transparent; border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase;
+  color: color-mix(in srgb, var(--sym-fg, #F0EBE0) 62%, transparent);
+  transition: background .15s, color .15s;
+}
+.sx-seg button:last-child { border-right: 0; }
+.sx-seg button:hover { color: var(--sym-fg, #F0EBE0); background: color-mix(in srgb, var(--tint) 8%, transparent); }
+.sx-seg button.on { background: var(--tint); color: var(--sym-ink, #1A1208); }
+
+/* ── Grids per density ─────────────────────────────────────────────── */
+.sx-tiles--card,
+.sx-tiles--feat {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; width: 100%;
+}
+@media (max-width: 1100px) { .sx-tiles--card, .sx-tiles--feat { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .sx-tiles--card, .sx-tiles--feat { grid-template-columns: 1fr; } }
+.sx-tiles--feat { margin-bottom: 13px; }
+
+.sx-rows { display: flex; flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent); }
+
+/* ── Heart on every tile (reuses .fav-btn store; restyled bare) ─────── */
+.sx-tile .sx-fav {
+  background: transparent; border: 0; border-radius: 0;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  width: auto; height: auto; padding: 4px; line-height: 0;
+  color: var(--sym-stone, #867660);
+  opacity: 0; z-index: 5;
+  transition: opacity .2s, color .2s, transform .15s;
+}
+.sx-tile .sx-fav svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7px; }
+.sx-tile--compact .sx-fav,
+.sx-tile--feat .sx-fav { position: absolute; top: 10px; right: 10px; bottom: auto; left: auto; }
+.sx-tile--row .sx-fav { position: static; }
+.sx-tile:hover .sx-fav { opacity: .8; }
+.sx-tile .sx-fav:hover { color: var(--sym-terra, #D97B5C); transform: scale(1.14); opacity: 1; }
+.sx-tile .sx-fav.fav-active { opacity: 1; color: var(--sym-terra, #D97B5C); animation: none; }
+.sx-tile .sx-fav.fav-active svg { fill: var(--sym-terra, #D97B5C); stroke: var(--sym-terra, #D97B5C); }
+
+/* ── Mode dot ──────────────────────────────────────────────────────── */
+.sx-mode {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--sym-stone, #867660); white-space: nowrap;
+}
+.sx-mode::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--md, var(--tint)); }
+.sx-mode--solo   { --md: var(--tint); }
+.sx-mode--multi  { --md: var(--sym-terra, #D97B5C); }
+.sx-mode--theory { --md: var(--sym-sage, #6A8752); }
+
+/* shared small tag (compact + row) */
+.sx-tile-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tint) 30%, transparent);
+  padding: 3px 7px; white-space: nowrap;
+}
+
+/* ── COMPACT CARD ──────────────────────────────────────────────────── */
+.sx-tile--compact { padding: 0; }
+.sx-tile--compact .sx-tile-head { display: flex; align-items: center; gap: 13px; padding: 15px 15px 0; }
+.sx-glyph-chip {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--tint) 28%, transparent);
+  background: color-mix(in srgb, var(--tint) 10%, transparent);
+  color: var(--tint);
+  display: flex; align-items: center; justify-content: center;
+}
+.sx-glyph-chip .glyph { width: 64%; height: 64%; color: inherit; display: flex; }
+.sx-glyph-chip .glyph svg { width: 100%; height: 100%; color: inherit; }
+.sx-head-tt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.sx-head-tt h3 {
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+  font-size: 18.5px; letter-spacing: -.3px; line-height: 1.12; margin: 0;
+  color: var(--sym-fg, #F0EBE0);
+}
+.sx-tagrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sx-desc {
+  font-size: 12px; line-height: 1.5; margin: 11px 15px 0;
+  color: color-mix(in srgb, var(--sym-fg, #F0EBE0) 60%, transparent);
+}
+.sx-tile--compact .sx-tile-cta { padding: 11px 15px 13px; margin-top: auto; }
+
+/* ── LIST ROW ──────────────────────────────────────────────────────── */
+.sx-tile--row {
+  flex-direction: row; align-items: center; gap: 14px; padding: 12px 16px;
+  border: 0; border-bottom: 1px solid color-mix(in srgb, var(--tint) 12%, transparent);
+  overflow: hidden; transition: background .2s;
+}
+.sx-tile--row:last-child { border-bottom: 0; }
+.sx-tile--row::before { inset: 0 auto 0 0; width: 2px; height: auto; }
+.sx-tile--row:hover {
+  transform: none; box-shadow: none;
+  border-color: transparent;
+  border-bottom-color: color-mix(in srgb, var(--tint) 12%, transparent);
+  background: color-mix(in srgb, var(--tint) 7%, var(--sym-bg-card, #1A130C));
+}
+.sx-row-chip {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--tint) 26%, transparent);
+  background: color-mix(in srgb, var(--tint) 9%, transparent);
+  color: var(--tint);
+  display: flex; align-items: center; justify-content: center;
+}
+.sx-row-chip .glyph { width: 62%; height: 62%; color: inherit; display: flex; }
+.sx-row-chip .glyph svg { width: 100%; height: 100%; color: inherit; }
+.sx-row-main { flex: 1; min-width: 0; }
+.sx-row-top { display: flex; align-items: baseline; gap: 10px; }
+.sx-row-top h3 {
+  flex: 1 1 auto; min-width: 0; margin: 0;
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+  font-size: 17.5px; letter-spacing: -.3px; line-height: 1.15;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--sym-fg, #F0EBE0);
+}
+.sx-row-top .sx-tile-tag, .sx-row-top .sx-mode { flex-shrink: 0; }
+.sx-row-desc {
+  margin: 3px 0 0; font-size: 11.5px; line-height: 1.45;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--sym-fg, #F0EBE0) 50%, transparent);
+}
+.sx-row-play {
+  font-family: 'JetBrains Mono', monospace; color: var(--tint);
+  font-size: 15px; flex-shrink: 0; transition: transform .2s;
+}
+.sx-tile--row:hover .sx-row-play { transform: translateX(4px); }
+
+/* ── FEATURED (banner) — shrink the tall banner ────────────────────── */
+.sx-tile--feat .sx-tile-banner { height: 118px; }
+.sx-tile--feat .sx-tile-banner .glyph { width: 58px; height: 58px; }
+.sx-tile--feat .sx-tile-body { padding: 15px 18px 6px; }
+.sx-tile--feat .sx-tile-body h3 { font-size: 21px; }
+
+/* ── FILTER CHIPS (replaces tabs) ──────────────────────────────────── */
+.sx-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.sx-chip {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--sym-stone, #867660);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+  padding: 9px 14px; transition: color .2s, border-color .2s, background .2s;
+}
+.sx-chip .n { opacity: .6; }
+.sx-chip:hover { color: var(--sym-fg, #F0EBE0); border-color: color-mix(in srgb, var(--tint) 40%, transparent); }
+.sx-chip.on { color: var(--sym-ink, #1A1208); background: var(--tint); border-color: var(--tint); }
+.sx-chip.on .n { opacity: .75; }
+.sx-chip--fav svg { width: 12px; height: 12px; fill: currentColor; stroke: currentColor; }
+.sx-chip--fav.on { background: var(--sym-terra, #D97B5C); border-color: var(--sym-terra, #D97B5C); }
+
+/* ── STACKED SECTIONS (no tabs) ────────────────────────────────────── */
+.sx-zone-head { display: flex; align-items: center; gap: 12px; margin: 26px 0 14px; }
+.sx-subject-body > .sx-zone-head:first-child,
+.sx-fav-strip + .sx-zone-head { margin-top: 6px; }
+.sx-zone-head .zi {
+  width: 27px; height: 27px; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  border: 1px solid color-mix(in srgb, var(--zc, var(--tint)) 40%, transparent);
+}
+.sx-zone-head h4 {
+  margin: 0; font-family: 'JetBrains Mono', monospace; font-weight: 500;
+  font-size: 11px; letter-spacing: 2.2px; text-transform: uppercase;
+  color: var(--sym-fg, #F0EBE0);
+}
+.sx-zone-head .c { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--sym-stone, #867660); }
+.sx-zone-head::after { content: ""; flex: 1; height: 1px; background: color-mix(in srgb, var(--tint) 16%, transparent); }
+.sx-zone-head--solo   { --zc: var(--tint); }
+.sx-zone-head--multi  { --zc: var(--sym-terra, #D97B5C); }
+.sx-zone-head--theory { --zc: var(--sym-sage, #6A8752); }
+
+/* ── PINNED FAVOURITES STRIP ───────────────────────────────────────── */
+.sx-fav-strip {
+  border: 1px solid color-mix(in srgb, var(--sym-terra, #D97B5C) 32%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sym-terra, #D97B5C) 7%, transparent), transparent);
+  padding: 16px 16px 18px; margin-bottom: 18px;
+}
+.sx-fav-strip-head { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+.sx-fav-strip-head svg { width: 15px; height: 15px; fill: var(--sym-terra, #D97B5C); stroke: var(--sym-terra, #D97B5C); }
+.sx-fav-strip-head h4 {
+  margin: 0; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--sym-terra, #D97B5C);
+}
+.sx-fav-strip-head .c { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--sym-stone, #867660); }
+
+.sx-empty-row {
+  padding: 36px; text-align: center; font-style: italic; font-size: 13px;
+  color: var(--sym-stone, #867660);
+  border: 1px dashed color-mix(in srgb, var(--tint) 16%, transparent);
+}
+
+@media (max-width: 640px) {
+  .sx-layout-menu { right: auto; left: 0; min-width: 240px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DENSITY INHERITANCE  ·  Browse / Mechanics / Theory grids
+   These keep their banner markup but honour the SX_LAYOUT density
+   (set via data-sx-density on the grid). All tokenised → theme-aware.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* card (default) — smaller banner so every grid scrolls less */
+[data-sx-density="card"] .sx-tile-banner { height: 104px; }
+[data-sx-density="card"] .sx-tile-banner .glyph { width: 60px; height: 60px; }
+
+/* list — dense rows: banner becomes a small left chip, no CTA */
+[data-sx-density="list"] {
+  grid-template-columns: 1fr !important; gap: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--tint) 16%, transparent);
+}
+[data-sx-density="list"] .sx-tile {
+  flex-direction: row; align-items: stretch;
+  border: 0; border-bottom: 1px solid color-mix(in srgb, var(--tint) 12%, transparent);
+}
+[data-sx-density="list"] .sx-tile:last-child { border-bottom: 0; }
+[data-sx-density="list"] .sx-tile:hover {
+  transform: none; box-shadow: none; border-color: transparent;
+  border-bottom-color: color-mix(in srgb, var(--tint) 12%, transparent);
+  background: color-mix(in srgb, var(--tint) 6%, var(--sym-bg-card, #1A130C));
+}
+[data-sx-density="list"] .sx-tile::before { inset: 0 auto 0 0; width: 2px; height: auto; }
+[data-sx-density="list"] .sx-tile-banner {
+  height: auto; width: 66px; flex-shrink: 0; border-bottom: 0;
+  border-right: 1px solid color-mix(in srgb, var(--tint) 14%, transparent);
+}
+[data-sx-density="list"] .sx-tile-banner .glyph { width: 32px; height: 32px; }
+[data-sx-density="list"] .sx-tile-banner .num,
+[data-sx-density="list"] .sx-tile-banner .tag,
+[data-sx-density="list"] .sx-tile-pro { display: none; }
+[data-sx-density="list"] .sx-tile-emoji { font-size: 24px; }
+[data-sx-density="list"] .sx-tile-body { padding: 12px 16px; gap: 3px; }
+[data-sx-density="list"] .sx-tile-body h3 { font-size: 18px; }
+[data-sx-density="list"] .sx-tile-body .desc {
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-sx-density="list"] .sx-tile-cta { display: none; }
+
+/* ── Theory Library hub — sx-tile study decks ──────────────────────── */
+#theory-library-hub { --tint: var(--sym-gold, #C4A448); }
+/* neutralise the old auto-fill deck grid so the inner sx grid controls layout */
+#theory-library-content[data-sx-themed] { display: block; padding: 0 2rem 2rem; }
+.sx-glyph-chip.sx-chip--emoji { font-size: 24px; line-height: 1; }
+.sx-row-chip.sx-chip--emoji   { font-size: 18px; line-height: 1; }
+@media (max-width: 640px) {
+  #theory-library-content[data-sx-themed] { padding: 0 1rem 2rem; }
+}

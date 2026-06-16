@@ -1,0 +1,63 @@
+/* ============================================================
+   Grammar Invaders — UI styles
+   Canvas handles all game rendering; this file covers the
+   HTML chrome that wraps the canvas.
+   ============================================================ */
+
+/* Ensure the canvas fills the flex container exactly */
+#invaders-canvas {
+  display: block;
+  /* Sized dynamically by JS; pixel-crisp rendering */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Topbar score chip */
+#invaders-score-display {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: var(--sym-fg, #e8dcc8);
+  min-width: 160px;
+  text-align: right;
+}
+
+/* ── Touch bar (shown on touch devices via JS) ──
+   LEFT ←  |  ⚡ FIRE  |  → RIGHT
+   Left/Right are at the far edges (space-between + no side padding).
+   Fire is a larger, visually distinct centre button.
+*/
+#invaders-touch {
+  flex-shrink: 0; height: 106px;
+  background: color-mix(in srgb, rgba(10,8,4,.95) 92%, var(--sym-gold, #c9a44a) 8%);
+  border-top: 1px solid color-mix(in srgb, var(--sym-gold, #c9a44a) 12%, transparent);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0;
+}
+.inv-t-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 88px; height: 88px;
+  background: color-mix(in srgb, var(--sym-gold, #c9a44a) 10%, transparent); border: 1.5px solid color-mix(in srgb, var(--sym-gold, #c9a44a) 28%, transparent);
+  border-radius: 12px;
+  font-size: 2.2rem; color: color-mix(in srgb, var(--sym-gold, #c9a44a) 85%, transparent);
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+  transition: background .08s, border-color .08s;
+  margin: 0 4px;
+}
+.inv-t-btn:active { background: color-mix(in srgb, var(--sym-gold, #c9a44a) 35%, transparent); border-color: color-mix(in srgb, var(--sym-gold, #c9a44a) 65%, transparent); }
+.inv-t-btn span { font-size: .6rem; letter-spacing: 1.5px; text-transform: uppercase; color: color-mix(in srgb, var(--sym-gold, #c9a44a) 55%, transparent); margin-top: 2px; font-family: 'Inter', sans-serif; }
+
+/* Fire button — round, red-orange accent, slightly larger hit area */
+.inv-t-fire-btn {
+  width: 100px; height: 94px; border-radius: 50%;
+  background: rgba(220,80,20,.15); border-color: rgba(220,100,40,.45); color: rgba(255,130,50,.9);
+}
+.inv-t-fire-btn:active { background: rgba(220,80,20,.4); border-color: rgba(255,140,60,.75); }
+
+/* Narrow-phone fallback */
+@media (max-width: 359px) {
+  #invaders-touch { height: 90px; }
+  .inv-t-btn       { width: 72px; height: 72px; font-size: 1.8rem; }
+  .inv-t-fire-btn  { width: 84px; height: 80px; }
+}

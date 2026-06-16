@@ -1,0 +1,68 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · carousel.css   —  rolling subject marquee
+   Two rows drift opposite directions; hover the wrap to pause.
+   Pair with carousel.js (builds + duplicates cards for a seamless loop).
+   ════════════════════════════════════════════════════════════════════ */
+.sym-carousel {
+  border: 1px solid var(--sym-hairline); overflow: hidden; position: relative;
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 0%, color-mix(in srgb, var(--med-aegean) 12%, transparent), transparent 60%),
+    var(--sym-bg-card);
+}
+.sym-carousel .wave {
+  height: 26px; color: var(--med-aegean); opacity: .4;
+  background-image: url('../images/bg-symbols/wave-band.svg');
+  background-repeat: repeat-x; background-size: auto 26px;
+}
+.sym-carousel .wave.flip { transform: scaleY(-1); }
+
+.sym-carousel-head { display: flex; align-items: baseline; justify-content: space-between; padding: 24px 30px 16px; }
+.sym-carousel-head h3 { font-family: var(--sym-font-serif); font-size: 26px; font-weight: 500; margin: 0; }
+.sym-carousel-head .gr { color: var(--med-aegean-lt); font-style: italic; font-size: 14px; }
+
+.sym-marquee { display: flex; gap: 16px; width: max-content; padding: 6px 30px 26px; animation: symSlideL 32s linear infinite; }
+.sym-marquee.rev { animation: symSlideR 38s linear infinite; }
+.sym-carousel:hover .sym-marquee { animation-play-state: paused; }
+@keyframes symSlideL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes symSlideR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  /* Slow down rather than cut completely — still readable, less dizzying */
+  .sym-marquee     { animation-duration: 120s !important; }
+  .sym-marquee.rev { animation-duration: 140s !important; }
+}
+
+/* ── Game-card marquee (auto-scroll version of #home-carousel) ───── */
+.carousel-wrapper.is-marquee-wrap {
+  overflow: hidden;
+  position: relative;
+}
+.carousel-wrapper.is-marquee-wrap .carousel-arrow { display: none; }
+.carousel.is-marquee {
+  width: max-content;
+  overflow: visible;
+  flex-shrink: 0;
+  animation: symSlideL 52s linear infinite;
+  cursor: default;
+}
+.carousel-wrapper.is-marquee-wrap:hover .carousel.is-marquee {
+  animation-play-state: paused;
+}
+.carousel.is-marquee .game-card { flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .carousel.is-marquee { animation-duration: 200s !important; }
+}
+
+.sym-mc { width: 230px; flex-shrink: 0; background: var(--sym-bg); overflow: hidden; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--mc-ac, var(--sym-gold)) 26%, transparent);
+  transition: transform .3s, box-shadow .3s; }
+.sym-mc:hover { transform: translateY(-4px); box-shadow: 0 14px 30px color-mix(in srgb, var(--mc-ac) 22%, transparent); }
+.sym-mc .ban { height: 104px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+  color: var(--mc-ac); border-bottom: 1px solid color-mix(in srgb, var(--mc-ac) 18%, transparent);
+  background:
+    radial-gradient(circle at 70% 40%, color-mix(in srgb, var(--mc-ac) 20%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--mc-ac) 6%, transparent), color-mix(in srgb, var(--mc-ac) 15%, transparent)); }
+.sym-mc .ban svg { width: 54px; height: 54px; color: var(--mc-ac); }
+.sym-mc .bd { padding: 14px 16px 16px; }
+.sym-mc .bd h4 { font-family: var(--sym-font-serif); font-size: 18px; font-weight: 500; margin: 0 0 3px; }
+.sym-mc .bd .latin { font-family: var(--sym-font-serif); font-style: italic; font-size: 12px; color: var(--mc-ac); }
+.sym-mc .bd .meta { font-family: var(--sym-font-mono); font-size: 9px; letter-spacing: 1px; color: var(--sym-fg-muted); margin-top: 8px; }

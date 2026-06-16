@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Coin">
+  <ellipse cx="32" cy="50" rx="22" ry="32"></ellipse>
+  <ellipse cx="32" cy="50" rx="16" ry="24" stroke-opacity="0.45"></ellipse>
+  <path d="M 32 22 Q 28 32 30 50 Q 28 68 32 78" stroke-opacity="0.7"></path>
+  <ellipse cx="68" cy="50" rx="22" ry="32"></ellipse>
+  <ellipse cx="68" cy="50" rx="16" ry="24" stroke-opacity="0.45"></ellipse>
+  <path d="M 60 38 Q 64 32 70 36 Q 72 42 68 46 Q 64 50 66 56 L 74 56" stroke-opacity="0.85"></path>
+  <line x1="56" y1="62" x2="80" y2="62" stroke-opacity="0.55"></line>
+  <line x1="54" y1="50" x2="46" y2="50" stroke-opacity="0.4"></line>
+</svg>

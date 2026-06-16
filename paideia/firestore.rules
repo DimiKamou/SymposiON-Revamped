@@ -1,0 +1,312 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ══════════════════════════════════════════════════════════
+    //  ROLE HELPERS
+    //  Roles live as custom claims on the Firebase ID token.
+    //  The bootstrap email is always super so you can never lock
+    //  yourself out before claims are provisioned.
+    // ══════════════════════════════════════════════════════════
+
+    function isBootstrap() {
+      return request.auth != null
+          && request.auth.token.email == 'dimikamou@gmail.com';
+    }
+
+    function role() {
+      return request.auth != null ? request.auth.token.get('role', null) : null;
+    }
+
+    function isSuper() {
+      return isBootstrap() || role() == 'super';
+    }
+
+    // Domain-based access — mirrors CC.ROLES in the prototype.
+    function can(domain) {
+      return request.auth != null && (
+           isSuper()
+        || (role() == 'content' && domain in ['games', 'curriculum', 'content'])
+        || (role() == 'support' && domain in ['support', 'users'])
+        || (role() == 'finance' && domain in ['subs'])
+      );
+    }
+
+    // Back-compat shim: any provisioned admin (any non-null role).
+    // Used only for READ permissions so existing surfaces keep working.
+    function isAdmin() {
+      return isSuper() || role() != null;
+    }
+
+    // ── Validation primitives (Guardrail 4) ──
+    function nonNegNum(v) { return v is number && v >= 0; }
+    function pctOk(v)     { return v is number && v >= 1 && v <= 100; }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  ADMIN INFRASTRUCTURE
+    // ══════════════════════════════════════════════════════════
+
+    // Role mirror (set by setAdminRole function via Admin SDK).
+    match /adminRoles/{uid} {
+      allow read:                    if isSuper();
+      allow create, update, delete:  if false;   // Admin SDK only
+    }
+
+    // Immutable audit log (written by functions via Admin SDK).
+    match /adminAudit/{docId} {
+      allow read:                    if isSuper();
+      allow create, update, delete:  if false;   // Admin SDK only
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  USERS
+    // ══════════════════════════════════════════════════════════
+
+    match /users/{uid} {
+      allow read: if request.auth != null
+               && (request.auth.uid == uid || can('users'));
+
+      allow create: if request.auth != null
+                 && request.auth.uid == uid
+                 && request.resource.data.role == 'free';
+
+      allow update: if request.auth != null
+                 && (
+                   (request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role)
+                   || can('users')
+                 );
+
+      // Hard delete: super only (prefer gdprEraseUser function).
+      allow delete: if isSuper();
+
+      // ── /users/{uid}/progression/{docId} ──
+      match /progression/{docId} {
+        allow read, write: if request.auth != null
+                        && (request.auth.uid == uid || can('users'));
+      }
+
+      // ── /users/{uid}/mistakes_archive/{docId} ──
+      match /mistakes_archive/{docId} {
+        allow read, delete: if request.auth != null
+                         && (request.auth.uid == uid || can('support'));
+
+        allow write: if request.auth != null
+                  && request.auth.uid == uid
+                  && request.resource.data.questionText is string
+                  && request.resource.data.questionText.size() <= 500
+                  && request.resource.data.correctAnswer is string
+                  && request.resource.data.correctAnswer.size() <= 200;
+      }
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  TEACHER REPORTS
+    // ══════════════════════════════════════════════════════════
+
+    match /teacher_reports/{docId} {
+      allow create: if request.auth != null
+                 && request.resource.data.studentUid == request.auth.uid
+                 && request.resource.data.teacherUid is string
+                 && request.resource.data.teacherUid.size() > 0
+                 && request.resource.data.mistakes   is list
+                 && request.resource.data.mistakes.size() <= 200;
+
+      allow read: if request.auth != null
+               && (resource.data.teacherUid == request.auth.uid || can('support'));
+
+      allow update: if false;
+
+      allow delete: if request.auth != null
+                 && (resource.data.studentUid  == request.auth.uid
+                     || resource.data.teacherUid == request.auth.uid
+                     || can('support'));
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  CONTENT DOMAINS
+    // ══════════════════════════════════════════════════════════
+
+    match /custom_games/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                 && request.resource.data.creatorId == request.auth.uid
+                 && request.resource.data.questions.size() <= 50;
+      allow delete: if request.auth != null
+                 && (resource.data.creatorId == request.auth.uid || can('content'));
+      allow update: if can('content');
+    }
+
+    match /classes/{classId} {
+      allow read:  if true;
+      allow write: if can('curriculum');
+
+      match /content_rules/{docId}  { allow read: if true; allow write: if can('curriculum'); }
+      match /unlocked_modes/{docId} { allow read: if true; allow write: if can('curriculum'); }
+      match /curriculum/{docId}     { allow read: if true; allow write: if can('curriculum'); }
+    }
+
+    match /subjects/{subjectId} {
+      allow read:  if true;
+      allow write: if can('content');
+    }
+
+    match /banners/{bannerId} {
+      allow read:  if true;
+      allow write: if can('content');
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  SUBSCRIPTIONS & FINANCE
+    // ══════════════════════════════════════════════════════════
+
+    // Coupon validation: % must be 1–100, maxUses must be ≥ 0.
+    match /coupons/{code} {
+      allow read: if true;
+      allow write: if can('subs')
+                && (request.method == 'delete'
+                    || (pctOk(request.resource.data.discount)
+                        && nonNegNum(request.resource.data.maxUses)));
+    }
+
+    // Config writes validated per-key in adminSaveConfig Cloud Function;
+    // Rules just enforce the domain gate here.
+    match /config/{docId} {
+      allow read:  if true;
+      allow write: if can('subs') || can('content');
+    }
+
+    // ── SITE STUDIO ───────────────────────────────────────────
+    // The live catalog tree (grades → subjects → games) and per-game
+    // content docs (quiz / paradigm). World-readable so the student app
+    // can render from Firestore first (static JS is the offline fallback).
+    // Writes go ONLY through the Admin SDK (adminSaveCatalog /
+    // adminSaveGameContent) because Rules cannot validate the nested
+    // invariants (quiz ans-range, paradigm cells = rows×cols) — same
+    // reason config/pricing is written by adminSaveConfig.
+    match /siteCatalog/{docId} {
+      allow read:  if true;
+      allow write: if false;
+    }
+    match /gameContent/{contentId} {
+      allow read:  if true;
+      allow write: if false;
+    }
+
+    match /subscriptions/{docId} {
+      allow read:  if true;
+      allow write: if can('subs');
+    }
+
+    match /subscription_bundles/{bundleId} {
+      allow read:  if true;
+      allow write: if can('subs');
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  SUPPORT
+    // ══════════════════════════════════════════════════════════
+
+    match /feedback/{docId} {
+      allow create: if request.resource.data.message is string
+                 && request.resource.data.message.size() > 0
+                 && request.resource.data.message.size() <= 2000;
+      allow read, delete: if can('support');
+      allow update:       if false;
+    }
+
+    match /classrooms/{classId} {
+      allow read: if request.auth != null
+               && (can('users') || resource.data.teacherUid == request.auth.uid);
+      allow write: if can('users');
+    }
+
+
+    // ══════════════════════════════════════════════════════════
+    //  LEADERBOARDS & LIVE GAMES
+    // ══════════════════════════════════════════════════════════
+
+    match /global_leaderboards/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                 && request.resource.data.uid      == request.auth.uid
+                 && request.resource.data.score    is number
+                 && request.resource.data.score    >= 0
+                 && request.resource.data.configId is string
+                 && request.resource.data.configId.size() <= 100
+                 && request.resource.data.username is string;
+      allow update: if false;
+      allow delete: if isSuper();
+    }
+
+    match /live_arenas/{pin} {
+      function isArenaHost() {
+        return request.auth != null && resource.data.hostUid == request.auth.uid;
+      }
+
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                 && request.resource.data.status           == 'lobby'
+                 && request.resource.data.hostUid          == request.auth.uid
+                 && request.resource.data.totalPlayers     == 0
+                 && request.resource.data.answersSubmitted == 0;
+
+      allow update: if request.auth != null
+                 && (
+                   isArenaHost()
+                   || (
+                     request.resource.data.diff(resource.data)
+                       .affectedKeys().hasOnly(['answersSubmitted'])
+                     && request.resource.data.answersSubmitted
+                          == resource.data.answersSubmitted + 1
+                   )
+                 );
+
+      allow delete: if isSuper();
+
+      match /players/{uid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                   && uid                         == request.auth.uid
+                   && request.resource.data.uid   == request.auth.uid
+                   && request.resource.data.score == 0;
+        allow update: if request.auth != null
+                   && (
+                     uid == request.auth.uid
+                     || get(/databases/$(database)/documents/live_arenas/$(pin))
+                          .data.hostUid == request.auth.uid
+                   );
+        allow delete: if isSuper();
+      }
+
+      match /answers/{answerId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                   && request.resource.data.uid == request.auth.uid
+                   && answerId == (request.auth.uid + '_q' + request.resource.data.questionIndex);
+        allow update: if false;
+        allow delete: if isSuper();
+      }
+    }
+
+    match /naumachia_matches/{matchId} {
+      allow read: if true;
+      allow create: if request.resource.data.status    == 'waiting'
+                   && request.resource.data.p1Id        is string
+                   && request.resource.data.p1Id.size() <= 64
+                   && request.resource.data.winner      == null;
+      allow update: if resource.data.p1Id == request.resource.data.p1Id
+                   || resource.data.p2Id  == null
+                   || resource.data.p2Id  == request.resource.data.p2Id;
+      allow delete: if isSuper();
+    }
+
+  }
+}

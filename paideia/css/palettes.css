@@ -1,0 +1,110 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON — palettes.css   (5 color directions)
+   Apply one theme class to <body> — the whole token tree switches.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── HEARTH · warm dark + terra + gold ────────────────────────────── */
+.theme-hearth {
+  --sym-bg-dark:    #18120A;
+  --sym-bg-panel:   #261B12;
+  --sym-bg-light:   #F6F2EB;
+  --sym-ink:        #221B10;
+  --sym-cream:      #F0EBE0;
+  --sym-stone:      #867660;
+  --sym-terra:      #D97B5C;
+  --sym-terra-dk:   #C05535;
+  --sym-gold:       #C4A448;
+  --sym-sage:       #6A8752;
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    var(--sym-bg-panel);
+  --sym-fg:         var(--sym-cream);
+  --sym-fg-muted:   var(--sym-stone);
+}
+
+/* ─── MARBLE · dusty daytime classroom ────────────────────────────── */
+.theme-marble {
+  --sym-bg-dark:    #242018;
+  --sym-bg-panel:   #302A23;
+  --sym-bg-light:   #F2EDE3;
+  --sym-ink:        #1A1612;
+  --sym-cream:      #EAE3D4;
+  --sym-stone:      #9A8975;
+  --sym-terra:      #CE6B4A;
+  --sym-terra-dk:   #A8502F;
+  --sym-gold:       #B8923A;
+  --sym-sage:       #7A9866;
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    var(--sym-bg-panel);
+  --sym-fg:         var(--sym-cream);
+  --sym-fg-muted:   var(--sym-stone);
+}
+
+/* ─── AMPHORA · black-figure pottery (ink + Attic red) ────────────── */
+.theme-amphora {
+  --sym-bg-dark:    #15100A;
+  --sym-bg-panel:   #201810;
+  --sym-bg-light:   #EFE3C9;
+  --sym-ink:        #171008;
+  --sym-cream:      #E8D9BA;
+  --sym-stone:      #8A7958;
+  --sym-terra:      #D14A1F;
+  --sym-terra-dk:   #A8341A;
+  --sym-gold:       #D49A2A;
+  --sym-sage:       #86793E;
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    var(--sym-bg-panel);
+  --sym-fg:         var(--sym-cream);
+  --sym-fg-muted:   var(--sym-stone);
+}
+
+/* ─── AEGEAN · sea + sky (midnight blue + copper) ─────────────────── */
+.theme-aegean {
+  --sym-bg-dark:    #0B1018;
+  --sym-bg-panel:   #142030;
+  --sym-bg-light:   #EDE7D8;
+  --sym-ink:        #0F1620;
+  --sym-cream:      #E8E1D0;
+  --sym-stone:      #7C8896;
+  --sym-terra:      #E0894C;
+  --sym-terra-dk:   #B86A35;
+  --sym-gold:       #D2B36A;
+  --sym-sage:       #5E8B96;
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    var(--sym-bg-panel);
+  --sym-fg:         var(--sym-cream);
+  --sym-fg-muted:   var(--sym-stone);
+}
+
+/* ─── ALABASTER · light theme ──────────────────────────────────────── */
+.theme-alabaster {
+  --sym-bg-dark:    #FAF7F0;
+  --sym-bg-panel:   #F1ECE0;
+  --sym-bg-light:   #FFFFFF;
+  --sym-ink:        #1A140C;
+  --sym-cream:      #FAF7F0;
+  --sym-stone:      #8A7E6B;
+  --sym-terra:      #C5572F;
+  --sym-terra-dk:   #9C3F1F;
+  --sym-gold:       #9C8238;
+  --sym-sage:       #5B7544;
+  --sym-bg:         var(--sym-bg-dark);
+  --sym-bg-card:    #FFFFFF;
+  --sym-fg:         var(--sym-ink);
+  --sym-fg-muted:   var(--sym-stone);
+  color-scheme: light;
+}
+
+/* Body + surface defaults */
+.theme-hearth, .theme-marble, .theme-amphora, .theme-aegean, .theme-alabaster {
+  background: var(--sym-bg);
+  color: var(--sym-fg);
+}
+
+/* Light surface — soften the "ON" terra glow */
+.theme-alabaster .logo > span,
+.theme-alabaster .logo .logo__wordmark > span,
+.theme-alabaster .footer-logo > span,
+.theme-alabaster .auth-modal-logo > span {
+  color: var(--sym-terra);
+  text-shadow: none;
+}

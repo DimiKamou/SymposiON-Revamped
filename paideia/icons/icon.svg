@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SymposiON app icon">
+  <defs>
+    <linearGradient id="symBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#18100A"></stop>
+      <stop offset="100%" stop-color="#0D0A06"></stop>
+    </linearGradient>
+    <radialGradient id="terraHalo" cx="65%" cy="50%" r="22%">
+      <stop offset="0%" stop-color="#D97B5C" stop-opacity="0.55"></stop>
+      <stop offset="100%" stop-color="#D97B5C" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#symBg)"></rect>
+  <rect width="512" height="512" fill="url(#terraHalo)"></rect>
+  <rect x="22" y="22" width="468" height="468" fill="none" stroke="rgba(196,164,72,0.22)" stroke-width="1.5"></rect>
+
+  <g fill="none" stroke="#F0EBE0" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter">
+    <line x1="118" y1="106" x2="386" y2="106"></line>
+    <line x1="118" y1="106" x2="246" y2="256"></line>
+    <line x1="246" y1="256" x2="118" y2="406"></line>
+    <line x1="118" y1="406" x2="386" y2="406"></line>
+  </g>
+
+  <g stroke="#D97B5C" stroke-width="16" fill="none" stroke-linecap="round">
+    <circle cx="320" cy="256" r="60" stroke-dasharray="312 60" stroke-dashoffset="-35" transform="rotate(-90 320 256)"></circle>
+    <line x1="320" y1="200" x2="320" y2="252"></line>
+  </g>
+
+  <circle cx="386" cy="406" r="3.5" fill="#C4A448" opacity="0.85"></circle>
+</svg>
