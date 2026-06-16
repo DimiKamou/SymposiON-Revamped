@@ -1,0 +1,131 @@
+<div id="study-overlay" class="game-overlay" role="dialog" aria-modal="true" aria-label="Μνημοσύνη — Μελέτη Καρτών">
+  <!-- Topbar -->
+  <div class="overlay-topbar study-topbar">
+    <button class="overlay-back" onclick="closeStudyOverlay()">← <span data-gr="Έξοδος" data-en="Exit">Έξοδος</span></button>
+    <div class="study-topbar-center">
+      <div class="study-topbar-title">Μνημοσύνη</div>
+      <div class="study-dataset-label" id="study-dataset-label"></div>
+    </div>
+    <div class="overlay-topbar-right">
+      <button class="study-qr-btn" id="study-qr-btn"
+              title="Κοινοποίηση QR"
+              aria-label="Κοινοποίηση μέσω QR"
+              onclick="if(typeof showQR==='function') showQR('Μνημοσύνη — '+(Mnemosyne.datasetLabel||''), {nav:'study',id:Mnemosyne.datasetId||''})">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/>
+          <path d="M14 14h3v3M17 14h4M14 17v4"/>
+        </svg>
+      </button>
+      <div class="overlay-lang">
+        <button class="lang-opt active" onclick="setSiteLang('gr')">GR</button>
+        <button class="lang-opt"        onclick="setSiteLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main Study Workspace ── -->
+  <div class="study-workspace" id="study-workspace">
+
+    <!-- Progress area -->
+    <div class="study-progress-area">
+      <div class="study-progress-info">
+        <span class="study-progress-text" id="study-progress-text">Κάρτα 1 από —</span>
+        <span class="study-mastery-text"  id="study-mastery-text">0 μαθεύτηκαν</span>
+      </div>
+      <div class="study-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <div class="study-progress-fill" id="study-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Direction toggle -->
+    <div class="study-direction-toggle" role="group" aria-label="Κατεύθυνση Μελέτης">
+      <button class="study-dir-btn active" id="study-dir-forward" onclick="Mnemosyne.setMode('forward')">
+        <span class="study-dir-icon">→</span>
+        <span class="study-dir-text">
+          <span class="study-dir-label" data-gr="Κανονική Μελέτη"    data-en="Forward Study">Κανονική Μελέτη</span>
+          <span class="study-dir-sub"   data-gr="Ερώτηση → Απάντηση" data-en="Question → Answer">Ερώτηση → Απάντηση</span>
+        </span>
+      </button>
+      <button class="study-dir-btn" id="study-dir-backward" onclick="Mnemosyne.setMode('backward')">
+        <span class="study-dir-icon">←</span>
+        <span class="study-dir-text">
+          <span class="study-dir-label" data-gr="Ανάποδη Μελέτη"     data-en="Reverse Study">Ανάποδη Μελέτη</span>
+          <span class="study-dir-sub"   data-gr="Απάντηση → Ερώτηση" data-en="Answer → Question">Απάντηση → Ερώτηση</span>
+        </span>
+      </button>
+      <button class="study-dir-btn" id="study-dir-fill" onclick="Mnemosyne.setMode('fill')">
+        <span class="study-dir-icon">✏️</span>
+        <span class="study-dir-text">
+          <span class="study-dir-label" data-gr="Συμπλήρωση Κενού"   data-en="Fill in Gap">Συμπλήρωση Κενού</span>
+          <span class="study-dir-sub"   data-gr="Γράψε την απάντηση" data-en="Type the answer">Γράψε την απάντηση</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- 3D Card -->
+    <div class="study-card-area" id="study-card-area">
+      <div class="study-card" id="study-card" onclick="Mnemosyne.flip()" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' '){Mnemosyne.flip();event.preventDefault();}">
+        <div class="study-card-inner" id="study-card-inner">
+
+          <!-- Front face -->
+          <div class="study-card-face study-card-front">
+            <div class="study-card-corner-label" id="study-front-label" data-gr="Ερώτηση" data-en="Question">Ερώτηση</div>
+            <div class="study-card-content" id="study-front-content"></div>
+            <div class="study-hint-wrap" id="study-hint-wrap" style="display:none;">
+              <span class="study-hint-icon">💡</span>
+              <span class="study-hint-text"></span>
+            </div>
+          </div>
+
+          <!-- Back face -->
+          <div class="study-card-face study-card-back">
+            <div class="study-card-corner-label" id="study-back-label" data-gr="Απάντηση" data-en="Answer">Απάντηση</div>
+            <div class="study-card-content" id="study-back-content"></div>
+          </div>
+
+        </div>
+      </div>
+      <p class="study-flip-hint" id="study-flip-hint" data-gr="Πάτα για να δεις την απάντηση" data-en="Tap to reveal answer">Πάτα για να δεις την απάντηση</p>
+    </div>
+
+    <!-- Fill-in-gap mode area (hidden in flip modes) -->
+    <div class="study-fill-area" id="study-fill-area" style="display:none;" aria-live="polite">
+      <div class="study-fill-question" id="study-fill-question"></div>
+      <div class="study-fill-input-wrap">
+        <input class="study-fill-input" id="study-fill-input" type="text"
+               autocomplete="off" autocorrect="off" spellcheck="false"
+               placeholder="Γράψε την απάντηση…"
+               onkeydown="if(event.key==='Enter'&&!this.disabled) Mnemosyne.submitFill()">
+        <button class="study-fill-submit" onclick="Mnemosyne.submitFill()" aria-label="Έλεγχος">→</button>
+      </div>
+      <div class="study-fill-result" id="study-fill-result"></div>
+    </div>
+
+    <!-- Action buttons (hidden until card is flipped) -->
+    <div class="study-actions" id="study-actions" role="group">
+      <button class="study-btn study-btn-review" onclick="Mnemosyne.review()" aria-label="Επανάληψη">
+        <span class="study-btn-icon">✕</span>
+        <span class="study-btn-label" data-gr="Επανάληψη" data-en="Review Again">Επανάληψη</span>
+      </button>
+      <button class="study-btn study-btn-master" onclick="Mnemosyne.master()" aria-label="Μαθεύτηκε">
+        <span class="study-btn-icon">✓</span>
+        <span class="study-btn-label" data-gr="Μαθεύτηκε" data-en="Mastered">Μαθεύτηκε</span>
+      </button>
+    </div>
+
+  </div><!-- /study-workspace -->
+
+  <!-- ── Session Complete Screen ── -->
+  <div class="study-complete" id="study-complete" style="display:none;" role="status">
+    <div class="study-complete-wreath">🏆</div>
+    <h2 class="study-complete-title" data-gr="Μπράβο!" data-en="Well done!">Μπράβο!</h2>
+    <p  class="study-complete-sub"   id="study-complete-sub"></p>
+    <div class="study-complete-actions">
+      <button class="study-cta-btn"                   onclick="Mnemosyne.resetMastery()" data-gr="🔄 Επανεκκίνηση" data-en="🔄 Restart">🔄 Επανεκκίνηση</button>
+      <button class="study-cta-btn study-cta-outline"  onclick="closeStudyOverlay()"     data-gr="Έξοδος" data-en="Exit">Έξοδος</button>
+    </div>
+  </div>
+
+</div><!-- /study-overlay -->

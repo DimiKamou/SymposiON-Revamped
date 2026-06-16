@@ -1,0 +1,14 @@
+<div id="trivia-overlay" class="game-overlay">
+  <div class="overlay-topbar">
+    <div class="overlay-nav-btns">
+      <button class="overlay-back" onclick="closeGame()" data-gr="← Επιλογή Παιχνιδιού" data-en="← Game Selection">← Επιλογή Παιχνιδιού</button>
+      <button class="overlay-back overlay-levels-btn" onclick="goHome()" data-gr="← Επιλογή Επιπέδου" data-en="← Level Selection">← Επιλογή Επιπέδου</button>
+    </div>
+    <div class="overlay-title" data-gr="Trivia Ιλιάδας" data-en="Iliad Trivia">Trivia Ιλιάδας</div>
+    <div class="overlay-lang">
+      <button id="ol-gr" class="active" onclick="switchGameLang('gr')">GR</button>
+      <button id="ol-en"               onclick="switchGameLang('en')">EN</button>
+    </div>
+  </div>
+  <div class="overlay-frame"><div id="game-root"></div></div>
+</div>
