@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Cerberus">
+  
+  <path d="M 60 150 Q 50 110 70 96 Q 100 84 140 92 Q 168 98 170 130 L 168 152"></path>
+  <path d="M 60 150 L 62 162 M 88 156 L 88 166 M 140 154 L 140 166 M 168 152 L 166 164" opacity="0.7"></path>
+  
+  <path d="M 100 92 Q 96 70 112 64 Q 128 62 132 80 Q 132 92 120 96"></path>
+  <path d="M 112 64 L 108 54 M 120 64 L 122 54" opacity="0.7"></path>
+  <circle cx="116" cy="76" r="1.8" fill="#E08456" stroke="none"></circle>
+  <path d="M 126 84 Q 132 86 134 82" opacity="0.6"></path>
+  
+  <path d="M 78 96 Q 64 82 70 64 Q 78 52 90 60 Q 96 72 88 84"></path>
+  <path d="M 74 64 L 68 56 M 82 60 L 82 50" opacity="0.7"></path>
+  <circle cx="78" cy="72" r="1.8" fill="#E08456" stroke="none"></circle>
+  
+  <path d="M 138 92 Q 156 80 154 60 Q 148 48 134 56 Q 128 68 138 80"></path>
+  <path d="M 150 60 L 156 52 M 142 56 L 142 46" opacity="0.7"></path>
+  <circle cx="148" cy="68" r="1.8" fill="#E08456" stroke="none"></circle>
+  
+  <path d="M 170 130 Q 196 128 198 104 Q 198 88 184 88 Q 176 88 178 98" stroke="#E08456" opacity="0.85"></path>
+  <circle cx="178" cy="100" r="1.6" fill="#E08456" stroke="none"></circle>
+  
+  <path d="M 40 170 Q 110 164 200 170" opacity="0.3"></path>
+</svg>

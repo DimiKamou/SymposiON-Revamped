@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Ship Prow">
+  <path d="M 10 64 Q 14 56 22 56 L 78 56 Q 90 56 86 68 L 80 76 L 24 76 Q 14 76 10 64 Z"></path>
+  <circle cx="24" cy="64" r="2"></circle>
+  <circle cx="36" cy="64" r="2"></circle>
+  <circle cx="48" cy="64" r="2"></circle>
+  <circle cx="60" cy="64" r="2"></circle>
+  <circle cx="72" cy="64" r="2"></circle>
+  <path d="M 78 56 Q 86 46 86 36 Q 84 28 76 26 Q 82 22 82 16 Q 78 12 72 16 L 72 28 Q 68 30 64 32 L 64 56" stroke-opacity="0.85"></path>
+  <line x1="72" y1="28" x2="78" y2="34" stroke-opacity="0.55"></line>
+  <path d="M 76 26 Q 72 30 72 36" stroke-opacity="0.55"></path>
+  <path d="M 50 56 L 50 30 L 24 30 L 50 14"></path>
+  <path d="M 50 30 Q 36 26 28 30" stroke-opacity="0.55"></path>
+  <path d="M 50 22 L 30 22" stroke-opacity="0.45"></path>
+  <path d="M 8 84 Q 24 78 40 84 T 72 84 T 96 82" stroke-opacity="0.5"></path>
+  <path d="M 8 92 Q 28 86 48 92 T 96 90" stroke-opacity="0.35"></path>
+</svg>

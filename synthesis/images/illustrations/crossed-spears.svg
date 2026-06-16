@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Crossed Spears">
+  <line x1="12" y1="12" x2="88" y2="88"></line>
+  <line x1="88" y1="12" x2="12" y2="88"></line>
+  <path d="M 12 12 L 22 20 L 14 28 Z"></path>
+  <path d="M 88 12 L 78 20 L 86 28 Z"></path>
+  <path d="M 88 88 L 78 80 L 86 72 Z"></path>
+  <path d="M 12 88 L 22 80 L 14 72 Z"></path>
+  <circle cx="50" cy="50" r="5"></circle>
+  <circle cx="50" cy="50" r="9" stroke-opacity="0.55"></circle>
+  <line x1="40" y1="40" x2="46" y2="46" stroke-opacity="0.55"></line>
+  <line x1="60" y1="40" x2="54" y2="46" stroke-opacity="0.55"></line>
+  <line x1="40" y1="60" x2="46" y2="54" stroke-opacity="0.55"></line>
+  <line x1="60" y1="60" x2="54" y2="54" stroke-opacity="0.55"></line>
+</svg>

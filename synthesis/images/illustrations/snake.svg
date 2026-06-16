@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Serpent / Caduceus">
+  <line x1="50" y1="12" x2="50" y2="88" stroke-width="1.8"></line>
+  <path d="M 50 14 Q 36 22 50 32 Q 64 42 50 52 Q 36 62 50 72 Q 60 78 50 84"></path>
+  <path d="M 50 14 Q 64 22 50 32 Q 36 42 50 52 Q 64 62 50 72 Q 40 78 50 84" stroke-opacity="0.85"></path>
+  <path d="M 36 22 L 30 20" stroke-opacity="0.7"></path>
+  <circle cx="30" cy="20" r="1.6" fill="currentColor" stroke="none"></circle>
+  <path d="M 28 18 L 26 16 M 28 22 L 26 24" stroke-opacity="0.6"></path>
+  <path d="M 64 22 L 70 20" stroke-opacity="0.7"></path>
+  <circle cx="70" cy="20" r="1.6" fill="currentColor" stroke="none"></circle>
+  <path d="M 72 18 L 74 16 M 72 22 L 74 24" stroke-opacity="0.6"></path>
+  <path d="M 38 8 Q 44 4 50 8 Q 56 4 62 8" stroke-opacity="0.55"></path>
+  <path d="M 42 12 Q 50 10 58 12" stroke-opacity="0.4"></path>
+</svg>
