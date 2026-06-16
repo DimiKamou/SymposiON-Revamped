@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON — Αυτοματισμοί Email</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#EFE9DC; --paper:#FFFFFF; --ink:#241B10; --muted:#8A7D66; --line:#E2D8C4;
+    --terra:#C5572F; --terra-dk:#A8451F; --gold:#C18A2C; --sage:#6E8B5A; --cream:#FBF7EE;
+    --disp:'Oswald',sans-serif; --serif:'Alegreya',Georgia,serif; --sans:'Montserrat',system-ui,sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); }
+  body{ padding:48px clamp(18px,5vw,72px) 100px; }
+  .wrap{ max-width:1180px; margin:0 auto; }
+
+  /* header */
+  .pg-eyebrow{ font-family:var(--disp); font-weight:500; letter-spacing:.32em; text-transform:uppercase; font-size:12px; color:var(--terra); margin:0 0 14px; }
+  .pg-title{ font-family:var(--serif); font-weight:800; font-size:clamp(32px,5vw,52px); line-height:1.06; margin:0 0 18px; letter-spacing:-.01em; }
+  .pg-title em{ font-style:italic; color:var(--gold); }
+  .pg-sub{ font-family:var(--serif); font-size:18px; line-height:1.6; color:#5A4F3C; max-width:60ch; margin:0; }
+  .pg-meta{ display:flex; flex-wrap:wrap; gap:10px 22px; margin-top:24px; font-family:var(--disp); text-transform:uppercase; letter-spacing:.12em; font-size:11.5px; color:var(--muted); }
+  .pg-meta b{ color:var(--ink); font-weight:600; }
+  .pg-meta span{ display:inline-flex; align-items:center; gap:8px; }
+  .pg-meta span::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--terra); }
+
+  .sec-h{ font-family:var(--disp); font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:13px; color:var(--terra-dk); margin:64px 0 6px; display:flex; align-items:center; gap:14px; }
+  .sec-h::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .sec-lede{ font-family:var(--serif); font-size:16px; color:#5A4F3C; margin:0 0 26px; max-width:64ch; line-height:1.55; }
+
+  /* ── TRIGGER / FLOW MAP ── */
+  .flow{ display:grid; gap:14px; }
+  .flow-grp{ background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:8px 8px 8px 0; overflow:hidden; }
+  .flow-grp__h{ font-family:var(--disp); font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:12px; color:#fff; background:var(--ink); padding:11px 18px; margin:-8px 0 8px -0; border-radius:0 0 14px 0; display:inline-flex; align-items:center; gap:9px; }
+  .flow-grp--sub .flow-grp__h{ background:var(--terra-dk); }
+  .flow-grp--eng .flow-grp__h{ background:var(--sage); }
+  .flow-row{ display:grid; grid-template-columns:230px 30px 1fr auto; align-items:center; gap:14px; padding:11px 18px; border-top:1px dashed var(--line); }
+  .flow-row:first-of-type{ border-top:0; }
+  .trg{ display:inline-flex; align-items:center; gap:9px; font-family:var(--disp); font-weight:500; letter-spacing:.04em; text-transform:uppercase; font-size:12px; color:var(--ink); }
+  .trg__dot{ width:9px; height:9px; border-radius:50%; background:var(--terra); flex:none; }
+  .flow-grp--sub .trg__dot{ background:var(--terra-dk); } .flow-grp--eng .trg__dot{ background:var(--sage); }
+  .arrow{ color:var(--muted); font-size:18px; text-align:center; }
+  .mail{ }
+  .mail__n{ font-family:var(--sans); font-weight:700; font-size:14.5px; }
+  .mail__s{ font-family:var(--serif); font-style:italic; font-size:13px; color:var(--muted); margin-top:1px; }
+  .when{ font-family:var(--disp); font-weight:500; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); background:var(--cream); border:1px solid var(--line); padding:5px 11px; border-radius:999px; white-space:nowrap; }
+  .when--inst{ color:var(--terra-dk); border-color:color-mix(in srgb,var(--terra) 30%,transparent); }
+
+  /* ── EMAIL TEMPLATES ── */
+  .mails{ display:grid; grid-template-columns:repeat(auto-fill,minmax(560px,1fr)); gap:34px; align-items:start; }
+  .em-wrap{ }
+  .em-tag{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .em-tag__id{ font-family:var(--disp); font-weight:600; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:var(--terra); padding:4px 11px; border-radius:7px; }
+  .em-tag__trg{ font-family:var(--disp); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  /* admin routing dropdown — decide which trigger fires this letter */
+  .em-tag__route{ display:none; font-family:var(--disp); font-weight:500; font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--terra-dk); background:var(--cream); border:1.5px solid color-mix(in srgb,var(--terra) 40%,transparent);
+    border-radius:7px; padding:4px 8px; cursor:pointer; max-width:300px; }
+  .em-tag__route:focus{ outline:none; border-color:var(--terra); }
+  .em-tag__when{ display:none; font-family:var(--disp); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  body.admin .em-tag__trg{ display:none; }
+  body.admin .em-tag__route, body.admin .em-tag__when{ display:inline-flex; align-items:center; }
+  body.admin .em-tag__route::before{ content:'⮕ '; color:var(--muted); }
+  /* email client chrome */
+  .em{ background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 20px 44px rgba(40,27,16,.12); }
+  .em__bar{ display:flex; align-items:center; gap:8px; padding:11px 16px; border-bottom:1px solid var(--line); background:var(--cream); }
+  .em__dots{ display:flex; gap:6px; } .em__dots i{ width:9px; height:9px; border-radius:50%; background:#D8CDB6; display:block; }
+  .em__from{ font-size:12px; color:var(--muted); }
+  .em__from b{ color:var(--ink); font-weight:700; }
+  .em__subj{ padding:12px 22px; border-bottom:1px solid var(--line); font-family:var(--sans); font-weight:700; font-size:14.5px; }
+  .em__subj span{ color:var(--muted); font-weight:500; }
+  /* email body — branded transactional layout */
+  .eb{ padding:0; }
+  .eb__head{ position:relative; background:radial-gradient(130% 110% at 50% -10%, #3C2D1B, var(--ink) 68%); padding:30px 34px 24px; text-align:center; color:#F1E7D4; overflow:hidden; }
+  .eb__head::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gold); opacity:.75; }
+  .eb__head::after{ content:''; position:absolute; top:6px; left:0; right:0; height:1px; background:var(--gold); opacity:.32; }
+  .eb__mark{ width:44px; height:44px; margin:8px auto 0; color:#F1E7D4; }
+  .eb__mark svg{ width:100%; height:100%; }
+  .eb__rule{ display:flex; align-items:center; justify-content:center; gap:11px; margin:12px 0 9px; color:var(--gold); }
+  .eb__rule::before, .eb__rule::after{ content:''; width:36px; height:1px; background:currentColor; opacity:.55; }
+  .eb__rule i{ width:6px; height:6px; transform:rotate(45deg); background:currentColor; display:block; }
+  .eb__kicker{ font-family:var(--disp); font-weight:500; letter-spacing:.22em; text-transform:uppercase; font-size:10.5px; color:var(--gold); }
+  /* wordmark inside the banner (editable in admin mode) */
+  .eb__word{ font-family:var(--disp); font-weight:600; letter-spacing:.36em; text-transform:uppercase; font-size:14px; color:#F4ECDC; margin:6px 0 0; padding-left:.36em; }
+  .eb__tag{ font-family:var(--serif); font-style:italic; font-size:13px; color:#C9B58C; margin:5px 0 2px; }
+  /* admin editable affordance */
+  body.admin [data-edit]{ outline:1.5px dashed color-mix(in srgb,var(--gold) 75%,transparent); outline-offset:3px; border-radius:4px; cursor:text; transition:background .15s; }
+  body.admin [data-edit]:hover{ background:rgba(193,138,44,.14); }
+  body.admin [data-edit]:focus{ outline-style:solid; outline-color:var(--gold); background:rgba(193,138,44,.18); }
+  /* admin control bar */
+  .adminbar{ position:fixed; top:16px; right:16px; z-index:300; display:flex; align-items:center; gap:12px;
+     background:var(--paper); border:1px solid var(--line); border-radius:999px; padding:8px 8px 8px 18px;
+     box-shadow:0 12px 30px rgba(40,27,16,.18); font-family:var(--sans); font-size:13px; font-weight:600; }
+  .adminbar__lbl{ display:flex; align-items:center; gap:8px; color:var(--ink); }
+  .adminbar__lbl::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--muted); }
+  body.admin .adminbar__lbl::before{ background:var(--sage); box-shadow:0 0 0 3px color-mix(in srgb,var(--sage) 22%,transparent); }
+  .adminbar__sw{ width:46px; height:26px; border-radius:999px; border:0; background:var(--line); position:relative; cursor:pointer; transition:background .18s; }
+  .adminbar__sw::after{ content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform .2s cubic-bezier(.2,.7,.2,1); box-shadow:0 2px 5px rgba(0,0,0,.3); }
+  .adminbar.on .adminbar__sw{ background:var(--sage); } .adminbar.on .adminbar__sw::after{ transform:translateX(20px); }
+  .adminbar__btn{ font-family:var(--sans); font-weight:600; font-size:12.5px; padding:7px 14px; border-radius:999px; border:1px solid var(--line); background:var(--cream); color:var(--ink); cursor:pointer; }
+  .adminbar__btn:hover{ border-color:var(--terra); color:var(--terra-dk); }
+  .adminbar__btn[hidden]{ display:none; }
+  .adminbar__hint{ position:fixed; top:58px; right:16px; z-index:300; background:var(--ink); color:#F1E7D4; font-family:var(--sans); font-size:12px; padding:8px 14px; border-radius:10px; max-width:260px; line-height:1.45; box-shadow:0 12px 30px rgba(40,27,16,.3); }
+  .adminbar__hint[hidden]{ display:none; }
+  .eb__body{ padding:30px 34px 16px; }
+  .eb__h{ font-family:var(--serif); font-weight:800; font-size:25px; line-height:1.18; margin:0 0 14px; }
+  .eb__h em{ font-style:italic; color:var(--terra-dk); }
+  .eb__p{ font-family:var(--serif); font-size:15.5px; line-height:1.62; color:#4A4030; margin:0 0 16px; }
+  .eb__p b{ color:var(--ink); }
+  .eb__cta{ display:inline-block; text-decoration:none; font-family:var(--sans); font-weight:700; font-size:15px; color:#fff; background:var(--terra); padding:14px 30px; border-radius:10px; margin:6px 0 8px; box-shadow:0 8px 20px color-mix(in srgb,var(--terra) 30%,transparent); }
+  .eb__cta--gold{ background:var(--gold); box-shadow:0 8px 20px color-mix(in srgb,var(--gold) 30%,transparent); }
+  .eb__cta--ghost{ background:none; color:var(--terra-dk); border:1.5px solid var(--terra); box-shadow:none; }
+  .eb__note{ font-family:var(--serif); font-style:italic; font-size:13.5px; color:var(--muted); margin:12px 0 0; line-height:1.5; }
+  .eb__feat{ display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line); margin-top:8px; }
+  .eb__feat:last-of-type{ border-bottom:1px solid var(--line); }
+  .eb__featic{ flex:none; width:38px; height:38px; border-radius:10px; display:grid; place-items:center; background:var(--cream); color:var(--terra-dk); font-size:19px; }
+  .eb__featt{ font-family:var(--sans); font-weight:700; font-size:14px; }
+  .eb__featd{ font-family:var(--serif); font-size:13.5px; color:#5A4F3C; line-height:1.45; margin-top:2px; }
+  /* receipt table */
+  .rcpt{ border:1px solid var(--line); border-radius:12px; overflow:hidden; margin:4px 0 16px; }
+  .rcpt__r{ display:flex; justify-content:space-between; gap:12px; padding:11px 16px; font-size:14px; border-top:1px solid var(--line); }
+  .rcpt__r:first-child{ border-top:0; }
+  .rcpt__r span:first-child{ color:var(--muted); }
+  .rcpt__r--tot{ background:var(--cream); font-family:var(--sans); font-weight:800; font-size:15.5px; }
+  .rcpt__r--disc span:last-child{ color:var(--sage); }
+  /* footer */
+  .eb__foot{ padding:22px 34px 30px; text-align:center; border-top:1px solid var(--line); background:var(--cream); }
+  .eb__social{ display:flex; gap:12px; justify-content:center; margin-bottom:14px; }
+  .eb__social a{ width:32px; height:32px; border-radius:50%; border:1px solid var(--line); display:grid; place-items:center; color:var(--muted); text-decoration:none; }
+  .eb__social svg{ width:16px; height:16px; }
+  .eb__fine{ font-family:var(--sans); font-size:11px; line-height:1.6; color:var(--muted); margin:0; }
+  .eb__fine a{ color:var(--terra-dk); text-decoration:underline; }
+
+  .note-block{ margin-top:46px; background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:14px; padding:20px 24px; }
+  .note-block h4{ font-family:var(--disp); font-weight:600; letter-spacing:.1em; text-transform:uppercase; font-size:12px; color:var(--gold); margin:0 0 8px; }
+  .note-block p{ font-family:var(--serif); font-size:14.5px; line-height:1.6; color:#4A4030; margin:0 0 8px; }
+  .note-block p:last-child{ margin-bottom:0; }
+  .note-block code{ font-family:'Oswald',monospace; background:var(--cream); border:1px solid var(--line); border-radius:5px; padding:1px 7px; font-size:13px; color:var(--terra-dk); }
+
+  @media (max-width:640px){ .flow-row{ grid-template-columns:1fr; gap:8px; } .arrow{ display:none; } .mails{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="adminbar" id="adminbar">
+  <span class="adminbar__lbl">Admin</span>
+  <button class="adminbar__sw" id="adminSw" aria-label="Λειτουργία διαχειριστή"></button>
+  <button class="adminbar__btn" id="adminReset" hidden>Επαναφορά κειμένου</button>
+</div>
+<div class="adminbar__hint" id="adminHint" hidden>Πάτησε σε οποιοδήποτε κείμενο της κεφαλίδας για να το αλλάξεις. Αποθηκεύεται αυτόματα.</div>
+<div class="wrap">
+
+  <header>
+    <p class="pg-eyebrow">SymposiON · Lifecycle</p>
+    <h1 class="pg-title">Αυτοματισμοί <em>Email</em></h1>
+    <p class="pg-sub">Όλα τα συναλλακτικά &amp; ενημερωτικά email της πλατφόρμας — ποιο γεγονός τα ενεργοποιεί, πότε φεύγουν, και πώς δείχνουν. Έτοιμα να συνδεθούν με τον email provider (π.χ. SendGrid / Postmark) και τα Firestore triggers.</p>
+    <div class="pg-meta">
+      <span><b>4</b> πρότυπα</span>
+      <span><b>10</b> ενεργοποιητές</span>
+      <span>GR · συναλλακτικά + newsletter</span>
+      <span>v1 · 16 Ιουν 2026</span>
+    </div>
+  </header>
+
+  <!-- ════════ TRIGGER MAP ════════ -->
+  <h2 class="sec-h">Χάρτης ενεργοποιητών</h2>
+  <p class="sec-lede">Κάθε γεγονός του χρήστη ή του συστήματος αντιστοιχεί σε ένα email. «Άμεσα» = αποστολή με το συμβάν· οι υπόλοιπες έχουν καθυστέρηση ή πρόγραμμα.</p>
+
+  <div class="flow" id="flow"></div>
+
+  <!-- ════════ TEMPLATES ════════ -->
+  <h2 class="sec-h">Πρότυπα email</h2>
+  <p class="sec-lede">Τέσσερα πρότυπα σε πλάτος 600px, με branded κεφαλίδα, σαφές CTA και υποσέλιδο συμμόρφωσης (διεύθυνση + απεγγραφή για τα μη-συναλλακτικά).</p>
+
+  <div class="mails" id="mails"></div>
+
+  <div class="note-block">
+    <h4>Σημειώσεις για την υλοποίηση</h4>
+    <p>Τα πρότυπα χρησιμοποιούν τις γραμματοσειρές της μάρκας για την προεπισκόπηση· στην παραγωγή πρόσθεσε web-safe fallbacks (Georgia / Arial) για συμβατότητα με email clients, και ενσωμάτωσε κρίσιμα στυλ inline.</p>
+    <p>Μεταβλητές με αγκύλες, π.χ. <code>{{firstName}}</code>, <code>{{plan}}</code>, <code>{{amount}}</code>, <code>{{nextBilling}}</code>, <code>{{accessUntil}}</code>, <code>{{receiptNo}}</code> — γεμίζουν από το event payload.</p>
+    <p>Ενεργοποιητές: <code>auth.user.created</code>, <code>subscription.created</code>, <code>subscription.canceled</code>, <code>invoice.payment_failed</code>, scheduled <code>newsletter.monthly</code>.</p>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#241B10"/>
+    <rect x="24" y="32" width="52" height="36" rx="4" fill="none" stroke="#C18A2C" stroke-width="2.6"/>
+    <path d="M26 36 L50 52 L74 36" fill="none" stroke="#C5572F" stroke-width="2.6"/>
+  </svg>
+</template>
+
+<script>
+  /* brand Σ mark */
+  function mark(){ return '<svg viewBox="0 0 100 100"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square"><line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></g><g fill="none" stroke="#C5572F" stroke-width="3.4" stroke-linecap="round"><circle cx="64" cy="50" r="12" stroke-dasharray="62 12" stroke-dashoffset="-7" transform="rotate(-90 64 50)"/></g></svg>'; }
+  function social(){ return '<div class="eb__social"><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg></a><a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 4v9.5a3.5 3.5 0 1 1-3-3.46"/><path d="M14 4c.5 2.4 2 3.8 4 4"/></svg></a></div>'; }
+  const fineTx = 'SymposiON · Παίξε τον αρχαίο κόσμο · Αθήνα, Ελλάδα<br/>Αυτό είναι συναλλακτικό email σχετικά με τον λογαριασμό σου.';
+  const fineMk = 'SymposiON · Αθήνα, Ελλάδα · Λαμβάνεις το email επειδή είσαι μέλος.<br/><a href="#">Απεγγραφή</a> · <a href="#">Προτιμήσεις email</a>';
+
+  /* ── flow map data ── */
+  const FLOW = [
+    { cls:'', h:'⎆ Λογαριασμός', rows:[
+      { trg:'auth.user.created', n:'Καλωσόρισμα', s:'«Καλωσήρθες στο SymposiON!»', when:'Άμεσα', inst:1 },
+      { trg:'auth.email.verify', n:'Επιβεβαίωση email', s:'«Επιβεβαίωσε τη διεύθυνσή σου»', when:'Άμεσα', inst:1 },
+      { trg:'auth.password.reset', n:'Επαναφορά κωδικού', s:'«Όρισε νέο κωδικό»', when:'Άμεσα', inst:1 },
+    ]},
+    { cls:'flow-grp--sub', h:'€ Συνδρομή', rows:[
+      { trg:'subscription.created', n:'Καλωσόρισμα Pro + απόδειξη', s:'«Είσαι πλέον Pro — η απόδειξή σου»', when:'Άμεσα', inst:1 },
+      { trg:'invoice.payment_failed', n:'Αποτυχία πληρωμής', s:'«Δεν περάσαμε τη χρέωση»', when:'Άμεσα + επανάληψη 3×' },
+      { trg:'subscription.renewed', n:'Απόδειξη ανανέωσης', s:'«Η συνδρομή σου ανανεώθηκε»', when:'Στην ανανέωση' },
+      { trg:'subscription.canceled', n:'Επιβεβαίωση ακύρωσης', s:'«Η συνδρομή σου ακυρώθηκε»', when:'Άμεσα', inst:1 },
+      { trg:'subscription.canceled', n:'Win-back', s:'«Σου λείπει το Pro;»', when:'+14 μέρες' },
+    ]},
+    { cls:'flow-grp--eng', h:'✦ Engagement', rows:[
+      { trg:'newsletter.monthly', n:'Μηνιαίο newsletter', s:'«Τα νέα του μήνα»', when:'1η κάθε μήνα' },
+      { trg:'inactivity.14d', n:'Re-engagement', s:'«Η τάξη σου σε περιμένει»', when:'+14 μέρες αδράνειας' },
+    ]},
+  ];
+  // canonical trigger list + per-letter when-labels, derived from the flow map
+  const TRIGGERS = [...new Set(FLOW.flatMap(g=>g.rows.map(r=>r.trg)))];
+  const WHEN_BY_TRG = {}; FLOW.forEach(g=>g.rows.forEach(r=>{ if(!WHEN_BY_TRG[r.trg]) WHEN_BY_TRG[r.trg]=r.when; }));
+  const flow = document.getElementById('flow');
+  FLOW.forEach(g=>{
+    const box = document.createElement('div'); box.className='flow-grp '+g.cls;
+    box.innerHTML = '<div class="flow-grp__h">'+g.h+'</div>';
+    g.rows.forEach(r=>{
+      const row = document.createElement('div'); row.className='flow-row';
+      row.innerHTML = '<span class="trg"><span class="trg__dot"></span>'+r.trg+'</span>'
+        + '<span class="arrow">→</span>'
+        + '<span class="mail"><span class="mail__n">'+r.n+'</span><span class="mail__s">'+r.s+'</span></span>'
+        + '<span class="when'+(r.inst?' when--inst':'')+'">'+r.when+'</span>';
+      box.appendChild(row);
+    });
+    flow.appendChild(box);
+  });
+
+  /* ── email templates ── */
+  function em(o){
+    return '<div class="em-wrap"><div class="em-tag"><span class="em-tag__id">'+o.id+'</span>'
+      + '<span class="em-tag__trg">'+o.trg+'</span>'
+      + '<select class="em-tag__route" data-mail="'+o.id+'">'+TRIGGERS.map(t=>'<option value="'+t+'"'+(t===o.trg?' selected':'')+'>'+t+'</option>').join('')+'</select>'
+      + '<span class="em-tag__when" data-when="'+o.id+'">'+(WHEN_BY_TRG[o.trg]||'')+'</span></div>'
+      + '<div class="em"><div class="em__bar"><span class="em__dots"><i></i><i></i><i></i></span>'
+      + '<span class="em__from"><b>SymposiON</b> &lt;hello@symposion.gr&gt;</span></div>'
+      + '<div class="em__subj" data-edit data-html data-k="'+o.id+'.subj">'+o.subj+'</div>'
+      + '<div class="eb"><div class="eb__head"><div class="eb__mark">'+mark()+'</div>'
+      +   '<div class="eb__word" data-edit data-k="'+o.id+'.word">'+(o.word||'SYMPOSION')+'</div>'
+      +   '<div class="eb__rule"><i></i></div>'
+      +   '<div class="eb__kicker" data-edit data-k="'+o.id+'.kicker">'+o.kicker+'</div>'
+      +   (o.tag?'<div class="eb__tag" data-edit data-k="'+o.id+'.tag">'+o.tag+'</div>':'')
+      +   '</div>'
+      + '<div class="eb__body" data-edit data-html data-k="'+o.id+'.body">'+o.body+'</div>'
+      + '<div class="eb__foot">'+(o.mk?social():'')+'<p class="eb__fine" data-edit data-html data-k="'+o.id+'.fine">'+(o.mk?fineMk:fineTx)+'</p></div>'
+      + '</div></div></div>';
+  }
+  const feat = (ic,t,d)=>'<div class="eb__feat"><span class="eb__featic">'+ic+'</span><div><div class="eb__featt">'+t+'</div><div class="eb__featd">'+d+'</div></div></div>';
+
+  const MAILS = [
+    { id:'M1', trg:'auth.user.created', kicker:'Καλωσόρισμα',
+      subj:'Καλωσήρθες στο SymposiON, {{firstName}}! <span>— ξεκίνα να παίζεις</span>',
+      body:'<h1 class="eb__h">Γεια σου <em>{{firstName}}</em>,<br/>καλωσήρθες στο Συμπόσιο.</h1>'
+        +'<p class="eb__p">Από σήμερα μαθαίνεις Αρχαία, Ιστορία, Λατινικά και πολλά ακόμη — μέσα από παιχνίδια. Ο λογαριασμός σου είναι έτοιμος.</p>'
+        +'<a class="eb__cta" href="{{appUrl}}">Ξεκίνα να παίζεις →</a>'
+        +feat('🏛️','Διάλεξε την τάξη σου','Η ύλη και τα παιχνίδια προσαρμόζονται αυτόματα.')
+        +feat('⚡','Παίξε Live με την τάξη','Ζωντανοί διαγωνισμοί σε πραγματικό χρόνο.')
+        +feat('🏺','Κέρδισε Kleos','Ξεκλείδωσε θέματα, δείκτες και ακρωτήρια.')
+        +'<p class="eb__note">Χρειάζεσαι βοήθεια; Απάντησε απλώς σε αυτό το email.</p>' },
+
+    { id:'M3', trg:'subscription.created', kicker:'Συνδρομή · Απόδειξη {{receiptNo}}',
+      subj:'Είσαι πλέον Pro! <span>Η απόδειξή σου #{{receiptNo}}</span>',
+      body:'<h1 class="eb__h">Καλωσήρθες στο <em>SymposiON Pro</em>.</h1>'
+        +'<p class="eb__p">Ξεκλειδώθηκαν όλα τα παιχνίδια, η Άνοδος και το απεριόριστο Live — για όλη την οικογένεια. Ευχαριστούμε που στηρίζεις το SymposiON!</p>'
+        +'<div class="rcpt"><div class="rcpt__r"><span>SymposiON Pro · {{plan}}</span><span>{{amount}}</span></div>'
+        +'<div class="rcpt__r rcpt__r--disc"><span>Έκπτωση {{code}}</span><span>−{{discount}}</span></div>'
+        +'<div class="rcpt__r"><span>Επόμενη χρέωση</span><span>{{nextBilling}}</span></div>'
+        +'<div class="rcpt__r rcpt__r--tot"><span>Σύνολο</span><span>{{total}}</span></div></div>'
+        +'<a class="eb__cta" href="{{accountUrl}}">Δες τη συνδρομή σου →</a>'
+        +'<p class="eb__note">Η απόδειξη σε PDF επισυνάπτεται. Ακύρωση όποτε θες, χωρίς ρήτρα.</p>' },
+
+    { id:'M4', trg:'subscription.canceled', kicker:'Συνδρομή · Ακύρωση',
+      subj:'Η συνδρομή σου ακυρώθηκε — έχεις πρόσβαση μέχρι {{accessUntil}}',
+      body:'<h1 class="eb__h">Η ακύρωση <em>ολοκληρώθηκε</em>.</h1>'
+        +'<p class="eb__p">Λάβαμε το αίτημά σου. Διατηρείς πλήρη πρόσβαση Pro μέχρι τις <b>{{accessUntil}}</b>· μετά ο λογαριασμός γυρνά αυτόματα στο δωρεάν πλάνο. Δεν θα γίνει άλλη χρέωση.</p>'
+        +'<p class="eb__p">Μετά τη λήξη χάνεις: τα κλειδωμένα παιχνίδια, την Άνοδο και το απεριόριστο Live. Η πρόοδος, τα Kleos και τα παράσημά σου <b>μένουν</b>.</p>'
+        +'<a class="eb__cta eb__cta--ghost" href="{{reactivateUrl}}">Επανενεργοποίηση Pro</a>'
+        +'<p class="eb__note">Θες να μας πεις γιατί έφυγες; <a href="#" style="color:inherit">Μια γρήγορη ερώτηση</a> μάς βοηθά πολύ.</p>' },
+
+    { id:'M5', trg:'newsletter.monthly', kicker:'Τα νέα του μήνα · Ιούνιος', mk:1,
+      subj:'Τα νέα του μήνα: νέα παιχνίδια &amp; εποχικά θέματα ☀️',
+      body:'<h1 class="eb__h">Καλό <em>καλοκαίρι</em>, {{firstName}}!</h1>'
+        +'<p class="eb__p">Νέα παιχνίδια, εποχικά θέματα και ένα κόλπο για να ανεβάσεις το σερί σου — όλα όσα πρόσθεσε το SymposiON αυτόν τον μήνα.</p>'
+        +feat('🎮','3 νέα παιχνίδια','Γραμματική Invaders, Ναυμαχία & Λαβύρινθος.')
+        +feat('☀️','Θέμα «Πανηγύρι»','Καλοκαιρινή παλέτα + δείκτης με πέταλα.')
+        +feat('💡','Tip του μήνα','Παίξε 7 μέρες σερί για διπλά Kleos τα Σαββατοκύριακα.')
+        +'<a class="eb__cta" href="{{appUrl}}" style="margin-top:14px">Δες τι νέο →</a>' },
+  ];
+  document.getElementById('mails').innerHTML = MAILS.map(em).join('');
+
+  /* ── ADMIN MODE: edit banner text inline, persisted in localStorage ──
+     Lets an admin reword the banner (wordmark / kicker / tag) per template
+     without touching code. In production these map to a CMS field per email. */
+  (function(){
+    const KEY = 'symEmailBannerText';
+    const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ return {}; } };
+    const save = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){} };
+    let store = load();
+
+    // apply any saved overrides on load (data-html fields restore innerHTML, others textContent)
+    function applyAll(){ document.querySelectorAll('[data-edit][data-k]').forEach(elm=>{ const v = store[elm.dataset.k]; if(v!=null && v!=='') { if(elm.hasAttribute('data-html')) elm.innerHTML = v; else elm.textContent = v; } }); }
+    applyAll();
+
+    /* ── routing: which trigger fires each letter (persisted) ── */
+    const RKEY = 'symEmailRouting';
+    const loadR = () => { try { return JSON.parse(localStorage.getItem(RKEY) || '{}'); } catch(e){ return {}; } };
+    let routing = loadR();
+    function applyRouting(){
+      document.querySelectorAll('.em-tag__route').forEach(sel=>{
+        const mail = sel.dataset.mail; const v = routing[mail];
+        if(v){ sel.value = v; }
+        const trg = sel.value;
+        const tag = sel.parentElement.querySelector('.em-tag__trg'); if(tag) tag.textContent = trg;
+        const when = sel.parentElement.querySelector('.em-tag__when'); if(when) when.textContent = (window.__WHEN&&window.__WHEN[trg])||'';
+      });
+    }
+    window.__WHEN = WHEN_BY_TRG;
+    applyRouting();
+    document.addEventListener('change', (e)=>{
+      const sel = e.target.closest && e.target.closest('.em-tag__route'); if(!sel) return;
+      routing[sel.dataset.mail] = sel.value;
+      try { localStorage.setItem(RKEY, JSON.stringify(routing)); } catch(_){}
+      applyRouting();
+    });
+
+    const bar = document.getElementById('adminbar');
+    const sw = document.getElementById('adminSw');
+    const resetBtn = document.getElementById('adminReset');
+    const hint = document.getElementById('adminHint');
+
+    function setAdmin(on){
+      document.body.classList.toggle('admin', on);
+      bar.classList.toggle('on', on);
+      resetBtn.hidden = !on;
+      hint.hidden = !on;
+      document.querySelectorAll('[data-edit]').forEach(elm=>{
+        if(on){ elm.setAttribute('contenteditable','true'); elm.spellcheck = false; }
+        else { elm.removeAttribute('contenteditable'); }
+      });
+      if(on) setTimeout(()=>{ hint.hidden = true; }, 4200);
+    }
+    sw.addEventListener('click', ()=> setAdmin(!document.body.classList.contains('admin')) );
+
+    // persist edits on blur (data-html stores innerHTML, others textContent)
+    document.addEventListener('blur', (e)=>{
+      const elm = e.target.closest && e.target.closest('[data-edit][data-k]');
+      if(!elm || !document.body.classList.contains('admin')) return;
+      store[elm.dataset.k] = elm.hasAttribute('data-html') ? elm.innerHTML.trim() : elm.textContent.trim();
+      save(store);
+    }, true);
+    document.addEventListener('keydown', (e)=>{
+      const ed = e.target.closest && e.target.closest('[data-edit]');
+      if(!ed) return;
+      // single-line fields (banner) commit on Enter; multi-line body allows newlines
+      if(e.key==='Enter' && !ed.hasAttribute('data-html')){ e.preventDefault(); ed.blur(); }
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      store = {}; save(store);
+      document.getElementById('mails').innerHTML = MAILS.map(em).join('');
+      applyRouting();   // keep trigger assignments after a text reset
+      setAdmin(true);
+    });
+  })();
+</script>
+</body>
+</html>

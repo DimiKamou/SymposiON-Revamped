@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON — Επισκόπηση Αλλαγών</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800&family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#11100D; --panel:#1A1814; --panel2:#211E19; --line:#2E2A23;
+    --ink:#F2ECDE; --muted:#A39A88; --terra:#D2783F; --terra-dk:#B85E2A; --gold:#D8B25A;
+    --fw:460px;            /* card frame width  */
+    --scale:0.341;         /* iframe scale      */
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Montserrat',system-ui,sans-serif; }
+  body{ padding:46px clamp(20px,5vw,72px) 90px; }
+
+  .ov-head{ max-width:1500px; margin:0 auto 38px; }
+  .ov-eyebrow{ font-family:'Oswald',sans-serif; font-weight:500; letter-spacing:.34em; text-transform:uppercase; font-size:12px; color:var(--terra); margin:0 0 14px; }
+  .ov-title{ font-family:'Alegreya',Georgia,serif; font-weight:800; font-size:clamp(30px,4.6vw,52px); line-height:1.08; margin:0 0 20px; letter-spacing:-.01em; }
+  .ov-title em{ font-style:italic; color:var(--gold); }
+  .ov-sub{ margin:0; max-width:760px; color:var(--muted); font-size:15px; line-height:1.6; }
+  .ov-meta{ display:flex; flex-wrap:wrap; gap:10px 22px; margin-top:22px; font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.12em; font-size:11.5px; color:var(--muted); }
+  .ov-meta b{ color:var(--ink); font-weight:600; }
+  .ov-meta span{ display:inline-flex; align-items:center; gap:8px; }
+  .ov-meta span::before{ content:''; width:7px; height:7px; border-radius:50%; background:var(--terra); }
+
+  .ov-grid{ max-width:1500px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--fw),1fr)); gap:26px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 18px 40px rgba(0,0,0,.34); }
+  .card__bar{ display:flex; align-items:center; gap:8px; padding:11px 14px; background:var(--panel2); border-bottom:1px solid var(--line); }
+  .card__dots{ display:flex; gap:6px; }
+  .card__dots i{ width:9px; height:9px; border-radius:50%; background:#37322A; display:block; }
+  .card__url{ flex:1; font-family:'Oswald',sans-serif; font-size:10.5px; letter-spacing:.06em; text-transform:lowercase; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card__no{ font-family:'Alegreya',serif; font-weight:700; font-size:13px; color:var(--terra); }
+
+  .frame{ position:relative; width:100%; height:calc(900px * var(--scale)); background:#0c0b09; overflow:hidden; }
+  .frame iframe{ position:absolute; top:0; left:0; width:calc(var(--fw) / var(--scale)); height:900px; border:0; transform:scale(var(--scale)); transform-origin:top left; pointer-events:none; }
+  .frame__open{ position:absolute; inset:0; z-index:2; display:flex; align-items:flex-end; justify-content:flex-end; padding:12px; opacity:0; transition:opacity .18s; text-decoration:none; background:linear-gradient(to top, rgba(10,9,7,.4), transparent 46%); }
+  .frame:hover .frame__open{ opacity:1; }
+  .frame__open span{ background:var(--terra); color:#fff; font-family:'Oswald',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.1em; font-size:11px; padding:7px 13px; border-radius:8px; }
+
+  .card__cap{ padding:15px 16px 17px; }
+  .card__nm{ font-family:'Alegreya',serif; font-weight:700; font-size:18px; margin:0; }
+  .card__en{ font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.14em; font-size:10.5px; color:var(--muted); margin:3px 0 0; }
+  .card__desc{ margin:11px 0 0; font-size:12.6px; line-height:1.55; color:#C9C0AE; }
+  .card__tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .card__tags b{ font-family:'Oswald',sans-serif; font-weight:500; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--gold); background:rgba(216,178,90,.1); border:1px solid rgba(216,178,90,.28); border-radius:999px; padding:3px 9px; }
+
+  .ov-note{ max-width:1500px; margin:34px auto 0; color:var(--muted); font-size:12.5px; line-height:1.6; border-top:1px solid var(--line); padding-top:18px; }
+  .ov-note b{ color:var(--ink); }
+</style>
+</head>
+<body>
+  <header class="ov-head">
+    <p class="ov-eyebrow">SymposiON · Home Revamp</p>
+    <h1 class="ov-title">Επισκόπηση <em>Αλλαγών</em> — οι οθόνες του site</h1>
+    <p class="ov-sub">Ζωντανή προεπισκόπηση κάθε μέρους που αλλάξαμε. Κάθε πλαίσιο είναι η πραγματική εφαρμογή — πέρασε το ποντίκι και πάτα «Άνοιγμα» για πλήρη οθόνη.</p>
+    <div class="ov-meta">
+      <span><b>9</b>&nbsp;οθόνες · screens</span>
+      <span><b>15 Ιουν 2026</b></span>
+      <span>live preview</span>
+    </div>
+  </header>
+
+  <main class="ov-grid" id="grid"></main>
+
+  <p class="ov-note"><b>Σημείωση:</b> τα πλαίσια είναι μικρογραφίες της ζωντανής εφαρμογής (σε κλίμακα). Για πλήρη αλληλεπίδραση άνοιξε το «Home Revamp.html». Οι οθόνες Admin φορτώνουν με ρόλο διαχειριστή μόνο για την προεπισκόπηση.</p>
+
+<script>
+  const APP = 'Home Revamp.html';
+  const SCREENS = [
+    { q:'?screen=home', url:'symposion/home', nm:'Αρχική', en:'Home', desc:'Hero με τη γραμμή ετικετών (μία σειρά), προωθητική κάρτα με αντίστροφο χρώμα, διακριτό link «Ἀγορά» στο μενού.', tags:['Hero strip','Promo','Nav glow'] },
+    { q:'?screen=temple', url:'symposion/agora', nm:'Ἀγορά', en:'Agora · Temple', desc:'Ημερήσιοι/εβδομαδιαίοι άθλοι, 102 παράσημα με φίλτρα, 40 τίτλοι, ακρωτήρια, Saga.', tags:['Quests','Medals','Titles','Acroteria'] },
+    { q:'?screen=tag&tag=tragedies', url:'symposion/#tag-tragedies', nm:'Σελίδα Ετικέτας', en:'Tag Page', desc:'Οι «extra σελίδες» — κάθε ετικέτα μαζεύει όλα τα παιχνίδια που τη φέρουν (π.χ. Τραγωδίες).', tags:['Tags','Deep-link'] },
+    { q:'?screen=admin&sec=tags&role=admin', url:'admin · game tags', nm:'Admin · Ετικέτες', en:'Game Tags', desc:'Πρόσθεσε/άλλαξε ετικέτες ανά παιχνίδι· νέες ετικέτες· εμφανίζονται αυτόματα στις σελίδες.', tags:['Admin','Tags'] },
+    { q:'?screen=admin&sec=rewards&role=admin', url:'admin · level rewards', nm:'Admin · Ανταμοιβές', en:'Level Rewards', desc:'Επεξεργασία ανταμοιβών ανά επίπεδο — τίτλοι, εικονίδια, τύποι — χωρίς deploy.', tags:['Admin','Rewards'] },
+    { q:'?screen=levelup', url:'symposion/levelup', nm:'Άνοδος Επιπέδου', en:'Level Up', desc:'Διαβάζει τη σκάλα ανταμοιβών από τα δεδομένα (όχι hardcoded).', tags:['Rewards'] },
+    { q:'?screen=gamepanel', url:'symposion/gamepanel', nm:'Πίνακας Παιχνιδιών', en:'Game Panel', desc:'Τέσσερις τρόποι προβολής — grid / list / compact / gallery — καθολικά.', tags:['Display modes'] },
+    { q:'?screen=login', url:'symposion/login', nm:'Σύνδεση', en:'Login', desc:'Με branded loading overlay (SymLoader) κατά τη σύνδεση.', tags:['SymLoader'] },
+    { q:'?screen=home&menu=themes', url:'themes · cursors picker', nm:'Θέματα & Δείκτες', en:'Themes & Cursors', desc:'74 θέματα (Light/Dark/Vivid/Seasonal/Icons/Neon), δείκτες με σχήμα+εικονίδιο, οικονομία Kleos.', tags:['Themes','Neon','Cursors'] },
+  ];
+
+  const grid = document.getElementById('grid');
+  SCREENS.forEach((s, i) => {
+    const card = document.createElement('article');
+    card.className = 'card';
+    const href = APP + s.q;
+    card.innerHTML =
+      '<div class="card__bar"><span class="card__dots"><i></i><i></i><i></i></span>'
+      + '<span class="card__url">'+s.url+'</span>'
+      + '<span class="card__no">'+String(i+1).padStart(2,'0')+'</span></div>'
+      + '<div class="frame"><iframe loading="lazy" title="'+s.en+'" src="'+href+'"></iframe>'
+      + '<a class="frame__open" href="'+href+'" target="_blank" rel="noopener"><span>Άνοιγμα ↗</span></a></div>'
+      + '<div class="card__cap"><h2 class="card__nm">'+s.nm+'</h2><p class="card__en">'+s.en+'</p>'
+      + '<p class="card__desc">'+s.desc+'</p>'
+      + '<div class="card__tags">'+s.tags.map(t=>'<b>'+t+'</b>').join('')+'</div></div>';
+    grid.appendChild(card);
+  });
+</script>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#11100D"/>
+    <g fill="none" stroke="#D2783F" stroke-width="2.4">
+      <rect x="30" y="30" width="18" height="14" rx="2"/>
+      <rect x="52" y="30" width="18" height="14" rx="2"/>
+      <rect x="30" y="48" width="18" height="14" rx="2"/>
+      <rect x="52" y="48" width="18" height="14" rx="2"/>
+    </g>
+    <text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#D8B25A">Σ</text>
+  </svg>
+</template>
+</body>
+</html>

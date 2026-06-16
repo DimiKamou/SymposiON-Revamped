@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Olympia · SymposiON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=Montserrat:wght@400;500;600;700;800&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/tokens.css"/>
+<link rel="stylesheet" href="css/shell.css"/>
+<link rel="stylesheet" href="css/stoa.css"/>
+<link rel="stylesheet" href="css/agora.css"/>
+<link rel="stylesheet" href="css/akropolis.css"/>
+<link rel="stylesheet" href="css/synthesis.css"/>
+<link rel="stylesheet" href="css/screens.css"/>
+<link rel="stylesheet" href="css/previews.css"/>
+<link rel="stylesheet" href="css/olympia.css"/>
+</head>
+<body class="oly">
+
+<div class="harness" id="harness"></div>
+
+<div class="stage theme-obsidian">
+  <div id="sym-home" class="theme-obsidian dir-synthesis"></div>
+</div>
+
+<div class="tweaks" id="tweaks"></div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" fill="#0A0907"/>
+    <g fill="none" stroke="#D2A24A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="100" cy="100" r="56" stroke-opacity="0.4"/>
+      <circle cx="100" cy="100" r="42" stroke-opacity="0.28"/>
+      <path d="M68 92 L100 68 L132 92 Z"/>
+      <line x1="64" y1="96" x2="136" y2="96"/>
+      <line x1="76" y1="100" x2="76" y2="130"/><line x1="92" y1="100" x2="92" y2="130"/>
+      <line x1="108" y1="100" x2="108" y2="130"/><line x1="124" y1="100" x2="124" y2="130"/>
+      <line x1="70" y1="132" x2="130" y2="132"/>
+    </g>
+  </svg>
+</template>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="js/store.js"></script>
+<script src="js/seasons.js"></script>
+<script src="js/data.js"></script>
+<script src="js/previews.js"></script>
+<script src="js/info-panels.js"></script>
+<script src="js/dir-stoa.js"></script>
+<script src="js/dir-agora.js"></script>
+<script src="js/dir-akropolis.js"></script>
+<script src="js/dir-synthesis.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/screens-2.js"></script>
+<script src="js/cursors.js"></script>
+<script src="js/mouse-fx.js"></script>
+<script src="js/app.js"></script>
+
+<!-- ── Olympia focus + direction switcher ──────────────────────────── -->
+<script>
+(function () {
+  // Boot straight into the Olympia (Temple) screen, in the Fusion direction.
+  if (window.STATE) { window.STATE.screen = 'temple'; window.STATE.direction = 'synthesis'; }
+
+  var DIRS = [
+    { id:'warm',   cls:'oly-warm',   theme:'obsidian',   nm:'Obsidian',   gr:'Ὀψιδιανός',  a:'#0A0907', b:'#D2A24A' },
+    { id:'verd',   cls:'oly-verd',   theme:'acroterion', nm:'Acroterion', gr:'Ἀκρωτήριον', a:'#08110F', b:'#3E9183' },
+    { id:'orphic', cls:'oly-orphic', theme:'orphic',     nm:'Orphic',     gr:'Ὀρφικὴ Νύξ', a:'#07080C', b:'#8E7FD6' },
+  ];
+  var CLASSES = DIRS.map(function (d) { return d.cls; });
+  var bar = null;
+
+  function applyDir(d, doRender) {
+    CLASSES.forEach(function (c) { document.body.classList.remove(c); });
+    document.body.classList.add(d.cls);
+    if (window.STATE) { window.STATE.theme = d.theme; window.STATE.season = null; }
+    if (window.SymSeasons) { try { SymSeasons.apply(null); } catch (e) {} }
+    if (window.SymStore) SymStore.set('oly_dir', d.id);
+    if (doRender !== false && window.symRender) window.symRender();
+    if (bar) bar.querySelectorAll('.oly-switch__b').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-dir') === d.id);
+    });
+  }
+
+  function buildBar(active) {
+    bar = document.createElement('div');
+    bar.className = 'oly-switch';
+    var lbl = document.createElement('span');
+    lbl.className = 'oly-switch__lbl';
+    lbl.textContent = 'Direction';
+    bar.appendChild(lbl);
+    DIRS.forEach(function (d) {
+      var b = document.createElement('button');
+      b.className = 'oly-switch__b' + (d.id === active ? ' on' : '');
+      b.setAttribute('data-dir', d.id);
+      b.style.setProperty('--a', d.a);
+      b.style.setProperty('--c', d.b);
+      b.innerHTML =
+        '<span class="oly-switch__sw"></span>' +
+        '<span class="oly-switch__tx">' +
+          '<span class="oly-switch__nm">' + d.nm + '</span>' +
+          '<span class="oly-switch__gr">' + d.gr + '</span>' +
+        '</span>';
+      b.addEventListener('click', function () { applyDir(d, true); });
+      bar.appendChild(b);
+    });
+    document.body.appendChild(bar);
+  }
+
+  function init() {
+    var saved = (window.SymStore && SymStore.get('oly_dir', 'warm')) || 'warm';
+    var d0 = DIRS.filter(function (x) { return x.id === saved; })[0] || DIRS[0];
+    buildBar(d0.id);
+    applyDir(d0, true);
+    document.body.classList.add('oly-ready');
+  }
+
+  // boot() runs on DOMContentLoaded first; this listener (registered later) runs after it.
+  if (document.readyState !== 'loading') init();
+  else document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
