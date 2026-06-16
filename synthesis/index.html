@@ -21,6 +21,32 @@
 <!-- Shared game-overlay container chrome (restored from Ver1 main.css so
      lazily-launched game overlays are positioned/visible over the shell). -->
 <link rel="stylesheet" href="css/overlay-chrome.css"/>
+<!-- ══════════ ADMIN (Command Center) — admin-only, lazy-visible ══════════
+     Ver1 admin styles. Scoped to #page-admin so they never touch the shell.
+     The overlay host (#page-admin) is added below; SYM_SCREENS.admin shows it. -->
+<link rel="stylesheet" href="css/admin-cc.css"/>
+<link rel="stylesheet" href="css/admin-studio.css"/>
+<link rel="stylesheet" href="css/admin-realm.css"/>
+<link rel="stylesheet" href="css/admin-atlas.css"/>
+<style id="syn-admin-host-css">
+  /* Full-screen overlay host for the admin Command Center. Hidden until the
+     admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
+     .page system, so we self-position here instead of pulling main.css. */
+  /* Above the harness top-bar (z-index:9000) and tweaks (9400) so the admin
+     Command Center is a true full-screen takeover, not layered under them. */
+  #page-admin { position:fixed; inset:0; z-index:9600; display:none; }
+  #page-admin.syn-admin-on { display:flex; }
+  .syn-admin-back {
+    position:fixed; top:14px; right:18px; z-index:9700;
+    font:600 13px/1 'Montserrat',system-ui,sans-serif; letter-spacing:.3px;
+    color:#EDE5DA; background:rgba(40,32,24,.85); border:1px solid rgba(212,174,88,.4);
+    border-radius:999px; padding:9px 16px; cursor:pointer; display:none;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  #page-admin.syn-admin-on ~ .syn-admin-back,
+  .syn-admin-back.syn-admin-on { display:block; }
+  .syn-admin-back:hover { background:#C8512E; border-color:#C8512E; color:#fff; }
+</style>
 </head>
 <body>
 
@@ -31,6 +57,12 @@
 </div>
 
 <div class="tweaks" id="tweaks"></div>
+
+<!-- ══════════ ADMIN OVERLAY HOST ══════════
+     Command Center mounts here (admin-cc.js _renderAdminPage). Hidden until the
+     admin screen activates it. Back button returns to the home shell. -->
+<div id="page-admin"></div>
+<button class="syn-admin-back" id="syn-admin-back" onclick="if(window.symGo)symGo('home')">✕ Κλείσιμο</button>
 
 <!-- ══════════ AUTH MODAL (Firebase login / signup) ══════════
      Brought from Ver1; driven by js/auth.js. Carries .theme-alabaster so it
@@ -178,6 +210,18 @@
 <script src="js/manifest/pvp-pack.js"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
 <script src="js/trivia-iframe-launchers.js"></script>
+
+<!-- ══════════ ADMIN COMMAND CENTER (admin-only) ══════════
+     Ver1 admin engine. admin.js = backend handlers; admin-cc.js = the
+     Command Center UI (navToAdmin / _renderAdminPage); realm + studio are
+     optional tabs (guarded — they stub out when their backends are absent in
+     synthesis). syn-admin.js registers SYM_SCREENS.admin to mount + show the
+     #page-admin overlay. All gated on the global isAdmin (auth.js). -->
+<script src="js/admin.js"></script>
+<script src="js/admin-realm.js"></script>
+<script src="js/admin-studio.js"></script>
+<script src="js/admin-cc.js"></script>
+<script src="js/syn-admin.js"></script>
 
 <script src="js/app.js"></script>
 </body>
