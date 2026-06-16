@@ -76,6 +76,7 @@
 <link rel="stylesheet" href="games/live-arena/live-arena-lobby.css"/>
 <!-- ★ Synthesis re-skin layer — loaded LAST so it overrides the obsidian theme. Remove this line to restore the original skin. -->
 <link rel="stylesheet" href="css/synthesis-skin.css?v=1"/>
+<link rel="stylesheet" href="css/revamp-features.css?v=1"/>
 <!-- SheetJS — Excel parsing for mass grant import -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <!-- QR code generation library -->
@@ -3449,6 +3450,8 @@
 <script src="js/live-arena-quiz-builder.js?v=1"></script>
 <script src="js/review-hub.js?v=4"></script>
 <script src="js/router.js"></script>
+<!-- ★ Revamp features runtime (consent/onboarding/guide/notifications/search/settings) — loaded via APP_BASE so it resolves regardless of <base href> / SPA route -->
+<script>(function(){try{var b=window.APP_BASE||new URL('./',location.href).href;var s=document.createElement('script');s.src=b+'js/revamp-runtime.js?v=1';s.defer=true;document.head.appendChild(s);}catch(e){console.warn('revamp-runtime load failed',e);}})();</script>
 
 <script>
 (function(){

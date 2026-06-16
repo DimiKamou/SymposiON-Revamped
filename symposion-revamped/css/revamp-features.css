@@ -1,0 +1,83 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON — Revamp features · STYLES
+   Styles for the ported prototype features (consent, onboarding, guide,
+   notifications, search, settings…). Token-bridged to the app's alabaster
+   palette and scoped to the feature popups/bars so nothing leaks into the
+   rest of the app.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Token bridge — prototype vars → app alabaster values, scoped to feature roots */
+.ob-ov, .ck-bar, .rv-pop {
+  --card: var(--sym-bg-card, #fff);
+  --bg: var(--sym-bg-dark, #FAF7F0);
+  --raise: #fff;
+  --fg: var(--sym-ink, #1A140C);
+  --muted: var(--sym-stone, #746a5b);
+  --fg-70: color-mix(in srgb, var(--sym-ink, #1A140C) 76%, transparent);
+  --disp: var(--syn-disp, 'Oswald', sans-serif);
+  --serif: var(--syn-serif, 'Alegreya', serif);
+  --sans: var(--syn-sans, 'Montserrat', sans-serif);
+  --terra: var(--sym-terra, #C5572F);
+  --terra-dk: var(--sym-terra-dk, #9C3F1F);
+  --terra-soft: color-mix(in srgb, var(--sym-terra, #C5572F) 16%, transparent);
+  --line: var(--sym-hairline, rgba(197,87,47,.16));
+  --line-bold: color-mix(in srgb, var(--sym-ink, #1A140C) 16%, transparent);
+  --shadow: rgba(40,30,20,.14);
+  --sage: var(--sym-sage, #5B7544);
+  font-family: var(--sans);
+}
+
+/* ── CTA buttons ─────────────────────────────────────────────────── */
+.syn-cta { font-family:var(--sans); font-weight:700; font-size:15px; cursor:pointer; display:inline-flex; align-items:center; gap:10px; padding:14px 26px; border-radius:999px; border:0; }
+.syn-cta--solid { background:var(--terra-dk); color:#fff; box-shadow:0 10px 28px var(--terra-soft); }
+.syn-cta--solid:hover { box-shadow:0 16px 36px var(--terra-soft); }
+.syn-cta--ghost { background:var(--card); color:var(--fg); border:1.5px solid var(--line-bold); }
+.syn-cta--ghost:hover { border-color:var(--terra); color:var(--terra-dk); }
+.syn-cta[disabled] { opacity:.5; cursor:not-allowed; }
+
+/* ── Overlay + card ──────────────────────────────────────────────── */
+.ob-ov { position:fixed; inset:0; z-index:9000; display:grid; place-items:center; padding:20px; background:rgba(20,14,8,.46); backdrop-filter:blur(3px); opacity:0; transition:opacity .28s; }
+.ob-ov.in { opacity:1; }
+.ob-card { position:relative; width:min(560px,100%); background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:22px; padding:34px 34px 26px; box-shadow:0 30px 80px rgba(30,20,10,.28); transform:translateY(14px) scale(.98); transition:transform .28s; }
+.ob-ov.in .ob-card { transform:none; }
+.ob-skip { position:absolute; top:16px; right:18px; background:none; border:0; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; }
+.ob-skip:hover { color:var(--fg); }
+.ob-mark { width:42px; height:42px; color:var(--fg); margin-bottom:14px; }
+.ob-mark svg { width:100%; height:100%; }
+.ob-eyebrow { font-family:var(--disp); font-weight:500; letter-spacing:.22em; text-transform:uppercase; font-size:11.5px; color:var(--terra-dk); margin:0 0 8px; }
+.ob-ttl { font-family:var(--serif); font-weight:800; font-size:clamp(24px,4vw,32px); line-height:1.1; margin:0 0 8px; }
+.ob-ttl em { font-style:italic; color:var(--terra-dk); }
+.ob-sub { margin:0 0 22px; color:var(--fg-70); font-size:14.5px; line-height:1.55; }
+.ob-foot { display:flex; gap:12px; justify-content:flex-end; align-items:center; margin-top:8px; }
+.ob-back { background:none; border:0; color:var(--muted); font-family:var(--sans); font-weight:600; cursor:pointer; margin-right:auto; }
+.ob-back:hover { color:var(--fg); }
+
+/* ── Consent / age-gate fields ───────────────────────────────────── */
+.cg-year { width:100%; font-family:var(--sans); font-weight:600; font-size:15px; padding:13px 15px; border:1.5px solid var(--line-bold); border-radius:12px; background:var(--card); color:var(--fg); margin:0 0 16px; }
+.cg-year:focus { outline:none; border-color:var(--terra); }
+.cg-err { border-color:#C2553A; }
+.cg-sent { font-size:13px; color:var(--sage); margin:-8px 0 16px; }
+.cg-check { display:flex; align-items:flex-start; gap:11px; padding:11px 0; font-size:14px; line-height:1.45; cursor:pointer; }
+.cg-check input { width:20px; height:20px; margin-top:1px; accent-color:var(--terra-dk); flex:none; cursor:pointer; }
+.cg-link { color:var(--terra-dk); font-weight:700; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+.cg-link:hover { color:var(--terra); }
+.cg-legal { max-height:46vh; overflow:auto; margin-bottom:18px; }
+.cg-legal h4 { font-family:var(--disp); font-weight:600; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--terra-dk); margin:16px 0 6px; }
+.cg-legal p { margin:0; font-size:14px; line-height:1.6; color:var(--fg-70); }
+.cg-legal__note { font-style:italic; color:var(--muted); margin-top:18px !important; font-size:12.5px !important; }
+
+/* ── Cookie banner ───────────────────────────────────────────────── */
+.ck-bar { position:fixed; left:16px; right:16px; bottom:16px; z-index:7500; display:flex; align-items:center; gap:18px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 20px; box-shadow:0 18px 48px rgba(30,20,10,.20); transform:translateY(120%); opacity:0; transition:transform .35s cubic-bezier(.16,1,.3,1), opacity .35s; }
+.ck-bar.in { transform:none; opacity:1; }
+.ck-bar__t { flex:1; min-width:240px; font-size:13.5px; line-height:1.5; color:var(--fg-70); }
+.ck-bar__t b { color:var(--fg); }
+.ck-bar__btns { display:flex; gap:10px; flex:none; }
+.ck-btn { font-family:var(--sans); font-weight:700; font-size:13px; padding:11px 18px; border-radius:999px; border:1.5px solid var(--line-bold); cursor:pointer; }
+.ck-btn--ghost { background:var(--bg); color:var(--fg); }
+.ck-btn--ghost:hover { border-color:var(--terra); }
+.ck-btn--solid { background:var(--terra-dk); color:#fff; border-color:var(--terra-dk); }
+.ck-btn--solid:hover { filter:brightness(1.07); }
+@media (max-width:560px){
+  .ck-bar { flex-direction:column; align-items:stretch; gap:12px; }
+  .ck-bar__btns { justify-content:stretch; } .ck-btn { flex:1; }
+}
