@@ -336,8 +336,31 @@
         return wrap;
       })(),
       (function(){ var av=(window.SymStore&&window.SYM.AVATARS)?window.SYM.AVATARS.find(function(a){return a.id===SymStore.get('avatar','av-athena');}):null; var b=el('button', { class:'syn-prof', title:'Προφίλ', onclick:()=>symGo('profile') }); var s=el('span',{class:'syn-prof__av'}); if(av){ s.setAttribute('data-illu', av.illu); } else { s.textContent='ΣΟ'; } b.appendChild(s); return b; })(),
-      el('button', { class:'syn-btn syn-btn--ghost', onclick:()=>symGo('login') }, L(ctx.STR.signin)),
-      el('button', { class:'syn-btn syn-btn--solid', onclick:()=>{ if(window.SymConsent&&SymConsent.requireConsent) SymConsent.requireConsent(()=>symGo('login')); else symGo('login'); } }, L(ctx.STR.signup)),
+      // ── Auth controls (Firebase via js/auth.js) ──
+      // When a user is signed in we show a compact chip with their name +
+      // sign-out; otherwise the sign-in / sign-up buttons open the auth modal.
+      // openAuthModal/signOutUser/currentUser come from js/auth.js (global).
+      ...(function(){
+        var u = (typeof currentUser !== 'undefined') ? currentUser : null;
+        var hasAuth = (typeof window.openAuthModal === 'function');
+        if (u) {
+          var nm = u.displayName || (u.email ? u.email.split('@')[0] : L({gr:'Χρήστης',en:'User'}));
+          var chip = el('div', { class:'syn-authchip' }, [
+            el('span', { class:'syn-authchip__av' }, (nm[0]||'?').toUpperCase()),
+            el('span', { class:'syn-authchip__nm' }, nm),
+            el('button', { class:'syn-authchip__out', title:L({gr:'Έξοδος',en:'Sign out'}),
+              onclick:()=>{ if(typeof window.signOutUser==='function') window.signOutUser(); }, html:'&#8617;' })
+          ]);
+          return [ chip ];
+        }
+        return [
+          el('button', { class:'syn-btn syn-btn--ghost',
+            onclick:()=>{ if(hasAuth) window.openAuthModal('login'); else symGo('login'); } }, L(ctx.STR.signin)),
+          el('button', { class:'syn-btn syn-btn--solid',
+            onclick:()=>{ var go=()=>{ if(hasAuth) window.openAuthModal('signup'); else symGo('login'); };
+                          if(window.SymConsent&&SymConsent.requireConsent) SymConsent.requireConsent(go); else go(); } }, L(ctx.STR.signup)),
+        ];
+      })(),
     ]);
     // mobile: collapse launcher + links + act into a drawer toggled by a burger.
     // (display:contents on desktop keeps the original bar layout untouched.)
