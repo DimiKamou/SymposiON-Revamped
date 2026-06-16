@@ -1,0 +1,17 @@
+<div id="labyrinth-overlay" class="game-overlay lb-overlay" style="--ac:var(--sym-terra,#E08456)">
+  <!-- Shared game-frame top bar -->
+  <div class="overlay-topbar lb-frame-bar">
+    <!-- Left: glyph + titles -->
+    <div class="lb-frame-identity">
+      <div class="lb-frame-glyph" data-illu="labyrinth" aria-hidden="true"></div>
+      <div class="lb-frame-titles">
+        <span class="lb-frame-gr" data-gr="Λαβύρινθος" data-en="Labyrinth">Λαβύρινθος</span>
+        <span class="lb-frame-en">Labyrinth of the Minotaur · Dungeon Crawler</span>
+      </div>
+    </div>
+    <!-- Right: back button (HUD is inside the stage) -->
+    <button class="overlay-back lb-close-btn" onclick="closeLabyrinth()" data-gr="← Έξοδος" data-en="← Exit">← <span data-gr="Έξοδος" data-en="Exit">Έξοδος</span></button>
+  </div>
+  <!-- Game stage -->
+  <div class="overlay-frame lb-stage" id="labyrinth-wrap"></div>
+</div>
