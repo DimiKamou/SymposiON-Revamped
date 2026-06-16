@@ -1,0 +1,313 @@
+<div id="la-overlay" style="display:none;">
+  <button class="la-close-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
+  <div id="la-wrap">
+
+    <!-- ── HOST: LOBBY ──────────────────────────────── -->
+    <div id="la-host-lobby" class="la-screen">
+
+  <!-- top brand bar -->
+  <div class="la-topbar">
+    <div class="la-brand">
+      <button class="la-icon-btn" onclick="LiveArena.showPicker()" title="Πίσω">←</button>
+      <svg class="la-brand-logo" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+        <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/>
+        <line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/>
+        <g stroke="#C87830" stroke-width="3.5" stroke-linecap="round">
+          <circle cx="64" cy="50" r="12" stroke-dasharray="62 12" stroke-dashoffset="-7" transform="rotate(-90 64 50)"/>
+          <line x1="64" y1="39" x2="64" y2="49"/>
+        </g>
+      </svg>
+      <div class="la-brand-text">
+        <div class="la-brand-name">Symposi<span>ON</span></div>
+        <div class="la-brand-sub">Agora Live Arena</div>
+      </div>
+    </div>
+    <div class="la-topbar-mid">
+      <div class="la-topbar-game" id="la-game-title"></div>
+      <div class="la-topbar-meta" id="la-lobby-q-count"></div>
+    </div>
+    <button class="la-icon-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
+  </div>
+
+  <!-- split: join (left) · players (right) -->
+  <div class="la-lobby-grid">
+
+    <div class="la-join-panel">
+      <div class="la-join-instruct">
+        <div class="la-join-il" data-gr="Μπες από υπολογιστή ή κινητό" data-en="Join from any device">Μπες από υπολογιστή ή κινητό</div>
+        <div class="la-join-iu">symposi-on.com</div>
+      </div>
+
+      <div class="la-code-row">
+        <div class="la-qr-card">
+          <div id="la-qr-box"></div>
+          <div class="la-qr-hint" data-gr="Σάρωσε για άμεση είσοδο" data-en="Scan to join instantly">Σάρωσε για άμεση είσοδο</div>
+        </div>
+        <div class="la-pin-cluster">
+          <div class="la-pin-label" data-gr="PIN ΕΙΣΟΔΟΥ" data-en="JOIN PIN">PIN ΕΙΣΟΔΟΥ</div>
+          <div class="la-pin-display" id="la-pin-display">------</div>
+          <div class="la-pin-share">
+            <button class="la-share-btn" onclick="LiveArena.copyInviteLink()" title="Copy link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span data-gr="Σύνδεσμος" data-en="Link">Σύνδεσμος</span>
+            </button>
+            <button class="la-share-btn" onclick="LiveArena.copyPIN()" title="Copy PIN">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              <span>PIN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="la-lobby-banner" id="la-lobby-banner" onclick="LAX.uploadBanner()" title="Ανέβασε εικόνα τάξης">
+        <span class="la-banner-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/></svg>
+          <span data-gr="Πανό τάξης (προαιρετικό)" data-en="Class banner (optional)">Πανό τάξης (προαιρετικό)</span>
+        </span>
+      </div>
+
+      <div class="la-host-id">
+        <div class="la-host-avatar" id="la-host-avatar" onclick="LAX.uploadAvatar()" title="Ανέβασε avatar">
+          <span class="la-av-initials">ΣΟ</span>
+        </div>
+        <div class="la-host-id-txt">
+          <div class="la-host-id-name" data-gr="Ο Καθηγητής" data-en="The Host">Ο Καθηγητής</div>
+          <div class="la-host-id-role" data-gr="Οικοδεσπότης" data-en="Host">Οικοδεσπότης</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="la-players-col">
+      <div class="la-players-header">
+        <span data-gr="Παίκτες σε αναμονή" data-en="Players waiting">Παίκτες σε αναμονή</span>
+        <span class="la-player-badge" id="la-player-count">0</span>
+      </div>
+      <div class="la-player-grid" id="la-player-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- footer: settings + start -->
+  <div class="la-lobby-footer">
+    <div class="la-settings">
+      <button class="la-pill" id="la-set-timer" onclick="LAX.cycleTimer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+        <span data-gr="Χρόνος" data-en="Timer">Χρόνος</span> <span class="la-pill-val" id="la-set-timer-val">25ς</span>
+      </button>
+      <button class="la-pill la-pill-on" id="la-set-shuffle" onclick="LAX.toggleShuffle()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>
+        <span data-gr="Ανάμειξη" data-en="Shuffle">Ανάμειξη</span>
+      </button>
+      <button class="la-pill" id="la-set-lock" onclick="LAX.toggleLock()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+        <span id="la-set-lock-lbl" data-gr="Ανοιχτό" data-en="Open">Ανοιχτό</span>
+      </button>
+    </div>
+    <button class="la-start-btn" id="la-start-btn" onclick="LiveArena.startBattle()" data-gr="🚀 Έναρξη Μάχης" data-en="🚀 Start Battle">🚀 Έναρξη Μάχης</button>
+  </div>
+
+    </div>
+
+    <!-- ── HOST: QUESTION ───────────────────────────── -->
+    <div id="la-host-question" class="la-screen">
+      <div class="la-hq-bar">
+        <span class="la-hq-game-tag" id="la-hq-game"></span>
+        <span class="la-hq-qnum"     id="la-hq-qnum"></span>
+        <span class="la-hq-ans-badge">
+          <span data-gr="Απαντήσεις:" data-en="Answers:">Απαντήσεις:</span>
+          <strong id="la-hq-ans-count">0</strong> / <strong id="la-hq-total">?</strong>
+        </span>
+      </div>
+      <div class="la-hq-body">
+        <div class="la-timer-wrap">
+          <svg class="la-timer-svg" viewBox="0 0 100 100">
+            <circle class="la-timer-track" cx="50" cy="50" r="44"/>
+            <circle class="la-timer-arc"   cx="50" cy="50" r="44" id="la-timer-arc"/>
+          </svg>
+          <span class="la-hq-timer" id="la-hq-timer">25</span>
+        </div>
+        <div class="la-hq-question-wrap">
+          <div class="la-hq-text" id="la-hq-text"></div>
+          <div class="la-hq-opts" id="la-hq-opts"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HOST: RESULTS ────────────────────────────── -->
+    <div id="la-host-results" class="la-screen">
+      <div class="la-hr-qtext" id="la-hr-qtext"></div>
+      <div class="la-hr-body">
+        <div class="la-hr-chart" id="la-hr-chart"></div>
+        <div class="la-hr-lb"    id="la-hr-lb"></div>
+      </div>
+      <div class="la-hr-footer">
+        <button class="la-next-btn" id="la-hr-next-btn"></button>
+      </div>
+    </div>
+
+    <!-- ── STUDENT: JOIN ─────────────────────────────── -->
+    <div id="la-join" class="la-screen">
+      <div class="la-join-inner">
+        <div class="la-join-logo">AGORA<br><em>Live Arena</em></div>
+        <div class="la-join-divider"></div>
+        <div class="la-join-prompt" data-gr="Εισάγετε PIN" data-en="Enter PIN">Εισάγετε PIN</div>
+        <input id="la-pin-input" class="la-pin-input" type="tel" inputmode="numeric"
+               maxlength="6" placeholder="000000"
+               oninput="this.value=this.value.replace(/\D/g,'')"
+               onkeydown="if(event.key==='Enter')LiveArena.submitJoin()"/>
+        <div class="la-join-error" id="la-join-error"></div>
+        <button class="la-join-btn" id="la-join-btn" onclick="LiveArena.submitJoin()" data-gr="Είσοδος →" data-en="Join →">Είσοδος →</button>
+        <button class="la-join-cancel" onclick="LiveArena.close()" data-gr="Άκυρο" data-en="Cancel">Άκυρο</button>
+      </div>
+    </div>
+
+    <!-- ── STUDENT: LOBBY WAIT ───────────────────────── -->
+    <div id="la-student-lobby" class="la-screen">
+      <div class="la-sl-inner">
+        <div class="la-greek-key"></div>
+        <div class="la-sl-pulse-wrap">
+          <div class="la-sl-icon">◈</div>
+          <div class="la-sl-game"   id="la-sl-game"></div>
+          <div class="la-sl-status" data-gr="Αναμονή εκκίνησης…" data-en="Waiting for host…">Αναμονή εκκίνησης…</div>
+        </div>
+        <div class="la-greek-key"></div>
+      </div>
+    </div>
+
+    <!-- ── STUDENT: QUESTION ────────────────────────── -->
+    <div id="la-student-question" class="la-screen">
+      <div class="la-sq-header">
+        <span class="la-sq-timer" id="la-sq-timer">25</span>
+      </div>
+      <div class="la-sq-question">
+        <div class="la-sq-text" id="la-sq-text"></div>
+      </div>
+      <div class="la-sq-grid" id="la-sq-grid"></div>
+    </div>
+
+    <!-- ── STUDENT: WAITING ─────────────────────────── -->
+    <div id="la-student-waiting" class="la-screen">
+      <div class="la-sw-inner">
+        <div class="la-sw-dots">
+          <div class="la-sw-dot"></div>
+          <div class="la-sw-dot"></div>
+          <div class="la-sw-dot"></div>
+        </div>
+        <div class="la-sw-msg" id="la-sw-msg" data-gr="Αναμονή συμμαθητών…" data-en="Waiting for classmates…">Αναμονή συμμαθητών…</div>
+      </div>
+    </div>
+
+    <!-- ── STUDENT: RESULT FLASH ────────────────────── -->
+    <div id="la-student-result" class="la-screen">
+      <canvas id="la-particles" class="la-particles-canvas"></canvas>
+      <div class="la-sr-inner">
+        <div class="la-sr-icon"  id="la-sr-icon"></div>
+        <div class="la-sr-label" id="la-sr-label"></div>
+        <div class="la-sr-pts"   id="la-sr-pts"></div>
+      </div>
+    </div>
+
+
+    <!-- ── Picker screen: teacher chooses Host or Join ────────────────── -->
+    <div class="la-screen" id="la-picker">
+      <!-- Header bar -->
+      <div class="la-picker-header">
+        <div class="la-picker-brand">
+          <svg class="la-picker-logo" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+            <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/>
+            <line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/>
+            <g stroke="#C87830" stroke-width="3.5" fill="none" stroke-linecap="round">
+              <circle cx="64" cy="50" r="12" stroke-dasharray="62 12" stroke-dashoffset="-7" transform="rotate(-90 64 50)"/>
+              <line x1="64" y1="39" x2="64" y2="49"/>
+            </g>
+          </svg>
+          <div>
+            <div class="la-picker-brand-name">Symposi<span>ON</span></div>
+            <div class="la-picker-brand-sub">Agora Live Arena</div>
+          </div>
+        </div>
+        <button class="la-picker-close-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
+      </div>
+
+      <!-- Role cards -->
+      <div class="la-picker-body">
+        <div class="la-picker-tagline" data-gr="Επίλεξε ρόλο" data-en="Choose your role">Επίλεξε ρόλο</div>
+        <div class="la-picker-cards">
+          <button class="la-picker-card" onclick="LiveArena.pickDataset()">
+            <span class="la-picker-card-icon">📡</span>
+            <span class="la-picker-card-label" data-gr="Φιλοξενία" data-en="Host">Φιλοξενία</span>
+            <span class="la-picker-card-desc" data-gr="Εκκίνηση νέας συνεδρίας για την τάξη" data-en="Launch a new session for your class">Εκκίνηση νέας συνεδρίας<br>για την τάξη</span>
+          </button>
+          <button class="la-picker-card" onclick="LiveArena.launchStudent()">
+            <span class="la-picker-card-icon">⚡</span>
+            <span class="la-picker-card-label" data-gr="Συμμετοχή" data-en="Join">Συμμετοχή</span>
+            <span class="la-picker-card-desc" data-gr="Εισαγωγή PIN για είσοδο στην αρένα" data-en="Enter a PIN to join the arena">Εισαγωγή PIN<br>για είσοδο στην αρένα</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Host dataset screen: pick which question bank ─────────────── -->
+    <div class="la-screen" id="la-host-dataset">
+      <div class="la-hd-topbar">
+        <button class="la-hd-back" id="la-ds-back-btn" onclick="LiveArena.navBack()">← Πίσω</button>
+        <h3 class="la-hd-title" id="la-ds-title">Επίλεξε Ερωτηματολόγιο</h3>
+      </div>
+      <div class="la-hd-body">
+        <div id="la-dataset-list"><!-- populated by JS --></div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOM QUIZ BUILDER ──────────────────────────────── -->
+    <div class="la-screen" id="la-custom-quiz">
+      <div class="la-hd-topbar">
+        <button class="la-hd-back" onclick="LiveArena.pickDataset()">← <span data-gr="Πίσω" data-en="Back">Πίσω</span></button>
+        <h3 class="la-hd-title" data-gr="Δικό μου Ερωτηματολόγιο" data-en="My Custom Quiz">Δικό μου Ερωτηματολόγιο</h3>
+      </div>
+      <div class="la-cq-wrap">
+
+        <!-- Quiz title -->
+        <div class="la-cq-header-row">
+          <input id="la-cq-name" class="la-cq-name-input"
+                 data-placeholder-gr="Τίτλος ερωτηματολογίου…"
+                 data-placeholder-en="Quiz title…"
+                 placeholder="Τίτλος ερωτηματολογίου…" maxlength="80"/>
+          <div class="la-cq-header-actions">
+            <button class="la-cq-upload-btn" onclick="LAQ.uploadFile()" title="Upload JSON / CSV">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span data-gr="Εισαγωγή JSON/CSV" data-en="Import JSON/CSV">Εισαγωγή JSON/CSV</span>
+            </button>
+            <button class="la-cq-template-btn" onclick="LAQ.downloadTemplate()" title="Download template">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span data-gr="Πρότυπο" data-en="Template">Πρότυπο</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Question list (populated by LAQ.js) -->
+        <div id="la-cq-list" class="la-cq-list"></div>
+
+        <!-- Empty state -->
+        <div id="la-cq-empty" class="la-cq-empty">
+          <div class="la-cq-empty-icon">❓</div>
+          <p data-gr="Δεν έχεις προσθέσει ερωτήσεις ακόμα." data-en="No questions yet.">Δεν έχεις προσθέσει ερωτήσεις ακόμα.</p>
+          <p data-gr="Πάτησε «+ Ερώτηση» ή ανέβασε αρχείο." data-en="Press «+ Question» or import a file.">Πάτησε «+ Ερώτηση» ή ανέβασε αρχείο.</p>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="la-cq-footer">
+          <button class="la-cq-add-btn" onclick="LAQ.addQuestion()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-gr="Ερώτηση" data-en="Question">Ερώτηση</span>
+          </button>
+          <span class="la-cq-count" id="la-cq-count">0 ερωτήσεις</span>
+          <button class="la-cq-start-btn" id="la-cq-start-btn" onclick="LAQ.launch()" disabled>
+            🚀 <span data-gr="Έναρξη Μάχης" data-en="Start Battle">Έναρξη Μάχης</span>
+          </button>
+        </div>
+
+      </div><!-- .la-cq-wrap -->
+    </div><!-- #la-custom-quiz -->
+
+  </div><!-- #la-wrap -->
+</div><!-- #la-overlay -->
