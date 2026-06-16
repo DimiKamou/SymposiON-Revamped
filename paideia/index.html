@@ -2,6 +2,8 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8"/>
+<!-- ★ Synthesis revamp: default to the light "alabaster" theme on first visit -->
+<script>try{if(!localStorage.getItem('symposion_theme'))localStorage.setItem('symposion_theme','alabaster');}catch(e){}</script>
 <!-- base href only on the live domain so local Live Server still resolves relative paths correctly -->
 <script>if(location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){document.write('<base href="\/"/>')}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
@@ -85,7 +87,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
-<body data-theme="" class="theme-obsidian">
+<body data-theme="" class="theme-alabaster" data-sym-theme="alabaster">
 
 <!-- ══════════ SITE BANNERS (rendered by nav.js / app.js into #site-banners-wrap) ══════════ -->
 <div id="site-banners-wrap"></div>
