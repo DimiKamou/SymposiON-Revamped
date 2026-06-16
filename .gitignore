@@ -4,3 +4,6 @@ Thumbs.db
 *.log
 .cache/
 .playwright/
+
+# Claude agent worktrees / internals
+.claude/
