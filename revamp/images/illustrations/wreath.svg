@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Holiday Wreath">
+  <circle cx="50" cy="52" r="24"></circle>
+  <circle cx="50" cy="52" r="15" opacity="0.5"></circle>
+  <path d="M 50 28 Q 44 22 50 18 Q 56 22 50 28" stroke-opacity="0.8"></path>
+  <circle cx="32" cy="44" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="66" cy="62" r="2.4" fill="currentColor" stroke="none"></circle><circle cx="60" cy="34" r="2.4" fill="currentColor" stroke="none"></circle>
+  <path d="M 44 74 L 38 84 M 56 74 L 62 84 M 50 76 L 50 84" stroke-opacity="0.7"></path>
+  <path d="M 44 76 Q 50 72 56 76 L 50 80 Z"></path>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Trivia · Scroll medallion">
+  <rect x="14" y="14" width="92" height="92" rx="6" stroke-width="1.2" opacity="0.5"></rect>
+  <rect x="22" y="22" width="76" height="76" rx="4"></rect>
+  
+  <path d="M 40 36 Q 34 36 34 42 L 34 78 Q 34 84 40 84 L 78 84 Q 84 84 84 78 L 84 42"></path>
+  <path d="M 84 42 Q 84 36 78 36 L 40 36" opacity="0.5"></path>
+  <path d="M 78 36 Q 74 40 74 46 L 74 80" opacity="0.5"></path>
+  <line x1="42" y1="48" x2="66" y2="48" opacity="0.6"></line>
+  <line x1="42" y1="56" x2="68" y2="56" opacity="0.6"></line>
+  <line x1="42" y1="64" x2="60" y2="64" opacity="0.6"></line>
+  <text x="50" y="80" font-family="Cinzel,serif" font-size="22" font-weight="700" fill="#E08456" stroke="none">?</text>
+  <circle cx="60" cy="14" r="3" fill="#E08456" stroke="none"></circle>
+</svg>

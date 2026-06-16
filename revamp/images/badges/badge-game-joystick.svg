@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Game · Controller crest">
+  <path d="M 14 40 L 60 30 L 106 40 L 100 92 L 70 96 L 60 86 L 50 96 L 20 92 Z" stroke-width="1.2" opacity="0.5"></path>
+  <path d="M 24 48 L 60 40 L 96 48 L 91 84 L 70 86 L 60 78 L 50 86 L 29 84 Z"></path>
+  
+  <path d="M 40 62 L 46 62 L 46 56 L 52 56 L 52 62 L 58 62 L 58 68 L 52 68 L 52 74 L 46 74 L 46 68 L 40 68 Z" opacity="0.8"></path>
+  
+  <circle cx="76" cy="58" r="4" fill="#E08456" stroke="none"></circle>
+  <circle cx="86" cy="68" r="4" stroke="#E08456"></circle>
+  <circle cx="66" cy="68" r="3" stroke="#E08456" opacity="0.7"></circle>
+</svg>

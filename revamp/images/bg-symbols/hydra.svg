@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Lernaean Hydra">
+  
+  <path d="M 70 168 Q 50 160 56 138 Q 64 118 90 122 Q 110 126 108 144"></path>
+  <path d="M 70 168 Q 110 174 150 168 Q 176 162 174 142" opacity="0.85"></path>
+  
+  <path d="M 90 124 Q 78 100 60 92 Q 48 86 44 72"></path>
+  <path d="M 100 122 Q 96 96 84 78 Q 76 66 80 52"></path>
+  <path d="M 112 124 Q 116 98 112 76 Q 110 62 120 52"></path>
+  <path d="M 124 126 Q 134 102 150 88 Q 160 80 160 66"></path>
+  <path d="M 138 130 Q 154 110 174 102 Q 186 98 188 84"></path>
+  
+  
+    <g transform="rotate(-30 44 72)">
+      <path d="M 36 72 Q 34 64 44 63 Q 56 63 56 72 Q 56 77 46 77 Z"></path>
+      <path d="M 56 72 L 64 71" stroke="#E08456" opacity="0.7"></path>
+      <circle cx="46" cy="69" r="1.2" fill="#E08456" stroke="none"></circle>
+    </g>
+    <g transform="rotate(-10 80 52)">
+      <path d="M 72 52 Q 70 44 80 43 Q 92 43 92 52 Q 92 57 82 57 Z"></path>
+      <path d="M 92 52 L 100 51" stroke="#E08456" opacity="0.7"></path>
+      <circle cx="82" cy="49" r="1.2" fill="#E08456" stroke="none"></circle>
+    </g>
+    <g transform="rotate(10 120 52)">
+      <path d="M 112 52 Q 110 44 120 43 Q 132 43 132 52 Q 132 57 122 57 Z"></path>
+      <path d="M 132 52 L 140 51" stroke="#E08456" opacity="0.7"></path>
+      <circle cx="122" cy="49" r="1.2" fill="#E08456" stroke="none"></circle>
+    </g>
+    <g transform="rotate(25 160 66)">
+      <path d="M 152 66 Q 150 58 160 57 Q 172 57 172 66 Q 172 71 162 71 Z"></path>
+      <path d="M 172 66 L 180 65" stroke="#E08456" opacity="0.7"></path>
+      <circle cx="162" cy="63" r="1.2" fill="#E08456" stroke="none"></circle>
+    </g>
+    <g transform="rotate(40 188 84)">
+      <path d="M 180 84 Q 178 76 188 75 Q 200 75 200 84 Q 200 89 190 89 Z"></path>
+      <path d="M 200 84 L 208 83" stroke="#E08456" opacity="0.7"></path>
+      <circle cx="190" cy="81" r="1.2" fill="#E08456" stroke="none"></circle>
+    </g>
+  
+  <path d="M 30 184 Q 70 178 110 184 T 190 184 T 210 182" opacity="0.3"></path>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Centaur">
+  
+  <path d="M 50 130 Q 42 108 58 98 Q 86 88 124 94 Q 142 98 146 118 L 144 132"></path>
+  <path d="M 60 128 Q 54 146 60 164 M 78 130 Q 84 148 76 166" opacity="0.85"></path>
+  <path d="M 126 128 Q 120 146 128 164 M 138 126 Q 146 144 138 162" opacity="0.85"></path>
+  
+  <path d="M 50 120 Q 32 122 26 144 Q 24 156 34 156 Q 30 144 42 138" opacity="0.7"></path>
+  
+  <path d="M 124 94 Q 132 76 130 60"></path>
+  <circle cx="130" cy="48" r="11"></circle>
+  <path d="M 124 44 Q 122 36 130 34 Q 138 36 136 44" opacity="0.6"></path>
+  <circle cx="127" cy="48" r="1.4" fill="#E08456" stroke="none"></circle>
+  <circle cx="133" cy="48" r="1.4" fill="#E08456" stroke="none"></circle>
+  
+  <path d="M 130 60 L 150 66 L 168 60"></path>
+  <path d="M 130 64 L 112 56"></path>
+  
+  <path d="M 168 38 Q 184 60 168 82" stroke="#E08456" opacity="0.9"></path>
+  <line x1="168" y1="38" x2="168" y2="82" stroke="#E08456" opacity="0.5"></line>
+  <line x1="150" y1="60" x2="196" y2="60" stroke="#E08456"></line>
+  <path d="M 196 60 L 190 57 M 196 60 L 190 63" stroke="#E08456"></path>
+</svg>

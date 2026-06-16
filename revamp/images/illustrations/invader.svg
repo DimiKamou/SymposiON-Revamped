@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Space Invader">
+  <path d="M 30 30 L 30 22 L 38 22 L 38 30"></path>
+  <path d="M 62 30 L 62 22 L 70 22 L 70 30"></path>
+  <path d="M 22 38 L 22 30 L 30 30 L 30 38 L 38 38 L 38 30 L 46 30 L 46 22 L 54 22 L 54 30 L 62 30 L 62 38 L 70 38 L 70 30 L 78 30 L 78 38"></path>
+  <path d="M 22 38 L 22 58 L 30 58 L 30 66 L 22 66 L 22 74"></path>
+  <path d="M 78 38 L 78 58 L 70 58 L 70 66 L 78 66 L 78 74"></path>
+  <path d="M 22 58 L 78 58"></path>
+  <rect x="34" y="42" width="6" height="6"></rect>
+  <rect x="60" y="42" width="6" height="6"></rect>
+  <line x1="38" y1="66" x2="38" y2="74" stroke-opacity="0.6"></line>
+  <line x1="46" y1="66" x2="46" y2="78" stroke-opacity="0.6"></line>
+  <line x1="54" y1="66" x2="54" y2="78" stroke-opacity="0.6"></line>
+  <line x1="62" y1="66" x2="62" y2="74" stroke-opacity="0.6"></line>
+  <line x1="30" y1="66" x2="30" y2="70" stroke-opacity="0.5"></line>
+  <line x1="70" y1="66" x2="70" y2="70" stroke-opacity="0.5"></line>
+</svg>

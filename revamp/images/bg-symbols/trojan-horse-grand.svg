@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Trojan Horse">
+  
+  <line x1="40" y1="176" x2="200" y2="176"></line>
+  <circle cx="74" cy="178" r="14"></circle><circle cx="74" cy="178" r="5" opacity="0.6"></circle>
+  <circle cx="166" cy="178" r="14"></circle><circle cx="166" cy="178" r="5" opacity="0.6"></circle>
+  <line x1="79.0" y1="178.0" x2="88.0" y2="178.0" opacity="0.4"></line><line x1="77.5" y1="181.5" x2="83.9" y2="187.9" opacity="0.4"></line><line x1="74.0" y1="183.0" x2="74.0" y2="192.0" opacity="0.4"></line><line x1="70.5" y1="181.5" x2="64.1" y2="187.9" opacity="0.4"></line><line x1="69.0" y1="178.0" x2="60.0" y2="178.0" opacity="0.4"></line><line x1="70.5" y1="174.5" x2="64.1" y2="168.1" opacity="0.4"></line><line x1="74.0" y1="173.0" x2="74.0" y2="164.0" opacity="0.4"></line><line x1="77.5" y1="174.5" x2="83.9" y2="168.1" opacity="0.4"></line>
+  <line x1="171.0" y1="178.0" x2="180.0" y2="178.0" opacity="0.4"></line><line x1="169.5" y1="181.5" x2="175.9" y2="187.9" opacity="0.4"></line><line x1="166.0" y1="183.0" x2="166.0" y2="192.0" opacity="0.4"></line><line x1="162.5" y1="181.5" x2="156.1" y2="187.9" opacity="0.4"></line><line x1="161.0" y1="178.0" x2="152.0" y2="178.0" opacity="0.4"></line><line x1="162.5" y1="174.5" x2="156.1" y2="168.1" opacity="0.4"></line><line x1="166.0" y1="173.0" x2="166.0" y2="164.0" opacity="0.4"></line><line x1="169.5" y1="174.5" x2="175.9" y2="168.1" opacity="0.4"></line>
+  <rect x="60" y="162" width="120" height="12" rx="2"></rect>
+  
+  <path d="M 62 162 Q 56 120 70 96 Q 84 76 120 74 Q 160 74 176 100 Q 186 120 180 162 Z"></path>
+  
+  <path d="M 70 100 Q 120 90 178 104" opacity="0.4"></path>
+  <path d="M 66 122 Q 120 114 182 124" opacity="0.4"></path>
+  <path d="M 64 142 Q 120 136 181 144" opacity="0.4"></path>
+  <line x1="96" y1="98" x2="96" y2="162" opacity="0.3"></line>
+  <line x1="120" y1="92" x2="120" y2="162" opacity="0.3"></line>
+  <line x1="148" y1="96" x2="148" y2="162" opacity="0.3"></line>
+  
+  <path d="M 120 74 Q 118 54 132 44 Q 126 34 132 26 Q 140 30 142 40 Q 156 42 160 56 Q 162 68 152 74"></path>
+  <path d="M 132 26 L 128 18 M 138 28 L 138 18" opacity="0.7"></path>
+  <circle cx="150" cy="50" r="1.6" fill="currentColor" stroke="none"></circle>
+  <path d="M 156 56 Q 162 58 164 54" opacity="0.6"></path>
+  
+  <path d="M 132 44 Q 124 48 126 56 Q 120 58 122 66" opacity="0.6"></path>
+  
+  <path d="M 180 120 Q 196 124 198 144 Q 198 158 188 162" opacity="0.7"></path>
+  
+  <rect x="106" y="120" width="28" height="22" rx="1" stroke="#E08456" opacity="0.85"></rect>
+  <line x1="120" y1="120" x2="120" y2="142" stroke="#E08456" opacity="0.5"></line>
+</svg>

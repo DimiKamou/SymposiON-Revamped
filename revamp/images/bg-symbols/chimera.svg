@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 180" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Chimera">
+  
+  <path d="M 56 132 Q 48 110 66 100 Q 96 90 134 96 Q 156 100 160 124"></path>
+  <path d="M 66 130 Q 60 146 66 162 M 84 132 Q 90 148 82 164" opacity="0.85"></path>
+  <path d="M 138 130 Q 132 146 140 162 M 150 128 Q 158 144 150 160" opacity="0.85"></path>
+  
+  <path d="M 134 96 Q 150 84 154 66 Q 156 56 166 54 Q 160 62 162 68 Q 158 80 148 84"></path>
+  <circle cx="156" cy="64" r="9" opacity="0.9"></circle>
+  <circle cx="156" cy="64" r="1.6" fill="#E08456" stroke="none"></circle>
+  <path d="M 150 58 Q 146 54 148 50 M 162 58 Q 166 54 164 50" opacity="0.6"></path>
+  
+  <path d="M 90 98 Q 84 78 96 68 Q 106 62 110 74"></path>
+  <path d="M 96 68 Q 92 58 100 54 Q 104 62 102 68" opacity="0.7"></path>
+  <circle cx="98" cy="76" r="1.4" fill="#E08456" stroke="none"></circle>
+  <path d="M 90 80 Q 84 82 86 88" opacity="0.5"></path>
+  
+  <path d="M 56 122 Q 36 122 30 102 Q 28 88 42 88 Q 50 88 48 98" stroke="#E08456" opacity="0.9"></path>
+  <circle cx="46" cy="98" r="1.4" fill="#E08456" stroke="none"></circle>
+  <path d="M 42 92 L 36 90 M 42 94 L 36 96" stroke="#E08456" opacity="0.6"></path>
+</svg>

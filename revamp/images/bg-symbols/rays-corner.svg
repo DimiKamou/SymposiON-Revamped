@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" role="img" aria-label="Corner Rays">
+  <g stroke-opacity="0.5">
+    <line x1="0" y1="0" x2="60" y2="20"></line>
+    <line x1="0" y1="0" x2="50" y2="35"></line>
+    <line x1="0" y1="0" x2="38" y2="50"></line>
+    <line x1="0" y1="0" x2="20" y2="60"></line>
+    <line x1="0" y1="0" x2="55" y2="8"></line>
+    <line x1="0" y1="0" x2="8" y2="55"></line>
+  </g>
+  <path d="M 70 14 Q 40 40 14 70" stroke-opacity="0.3"></path>
+</svg>
