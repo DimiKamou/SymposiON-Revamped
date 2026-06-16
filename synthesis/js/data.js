@@ -53,8 +53,10 @@ const CLASSES = [
     blurb:{ gr:'Κατεύθυνση — Ιστορία & Λατινικά', en:'Advanced — History & Latin' } },
 ];
 
-// helper to build a game tile
-const g = (gr, en, meta, illu) => ({ gr, en, meta, illu });
+// helper to build a game tile. `launch` (optional) = { fn:'openX', args:[] }
+// threaded to screens.js so a tile can dispatch to a real Ver1 opener via
+// synLaunch (else falls back to SymPreview). Existing tiles omit it (undefined).
+const g = (gr, en, meta, illu, launch) => ({ gr, en, meta, illu, launch });
 
 // ── Subjects per class. illu = line-art name from images/illustrations ──
 const SUBJECTS = {

@@ -148,6 +148,27 @@
 <script src="js/tags.js"></script>
 <script src="js/cursors.js"></script>
 <script src="js/mouse-fx.js"></script>
+
+<!-- ══════════ GAME-LAUNCH FRAMEWORK (Batch 0) ══════════
+     Ver1 shared engine + the synthesis lazy-loader / launcher / manifests.
+     Loaded after the revamp shell scripts and BEFORE js/app.js so synLaunch
+     and the SYN_GAMES registry exist before app.js wires tile clicks. -->
+<script src="js/syn-lazy.js"></script>
+<script src="js/loader.js"></script>
+<script src="js/scores.js"></script>
+<script src="js/progression.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/review-hub.js"></script>
+<script src="js/gp-levels.js"></script>
+<script src="js/gp-content.js"></script>
+<script src="games/shared-engine.js"></script>
+<script src="js/syn-launch.js"></script>
+<script src="js/manifest/grammar-greek.js"></script>
+<script src="js/manifest/grammar-latin.js"></script>
+<script src="js/manifest/canvas-arcade.js"></script>
+<script src="js/manifest/trivia-iframe.js"></script>
+<script src="js/manifest/multiplayer-fb.js"></script>
+
 <script src="js/app.js"></script>
 </body>
 </html>

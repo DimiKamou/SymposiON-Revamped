@@ -255,7 +255,11 @@
       const rows = ROWS[cat.id] || Array.from({length:cat.total},(_,i)=>L({gr:'Επίπεδο',en:'Level'})+' '+(i+1));
       rows.forEach((label,i)=>{
         const dn = i<cat.done, now = i===cat.done;
-        list.appendChild(el('button',{class:'lv-row'+(dn?' done':now?' now':''), onclick:()=>SymPreview.open(grammar?showType:'mc',{title:L(game)+' · '+label, illu:game.illu, note:L({gr:'Στατική προεπισκόπηση — δεν ξεκινά το παιχνίδι.',en:'Static preview — does not start the game.'})}) },[
+        list.appendChild(el('button',{class:'lv-row'+(dn?' done':now?' now':''), onclick:()=>{
+          const _fn = (window.synResolveLaunch && synResolveLaunch(game));
+          if (_fn && window.SYN_GAMES && SYN_GAMES[_fn]) { return synLaunch(_fn); }
+          return SymPreview.open(grammar?showType:'mc',{title:L(game)+' · '+label, illu:game.illu, note:L({gr:'Στατική προεπισκόπηση — δεν ξεκινά το παιχνίδι.',en:'Static preview — does not start the game.'})});
+        } },[
           el('span',{class:'lv-row__n'}, dn?'✓':String(i+1).padStart(2,'0')),
           el('span',{class:'lv-row__t'}, label),
           el('span',{class:'lv-row__go'}, (dn?L({gr:'Ξανά',en:'Replay'}):L({gr:'Ξεκίνα',en:'Start'}))+' →'),
