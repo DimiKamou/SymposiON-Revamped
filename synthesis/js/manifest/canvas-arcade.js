@@ -7,10 +7,219 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     overlay: 'invaders-overlay',
     eager:   false,
     fb:      false
+  },
+
+  // ── canvas / arcade / engine games ─────────────────────────────────────
+
+  // EAGER: IliadaControls.js wires touch/mobile controls on DOMContentLoaded
+  // (already fired by lazy time), so the boot shim below dispatches a synthetic
+  // DOMContentLoaded after the engine loads so the controls init runs.
+  openIliadaArcade: {
+    js:      ['games/iliada-arcade/game.js', 'games/iliada-arcade/IliadaControls.js'],
+    css:     ['games/iliada-arcade/game.css'],
+    overlay: 'iliada-arcade-overlay',
+    eager:   true,
+    fb:      false
+  },
+
+  // Agora Surfers (alias openTempleRun). adapter.js builds its OWN iframe
+  // overlay (agora-surfers-overlay) and loads src/* inside the iframe.
+  openAgoraSurfers: {
+    js:      ['games/agora-surfers/adapter.js'],
+    css:     [],
+    overlay: 'temple-run-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openMythMemory: {
+    js:      ['games/myth-memory/game.js'],
+    css:     ['games/myth-memory/game.css'],
+    overlay: 'myth-memory-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openEpicPuzzle: {
+    js:      ['games/epic-puzzle/game.js'],
+    css:     ['games/epic-puzzle/game.css'],
+    overlay: 'epic-puzzle-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  // Odyssey 3D — init/destroy pair; needs ODYSSEY_LOCATIONS from data.js.
+  initOdysseyJourney: {
+    js:      ['games/odyssey-journey/data.js', 'games/odyssey-journey/game.js'],
+    css:     ['games/odyssey-journey/game.css'],
+    overlay: 'odyssey-journey-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openBlade: {
+    js:      ['games/blade/game.js'],
+    css:     ['games/blade/game.css'],
+    overlay: 'blade-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  // Crypto Hack — CryptoHack IIFE builds its own overlay at runtime →
+  // overlay:null. openCryptoHack shim (below) forwards to CryptoHack.open.
+  openCryptoHack: {
+    js:      ['games/crypto-hack/game.js'],
+    css:     ['games/crypto-hack/game.css'],
+    overlay: null,
+    eager:   false,
+    fb:      false
+  },
+
+  // GP games — content comes from the GP_DATASETS bridge (gp-content.js eager);
+  // each has a built-in fallback pool/lobby so a direct open() works.
+  openDig: {
+    js:      ['games/dig/game.js'],
+    css:     ['games/dig/game.css'],
+    overlay: 'dig-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openLabyrinth: {
+    js:      ['games/labyrinth/maze.js', 'games/labyrinth/questions.js',
+              'games/labyrinth/audio.js', 'games/labyrinth/ui.js',
+              'games/labyrinth/game.js'],
+    css:     ['games/labyrinth/game.css'],
+    overlay: 'labyrinth-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openPhalanx: {
+    js:      ['games/phalanx/phalanx-audio.js', 'games/phalanx/phalanx-arena.js',
+              'games/phalanx/phalanx-engine.js'],
+    css:     ['games/phalanx/phalanx.css'],
+    overlay: 'phalanx-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openNaumachia: {
+    js:      ['games/naumachia/game.js'],
+    css:     ['games/naumachia/game.css'],
+    overlay: 'naumachia-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openRapidFire: {
+    js:      ['games/rapid-fire/storm-audio.js', 'games/rapid-fire/storm-arena.js',
+              'games/rapid-fire/storm-content.js', 'games/rapid-fire/storm-engine.js'],
+    css:     ['games/rapid-fire/kataigismos.css'],
+    overlay: 'rf-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  openTow: {
+    js:      ['games/tow/tow-audio.js', 'games/tow/tow-arena.js',
+              'games/tow/tow-questions.js', 'games/tow/game.js'],
+    css:     ['games/tow/tow.css'],
+    overlay: 'tow-overlay',
+    eager:   false,
+    fb:      false
+  },
+
+  // noun-tow shares the tow engine files; different overlay/wrap.
+  openNounTow: {
+    js:      ['games/tow/tow-audio.js', 'games/tow/tow-arena.js',
+              'games/tow/tow-questions.js', 'games/tow/game.js'],
+    css:     ['games/tow/tow.css'],
+    overlay: 'noun-tow-overlay',
+    eager:   false,
+    fb:      false
   }
-  /* filled by batch agent */
 });
+
 window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
-  'Grammar Invaders': 'openInvaders'
-  /* 'Tile name': 'openFn' */
+  'Grammar Invaders':         'openInvaders',
+  'Ιλιάδα Arcade':            'openIliadaArcade',
+  'Iliad Arcade':             'openIliadaArcade',
+  'Agora Surfers':            'openAgoraSurfers',
+  'Mythology Memory':         'openMythMemory',
+  'Epic Puzzle':              'openEpicPuzzle',
+  'Odyssey 3D':               'initOdysseyJourney',
+  "Grammarian's Blade":       'openBlade',
+  'Ξίφος Γραμματικού':        'openBlade',
+  'Crypto Hack':              'openCryptoHack',
+  'Ανασκαφή':                 'openDig',
+  'Archaeological Dig':       'openDig',
+  'Λαβύρινθος':               'openLabyrinth',
+  'Labyrinth':                'openLabyrinth',
+  'Φάλαγγα':                  'openPhalanx',
+  'Phalanx':                  'openPhalanx',
+  'Ναυμαχία':                 'openNaumachia',
+  'Naumachia':                'openNaumachia',
+  'Rapid Fire':               'openRapidFire',
+  'Καταιγισμός':              'openRapidFire',
+  'Tug of War':               'openTow'
 });
+
+// ── crypto-hack shim: window.openCryptoHack → CryptoHack.open({...}) ────────
+// CryptoHack is an IIFE defined in games/crypto-hack/game.js (loaded lazily by
+// the manifest). This wrapper resolves CryptoHack at call-time and builds its
+// own overlay, so the manifest entry uses overlay:null.
+if (!window.openCryptoHack) {
+  window.openCryptoHack = async function (cfg) {
+    // CryptoHack.open() injects its UI into a pre-existing #ch-overlay/#ch-wrap
+    // shell (it reads ch-overlay.style first), so ensure that partial is in the
+    // DOM before opening. (manifest overlay is null because synLaunch shouldn't
+    // gate the lazy-load on it — we inject it here just-in-time.)
+    if (window.synEnsureOverlay) { try { await window.synEnsureOverlay('ch-overlay'); } catch (_) {} }
+    // CryptoHack is declared as a top-level `const` in game.js. Loaded via a
+    // <script> tag it becomes a lexical global (not a window property), so we
+    // resolve it via the global scope; fall back to window.CryptoHack if a
+    // future build attaches it there.
+    var CH = window.CryptoHack;
+    if (!CH) { try { CH = (0, eval)('typeof CryptoHack!=="undefined"?CryptoHack:null'); } catch (_) {} }
+    if (CH && typeof CH.open === 'function') {
+      return CH.open(cfg || {});
+    }
+    console.warn('[syn] CryptoHack not loaded');
+  };
+}
+
+// ── iliada-arcade eager-boot trap ──────────────────────────────────────────
+// IliadaControls.js registers its mobile-controls init on DOMContentLoaded,
+// which has already fired by the time the engine is lazy-loaded. We trap the
+// assignment game.js makes to window.openIliadaArcade and wrap it so the first
+// launch dispatches a synthetic DOMContentLoaded (booting the controls) before
+// calling the real opener. Idempotent and non-enumerable so it stays invisible.
+(function () {
+  var booted = false;
+  function wrap(real) {
+    if (typeof real !== 'function' || real.__synWrapped) return real;
+    var wrapped = function () {
+      if (!booted) {
+        booted = true;
+        try { document.dispatchEvent(new Event('DOMContentLoaded')); } catch (_) {}
+      }
+      return real.apply(window, arguments);
+    };
+    wrapped.__synWrapped = true;
+    return wrapped;
+  }
+  if (typeof window.openIliadaArcade === 'function') {
+    window.openIliadaArcade = wrap(window.openIliadaArcade);
+    return;
+  }
+  var stored;
+  try {
+    Object.defineProperty(window, 'openIliadaArcade', {
+      configurable: true,
+      enumerable: true,
+      get: function () { return stored; },
+      set: function (fn) { stored = wrap(fn); }
+    });
+  } catch (_) { /* if trap fails, fall back to plain assignment by game.js */ }
+})();

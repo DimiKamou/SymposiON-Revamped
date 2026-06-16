@@ -1,0 +1,553 @@
+/* ============================================================
+   Odyssey Journey 3D — Game Styles  (Enhanced)
+   ============================================================ */
+
+/* ── Canvas ── */
+#odyssey-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── HUD ── */
+#oj-hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  pointer-events: none;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(4,12,26,0.78) 0%, transparent 100%);
+}
+
+#oj-hud-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c9a44a;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 12px rgba(201,164,74,0.35), 0 1px 4px rgba(0,0,0,0.9);
+}
+
+#oj-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#oj-progress-text {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: rgba(250,245,237,0.75);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+#oj-progress-bar {
+  width: 90px;
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+#oj-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c9a44a, #44ff88);
+  border-radius: 3px;
+  transition: width 0.7s ease;
+  width: 0%;
+  box-shadow: 0 0 6px rgba(68,255,136,0.4);
+}
+
+/* ── Island Labels ── */
+#oj-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.oj-island-label {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.oj-island-label:hover {
+  transform: translate(-50%, -100%) scale(1.12);
+  filter: brightness(1.2);
+}
+
+.oj-label-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.95));
+}
+
+.oj-label-bubble {
+  background: rgba(6, 12, 28, 0.9);
+  border: 1px solid rgba(201,164,74,0.4);
+  border-radius: 8px;
+  padding: 4px 11px 5px;
+  margin-top: 3px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 8px rgba(201,164,74,0.05);
+}
+
+.oj-label-name {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #FAF5ED;
+  white-space: nowrap;
+  letter-spacing: 0.8px;
+}
+
+.oj-label-rhap {
+  font-family: 'Crimson Text', serif;
+  font-size: 9px;
+  color: #c9a44a;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.oj-island-label.complete .oj-label-bubble {
+  border-color: rgba(68,255,136,0.45);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 10px rgba(68,255,136,0.1);
+}
+
+.oj-label-check {
+  font-size: 9px;
+  color: #44ff88;
+  margin-top: 1px;
+  display: none;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.3px;
+}
+
+.oj-island-label.complete .oj-label-check {
+  display: block;
+}
+
+/* ── Instructions ── */
+#oj-instructions {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Crimson Text', serif;
+  font-size: 13px;
+  color: rgba(250,245,237,0.45);
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* ── Panels (shared base) ── */
+.oj-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  background: rgba(4,10,22,0.8);
+  backdrop-filter: blur(8px);
+  animation: ojFadeIn 0.25s ease;
+}
+
+@keyframes ojFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.oj-panel-content {
+  background: linear-gradient(155deg, #0e1e35 0%, #080f1e 100%);
+  border: 1px solid rgba(201,164,74,0.28);
+  border-radius: 20px;
+  padding: 38px 44px;
+  max-width: 490px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.85), 0 0 40px rgba(201,164,74,0.04), inset 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+}
+
+.oj-panel-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.7));
+}
+
+.oj-panel-content h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #c9a44a;
+  margin: 0 0 14px;
+  letter-spacing: 0.8px;
+  text-shadow: 0 0 20px rgba(201,164,74,0.2);
+}
+
+.oj-panel-content p {
+  font-family: 'Crimson Text', serif;
+  font-size: 16px;
+  color: rgba(250,245,237,0.78);
+  line-height: 1.65;
+  margin: 0 0 10px;
+}
+
+.oj-panel-content .oj-subtitle {
+  font-size: 13px;
+  color: rgba(201,164,74,0.65);
+  margin-bottom: 26px;
+  letter-spacing: 0.3px;
+}
+
+.oj-panel-content button,
+.oj-result-buttons button {
+  background: linear-gradient(135deg, #c4622d, #9a4418);
+  color: #FAF5ED;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 30px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  box-shadow: 0 4px 14px rgba(196,98,45,0.35);
+}
+
+.oj-panel-content button:hover,
+.oj-result-buttons button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+  box-shadow: 0 8px 22px rgba(196,98,45,0.5);
+}
+
+.oj-close-btn {
+  position: absolute !important;
+  top: 14px !important; right: 16px !important;
+  background: rgba(255,255,255,0.05) !important;
+  padding: 5px 11px !important;
+  font-size: 13px !important;
+  border-radius: 7px !important;
+  color: rgba(250,245,237,0.45) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.oj-close-btn:hover {
+  background: rgba(255,255,255,0.1) !important;
+  color: rgba(250,245,237,0.8) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* ── Intro Panel ── */
+#oj-intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  background: rgba(4,10,22,0.92);
+  backdrop-filter: blur(10px);
+}
+
+/* ── Location Panel ── */
+#oj-loc-panel {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 20px 22px;
+  z-index: 30;
+  pointer-events: none;
+  animation: ojSlideUp 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@keyframes ojSlideUp {
+  from { transform: translateY(36px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.oj-loc-card {
+  pointer-events: auto;
+  max-width: 540px;
+  padding: 24px 28px !important;
+  text-align: left !important;
+  display: flex !important;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.oj-loc-left {
+  flex-shrink: 0;
+  text-align: center;
+  padding-top: 2px;
+}
+
+.oj-loc-icon {
+  font-size: 44px;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
+}
+
+.oj-loc-rhap {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: #c9a44a;
+  letter-spacing: 1.2px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.oj-loc-right {
+  flex: 1;
+  min-width: 0;
+}
+
+.oj-loc-right h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #c9a44a;
+  margin: 0 0 8px;
+  text-shadow: 0 0 12px rgba(201,164,74,0.2);
+}
+
+.oj-loc-right p {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: rgba(250,245,237,0.72);
+  line-height: 1.6;
+  margin: 0 0 14px;
+}
+
+.oj-loc-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.oj-quiz-start-btn {
+  font-size: 13px !important;
+  padding: 9px 20px !important;
+  margin-top: 0 !important;
+}
+
+.oj-complete-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: #44ff88;
+  background: rgba(68,255,136,0.07);
+  border: 1px solid rgba(68,255,136,0.22);
+  border-radius: 8px;
+  padding: 7px 14px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 12px rgba(68,255,136,0.06);
+}
+
+/* ── Quiz Panel ── */
+#oj-quiz-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  background: rgba(4,12,26,0.88);
+  backdrop-filter: blur(8px);
+  animation: ojFadeIn 0.2s ease;
+}
+
+.oj-quiz-content {
+  background: linear-gradient(155deg, #0e1e35 0%, #07101e 100%);
+  border: 1px solid rgba(201,164,74,0.22);
+  border-radius: 20px;
+  padding: 28px 32px 32px;
+  max-width: 530px;
+  width: 93%;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.04);
+  animation: ojFadeIn 0.2s ease;
+}
+
+.oj-quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.oj-quiz-loc {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: #c9a44a;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(201,164,74,0.25);
+}
+
+.oj-quiz-lives {
+  font-size: 17px;
+  letter-spacing: 2px;
+}
+
+.oj-quiz-progress {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: rgba(250,245,237,0.4);
+  letter-spacing: 0.5px;
+}
+
+.oj-quiz-question {
+  font-family: 'Crimson Text', serif;
+  font-size: 18px;
+  color: #FAF5ED;
+  line-height: 1.6;
+  margin-bottom: 22px;
+  min-height: 60px;
+}
+
+.oj-quiz-answers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.oj-answer-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 11px;
+  padding: 13px 15px;
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: rgba(250,245,237,0.82);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  line-height: 1.4;
+}
+
+.oj-answer-btn:hover:not(:disabled) {
+  background: rgba(201,164,74,0.1);
+  border-color: rgba(201,164,74,0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+}
+
+.oj-answer-btn.correct {
+  background: rgba(68,210,110,0.18) !important;
+  border-color: rgba(68,210,110,0.55) !important;
+  color: #6fdc8c !important;
+  box-shadow: 0 0 12px rgba(68,210,110,0.12) !important;
+}
+
+.oj-answer-btn.wrong {
+  background: rgba(220,60,60,0.18) !important;
+  border-color: rgba(220,60,60,0.5) !important;
+  color: #e08888 !important;
+}
+
+.oj-answer-btn:disabled { cursor: default; }
+
+/* ── Result Screen ── */
+.oj-result-icon {
+  font-size: 58px;
+  text-align: center;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+}
+
+.oj-quiz-content h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: #c9a44a;
+  text-align: center;
+  margin: 0 0 10px;
+  text-shadow: 0 0 16px rgba(201,164,74,0.18);
+}
+
+.oj-quiz-content p {
+  font-family: 'Crimson Text', serif;
+  font-size: 16px;
+  color: rgba(250,245,237,0.72);
+  text-align: center;
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+
+.oj-result-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.oj-result-buttons button.oj-map-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: none;
+}
+
+.oj-result-buttons button.oj-map-btn:hover {
+  background: rgba(255,255,255,0.1);
+  box-shadow: none;
+  filter: none;
+}
+
+/* ── Victory Panel ── */
+#oj-victory-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  background: rgba(4,10,22,0.94);
+  backdrop-filter: blur(12px);
+  animation: ojFadeIn 0.5s ease;
+}
+
+.oj-victory-card {
+  border-color: rgba(201,164,74,0.45) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.9), 0 0 60px rgba(201,164,74,0.07) !important;
+}
+
+.oj-stars {
+  font-size: 32px;
+  letter-spacing: 8px;
+  margin: 18px 0 14px;
+  animation: ojStarPop 0.7s ease 0.3s backwards;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4);
+}
+
+@keyframes ojStarPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}

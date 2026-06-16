@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Agora Surfers · Αρχαία Αγορά</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --ink:#2B2218; --ink2:#5A4A36;
+    --cream:#FBF6EA; --paper:#FFFFFF;
+    --gold:#E0A82E; --goldDk:#B5811C; --goldLt:#F4C75A;
+    --terra:#D9573D; --terraDk:#B23E28;
+    --sage:#6E8B3C; --sageLt:#8CA851;
+    --blue:#1E73C4; --blueLt:#3DA0E8;
+    --bronze:#B5763C;
+    --green:#5BB85C; --red:#D84B3A;
+    --line:rgba(43,34,24,0.12);
+    --fDisp:'Cinzel',serif;
+    --fSerif:'Cormorant Garamond',Georgia,serif;
+    --fSans:'Inter',system-ui,sans-serif;
+    --fMono:'JetBrains Mono',monospace;
+    --shadow:0 8px 28px rgba(40,30,15,0.18), 0 2px 6px rgba(40,30,15,0.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#bfe3ff;color:var(--ink);
+    font-family:var(--fSans);user-select:none;-webkit-user-select:none;
+    -webkit-tap-highlight-color:transparent;touch-action:none}
+  #stage{position:fixed;inset:0;overflow:hidden}
+  #stage canvas{display:block;width:100%;height:100%}
+
+  /* ── Top bar ──────────────────────────────────────── */
+  #topbar{position:absolute;top:0;left:0;right:0;height:52px;z-index:14;
+    display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+    pointer-events:none}
+  .tb-left,.tb-right{display:flex;align-items:center;gap:10px;pointer-events:auto}
+  .pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.82);
+    border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+    box-shadow:var(--shadow);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .tb-back{font-family:var(--fMono);font-size:11px;color:var(--ink2);letter-spacing:.5px;
+    text-decoration:none;cursor:pointer}
+  .tb-back:hover{color:var(--ink)}
+  .mono-badge{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  .brand{display:flex;flex-direction:column;line-height:1.05}
+  .brand .nm{font-family:var(--fDisp);font-weight:800;font-size:13px;letter-spacing:1.5px;color:var(--ink)}
+  .brand .sb{font-family:var(--fSerif);font-style:italic;font-size:12px;color:var(--terra)}
+  .icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+    background:rgba(255,255,255,0.82);box-shadow:var(--shadow);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px}
+  .icon-btn:active{transform:scale(.94)}
+
+  /* ── Score (top-left) ─────────────────────────────── */
+  #scorewrap{position:absolute;top:62px;left:16px;z-index:11;pointer-events:none}
+  #scorewrap .l{font-family:var(--fMono);font-size:9px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--ink2)}
+  #hud-score{font-family:var(--fDisp);font-weight:900;font-size:38px;line-height:.95;
+    color:var(--ink);text-shadow:0 2px 0 rgba(255,255,255,0.6)}
+
+  /* ── Right cluster (coins, dist, chaser) ──────────── */
+  #rightwrap{position:absolute;top:62px;right:16px;z-index:11;display:flex;
+    flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+  .chip{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.84);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;box-shadow:var(--shadow)}
+  .chip .ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:11px;font-weight:800;color:#fff}
+  .chip .ic.coin{background:linear-gradient(150deg,var(--goldLt),var(--goldDk))}
+  .chip .ic.dist{background:linear-gradient(150deg,var(--blueLt),var(--blue))}
+  .chip .ic.mult{background:linear-gradient(150deg,var(--sageLt),var(--sage))}
+  .chip .v{font-family:var(--fDisp);font-weight:800;font-size:17px;color:var(--ink);min-width:18px;text-align:right}
+  .chip .v.sm{font-size:14px}
+  #hud-coins.pop{animation:pop .3s ease}
+  @keyframes pop{40%{transform:scale(1.5);color:var(--goldDk)}}
+
+  /* chaser proximity gauge */
+  #chase{display:flex;align-items:center;gap:8px;background:rgba(43,34,24,0.78);
+    border-radius:999px;padding:5px 12px 5px 8px;box-shadow:var(--shadow);
+    backdrop-filter:blur(6px)}
+  #chase .ti{font-family:var(--fDisp);font-weight:800;font-size:11px;letter-spacing:1px;color:var(--goldLt)}
+  .chase-track{width:90px;height:7px;border-radius:6px;background:rgba(255,255,255,0.18);overflow:hidden}
+  #chase-fill{height:100%;width:30%;border-radius:6px;background:var(--green);transition:width .14s linear,background .3s}
+  #chase.peril{animation:perilPulse .6s ease-in-out infinite alternate}
+  @keyframes perilPulse{from{box-shadow:var(--shadow)}to{box-shadow:0 0 0 3px rgba(216,75,58,.55),var(--shadow)}}
+
+  /* ── streak (under score) ─────────────────────────── */
+  #streakwrap{position:absolute;top:108px;left:18px;z-index:11;pointer-events:none;
+    font-family:var(--fMono);font-size:12px;color:var(--terraDk);font-weight:700;letter-spacing:1px}
+
+  /* ── Power-up badges (active) ─────────────────────── */
+  #pu-hud{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);z-index:11;
+    display:flex;gap:10px;pointer-events:none;flex-wrap:wrap;justify-content:center;max-width:92vw}
+  .pu{display:flex;align-items:center;gap:9px;padding:7px 13px 7px 8px;border-radius:14px;
+    background:rgba(255,255,255,0.94);border:1px solid var(--line);box-shadow:var(--shadow);
+    border-left:4px solid var(--pc);animation:puIn .3s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes puIn{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:none}}
+  .pu-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:#fff;background:var(--pc);box-shadow:0 2px 8px color-mix(in srgb,var(--pc) 55%,transparent)}
+  .pu-ic svg{width:20px;height:20px}
+  .pu-meta{display:flex;flex-direction:column;gap:3px;min-width:64px}
+  .pu-name{font-family:var(--fMono);font-size:9.5px;font-weight:700;letter-spacing:1px;color:var(--ink)}
+  .pu-bar{height:4px;border-radius:3px;background:rgba(43,34,24,0.12);overflow:hidden}
+  .pu-bar span{display:block;height:100%;border-radius:3px;background:var(--pc);transition:width .25s linear}
+  .pu b{font-family:var(--fDisp);font-size:17px;font-weight:800;color:var(--pc);min-width:16px;text-align:center}
+
+  /* ── Question card ────────────────────────────────── */
+  #qwrap{position:absolute;top:52px;left:50%;transform:translate(-50%,-130%);
+    width:92%;max-width:580px;z-index:16;opacity:0;
+    transition:transform .34s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;
+    pointer-events:none}
+  #qwrap.visible{transform:translate(-50%,0);opacity:1}
+  .qcard{background:var(--paper);border:1px solid var(--line);border-radius:0 0 20px 20px;
+    border-top:4px solid var(--gold);padding:14px 20px 18px;
+    box-shadow:0 20px 52px rgba(40,30,15,0.32);pointer-events:auto}
+  .q-timer{height:4px;border-radius:3px;background:rgba(43,34,24,0.10);overflow:hidden;margin-bottom:14px}
+  #q-timer{height:100%;width:100%;border-radius:3px;
+    background:linear-gradient(90deg,var(--green),var(--gold) 55%,var(--terra));transition:width .1s linear}
+
+  /* highlighted question block */
+  .q-text{font-family:var(--fSerif);font-size:18px;font-weight:600;text-align:center;
+    color:var(--ink);line-height:1.5;word-break:break-word;
+    background:linear-gradient(135deg,#fffcf2,var(--cream));
+    border:1.5px solid rgba(224,168,46,0.35);border-radius:12px;
+    padding:14px 18px;margin-bottom:14px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 2px 8px rgba(43,34,24,0.06)}
+
+  .q-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .q-opt{display:flex;align-items:flex-start;gap:8px;padding:10px 11px;cursor:pointer;
+    background:#fff;border:1.5px solid var(--line);border-radius:11px;transition:all .12s}
+  .q-opt:hover{border-color:var(--gold);background:#fffdf5;transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(43,34,24,0.10)}
+  .q-opt .lbl{font-family:var(--fDisp);font-weight:800;font-size:14px;color:var(--goldDk);
+    width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#fffcf2,var(--cream));
+    border:1.5px solid var(--gold);border-radius:50%;line-height:1}
+  .q-opt .txt{font-family:var(--fSerif);font-size:15px;font-weight:600;color:var(--ink);
+    line-height:1.3;word-break:break-word}
+  .q-opt.correct{background:#eaf6ea;border-color:var(--green)}
+  .q-opt.correct .lbl{background:var(--green);border-color:var(--green);color:#fff}
+  .q-opt.wrong{background:#fbeae7;border-color:var(--red)}
+  .q-opt.wrong .lbl{background:var(--red);border-color:var(--red);color:#fff}
+  .q-hint{text-align:center;margin-top:12px;font-family:var(--fMono);font-size:10px;
+    color:var(--ink2);letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:7px}
+  .q-hint kbd{background:var(--cream);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-family:var(--fMono);color:var(--goldDk);font-weight:700}
+  #q-hint-keys{display:inline-flex;gap:5px}
+
+  /* ── Answer flash ─────────────────────────────────── */
+  #flash{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%) scale(.5);opacity:0;
+    z-index:30;pointer-events:none;font-family:var(--fDisp);font-weight:900;letter-spacing:4px;
+    font-size:clamp(30px,6vw,58px);text-transform:uppercase;padding:10px 30px;border-radius:14px;white-space:nowrap}
+  #flash.go-correct{color:#fff;background:var(--green);box-shadow:0 10px 40px rgba(91,184,92,.5);animation:fl 1s ease forwards}
+  #flash.go-wrong{color:#fff;background:var(--red);box-shadow:0 10px 40px rgba(216,75,58,.5);animation:fl 1s ease forwards}
+  @keyframes fl{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+    62%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(.9)}}
+
+  /* ── Toast (power-up grabbed) ─────────────────────── */
+  #toast{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;
+    z-index:28;pointer-events:none;display:flex;align-items:center;gap:14px;
+    background:rgba(255,255,255,0.96);border:1px solid var(--line);border-left:5px solid var(--tc);
+    border-radius:18px;padding:13px 22px 13px 14px;box-shadow:0 16px 44px rgba(40,30,15,0.3)}
+  #toast .toast-icon{width:46px;height:46px;border-radius:13px;flex-shrink:0;color:#fff;
+    background:var(--tc);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px color-mix(in srgb,var(--tc) 55%,transparent)}
+  #toast .toast-icon svg{width:30px;height:30px}
+  #toast .toast-body{display:flex;flex-direction:column;gap:2px;text-align:left}
+  #toast .toast-txt{font-family:var(--fDisp);font-weight:800;letter-spacing:2px;font-size:20px;
+    text-transform:uppercase;color:var(--ink);line-height:1}
+  #toast .toast-sub{font-family:var(--fSerif);font-style:italic;font-size:14px;color:var(--ink2)}
+  #toast.show{animation:toast 1.8s ease forwards}
+  @keyframes toast{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+    14%{opacity:1;transform:translate(-50%,-50%) scale(1.06)} 64%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-90%) scale(.96)}}
+
+  /* ── Danger vignette ──────────────────────────────── */
+  #danger{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity .4s;
+    background:radial-gradient(ellipse 88% 80% at 50% 60%,transparent 42%,rgba(216,75,58,0.55) 100%)}
+  #danger.d1{opacity:.45} #danger.d2{opacity:.7;animation:dpulse .55s ease-in-out infinite alternate}
+  @keyframes dpulse{from{opacity:.5}to{opacity:.82}}
+
+  /* speed lines — radial motion streaks that bloom in at high velocity */
+  #speedfx{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;
+    transition:opacity .25s ease;mix-blend-mode:screen;
+    background:
+      repeating-conic-gradient(from 0deg at 50% 52%,
+        rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 2.2deg,
+        rgba(255,255,255,.5) 2.6deg, rgba(255,255,255,0) 3.0deg);
+    -webkit-mask:radial-gradient(ellipse 42% 38% at 50% 52%, transparent 60%, #000 100%);
+    mask:radial-gradient(ellipse 42% 38% at 50% 52%, transparent 60%, #000 100%)}
+  #speedfx.on{animation:spin 3s linear infinite}
+  @keyframes spin{to{transform:rotate(2deg) scale(1.04)}}
+
+  /* ── Overlays ─────────────────────────────────────── */
+  .overlay{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 30%,rgba(255,250,235,0.6),rgba(180,210,235,0.72));
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+  .overlay.hidden{display:none}
+  .ov-card{position:relative;width:94%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--paper);
+    border-radius:22px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(40,30,15,.35);
+    padding:24px 30px 18px;text-align:center;animation:rise .4s ease}
+  .ov-card::before{content:'';position:absolute;top:0;left:18%;right:18%;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,transparent,var(--gold),var(--terra),var(--gold),transparent)}
+  @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+  .ov-kicker{font-family:var(--fMono);font-size:10px;letter-spacing:4px;text-transform:uppercase;
+    color:var(--terraDk);margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:10px}
+  .ov-kicker .rule{width:26px;height:1.5px;background:var(--terra)}
+  .ov-title{margin:0;font-family:var(--fDisp);font-weight:900;font-size:clamp(40px,8vw,66px);
+    letter-spacing:3px;line-height:.95;color:var(--ink);
+    background:linear-gradient(180deg,var(--ink) 30%,var(--terraDk));-webkit-background-clip:text;background-clip:text}
+  .ov-sub{font-family:var(--fSerif);font-style:italic;font-size:18px;color:var(--terra);margin-top:4px}
+  .ov-pitch{font-family:var(--fSerif);font-size:14px;color:var(--ink2);max-width:430px;
+    line-height:1.45;margin:10px auto 0}
+  .ov-pitch b{color:var(--terraDk)}
+  .glyph{display:flex;justify-content:center;margin-bottom:2px}
+
+  .ctrl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 auto 6px;
+    text-align:left;max-width:460px}
+  .ctrl{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--cream);border:1px solid var(--line);
+    border-radius:11px;padding:9px 6px;text-align:center}
+  .ctrl .keys{display:flex;gap:3px;flex-shrink:0}
+  .ctrl kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;
+    padding:2px 7px;font-family:var(--fMono);font-size:11px;color:var(--goldDk);font-weight:700;min-width:20px;text-align:center}
+  .ctrl .d{font-family:var(--fSerif);font-size:13px;font-weight:600;color:var(--ink);line-height:1.1}
+  .ctrl .d small{display:block;font-family:var(--fMono);font-size:8px;color:var(--ink2);
+    letter-spacing:.5px;text-transform:uppercase;margin-top:2px;font-weight:500}
+
+  /* section label inside overlay */
+  .ov-label{font-family:var(--fMono);font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--ink2);display:flex;align-items:center;gap:9px;margin:14px 0 8px}
+  .ov-label::before,.ov-label::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* ── Character picker (Νεανίας / Κορασίδα) ────────── */
+  .hero-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:430px;margin:0 auto}
+  .hero-opt{display:flex;align-items:center;gap:12px;cursor:pointer;padding:11px 13px;
+    background:var(--cream);border:2px solid var(--line);border-radius:14px;transition:all .15s;text-align:left}
+  .hero-opt:hover{border-color:var(--gold);background:#fff}
+  .hero-opt.sel{border-color:var(--terra);background:#fff;box-shadow:0 6px 18px rgba(178,62,40,.18)}
+  .hero-opt .av{width:46px;height:46px;border-radius:11px;flex-shrink:0;display:flex;align-items:flex-end;
+    justify-content:center;overflow:hidden;background:linear-gradient(180deg,#bfe3ff,#eef6e6)}
+  .hero-opt .nm{font-family:var(--fDisp);font-weight:800;font-size:15px;letter-spacing:1px;color:var(--ink);line-height:1}
+  .hero-opt .nm small{display:block;font-family:var(--fSerif);font-style:italic;font-weight:500;
+    font-size:12.5px;letter-spacing:0;color:var(--ink2);margin-top:3px}
+  .hero-opt .chk{margin-left:auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+  .hero-opt.sel .chk{background:var(--terra);border-color:var(--terra)}
+  .hero-opt:not(.sel) .chk svg{display:none}
+
+  /* ── Power-up legend ──────────────────────────────── */
+  .pu-legend{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:460px;margin:0 auto}
+  .pu-leg{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 5px;
+    background:var(--cream);border:1px solid var(--line);border-radius:12px;border-top:3px solid var(--lc)}
+  .pu-leg .li{width:34px;height:34px;border-radius:10px;color:#fff;background:var(--lc);
+    display:flex;align-items:center;justify-content:center}
+  .pu-leg .li svg{width:22px;height:22px}
+  .pu-leg .ln{font-family:var(--fMono);font-size:8px;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;color:var(--ink);text-align:center;line-height:1.25}
+  .pu-leg .ld{font-family:var(--fSerif);font-size:10.5px;font-style:italic;color:var(--ink2);
+    text-align:center;line-height:1.2}
+
+  .btn{display:inline-flex;align-items:center;gap:9px;border:none;cursor:pointer;
+    font-family:var(--fDisp);font-weight:800;letter-spacing:2px;font-size:15px;
+    padding:14px 34px;border-radius:13px;transition:transform .14s,box-shadow .14s}
+  .btn.primary{background:linear-gradient(140deg,var(--terra),var(--terraDk));color:#fff;
+    box-shadow:0 8px 24px rgba(178,62,40,.4)}
+  .btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(178,62,40,.5)}
+  .btn.secondary{background:var(--cream);color:var(--ink2);border:1px solid var(--line)}
+  .btn.secondary:hover{background:#fff;color:var(--ink)}
+  .ov-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:sticky;bottom:-2px;
+    padding:14px 0 4px;margin-top:14px;background:linear-gradient(180deg,transparent,var(--paper) 32%)}
+  .ov-meta{margin-top:6px;display:flex;gap:26px;justify-content:center;flex-wrap:wrap;
+    font-family:var(--fMono);font-size:10px;color:var(--ink2);letter-spacing:1.5px;text-transform:uppercase}
+  .ov-meta b{font-family:var(--fDisp);color:var(--goldDk);font-size:15px;margin-left:5px}
+
+  /* game over */
+  .ov-bignum{font-family:var(--fDisp);font-weight:900;font-size:clamp(64px,12vw,104px);line-height:1;
+    margin:14px 0 0;color:var(--gold);
+    background:linear-gradient(180deg,var(--goldLt),var(--goldDk));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ov-bignum-l{font-family:var(--fMono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink2)}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:24px 0 22px}
+  .stat{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:11px 8px}
+  .stat .l{font-family:var(--fMono);font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink2)}
+  .stat .v{font-family:var(--fDisp);font-weight:800;font-size:21px;margin-top:3px;line-height:1}
+  .stat .v.gold{color:var(--goldDk)} .stat .v.terra{color:var(--terraDk)}
+  .stat .v.sage{color:var(--sage)} .stat .v.blue{color:var(--blue)}
+
+  /* ── Mobile controls ──────────────────────────────── */
+  #mctrl{position:absolute;bottom:16px;left:0;right:0;z-index:12;display:none;
+    justify-content:space-between;align-items:center;padding:0 16px;pointer-events:none}
+  @media (pointer:coarse){#mctrl{display:flex}}
+  .mc{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,0.8);
+    border:1px solid var(--line);box-shadow:var(--shadow);color:var(--ink);font-size:22px;
+    display:flex;align-items:center;justify-content:center;pointer-events:auto;cursor:pointer}
+  .mc:active{transform:scale(.92);background:#fff}
+  .mc-mid{display:flex;flex-direction:column;gap:8px}
+
+  /* ── Loading ──────────────────────────────────────── */
+  #loading{position:absolute;inset:0;z-index:100;background:linear-gradient(180deg,#83c7f0,#fbefd6);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    transition:opacity .6s}
+  #loading.hidden{opacity:0;pointer-events:none}
+  #loading .ld{font-family:var(--fMono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--ink2)}
+  .dots{display:flex;gap:8px}
+  .dots i{width:9px;height:9px;border-radius:50%;background:var(--terra);animation:bob 1s ease-in-out infinite}
+  .dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+  @keyframes bob{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-9px);opacity:1}}
+
+  @media (max-width:560px){
+    #hud-score{font-size:30px}
+    .q-opts{gap:6px} .q-opt{padding:8px} .q-text{font-size:16px}
+    .stat-row{grid-template-columns:repeat(2,1fr)}
+    .ctrl-grid{grid-template-columns:1fr}
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="stage" data-screen-label="Agora Surfers">
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="tb-left">
+      <span class="pill">
+        <span class="mono-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M19 4 L5 4 L12 12 L5 20 L19 20" stroke="#2B2218" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="19" cy="4" r="2" fill="#D9573D"/>
+          </svg>
+        </span>
+        <span class="brand"><span class="nm" id="game-title">AGORA SURFERS</span><span class="sb">Αρχαία Αγορά</span></span>
+      </span>
+      <a class="tb-back pill" href="#" onclick="event.preventDefault();(window.parent!==window&&window.parent.closeTempleRun?window.parent.closeTempleRun():history.back())">← Έξοδος</a>
+    </div>
+    <div class="tb-right">
+      <button class="icon-btn" id="btn-pause" title="Παύση">⏸</button>
+    </div>
+  </div>
+
+  <!-- Score -->
+  <div id="scorewrap"><div class="l">Βαθμοί</div><div id="hud-score">0</div></div>
+  <div id="streakwrap"><span id="hud-streak">—</span></div>
+
+  <!-- Right cluster -->
+  <div id="rightwrap">
+    <span class="chip"><span class="ic coin">δ</span><span class="v" id="hud-coins">0</span></span>
+    <span class="chip"><span class="ic dist">▸</span><span class="v sm" id="hud-dist">0m</span></span>
+    <span class="chip"><span class="ic mult">×</span><span class="v sm" id="hud-mult">×1</span></span>
+    <div id="chase"><span class="ti">ΤΑΛΩΣ</span><div class="chase-track"><div id="chase-fill"></div></div></div>
+  </div>
+
+  <!-- Power-up badges -->
+  <div id="pu-hud"></div>
+
+  <!-- Question card -->
+  <div id="qwrap">
+    <div class="qcard">
+      <div class="q-timer"><div id="q-timer"></div></div>
+      <div class="q-text" id="q-text">…</div>
+      <div class="q-opts" id="q-opts"></div>
+      <div class="q-hint"><span id="q-hint-keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>ή πάτησε την απάντηση</span></div>
+    </div>
+  </div>
+
+  <!-- FX layers -->
+  <div id="flash"></div>
+  <div id="toast"></div>
+  <div id="danger"></div>
+  <div id="speedfx"></div>
+
+  <!-- Mobile controls -->
+  <div id="mctrl">
+    <button class="mc" id="mc-left">◀</button>
+    <div class="mc-mid"><button class="mc" id="mc-jump">▲</button><button class="mc" id="mc-slide">▼</button></div>
+    <button class="mc" id="mc-right">▶</button>
+  </div>
+
+  <!-- START overlay -->
+  <div id="start" class="overlay">
+    <div class="ov-card">
+      <div class="ov-kicker"><span class="rule"></span><span>Ατέρμων δρόμος · 3D</span><span class="rule"></span></div>
+      <div class="glyph">
+        <svg width="50" height="50" viewBox="0 0 100 100" fill="none">
+          <g stroke="#B5811C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M22 84 L78 84" stroke="#D9573D"/>
+            <path d="M30 84 L30 34 M44 84 L44 34 M56 84 L56 34 M70 84 L70 34"/>
+            <path d="M26 34 L74 34" stroke-width="3"/>
+            <path d="M24 34 L50 16 L76 34 Z" fill="rgba(224,168,46,0.16)"/>
+          </g>
+        </svg>
+      </div>
+      <h1 class="ov-title" id="start-title">AGORA SURFERS</h1>
+      <div class="ov-sub">Τρέξε στην αρχαία αγορά</div>
+      <div class="ov-pitch">Γλίστρα στους μαρμάρινους δρόμους, μάζεψε <b>δραχμές</b> και απάντησε σωστά για να κρατήσεις μακριά τον χάλκινο <b>Τάλω</b> — που σε προλαβαίνει αν αργήσεις.</div>
+
+      <div class="ov-label">Διάλεξε ήρωα</div>
+      <div class="hero-pick">
+        <div class="hero-opt" data-sex="male">
+          <span class="av">
+            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round">
+              <ellipse cx="20" cy="42" rx="11" ry="2.2" fill="rgba(40,30,15,.18)" stroke="none"/>
+              <rect x="14" y="20" width="12" height="16" rx="4" fill="#FBF6EA"/>
+              <path d="M14 24 L26 30" stroke="#1E6FB8" stroke-width="3" fill="none"/>
+              <circle cx="20" cy="13" r="6" fill="#E0A878"/>
+              <path d="M13 11a7 7 0 0 1 14 0z" fill="#4A3526"/>
+              <path d="M12 12 Q20 7 28 12" stroke="#6E8B3C" stroke-width="2" fill="none"/>
+              <rect x="11" y="34" width="5" height="8" rx="2" fill="#E0A878"/><rect x="24" y="34" width="5" height="8" rx="2" fill="#E0A878"/>
+            </g></svg>
+          </span>
+          <span class="nm">ΝΕΑΝΙΑΣ<small>Young man</small></span>
+          <span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></span>
+        </div>
+        <div class="hero-opt" data-sex="female">
+          <span class="av">
+            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round">
+              <ellipse cx="20" cy="42" rx="11" ry="2.2" fill="rgba(40,30,15,.18)" stroke="none"/>
+              <rect x="14" y="20" width="12" height="16" rx="4" fill="#F7EFE0"/>
+              <path d="M14 28 Q20 30 26 28" stroke="#D9573D" stroke-width="2.4" fill="none"/>
+              <circle cx="20" cy="13" r="6" fill="#E0A878"/>
+              <path d="M13 12a7 7 0 0 1 14 0 q0 6 -3 9 l-2 -1 q2 -4 1 -8 z" fill="#3A2818"/>
+              <path d="M22 18 q5 1 4 8" stroke="#3A2818" stroke-width="3" fill="none"/>
+              <path d="M13 11 Q20 8 27 11" stroke="#EAC44A" stroke-width="1.6" fill="none"/>
+              <rect x="11" y="34" width="5" height="8" rx="2" fill="#E0A878"/><rect x="24" y="34" width="5" height="8" rx="2" fill="#E0A878"/>
+            </g></svg>
+          </span>
+          <span class="nm">ΚΟΡΑΣΙΔΑ<small>Young woman</small></span>
+          <span class="chk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></span>
+        </div>
+      </div>
+
+      <div class="ov-label">Δυνάμεις</div>
+      <div class="pu-legend" id="pu-legend"></div>
+
+      <div class="ov-label">Χειριστήρια</div>
+      <div class="ctrl-grid">
+        <div class="ctrl"><span class="keys"><kbd>◀</kbd><kbd>▶</kbd></span><span class="d">Λωρίδα<small>swipe ←/→</small></span></div>
+        <div class="ctrl"><span class="keys"><kbd>▲</kbd></span><span class="d">Άλμα<small>swipe up</small></span></div>
+        <div class="ctrl"><span class="keys"><kbd>▼</kbd></span><span class="d">Σύρσιμο<small>swipe down</small></span></div>
+        <div class="ctrl"><span class="keys"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span class="d">Απάντηση<small>στις ερωτήσεις</small></span></div>
+      </div>
+      <div class="ov-actions"><button class="btn primary" id="btn-start">▷ ΤΡΕΞΕ</button></div>
+      <div class="ov-meta">
+        <span>Ρεκόρ<b id="meta-best">0</b></span>
+        <span>Δραχμές<b id="meta-coins">0</b></span>
+        <span>Παιχνίδια<b id="meta-runs">0</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER overlay -->
+  <div id="gameover" class="overlay hidden">
+    <div class="ov-card">
+      <div class="ov-kicker"><span class="rule"></span><span id="go-reason">Σε έπιασαν</span><span class="rule"></span></div>
+      <h2 class="ov-title">ΣΕ ΕΠΙΑΣΑΝ</h2>
+      <div class="ov-bignum" id="go-score">0</div>
+      <div class="ov-bignum-l">Τελικοί βαθμοί</div>
+      <div class="stat-row">
+        <div class="stat"><div class="l">Απόσταση</div><div class="v blue" id="go-dist">0 m</div></div>
+        <div class="stat"><div class="l">Δραχμές</div><div class="v gold" id="go-coins">0</div></div>
+        <div class="stat"><div class="l">Σωστά</div><div class="v sage" id="go-correct">0/0</div></div>
+        <div class="stat"><div class="l">Σερί</div><div class="v terra" id="go-combo">×1</div></div>
+      </div>
+      <div class="ov-actions">
+        <button class="btn primary" id="btn-retry">▷ Ξανά</button>
+        <button class="btn secondary" id="btn-menu">Αρχική</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSE overlay -->
+  <div id="pause" class="overlay hidden">
+    <div class="ov-card" style="max-width:380px">
+      <div class="ov-kicker"><span class="rule"></span><span>Παύση</span><span class="rule"></span></div>
+      <h2 class="ov-title" style="font-size:clamp(34px,6vw,52px)">∥</h2>
+      <div class="ov-sub" style="margin-bottom:8px">Πάτα P για συνέχεια</div>
+      <div class="ov-actions" style="margin-top:18px">
+        <button class="btn primary" id="btn-resume">▷ Συνέχεια</button>
+        <button class="btn secondary" id="btn-pause-menu">Αρχική</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading"><div class="dots"><i></i><i></i><i></i></div><div class="ld">Φόρτωση αγοράς…</div></div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

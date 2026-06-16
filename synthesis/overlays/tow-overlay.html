@@ -1,0 +1,11 @@
+<div id="tow-overlay" class="game-overlay">
+  <div class="overlay-topbar">
+    <button class="overlay-back" onclick="closeTow()" data-gr="← Επιλογή Παιχνιδιού" data-en="← Game Selection">← Επιλογή Παιχνιδιού</button>
+    <div class="overlay-title" id="tow-overlay-title">Tug of War — Ιλιάδα</div>
+    <div class="overlay-lang" style="display:none;">
+      <button onclick="towSetLang('gr')" id="tow-lang-gr" style="font-size:12px;padding:4px 10px;cursor:pointer;background:rgba(201,164,74,0.2);border:1px solid rgba(201,164,74,0.4);color:#c9a44a;border-radius:5px 0 0 5px;font-family:inherit;">GR</button>
+      <button onclick="towSetLang('en')" id="tow-lang-en" style="font-size:12px;padding:4px 10px;cursor:pointer;background:transparent;border:1px solid rgba(255,255,255,0.12);color:#907A68;border-left:none;border-radius:0 5px 5px 0;font-family:inherit;">EN</button>
+    </div>
+  </div>
+  <div class="overlay-frame" id="tow-wrap" style="flex:1;overflow-y:auto;"></div>
+</div>
