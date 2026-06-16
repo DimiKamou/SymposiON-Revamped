@@ -181,9 +181,195 @@
     })();
   })();
 
+  /* ── illustration injector (fetches the app's line-art SVGs) ─────── */
+  if (!window.injectIllus) {
+    window.injectIllus = async function (scope) {
+      const base = window.APP_BASE || new URL('./', location.href).href;
+      const nodes = scope.querySelectorAll('[data-illu]:not([data-done]), [data-sym]:not([data-done])');
+      await Promise.all([...nodes].map(async (node) => {
+        const isSym = node.hasAttribute('data-sym');
+        const dir = isSym ? 'bg-symbols' : 'illustrations';
+        const name = node.getAttribute(isSym ? 'data-sym' : 'data-illu');
+        node.setAttribute('data-done', '1');
+        if (!name) return;
+        try {
+          const r = await fetch(base + 'images/' + dir + '/' + name + '.svg');
+          if (r.ok) { node.innerHTML = await r.text(); const s = node.firstElementChild; if (s) { s.removeAttribute('width'); s.removeAttribute('height'); } }
+        } catch (e) {}
+      }));
+    };
+  }
+
+  /* grade list for onboarding placement (mirrors the app's 6 classes) */
+  const CLASSES = [
+    { id: 'gym-a', roman: 'I',   accent: '#D2693F', gr: 'Α΄ Γυμνασίου', en: '7th Grade' },
+    { id: 'gym-b', roman: 'II',  accent: '#2F6F8E', gr: 'Β΄ Γυμνασίου', en: '8th Grade' },
+    { id: 'gym-c', roman: 'III', accent: '#6E8B3D', gr: 'Γ΄ Γυμνασίου', en: '9th Grade' },
+    { id: 'lyk-a', roman: 'IV',  accent: '#7C5AC2', gr: 'Α΄ Λυκείου',   en: '10th Grade' },
+    { id: 'lyk-b', roman: 'V',   accent: '#C18A2C', gr: 'Β΄ Λυκείου',   en: '11th Grade' },
+    { id: 'lyk-c', roman: 'VI',  accent: '#B0395A', gr: 'Γ΄ Λυκείου',   en: '12th Grade' },
+  ];
+  const route = (s) => { try { if (typeof window.goTo === 'function') window.goTo(s); } catch (e) {} };
+
+  /* ══════════════════════════════════════════════════════════════
+     FEATURE · First-visit onboarding (role → grade → guide)
+     (ported from prototype js/student.js — STATE→SymStore, symGo→goTo)
+     ══════════════════════════════════════════════════════════════ */
+  window.SymOnboard = (function () {
+    let ov, step, role, classId, guideOn;
+    const SS = () => window.SymStore;
+    function isDoneOb() { return !!SS().get('onboarded', 0); }
+    function maybeStart() { if (!isDoneOb()) open(); }
+    function reset() { SS().set('onboarded', 0); open(); }
+
+    function open() {
+      step = 0; role = null; classId = SS().get('onboard_class', 'gym-b'); guideOn = true;
+      ov = el('div', { class: 'ob-ov', role: 'dialog', 'aria-modal': 'true' });
+      window.symApplyThemeClass(ov);
+      const card = el('div', { class: 'ob-card' }); ov.appendChild(card); ov._card = card;
+      document.body.appendChild(ov); paint();
+      requestAnimationFrame(() => ov.classList.add('in'));
+      setTimeout(() => { if (ov) ov.classList.add('in'); }, 60);
+    }
+    function close() { if (!ov) return; ov.classList.remove('in'); const o = ov; ov = null; setTimeout(() => o.remove(), 300); }
+
+    function finish() {
+      SS().set('onboarded', 1);
+      SS().set('guide_mode', guideOn ? 1 : 0);
+      SS().set('onboard_role', role || 'student');
+      if (role === 'student' && classId) SS().set('onboard_class', classId);
+      close();
+      if (window.SymGuide) SymGuide.sync();
+      route(role === 'teacher' ? 'teacher' : role === 'parent' ? 'parent' : 'home');
+    }
+
+    function dots(n) { const total = role === 'teacher' ? 2 : 3; return el('div', { class: 'ob-dots' }, Array.from({ length: total }, (_, i) => el('span', { class: i <= n ? 'on' : '' }))); }
+
+    function paint() {
+      const card = ov._card; card.innerHTML = '';
+      card.appendChild(el('button', { class: 'ob-skip', onclick: () => { SS().set('onboarded', 1); close(); } }, L({ gr: 'Παράλειψη', en: 'Skip' })));
+      const mark = el('div', { class: 'ob-mark' }); mark.appendChild(brandMark()); card.appendChild(mark);
+      if (step === 0) stepRole(card);
+      else if (step === 1 && role === 'student') stepGrade(card);
+      else if (step === 1 && role === 'parent') stepLinkChild(card);
+      else stepFinish(card);
+      if (window.injectIllus) injectIllus(card);
+    }
+
+    function stepRole(card) {
+      card.appendChild(dots(0));
+      card.appendChild(el('p', { class: 'ob-eyebrow' }, 'SymposiON'));
+      card.appendChild(el('h2', { class: 'ob-ttl', html: L({ gr: 'Καλωσήρθες στο <em>Συμπόσιο</em>', en: 'Welcome to the <em>Symposion</em>' }) }));
+      card.appendChild(el('p', { class: 'ob-sub' }, L({ gr: 'Πες μας ποιος είσαι — θα στήσουμε τα πάντα στα μέτρα σου.', en: 'Tell us who you are — we’ll set everything up for you.' })));
+      const roles = el('div', { class: 'ob-roles' });
+      const mk = (id, ic, nm, ds) => el('button', { class: 'ob-role' + (role === id ? ' sel' : ''), onclick: () => { role = id; step = 1; paint(); } }, [el('span', { class: 'ob-role__ic', 'data-illu': ic }), el('span', { class: 'ob-role__nm' }, L(nm)), el('span', { class: 'ob-role__ds' }, L(ds))]);
+      roles.appendChild(mk('student', 'owl', { gr: 'Μαθητής', en: 'Student' }, { gr: 'Παίξε, μάθε, ανέβα επίπεδα.', en: 'Play, learn, level up.' }));
+      roles.appendChild(mk('teacher', 'quill', { gr: 'Καθηγητής', en: 'Teacher' }, { gr: 'Φτιάξε τάξη & ανάθεσε εργασίες.', en: 'Build a class & assign work.' }));
+      card.appendChild(roles);
+      const parent = el('button', { class: 'ob-role' + (role === 'parent' ? ' sel' : ''), style: 'margin-top:12px;width:100%;flex-direction:row;align-items:center;gap:14px', onclick: () => { role = 'parent'; step = 1; paint(); } }, [el('span', { class: 'ob-role__ic', 'data-illu': 'philosopher' }), el('span', {}, [el('span', { class: 'ob-role__nm', style: 'display:block' }, L({ gr: 'Γονέας', en: 'Parent' })), el('span', { class: 'ob-role__ds' }, L({ gr: 'Δες την πρόοδο του παιδιού σου.', en: 'Follow your child’s progress.' }))])]);
+      card.appendChild(parent);
+    }
+
+    function stepGrade(card) {
+      card.appendChild(dots(1));
+      card.appendChild(el('p', { class: 'ob-eyebrow' }, L({ gr: 'Βήμα 2', en: 'Step 2' })));
+      card.appendChild(el('h2', { class: 'ob-ttl', html: L({ gr: 'Σε ποια <em>τάξη</em> είσαι;', en: 'Which <em>class</em> are you in?' }) }));
+      card.appendChild(el('p', { class: 'ob-sub' }, L({ gr: 'Θα σου δείξουμε την ύλη και τα παιχνίδια της τάξης σου.', en: 'We’ll show the right material and games for your class.' })));
+      [['gym', { gr: 'Γυμνάσιο', en: 'Gymnasio' }], ['lyk', { gr: 'Λύκειο', en: 'Lykeio' }]].forEach(([pre, lab]) => {
+        const grp = el('div', { class: 'ob-gradegrp' });
+        grp.appendChild(el('div', { class: 'ob-gradegrp__h' }, L(lab)));
+        const row = el('div', { class: 'ob-grades' });
+        CLASSES.filter(c => c.id.indexOf(pre) === 0).forEach(c => {
+          const sel = classId === c.id;
+          row.appendChild(el('button', { class: 'ob-grade' + (sel ? ' sel' : ''), style: sel ? `background:${c.accent};border-color:${c.accent}` : `border-color:${c.accent}`, onclick: () => { classId = c.id; paint(); } }, [el('span', { class: 'ob-grade__rom', style: `background:${c.accent}` }, c.roman), L(c)]));
+        });
+        grp.appendChild(row); card.appendChild(grp);
+      });
+      card.appendChild(el('div', { class: 'ob-foot' }, [el('button', { class: 'ob-back', onclick: () => { step = 0; paint(); } }, '← ' + L({ gr: 'Πίσω', en: 'Back' })), el('button', { class: 'syn-cta syn-cta--solid', onclick: () => { step = 2; paint(); } }, [L({ gr: 'Συνέχεια', en: 'Continue' }), el('span', { html: '&rarr;' })])]));
+    }
+
+    function stepLinkChild(card) {
+      card.appendChild(dots(1));
+      card.appendChild(el('p', { class: 'ob-eyebrow' }, L({ gr: 'Βήμα 2', en: 'Step 2' })));
+      card.appendChild(el('h2', { class: 'ob-ttl', html: L({ gr: 'Σύνδεσε το <em>παιδί</em> σου', en: 'Link your <em>child</em>' }) }));
+      card.appendChild(el('p', { class: 'ob-sub' }, L({ gr: 'Βάλε τον 6ψήφιο κωδικό από τον λογαριασμό του παιδιού σου. Μπορείς και αργότερα.', en: 'Enter the 6-character code from your child’s account. You can do this later too.' })));
+      card.appendChild(el('input', { type: 'text', maxlength: '6', placeholder: 'ΑΛΕΞ24', style: 'width:100%;font-family:var(--disp);font-size:20px;letter-spacing:.3em;text-align:center;text-transform:uppercase;padding:14px;border-radius:14px;border:1.5px solid var(--line-bold);background:var(--bg);color:var(--fg);margin-bottom:20px' }));
+      card.appendChild(el('div', { class: 'ob-foot' }, [el('button', { class: 'ob-back', onclick: () => { step = 0; paint(); } }, '← ' + L({ gr: 'Πίσω', en: 'Back' })), el('button', { class: 'syn-cta syn-cta--ghost', onclick: () => { step = 2; paint(); } }, L({ gr: 'Παράλειψη', en: 'Skip' })), el('button', { class: 'syn-cta syn-cta--solid', onclick: () => { step = 2; paint(); } }, [L({ gr: 'Σύνδεση', en: 'Link' }), el('span', { html: '&rarr;' })])]));
+    }
+
+    function stepFinish(card) {
+      card.appendChild(dots(role === 'teacher' ? 1 : 2));
+      card.appendChild(el('p', { class: 'ob-eyebrow' }, L({ gr: 'Έτοιμοι', en: 'All set' })));
+      card.appendChild(el('h2', { class: 'ob-ttl', html: L({ gr: 'Είσαι <em>έτοιμος</em>', en: 'You’re <em>ready</em>' }) }));
+      card.appendChild(el('p', { class: 'ob-sub' }, role === 'teacher'
+        ? L({ gr: 'Θα σε πάμε στην Κονσόλα Καθηγητή για να φτιάξεις την πρώτη σου τάξη.', en: 'We’ll take you to the Teacher Console to build your first class.' })
+        : role === 'parent'
+        ? L({ gr: 'Θα σε πάμε στον Γονικό Πίνακα για να δεις την πρόοδο του παιδιού σου. Θες έναν οδηγό;', en: 'We’ll take you to the Parent dashboard. Want a guide?' })
+        : L({ gr: 'Θα σε πάμε στην αρχική. Θες έναν οδηγό να σε ξεναγεί;', en: 'We’ll drop you on the home screen. Want a guide to show you around?' })));
+      const sw = el('button', { class: 'ob-switch' + (guideOn ? ' on' : ''), 'aria-label': 'guide', onclick: (e) => { guideOn = !guideOn; e.currentTarget.classList.toggle('on', guideOn); } });
+      card.appendChild(el('div', { class: 'ob-guide-row' }, [el('span', { class: 'ob-role__ic', style: 'width:30px;height:30px', 'data-illu': 'philosopher' }), el('div', { class: 'ob-guide-row__b' }, [el('div', { class: 'ob-guide-row__t' }, L({ gr: 'Λειτουργία Οδηγού', en: 'Guide mode' })), el('div', { class: 'ob-guide-row__d' }, L({ gr: 'Σύντομες συμβουλές σε κάθε οθόνη. Σβήνει όποτε θες.', en: 'Short tips on each screen. Turn it off anytime.' }))]), sw]));
+      card.appendChild(el('div', { class: 'ob-foot' }, [el('button', { class: 'ob-back', onclick: () => { step = role === 'teacher' ? 0 : 1; paint(); } }, '← ' + L({ gr: 'Πίσω', en: 'Back' })), el('button', { class: 'syn-cta syn-cta--solid', onclick: finish }, [role === 'teacher' ? L({ gr: 'Στην Κονσόλα', en: 'To the Console' }) : role === 'parent' ? L({ gr: 'Στον Πίνακα', en: 'To the dashboard' }) : L({ gr: 'Μπες', en: 'Enter' }), el('span', { html: '&rarr;' })])]));
+    }
+
+    return { maybeStart, open, reset };
+  })();
+
+  /* ══════════════════════════════════════════════════════════════
+     FEATURE · Guide mode (toggleable coach tips)
+     ══════════════════════════════════════════════════════════════ */
+  window.SymGuide = (function () {
+    let fab, tip, dismissed = {};
+    const SS = () => window.SymStore;
+    const TIPS = {
+      home: { w: { gr: 'Αρχική', en: 'Home' }, t: { gr: 'Από εδώ ξεκινούν όλα', en: 'Everything starts here' }, d: { gr: 'Διάλεξε την τάξη σου από τα κουμπιά, ή πάτα «Πίνακας» για όλα τα παιχνίδια.', en: 'Pick your class from the chips, or open the Panel for every game.' } },
+      subject: { w: { gr: 'Μάθημα', en: 'Subject' }, t: { gr: 'Τα παιχνίδια του μαθήματος', en: 'The subject’s games' }, d: { gr: 'Διάλεξε παιχνίδι και επίπεδο — η μπάρα δείχνει την πρόοδό σου.', en: 'Pick a game and level — the bar shows your progress.' } },
+      trivia: { w: { gr: 'Trivia', en: 'Trivia' }, t: { gr: 'Γρήγορες ερωτήσεις', en: 'Rapid questions' }, d: { gr: 'Απάντησε γρήγορα και κέρδισε Kleos.', en: 'Answer fast and earn Kleos.' } },
+      teacher: { w: { gr: 'Καθηγητής', en: 'Teacher' }, t: { gr: 'Η κονσόλα σου', en: 'Your console' }, d: { gr: 'Φτιάξε τάξη, κάλεσε μαθητές και ανάθεσε εργασίες.', en: 'Build a class, invite students and assign work.' } },
+    };
+    function on() { return !!SS().get('guide_mode', 0); }
+    function activeScreen() { const a = document.querySelector('.page.active'); return a ? a.id.replace('page-', '') : 'home'; }
+    function mount() {
+      if (fab) return;
+      fab = el('button', { class: 'guide-fab', onclick: toggle }, [el('span', { class: 'guide-fab__q' }, '?'), el('span', { class: 'guide-fab__lbl' }, L({ gr: 'Οδηγός', en: 'Guide' }))]);
+      tip = el('div', { class: 'guide-tip' });
+      window.symApplyThemeClass(fab); window.symApplyThemeClass(tip);
+      document.body.appendChild(fab); document.body.appendChild(tip); sync();
+    }
+    function toggle() { SS().set('guide_mode', on() ? 0 : 1); dismissed = {}; sync(); }
+    function sync() {
+      if (!fab) return;
+      window.symApplyThemeClass(fab); window.symApplyThemeClass(tip);
+      fab.classList.toggle('on', on());
+      renderTip();
+    }
+    window.addEventListener('sym-store', (e) => { if (e.detail && e.detail.key === 'guide_mode') sync(); });
+    function renderTip() {
+      if (!tip) return;
+      const screen = activeScreen(); const info = TIPS[screen];
+      if (!on() || !info || dismissed[screen]) { tip.classList.remove('show'); return; }
+      tip.innerHTML = '';
+      tip.appendChild(el('div', { class: 'guide-tip__hd' }, [el('span', { class: 'guide-tip__dot' }), el('span', { class: 'guide-tip__where' }, L(info.w)), el('button', { class: 'guide-tip__x', html: '&times;', onclick: () => { dismissed[screen] = 1; tip.classList.remove('show'); } })]));
+      tip.appendChild(el('div', { class: 'guide-tip__t' }, L(info.t)));
+      tip.appendChild(el('div', { class: 'guide-tip__d' }, L(info.d)));
+      tip.appendChild(el('div', { class: 'guide-tip__foot' }, [el('button', { class: 'guide-tip__off', onclick: () => { SS().set('guide_mode', 0); sync(); } }, L({ gr: 'Σβήσε τον οδηγό', en: 'Turn off guide' }))]));
+      requestAnimationFrame(() => tip.classList.add('show'));
+    }
+    return { mount, sync, toggle, refresh: renderTip, isOn: on };
+  })();
+
   /* ── boot ───────────────────────────────────────────────────────── */
   function boot() {
     try { window.SymConsent.start(); } catch (e) {}
+    try { window.SymGuide.mount(); } catch (e) {}
+    try { window.SymOnboard.maybeStart(); } catch (e) {}
+    // keep the guide tip in sync when the app switches pages
+    try {
+      if (typeof window.goTo === 'function' && !window.goTo.__rvWrapped) {
+        const og = window.goTo;
+        window.goTo = function () { const r = og.apply(this, arguments); try { window.SymGuide.sync(); } catch (e) {} return r; };
+        window.goTo.__rvWrapped = true;
+      }
+    } catch (e) {}
     // Gate the real sign-up behind the GDPR age/terms consent (non-breaking):
     // wrap openAuthModal('signup') so it runs consent first, then proceeds.
     try {
