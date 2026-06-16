@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Crown / King">
+  <path d="M 14 70 L 18 36 L 32 50 L 50 26 L 68 50 L 82 36 L 86 70 Z"></path>
+  <line x1="14" y1="70" x2="86" y2="70" stroke-width="1.8"></line>
+  <line x1="14" y1="76" x2="86" y2="76"></line>
+  <line x1="14" y1="82" x2="86" y2="82" stroke-opacity="0.55"></line>
+  <circle cx="18" cy="34" r="2.4"></circle>
+  <circle cx="50" cy="24" r="2.4"></circle>
+  <circle cx="82" cy="34" r="2.4"></circle>
+  <rect x="46" y="74" width="8" height="6"></rect>
+  <circle cx="32" cy="76" r="1.8" stroke-opacity="0.7"></circle>
+  <circle cx="68" cy="76" r="1.8" stroke-opacity="0.7"></circle>
+  <path d="M 26 64 L 30 60" stroke-opacity="0.45"></path>
+  <path d="M 70 60 L 74 64" stroke-opacity="0.45"></path>
+</svg>

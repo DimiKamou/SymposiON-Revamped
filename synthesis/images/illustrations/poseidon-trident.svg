@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Trident">
+  <line x1="50" y1="20" x2="50" y2="86"></line>
+  <path d="M 30 26 L 30 14"></path>
+  <path d="M 70 26 L 70 14"></path>
+  <path d="M 50 14 L 50 6"></path>
+  <path d="M 26 28 Q 30 22 34 28"></path>
+  <path d="M 66 28 Q 70 22 74 28"></path>
+  <path d="M 46 8 Q 50 2 54 8"></path>
+  <path d="M 30 26 Q 40 26 50 32 Q 60 26 70 26"></path>
+  <line x1="44" y1="40" x2="56" y2="40" stroke-opacity="0.5"></line>
+  <path d="M 44 86 L 56 86 L 54 92 L 46 92 Z"></path>
+  <line x1="42" y1="92" x2="58" y2="92" stroke-width="1.8"></line>
+</svg>
