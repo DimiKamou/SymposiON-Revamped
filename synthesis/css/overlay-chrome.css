@@ -1,0 +1,91 @@
+/* ══════════════════════════════════════════════════════════════════════
+   SHARED GAME-OVERLAY CHROME  (synthesis shell)
+
+   Ver1 games inject their own dark inner UI but rely on a SHARED set of
+   `.game-overlay` / `.overlay-*` container rules that lived in Ver1's
+   css/main.css and were NOT carried into the synthesis shell. Without
+   them every launched game rendered transparent, in-flow and unpositioned
+   (z-index:auto, background:transparent) — i.e. the game launched but was
+   invisible, with the alabaster home bleeding through.
+
+   This file restores ONLY the overlay container chrome, self-contained
+   (concrete dark values, no dependency on --dark-* tokens that the shell
+   does not define). A game's own game.css still styles its inner content.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* fallbacks for any Ver1 game CSS that references these tokens */
+  --dark-base:   #18100A;
+  --dark-panel:  #201408;
+  --dark-border: rgba(195,165,105,0.14);
+}
+
+.game-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #18100A;            /* var(--dark-base) */
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.game-overlay.active { display: flex; animation: none; }
+
+.overlay-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2rem;
+  padding-top: max(4px, env(safe-area-inset-top));
+  padding-left: max(2rem, calc(1rem + env(safe-area-inset-left)));
+  padding-right: max(2rem, calc(1rem + env(safe-area-inset-right)));
+  min-height: 52px;
+  background: #201408;            /* var(--dark-panel) */
+  border-bottom: 1px solid rgba(195,165,105,0.14);
+  flex-shrink: 0;
+}
+
+.overlay-nav-btns { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.overlay-levels-btn { font-size: 10px !important; letter-spacing: 0.8px !important; opacity: 0.75; }
+
+.overlay-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #907860;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgba(195,165,105,0.18);
+  padding: 6px 14px;
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-weight: 500;
+  transition: color 0.25s, border-color 0.25s;
+}
+.overlay-back:hover { color: #F6F2EB; border-color: rgba(195,165,105,0.5); }
+
+.overlay-title {
+  font-family: 'Cormorant Garamond', 'Alegreya', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(195,165,105,0.8);
+}
+
+.overlay-lang { display: flex; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+.overlay-lang button {
+  font-size: 11px;
+  padding: 4px 12px;
+  cursor: pointer;
+  color: #907A68;
+  background: transparent;
+  border: none;
+  font-family: 'Inter', 'Montserrat', sans-serif;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.overlay-lang button.active { background: rgba(255,255,255,0.08); color: #F6F2EB; }
+
+.overlay-frame { flex: 1; overflow-y: auto; overflow-x: hidden; }
