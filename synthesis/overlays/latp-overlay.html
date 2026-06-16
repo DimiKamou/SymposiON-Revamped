@@ -1,0 +1,20 @@
+<style>
+  .game-overlay{display:none;position:fixed;inset:0;z-index:1200;background:#0D0A06;flex-direction:column;color:#e8dcc8;}
+  .game-overlay.active{display:flex;}
+  .game-overlay .overlay-topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;min-height:52px;background:#16110A;border-bottom:1px solid #3d3020;flex-shrink:0;}
+  .game-overlay .overlay-nav-btns{display:flex;gap:8px;}
+  .game-overlay .overlay-title{color:#c9a44a;font-family:'Cormorant Garamond',serif;font-size:1.25rem;}
+  .game-overlay .overlay-back{background:#241a0e;color:#e8dcc8;border:1px solid #3d3020;border-radius:8px;padding:6px 12px;cursor:pointer;}
+  .game-overlay .overlay-frame{flex:1;overflow:auto;position:relative;}
+</style>
+<div id="latp-overlay" class="game-overlay">
+  <div class="overlay-topbar">
+    <div class="overlay-nav-btns">
+      <button class="overlay-back" onclick="closeLatAntonymies()" data-gr="← Επιλογή Παιχνιδιού" data-en="← Game Selection">← Επιλογή Παιχνιδιού</button>
+      <button class="overlay-back overlay-levels-btn" onclick="_latpToLevels()">← Επιλογή Επιπέδου</button>
+    </div>
+    <div class="overlay-title" data-gr="Κλίση Λατινικών Αντωνυμιών" data-en="Latin Pronoun Declension">Κλίση Λατινικών Αντωνυμιών</div>
+    <div style="width:80px;"></div>
+  </div>
+  <div class="overlay-frame" id="latp-wrap"></div>
+</div>
