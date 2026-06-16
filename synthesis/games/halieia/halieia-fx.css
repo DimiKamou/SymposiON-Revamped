@@ -1,0 +1,61 @@
+/* ══════════════════════════════════════════════════════════════════════
+   ΑΛΙΕΙΑ — standalone FX restyle  (halieia-fx.css)
+   Aegean of Poseidon: rising bubbles + caustic light over teal water.
+   Loaded only by the standalone page. Pushes the sea palette and adds glow.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* let the ambient bubbles show behind the game */
+body { background: #06100C; }
+#al-overlay { background: transparent; z-index: 1; }
+.fx-ambient { z-index: 0; }
+#al-wrap {
+  background:
+    radial-gradient(900px 520px at 50% -10%, rgba(106,135,82,0.18), transparent 60%),
+    radial-gradient(820px 640px at 50% 116%, rgba(94,139,150,0.26), transparent 60%) !important;
+  background-color: transparent !important;
+}
+#al-overlay .overlay-topbar { background: rgba(6,16,12,0.82); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(106,135,82,0.34); }
+
+/* transform-only entrance: opacity stays 1 (never trapped hidden) */
+.al-screen.active { animation: alx-screenin .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes alx-screenin { from { transform: translateY(12px); } to { transform: none; } }
+
+/* ── intro: trident shimmers, title glows like sunlit water ── */
+.al-trident { animation: alx-bob 3.6s ease-in-out infinite; }
+@keyframes alx-bob { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-8px) rotate(1deg); } }
+.al-logo { animation: alx-logoglow 3.4s ease-in-out infinite; }
+@keyframes alx-logoglow {
+  0%,100% { text-shadow: 0 0 26px rgba(106,135,82,0.4); }
+  50%     { text-shadow: 0 0 46px rgba(157,190,132,0.7), 0 0 14px rgba(127,176,188,0.5); }
+}
+
+/* ── HUD: haul + frenzy read brighter ── */
+.al-haul-val { text-shadow: 0 0 18px rgba(227,199,102,0.45); }
+.al-frenzy-mult.hot { text-shadow: 0 0 18px rgba(217,123,92,0.6); animation: alx-hotpulse .8s ease-in-out infinite; }
+@keyframes alx-hotpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.al-frenzy-fill { box-shadow: 0 0 12px rgba(157,190,132,0.5); }
+.al-frenzy-fill.hot { box-shadow: 0 0 16px rgba(217,123,92,0.6); }
+
+/* ── answers: crisper hover ── */
+.al-ans { transition: border-color .15s, background .15s, transform .1s, box-shadow .2s; }
+.al-ans:hover:not(:disabled) { box-shadow: 0 0 24px rgba(106,135,82,0.2); transform: translateY(-1px); }
+.al-ans.correct { box-shadow: 0 0 26px rgba(106,135,82,0.4); }
+
+/* ── scene: deeper shadow + zone glow ── */
+.al-scene svg { box-shadow: 0 22px 60px rgba(0,0,0,0.6); }
+.al-zone:hover .al-zone-ring { filter: drop-shadow(0 0 8px rgba(240,235,224,0.5)); }
+.al-cast-prompt { text-shadow: 0 0 18px rgba(157,190,132,0.5); }
+
+/* reveal card glow */
+.al-reveal { box-shadow: 0 16px 46px rgba(0,0,0,0.65), 0 0 30px rgba(106,135,82,0.2); }
+.al-reveal-name.big { animation: alx-bigpulse 1.6s ease-in-out infinite; }
+@keyframes alx-bigpulse { 0%,100% { text-shadow: 0 0 22px rgba(196,164,72,0.55); } 50% { text-shadow: 0 0 38px rgba(227,199,102,0.85); } }
+
+/* end glow */
+.al-end-emoji { animation: alx-bob 2.6s ease-in-out infinite; }
+.al-end-title.win { animation: alx-logoglow 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .al-trident, .al-logo, .al-frenzy-mult.hot, .al-reveal-name.big,
+  .al-end-emoji, .al-end-title.win { animation: none !important; }
+}

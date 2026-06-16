@@ -1,0 +1,114 @@
+/* ══════════════════ ΑΓΟΡΑ — The Agora (auction) ══════════════════
+   Bid drachmas for the right to answer; win the lot and answer truly to
+   claim its worth. Palette: gold market + terracotta over dark Hearth.
+═══════════════════════════════════════════════════════════════════════ */
+
+#ag-overlay { --ag-ink:#0E0A05; }
+#ag-overlay .overlay-topbar { background:rgba(14,10,5,0.92); border-bottom:1px solid rgba(196,164,72,0.24); }
+#ag-overlay .overlay-title { color:var(--sym-gold-lt); text-shadow:0 0 16px rgba(196,164,72,0.35); }
+
+#ag-wrap {
+  min-height:100%;
+  background:
+    radial-gradient(960px 540px at 50% -10%, rgba(196,164,72,0.15), transparent 60%),
+    radial-gradient(720px 560px at 50% 116%, rgba(217,123,92,0.10), transparent 60%),
+    linear-gradient(180deg, #16100A, #0E0A05);
+  color:var(--sym-cream); font-family:var(--sym-sans); position:relative; overflow:hidden;
+}
+
+.ag-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.ag-screen.active { display:flex; animation:ag-fade .4s ease; }
+@keyframes ag-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ── Intro ── */
+#ag-screen-intro { align-items:center; justify-content:center; text-align:center; gap:8px; }
+.ag-gavel { width:140px; height:130px; margin-bottom:4px; filter:drop-shadow(0 8px 26px rgba(196,164,72,0.4)); }
+.ag-logo { font-family:var(--sym-display); font-weight:700; font-size:clamp(30px,5vw,52px); letter-spacing:0.14em; color:var(--sym-gold-lt); text-shadow:0 0 30px rgba(196,164,72,0.4); }
+.ag-logo-en { font-family:var(--sym-serif); font-style:italic; font-size:21px; color:var(--sym-terra-lt); margin-bottom:6px; }
+.ag-intro-txt { font-family:var(--sym-serif); font-size:19px; line-height:1.55; color:var(--sym-stone); max-width:610px; margin-bottom:26px; }
+.ag-intro-txt b { color:var(--sym-cream); font-style:normal; }
+
+/* ── Top ── */
+.ag-top { display:flex; align-items:center; justify-content:space-between; gap:18px; max-width:760px; width:100%; margin:0 auto 12px; }
+.ag-purse { display:flex; align-items:baseline; gap:10px; }
+.ag-purse-lbl { font-family:var(--sym-mono); font-size:10px; letter-spacing:2px; color:var(--sym-stone); }
+.ag-purse-val { font-family:var(--sym-display); font-size:28px; color:var(--sym-gold-lt); line-height:1; }
+.ag-round { font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-stone); }
+
+.ag-board { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:760px; width:100%; margin:0 auto 16px; }
+.ag-board-chip { display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(240,235,224,0.08); font-size:12px; }
+.ag-board-chip.me { border-color:var(--sym-gold); background:rgba(196,164,72,0.12); }
+.ag-board-rank { font-family:var(--sym-mono); font-size:10px; color:var(--sym-stone); }
+.ag-board-name { font-family:var(--sym-serif); font-size:14px; color:var(--sym-cream); }
+.ag-board-d { font-family:var(--sym-mono); font-size:11px; color:var(--sym-gold-lt); }
+
+/* ── Lot ── */
+.ag-lot { display:flex; align-items:center; gap:18px; justify-content:center; max-width:560px; width:100%; margin:0 auto 18px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(196,164,72,0.22); border-radius:6px; padding:18px 24px; }
+.ag-lot-ic { font-size:46px; filter:drop-shadow(0 3px 5px rgba(0,0,0,0.5)); }
+.ag-lot-info { text-align:left; }
+.ag-lot-name { font-family:var(--sym-serif); font-size:21px; color:var(--sym-cream); }
+.ag-lot-val { font-family:var(--sym-mono); font-size:12px; letter-spacing:1px; color:var(--sym-stone); margin-top:4px; }
+.ag-lot-val b { color:var(--sym-gold-lt); font-size:15px; }
+
+/* ── Phase: bid / question / resolve ── */
+.ag-phase { max-width:640px; width:100%; margin:0 auto; flex:1; }
+.ag-bid-head { text-align:center; font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-gold-lt); margin-bottom:12px; }
+.ag-bid-opts { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; }
+@media (max-width:560px){ .ag-bid-opts{grid-template-columns:1fr 1fr;} }
+.ag-bid-btn { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;
+  background:var(--sym-bg-panel); border:1px solid rgba(196,164,72,0.3); border-radius:4px; padding:13px 8px; color:var(--sym-cream);
+  transition:transform .12s, border-color .15s, background .15s, opacity .2s; }
+.ag-bid-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--sym-gold-lt); background:rgba(196,164,72,0.1); }
+.ag-bid-btn:disabled{ opacity:0.4; }
+.ag-bid-btn.pass { border-color:rgba(240,235,224,0.2); }
+.ag-bid-btn.bold { border-color:rgba(217,123,92,0.45); }
+.ag-bid-lbl { font-family:var(--sym-display); font-size:13px; letter-spacing:1px; }
+.ag-bid-btn.bold .ag-bid-lbl { color:var(--sym-terra-lt); }
+.ag-bid-amt { font-family:var(--sym-mono); font-size:17px; color:var(--sym-gold-lt); }
+.ag-bid-btn.pass .ag-bid-amt { color:var(--sym-stone); }
+
+.ag-won-tag { text-align:center; font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-gold-lt); margin-bottom:10px; }
+.ag-q-card { background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(196,164,72,0.2); border-left:3px solid var(--sym-gold); border-radius:4px; padding:18px 24px; margin-bottom:14px; }
+.ag-q-text { font-family:var(--sym-serif); font-size:clamp(18px,2.5vw,24px); line-height:1.4; color:var(--sym-cream); }
+.ag-answers { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+@media (max-width:560px){ .ag-answers{grid-template-columns:1fr;} }
+.ag-ans { display:flex; align-items:center; gap:12px; text-align:left;
+  background:var(--sym-bg-panel); border:1px solid rgba(240,235,224,0.12); border-radius:3px; padding:13px 15px; cursor:pointer; color:var(--sym-cream);
+  font-family:var(--sym-sans); font-size:15px; line-height:1.3; transition:border-color .15s, background .15s, transform .1s; }
+.ag-ans:hover:not(:disabled){ border-color:var(--sym-gold-lt); background:rgba(196,164,72,0.08); }
+.ag-ans:active:not(:disabled){ transform:scale(.99); }
+.ag-ans-key { width:28px; height:28px; flex-shrink:0; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(196,164,72,0.45); font-family:var(--sym-display); font-size:13px; color:var(--sym-gold-lt); }
+.ag-ans.correct { border-color:var(--sym-gold); background:rgba(196,164,72,0.18); }
+.ag-ans.correct .ag-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
+.ag-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
+.ag-ans.wrong .ag-ans-key { border-color:var(--sym-blood); color:#E08577; }
+
+.ag-resolve { text-align:center; font-family:var(--sym-serif); font-size:18px; color:var(--sym-cream); line-height:1.5; margin-bottom:18px; }
+.ag-resolve b { color:var(--sym-gold-lt); }
+.ag-cont { display:block; margin:8px auto 0; }
+
+.ag-feedback { text-align:center; min-height:22px; margin-top:14px; font-family:var(--sym-mono); font-size:13px; letter-spacing:1.5px; }
+.ag-bidline { letter-spacing:0.5px; }
+.ag-fb-ok { color:var(--sym-gold); }
+.ag-fb-bad { color:#E08577; }
+.ag-fb-hint { color:var(--sym-stone); }
+
+/* ── End ── */
+#ag-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
+.ag-end-gavel { width:150px; height:140px; }
+.ag-end-title { font-family:var(--sym-display); font-size:clamp(28px,5vw,46px); letter-spacing:4px; }
+.ag-end-title.win { color:var(--sym-gold-lt); text-shadow:0 0 30px rgba(196,164,72,0.5); }
+.ag-end-title.lose { color:var(--sym-terra-lt); }
+.ag-end-sub { font-family:var(--sym-serif); font-style:italic; font-size:18px; color:var(--sym-stone); max-width:520px; line-height:1.5; }
+.ag-final-board { background:var(--sym-bg-panel); border:1px solid rgba(196,164,72,0.2); border-radius:4px; padding:10px 14px; min-width:320px; margin:6px 0; }
+.ag-final-row { display:flex; align-items:center; gap:12px; padding:9px 8px; border-bottom:1px solid rgba(240,235,224,0.06); }
+.ag-final-row:last-child { border-bottom:none; }
+.ag-final-row.me { background:rgba(196,164,72,0.08); border-radius:3px; }
+.ag-final-pos { font-family:var(--sym-display); font-size:16px; color:var(--sym-stone); width:30px; text-align:center; }
+.ag-final-row.me .ag-final-pos { color:var(--sym-gold-lt); }
+.ag-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
+.ag-final-d { font-family:var(--sym-mono); font-size:14px; color:var(--sym-gold-lt); }
+.ag-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }

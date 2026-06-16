@@ -1,0 +1,135 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON — synthesis PvP/Game-Panel shared overlay shell  (pvp-shell.css)
+
+   The PvP-pack games (krypteia, hegemonia, discus, toxotes, agora — and the
+   existing golden-fleece / halieia / crypto-hack) build a `.sym-overlay`
+   shell on demand and rely on:
+     (a) the shared `.sym-overlay / .overlay-* / .sym-btn` shell, and
+     (b) the DARK "Hearth" `--sym-*` token values.
+
+   synthesis/css/tokens.css defines `--sym-*` with LIGHT (alabaster) values for
+   the home, and no synthesis CSS defines the base `.sym-overlay` shell. So we
+   provide both here — but **scoped to `.sym-overlay`** so the dark tokens and
+   shell never leak onto the home (which keeps its alabaster look untouched).
+
+   Lifted from the pack's brand.css overlay-shell section (Hearth palette).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Dark "Hearth" tokens, scoped to the game overlay only ──
+   These override synthesis' light home tokens INSIDE the overlay subtree,
+   so the games render on the dark Hearth palette they were designed for
+   while the home (.theme-alabaster) keeps its own light token values. */
+.sym-overlay {
+  --sym-bg-dark:   #0D0A06;
+  --sym-bg-panel:  #1A130C;
+  --sym-bg-panel2: #241A10;
+  --sym-bg-light:  #F6F2EB;
+
+  --sym-ink:    #221B10;
+  --sym-cream:  #F0EBE0;
+  --sym-stone:  #867660;
+  --sym-stone-dk: #5A4E3C;
+
+  --sym-terra:    #D97B5C;
+  --sym-terra-dk: #C05535;
+  --sym-terra-lt: #E59A7E;
+
+  --sym-gold:   #C4A448;
+  --sym-gold-lt:#E3C766;
+  --sym-sage:   #6A8752;
+  --sym-aegean: #5E8B96;
+  --sym-aegean-lt: #7FB0BC;
+  --sym-blood:  #9E3B2E;
+
+  --sym-serif:   'Alegreya', 'Cormorant Garamond', Georgia, serif;
+  --sym-sans:    'Montserrat', 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sym-mono:    'JetBrains Mono', ui-monospace, monospace;
+  --sym-label:   'Montserrat', 'Fira Sans', -apple-system, 'Segoe UI', sans-serif;
+  --sym-display: 'Oswald', 'Roboto Condensed', Georgia, sans-serif;
+}
+
+/* ── Overlay shell ── */
+.sym-overlay {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  background: var(--sym-bg-dark);
+}
+.sym-overlay.active { display: flex; }
+
+.sym-overlay .overlay-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px clamp(16px, 4vw, 34px);
+  height: 54px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(240,235,224,0.10);
+  background: rgba(13,10,6,0.85);
+  backdrop-filter: blur(6px);
+}
+.sym-overlay .overlay-back {
+  background: transparent;
+  border: 1px solid rgba(240,235,224,0.2);
+  color: var(--sym-cream);
+  font-family: var(--sym-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 8px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.sym-overlay .overlay-back:hover { background: rgba(240,235,224,0.08); border-color: rgba(240,235,224,0.4); }
+.sym-overlay .overlay-title {
+  font-family: var(--sym-display);
+  letter-spacing: 4px;
+  font-size: 13px;
+  color: var(--sym-cream);
+  text-transform: uppercase;
+}
+.sym-overlay .overlay-lang {
+  display: inline-flex;
+  border: 1px solid rgba(240,235,224,0.16);
+  border-radius: 2px;
+  overflow: hidden;
+  font-family: var(--sym-mono);
+  font-size: 10px;
+}
+.sym-overlay .overlay-lang button {
+  background: transparent; border: none; color: var(--sym-stone);
+  padding: 6px 10px; cursor: pointer;
+}
+.sym-overlay .overlay-lang button.on { background: var(--sym-terra); color: #1A130C; font-weight: 600; }
+
+.sym-overlay .overlay-stage { flex: 1; overflow-y: auto; position: relative; }
+
+/* ── Shared button ── */
+.sym-overlay .sym-btn {
+  font-family: var(--sym-display);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A130C;
+  background: var(--sym-terra);
+  border: none;
+  border-radius: 3px;
+  padding: 14px 34px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .2s, background .2s;
+  box-shadow: 0 6px 22px rgba(217,123,92,0.28);
+}
+.sym-overlay .sym-btn:hover { transform: translateY(-2px); background: var(--sym-terra-lt); box-shadow: 0 10px 30px rgba(217,123,92,0.4); }
+.sym-overlay .sym-btn:active { transform: translateY(0); }
+.sym-overlay .sym-btn.ghost {
+  background: transparent;
+  color: var(--sym-cream);
+  border: 1px solid rgba(240,235,224,0.28);
+  box-shadow: none;
+}
+.sym-overlay .sym-btn.ghost:hover { background: rgba(240,235,224,0.06); border-color: var(--sym-cream); }

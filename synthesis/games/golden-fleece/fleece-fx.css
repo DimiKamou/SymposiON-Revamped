@@ -1,0 +1,57 @@
+/* ══════════════════════════════════════════════════════════════════════
+   ΧΡΥΣΟΜΑΛΛΟΝ ΔΕΡΑΣ — standalone FX restyle  (fleece-fx.css)
+   The voyage of the Argo: drifting golden dust-motes + sea shimmer.
+   Loaded only by the standalone page.
+   ════════════════════════════════════════════════════════════════════════ */
+
+body { background: #0A1014; }
+#gf-overlay { background: transparent; z-index: 1; }
+.fx-ambient { z-index: 0; }
+#gf-wrap {
+  background:
+    radial-gradient(900px 520px at 50% -10%, rgba(196,164,72,0.18), transparent 60%),
+    radial-gradient(820px 640px at 50% 116%, rgba(94,139,150,0.22), transparent 60%) !important;
+  background-color: transparent !important;
+}
+#gf-overlay .overlay-topbar { background: rgba(10,16,20,0.82); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(196,164,72,0.3); }
+
+/* transform-only entrance (opacity always 1) */
+.gf-screen.active { animation: gfx-screenin .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes gfx-screenin { from { transform: translateY(12px); } to { transform: none; } }
+
+/* ── intro fleece + title glow ── */
+.gf-fleece { animation: gfx-fleece 3.8s ease-in-out infinite; }
+@keyframes gfx-fleece { 0%,100% { transform: translateY(0) rotate(-1deg); filter: drop-shadow(0 8px 26px rgba(196,164,72,0.4)); } 50% { transform: translateY(-7px) rotate(1deg); filter: drop-shadow(0 14px 36px rgba(227,199,102,0.7)); } }
+.gf-logo { animation: gfx-logoglow 3.4s ease-in-out infinite; }
+@keyframes gfx-logoglow {
+  0%,100% { text-shadow: 0 0 26px rgba(196,164,72,0.4); }
+  50%     { text-shadow: 0 0 48px rgba(227,199,102,0.8), 0 0 14px rgba(127,176,188,0.4); }
+}
+
+/* ── purse + the Argo sailing across the voyage track ── */
+.gf-purse-val { text-shadow: 0 0 18px rgba(227,199,102,0.5); }
+.gf-argo { transition: left .6s cubic-bezier(.3,.8,.3,1); filter: drop-shadow(0 0 8px rgba(127,176,188,0.5)); }
+.gf-voyage-fill { box-shadow: 0 0 12px rgba(196,164,72,0.45); }
+
+/* answers */
+.gf-ans { transition: border-color .15s, background .15s, transform .12s, box-shadow .2s; }
+.gf-ans:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 0 24px rgba(196,164,72,0.2); }
+.gf-ans.correct { box-shadow: 0 0 26px rgba(106,135,82,0.4); }
+
+/* ── jars: the pick set-piece ── */
+.gf-pot { transition: transform .2s, filter .2s; }
+.gf-pot:hover .gf-pot-jar { filter: drop-shadow(0 0 18px rgba(196,164,72,0.5)); }
+.gf-pot.picked { animation: gfx-jarpick .6s cubic-bezier(.2,1.4,.4,1); }
+@keyframes gfx-jarpick { 0%{ transform: scale(1); } 40%{ transform: scale(1.12) translateY(-6px); } 100%{ transform: scale(1.05); } }
+.gf-reveal-amt.gain { text-shadow: 0 0 18px rgba(227,199,102,0.6); }
+.gf-reveal-amt.loss { text-shadow: 0 0 18px rgba(158,59,46,0.6); }
+
+/* outcome */
+.gf-outcome-big.gain { animation: gfx-logoglow 1.8s ease-in-out infinite; }
+
+/* end */
+.gf-end-title.win { animation: gfx-logoglow 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-fleece, .gf-logo, .gf-outcome-big.gain, .gf-end-title.win { animation: none !important; }
+}

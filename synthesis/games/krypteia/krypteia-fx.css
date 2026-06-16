@@ -1,0 +1,122 @@
+/* ══════════════════════════════════════════════════════════════════════
+   ΚΡΥΠΤΕΙΑ — standalone FX restyle  (krypteia-fx.css)
+   "Ancient artifact shot through with code": gold/terra glyph-rain + scanlines
+   behind torchlit wax & stone. Loaded only by the standalone page, so the hub
+   overlay is untouched. Pushes the palette hotter and adds reactive glow.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* let the ambient code-rain show behind the game */
+body { background: #0B0805; }
+#kr-overlay { background: transparent; z-index: 1; }
+.fx-ambient { z-index: 0; }
+
+/* transform-only screen entrance: opacity stays 1, so content is always
+   visible (no from{opacity:0} trap) while still sliding in for motion. */
+.kr-screen.active { animation: krx-screenin .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes krx-screenin { from { transform: translateY(12px); } to { transform: none; } }
+#kr-wrap {
+  background:
+    radial-gradient(900px 520px at 50% -12%, rgba(217,123,92,0.18), transparent 60%),
+    radial-gradient(700px 640px at 92% 112%, rgba(158,59,46,0.14), transparent 60%) !important;
+  background-color: transparent !important;
+}
+#kr-overlay .overlay-topbar {
+  background: rgba(11,8,5,0.82);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(196,164,72,0.28);
+}
+
+/* ── louder logo: live "decoding signal" ── */
+.kr-logo {
+  position: relative;
+  animation: krx-logoglow 3.2s ease-in-out infinite;
+}
+@keyframes krx-logoglow {
+  0%,100% { text-shadow: 0 0 26px rgba(196,164,72,0.35); }
+  50%     { text-shadow: 0 0 44px rgba(196,164,72,0.7), 0 0 12px rgba(217,123,92,0.5); }
+}
+.kr-logo::after {
+  content: ''; display: block; height: 2px; width: 120px; margin: 10px auto 0;
+  background: linear-gradient(90deg, transparent, var(--sym-gold), var(--sym-terra), transparent);
+  background-size: 220% 100%;
+  animation: krx-rail 2.4s linear infinite;
+}
+@keyframes krx-rail { to { background-position: 220% 0; } }
+
+/* ── hotter seal cards ── */
+.kr-seal-card { transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .3s, box-shadow .3s; }
+.kr-seal-card:hover {
+  transform: translateY(-9px) scale(1.02);
+  box-shadow: 0 26px 64px rgba(0,0,0,0.6), 0 0 40px rgba(196,164,72,0.34);
+}
+.kr-seal-card:hover .kr-seal-wax { animation: krx-wax 1.4s ease-in-out infinite; }
+@keyframes krx-wax {
+  0%,100% { box-shadow: inset 0 3px 8px rgba(255,255,255,0.25), inset 0 -6px 14px rgba(0,0,0,0.45), 0 6px 18px rgba(0,0,0,0.5); }
+  50%     { box-shadow: inset 0 3px 8px rgba(255,255,255,0.3), inset 0 -6px 14px rgba(0,0,0,0.45), 0 6px 26px rgba(217,123,92,0.6); }
+}
+
+/* ── arena HUD: timer reads like a countdown terminal ── */
+.kr-timer-val { text-shadow: 0 0 18px rgba(240,235,224,0.25); }
+.kr-timer.low .kr-timer-val { text-shadow: 0 0 22px rgba(158,59,46,0.7); }
+.kr-stat-val { text-shadow: 0 0 16px rgba(196,164,72,0.4); }
+
+/* question card: faint scan + animated left rule */
+.kr-q-card {
+  position: relative; overflow: hidden;
+  border-left-width: 3px;
+}
+.kr-q-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--sym-terra), var(--sym-gold), var(--sym-terra));
+  background-size: 100% 220%;
+  animation: krx-edge 3s linear infinite;
+}
+@keyframes krx-edge { to { background-position: 0 220%; } }
+
+/* answers: sharper hover with glow */
+.kr-ans { transition: border-color .15s, background .15s, transform .1s, box-shadow .2s; }
+.kr-ans:hover:not(:disabled) { box-shadow: 0 0 24px rgba(196,164,72,0.18); transform: translateY(-1px); }
+.kr-ans.correct { box-shadow: 0 0 26px rgba(106,135,82,0.4); }
+
+/* ── decrypt mini-game: the "hack" centrepiece ── */
+.kr-dx-target .n { text-shadow: 0 0 18px rgba(224,133,119,0.6); letter-spacing: 4px; }
+.kr-dx-timer-fill { box-shadow: 0 0 12px rgba(196,164,72,0.6); }
+.kr-dx-slot {
+  position: relative;
+  transition: border-color .25s, background .25s, transform .2s, box-shadow .25s;
+}
+.kr-dx-slot.filled {
+  animation: krx-slotpop .4s cubic-bezier(.2,1.4,.4,1);
+  box-shadow: 0 0 20px rgba(106,135,82,0.5);
+}
+@keyframes krx-slotpop { 0%{ transform: scale(.5) rotateX(70deg); } 60%{ transform: scale(1.12); } 100%{ transform: scale(1); } }
+.kr-dx-tile {
+  transition: transform .1s, background .15s, opacity .25s, box-shadow .2s;
+  text-shadow: 0 0 10px rgba(196,164,72,0.25);
+}
+.kr-dx-tile:hover:not(:disabled) { box-shadow: 0 0 22px rgba(196,164,72,0.32); transform: translateY(-2px); }
+.kr-dx-tile.used { transform: scale(.86); }
+
+/* tablets: subtle hovering shimmer */
+.kr-tablet-front { position: relative; overflow: hidden; }
+.kr-tablet-front::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(196,164,72,0.18) 50%, transparent 60%);
+  background-size: 250% 100%;
+  animation: krx-shimmer 3.5s linear infinite; pointer-events: none;
+}
+@keyframes krx-shimmer { to { background-position: -250% 0; } }
+
+/* result + over: bigger glow */
+.kr-result-icon { filter: drop-shadow(0 0 22px rgba(196,164,72,0.5)); animation: krx-iconpulse 2s ease-in-out infinite; }
+@keyframes krx-iconpulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.08); } }
+.kr-over-crown { filter: drop-shadow(0 0 30px rgba(196,164,72,0.55)); animation: krx-iconpulse 2.4s ease-in-out infinite; }
+
+/* board hit/gain get a punchier flash */
+.kr-board-row.gain { box-shadow: 0 0 22px rgba(106,135,82,0.4); }
+.kr-board-row.hit { box-shadow: 0 0 22px rgba(158,59,46,0.45); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kr-logo, .kr-logo::after, .kr-q-card::before, .kr-tablet-front::after,
+  .kr-result-icon, .kr-over-crown, .kr-seal-card:hover .kr-seal-wax { animation: none !important; }
+}
