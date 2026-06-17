@@ -56,8 +56,7 @@
       const cont = el('button',{class:'syn-cta syn-cta--solid', disabled:'', onclick:()=>{
         const age = THIS_YEAR - year;
         SS().set('age_bracket', age < CONSENT_AGE ? 'minor' : (age<18?'teen':'adult'));
-        if (age < CONSENT_AGE) paintGuardian(card);   // under 15 → parental-consent step
-        else paintConsent(card, false);               // 15+ → straight to Terms
+        paintConsent(card, false);                    // straight to Terms (no parental-consent step)
       }}, [ L({gr:'Συνέχεια',en:'Continue'}), el('span',{html:'&rarr;'}) ]);
       card.appendChild(el('div',{class:'ob-foot'}, [ cont ]));
       return card;

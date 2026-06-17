@@ -131,7 +131,7 @@ const SUBJECTS = {
               g('Λαβύρινθος','Labyrinth','Maze · σύνταξη','labyrinth') ] },
     { id:'ekfrasi', roman:'IV', illu:'quill', gr:'Έκφραση · Έκθεση', en:'Composition', sub:'Modern Greek',
       summary:{ gr:'Κειμενικά είδη, επιχειρηματολογία και λεξιλόγιο.', en:'Text types, argumentation and vocabulary.' },
-      games:[ g('Λεξιλόγιο','Vocabulary','Κάρτες μνήμης · όροι','book',{fn:'synOpenStudyFlashcards'}),
+      games:[ gSoon('Λεξιλόγιο','Vocabulary','Κάρτες μνήμης · όροι','book'),
               g('Crypto Hack','Crypto Hack','Cipher · λέξεις','cipher'),
               g('Rapid Fire','Rapid Fire','Speed quiz','lightning-bolt') ] },
   ],
