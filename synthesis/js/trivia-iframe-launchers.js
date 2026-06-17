@@ -75,12 +75,12 @@
   // last active), wires the overlay title/lang, then calls the engine initGame()
   // (from games/iliada-trivia/game.js, lazy-loaded by the manifest).
   function launchGame(lang) {
-    if (typeof ILIADA_QUESTIONS !== 'undefined') {
+    if (window._triviaGameId !== 'odyssey-trivia' && typeof ILIADA_QUESTIONS !== 'undefined') {
       window.QUESTIONS  = ILIADA_QUESTIONS;
       window.RHAPSODIES = ILIADA_RHAPSODIES;
     }
     const titleEl = document.querySelector('#trivia-overlay .overlay-title');
-    if (titleEl) { titleEl.textContent = lang === 'en' ? 'Iliad Trivia' : 'Trivia Ιλιάδας'; }
+    if (titleEl && window._triviaGameId !== 'odyssey-trivia') { titleEl.textContent = lang === 'en' ? 'Iliad Trivia' : 'Trivia Ιλιάδας'; }
 
     const ov = document.getElementById('trivia-overlay');
     if (ov) ov.classList.add('active');

@@ -266,7 +266,7 @@
       SS().set('onboarded', 1);
       SS().set('guide_mode', guideOn ? 1 : 0);
       if(window.STATE){
-        STATE.role='student';                               // teacher/parent surfaces are their own screens
+        STATE.role = role || 'student';                     // keep the chosen role (teacher/parent/student)
         if(role==='student' && classId) STATE.classId = classId;
       }
       close();

@@ -73,7 +73,7 @@
     grp4.appendChild(el('button',{class:'set-link', onclick:()=>window.SymConsent&&SymConsent.privacy()},[
       el('span',{class:'set-link__ic'}, '⛉'), el('span',{class:'set-link__t'}, L({gr:'Απόρρητο & δεδομένα',en:'Privacy & data'})), el('span',{class:'set-link__ar', html:'&rsaquo;'}) ]));
     grp4.appendChild(el('button',{class:'set-link set-link--danger', onclick:(e)=>{
-      const b=e.currentTarget; if(b.dataset.armed){ try{ ['pref_bigtext','pref_contrast'].forEach(k=>{}); }catch(_){}
+      const b=e.currentTarget; if(b.dataset.armed){ try{ Object.keys(localStorage).filter(k=>k.indexOf('sym_revamp_')===0).forEach(k=>localStorage.removeItem(k)); }catch(_){}
         b.textContent=L({gr:'✓ Καθαρίστηκε',en:'✓ Cleared'}); b.disabled=true; }
       else { b.dataset.armed='1'; b.querySelector('.set-link__t').textContent=L({gr:'Σίγουρα; Πάτα ξανά',en:'Sure? Tap again'}); } }},[
       el('span',{class:'set-link__ic'}, '⌫'), el('span',{class:'set-link__t'}, L({gr:'Καθαρισμός τοπικών δεδομένων',en:'Clear local data'})), el('span',{class:'set-link__ar', html:'&rsaquo;'}) ]));
