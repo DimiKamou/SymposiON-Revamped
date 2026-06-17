@@ -301,7 +301,7 @@ async function awardRewards(xpAmount, drachmaAmount) {
 
   if (_prog.level > prevLevel) {
     _hjAutoUnlockTitles(_prog.level);
-    _hjShowLevelUpToast(_prog.level);
+    _hjShowLevelUpToast(_prog.level, xpAmount, drachmaAmount);
     if (typeof _updateAllNavbars === 'function') _updateAllNavbars();
   } else if (xpAmount || drachmaAmount) {
     _hjShowRewardToast(xpAmount, drachmaAmount);
@@ -912,8 +912,127 @@ async function _hjExecutePurchase(type, id) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+//  GRAND LEVEL-UP BANNER
+//  Full-screen celebratory modal: laurel emblem, ray burst,
+//  confetti shards and XP / Δραχμές reward chips. Dismisses on tap
+//  or after ~4.6s. Pure CSS animation (no GSAP dependency); colours
+//  are self-contained (dark/gold) and defined in css/student.css.
+//
+//  Usage:
+//    showLevelUp({ level, titleGr, titleEn, flavor, xp, drachmas });
+// ══════════════════════════════════════════════════════════════
+
+const LU_ICON_LAUREL = `<svg viewBox="0 0 80 80" fill="none" aria-hidden="true">
+  <line x1="40" y1="72" x2="40" y2="46" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <path d="M36 21 Q28 13 19 22 Q15 33 24 40 Q33 44 36 37 Q40 30 36 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M44 21 Q52 13 61 22 Q65 33 56 40 Q47 44 44 37 Q40 30 44 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M30 31 Q22 23 16 32 Q14 41 22 44 Q31 47 33 39" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M50 31 Q58 23 64 32 Q66 41 58 44 Q49 47 47 39" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M27 43 Q19 39 16 47 Q15 55 24 56 Q33 57 34 48" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M53 43 Q61 39 64 47 Q65 55 56 56 Q47 57 46 48" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+</svg>`;
+const LU_ICON_BOLT = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13 2 L4 14 H11 L10 22 L20 9 H13 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const LU_ICON_COIN = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 9 Q12 6.5 14.5 9 M9.5 15 Q12 17.5 14.5 15 M12 8 V16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+
+const LU_SHARD_COLORS = ['#C4A448', '#D97B5C', '#6A8752', '#F0EBE0'];
+
+function showLevelUp(opts = {}) {
+  const o = Object.assign({
+    level: 1, titleGr: '', titleEn: '',
+    flavor: 'A new title awaits in your Profile.',
+    xp: 0, drachmas: 0
+  }, opts);
+
+  document.getElementById('lvlup')?.remove();
+
+  const el = document.createElement('div');
+  el.id = 'lvlup';
+
+  // confetti shards
+  let confetti = '';
+  for (let i = 0; i < 14; i++) {
+    const left  = 8 + Math.random() * 84;
+    const color = LU_SHARD_COLORS[i % LU_SHARD_COLORS.length];
+    const delay = (Math.random() * 0.3).toFixed(2);
+    confetti += `<span class="lu-bit" style="left:${left}%;background:${color};animation-delay:${delay}s"></span>`;
+  }
+
+  const titleLine = (o.titleGr || o.titleEn)
+    ? `<div class="lu-title"><span class="gr">${o.titleGr}</span>${o.titleGr && o.titleEn ? ' · ' : ''}${o.titleEn}</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="lu-backdrop"></div>
+    <div class="lu-card">
+      <div class="lu-glow"></div>
+      <div class="lu-confetti">${confetti}</div>
+      <div class="lu-emblem">
+        <div class="lu-rays"></div>
+        <div class="lu-disc">${LU_ICON_LAUREL}</div>
+      </div>
+      <div class="lu-eyebrow">Ανέβηκες Επίπεδο<span class="en">LEVEL UP</span></div>
+      <div class="lu-line"><span class="rule"></span><span class="dot"></span><span class="rule"></span></div>
+      <div class="lu-number">${o.level}</div>
+      ${titleLine}
+      <div class="lu-flavor">${o.flavor}</div>
+      <div class="lu-rewards">
+        ${o.xp       ? `<div class="lu-chip"><span class="ic">${LU_ICON_BOLT}</span><b>+${o.xp}</b>&nbsp;XP</div>` : ''}
+        ${o.drachmas ? `<div class="lu-chip"><span class="ic">${LU_ICON_COIN}</span><b>+${o.drachmas}</b>&nbsp;Δρχ</div>` : ''}
+      </div>
+      <div class="lu-hint">Tap anywhere to continue</div>
+    </div>`;
+
+  document.body.appendChild(el);
+  // double rAF so the entrance transition plays from the start state
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-in')));
+
+  const dismiss = () => {
+    if (el.classList.contains('is-out')) return;
+    el.classList.remove('is-in');
+    el.classList.add('is-out');
+    setTimeout(() => el.remove(), 600);
+  };
+
+  // tap to dismiss
+  el.style.pointerEvents = 'auto';
+  el.addEventListener('click', dismiss);
+
+  // auto-dismiss
+  const auto = setTimeout(dismiss, 4600);
+  el.addEventListener('click', () => clearTimeout(auto), { once: true });
+
+  return el;
+}
+
+// expose globally so other modules can trigger it directly
+if (typeof window !== 'undefined') window.showLevelUp = showLevelUp;
+
 // ── LEVEL-UP TOAST ────────────────────────────────────────────
-function _hjShowLevelUpToast(level) {
+// Drives the Grand banner above: names the milestone title unlocked
+// at this level (HJ_TITLES is keyed by levelReq) and shows the XP /
+// Drachmas just awarded as reward chips.
+function _hjShowLevelUpToast(level, xp, drachmas) {
+  const t    = HJ_TITLES.find(x => x.levelReq === level);
+  const lang = (typeof siteLang !== 'undefined') ? siteLang : 'gr';
+
+  showLevelUp({
+    level,
+    titleGr: t ? t.gr : '',
+    titleEn: t ? t.en : '',
+    flavor: t
+      ? (lang === 'en' ? 'New title unlocked — see it in your Profile.'
+                       : 'Νέος τίτλος ξεκλειδώθηκε — δες τον στο Προφίλ σου.')
+      : (lang === 'en' ? 'Keep climbing the Path of the Hero.'
+                       : 'Συνέχισε να ανεβαίνεις το Μονοπάτι του Ήρωα.'),
+    xp:       Math.max(0, xp || 0),
+    drachmas: Math.max(0, drachmas || 0)
+  });
+}
+
+// ── LEVEL-UP TOAST (compact) ──────────────────────────────────
+// Previous compact toast, kept as an alternative to the Grand banner.
+function _hjShowLevelUpToastCompact(level) {
   document.getElementById('hj-levelup-toast')?.remove();
 
   const el = document.createElement('div');
