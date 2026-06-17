@@ -34,6 +34,11 @@
 <link rel="stylesheet" href="css/admin-studio.css"/>
 <link rel="stylesheet" href="css/admin-realm.css"/>
 <link rel="stylesheet" href="css/admin-atlas.css"/>
+<!-- ══════════ ADMIN SYNTHESIS (revamp-native light admin) ══════════
+     css/admin-synthesis.css styles the sc-admin2 light admin + the real
+     Access-Control matrix rendered by js/admin-synthesis.js (loaded below,
+     after syn-admin.js, so it wins SYM_SCREENS.admin). -->
+<link rel="stylesheet" href="css/admin-synthesis.css"/>
 <!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
      anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
      The trivia-panel's own chrome (games/trivia-panel/panel.css) is
@@ -244,6 +249,14 @@
 <script src="js/admin-cc.js"></script>
 <script src="js/admin-atlas.js"></script>
 <script src="js/syn-admin.js"></script>
+<!-- ══════════ ADMIN SYNTHESIS (revamp-native light admin) ══════════
+     Re-registers window.SYM_SCREENS.admin AFTER syn-admin.js so the light
+     sc-admin2 design wins over the Ver1 Command Center overlay. Reuses the
+     real engines via their globals (AdminStudio, ccOpenAtlas, synOpenAcroteria)
+     and keeps a "Classic Command Center" button that opens the old #page-admin.
+     Adds the real Access-Control matrix (SymStore 'access_control' + guarded
+     Firestore config/accessControl). Gated on the bare global isAdmin. -->
+<script src="js/admin-synthesis.js"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
      Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
