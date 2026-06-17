@@ -13,6 +13,24 @@
 
   /* ── shared bits ───────────────────────────────────────────────── */
   function glyph(name, cls){ return el('span', { class:(cls||'sc-gl'), 'data-illu':name }); }
+  // "Coming soon" helpers — tiles flagged `soon:true` in data.js have no real
+  // game yet. Reuse the shared badge + friendly notice defined in dir-synthesis.js;
+  // fall back to inline equivalents if that module hasn't registered them.
+  function soonBadge(){
+    if (typeof window.synSoonBadge === 'function') return window.synSoonBadge();
+    return el('span',{ class:'syn-soon-badge',
+      style:'position:absolute;top:8px;left:8px;z-index:3;display:inline-flex;align-items:center;gap:4px;'
+        + 'padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.09em;'
+        + 'text-transform:uppercase;line-height:1;color:var(--sym-terra-dk,#9C3F1F);'
+        + 'background:color-mix(in srgb, var(--sym-gold,#A2862F) 16%, transparent);'
+        + 'border:1px solid color-mix(in srgb, var(--sym-terra,#C5572F) 38%, transparent);' },
+      [ el('span',{html:'&#9685;'}), L({gr:'Σύντομα',en:'Soon'}) ]);
+  }
+  function comingSoon(g){
+    if (typeof window.synComingSoon === 'function') return window.synComingSoon(g);
+    SymPreview.open('mc', { title:L(g)+' · '+L({gr:'Σύντομα',en:'Coming soon'}), illu:g.illu,
+      note:L({gr:'Αυτό το παιχνίδι ετοιμάζεται — θα είναι σύντομα διαθέσιμο.',en:'This game is on the way — available soon.'}) });
+  }
   function pill(t, accent){ return el('span',{class:'sc-pill has-accent', style:`--ca:${accent||SITE}`}, t); }
   function stat(v, label, accent){ return el('div', { class:'sc-stat has-accent', style:`--ca:${accent||SITE}` }, [
     el('div',{class:'sc-stat__v'}, v), el('div',{class:'sc-stat__l'}, label) ]); }
@@ -118,13 +136,16 @@
       games.sort((a,b)=> (SymStore.isFav(a.rid)?-1:0) - (SymStore.isFav(b.rid)?-1:0));
       const grid = el('div', { class:'sc-cards has-accent'+(ST().display!=='grid'?' sc-cards--'+ST().display:''), style:`--ca:${accent}` });
       games.forEach(({g,rid},i)=>{
-        const card = el('a', { class:'sc-gcard', href:'javascript:void 0', 'data-rid':rid, onclick:()=>go('level',{subject,game:g,cls}) }, [
-          el('div',{class:'sc-gcard__ban'},[ favBtn(rid), glyph(g.illu,'sc-gcard__illu'), (i%3===0?el('span',{class:'sc-tag'},L({gr:'Δωρεάν',en:'Free'})):null),
+        const soon = !!g.soon;
+        const card = el('a', { class:'sc-gcard'+(soon?' sc-gcard--soon':''), href:'javascript:void 0', style:'position:relative', 'data-rid':rid,
+          onclick: soon ? (e)=>{ e.preventDefault(); comingSoon(g); } : ()=>go('level',{subject,game:g,cls}) }, [
+          soon ? soonBadge() : null,
+          el('div',{class:'sc-gcard__ban'},[ favBtn(rid), glyph(g.illu,'sc-gcard__illu'), (!soon&&i%3===0?el('span',{class:'sc-tag'},L({gr:'Δωρεάν',en:'Free'})):null),
             isAdmin()&&window.__symEdit? el('span',{class:'sc-gcard__drag',html:'⠿'}):null ]),
           el('div',{class:'sc-gcard__b'},[ el('h3',{class:'sc-gcard__t'}, L(g)), el('p',{class:'sc-gcard__m'}, g.meta),
-            el('div',{class:'sc-gcard__f'},[ el('span',{class:'sc-gcard__tags'},[pill(L({gr:'Μόνος',en:'Solo'}),accent)]),
-              el('button',{class:'sc-gcard__eye', title:'Preview', onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu}); }, html:'&#128065;'}),
-              el('span',{class:'sc-gcard__play',html:'&#9654;'}) ]) ]),
+            el('div',{class:'sc-gcard__f'},[ el('span',{class:'sc-gcard__tags'},[pill(soon?L({gr:'Σύντομα',en:'Soon'}):L({gr:'Μόνος',en:'Solo'}),accent)]),
+              soon ? null : el('button',{class:'sc-gcard__eye', title:'Preview', onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu}); }, html:'&#128065;'}),
+              el('span',{class:'sc-gcard__play',html: soon ? '&#9679;' : '&#9654;'}) ]) ]),
         ]);
         grid.appendChild(card);
       });
@@ -256,8 +277,15 @@
       rows.forEach((label,i)=>{
         const dn = i<cat.done, now = i===cat.done;
         list.appendChild(el('button',{class:'lv-row'+(dn?' done':now?' now':''), onclick:()=>{
+          // coming-soon tile → friendly notice, never a fake preview
+          if (game && game.soon) { return comingSoon(game); }
           const _fn = (window.synResolveLaunch && synResolveLaunch(game));
-          if (_fn && window.SYN_GAMES && SYN_GAMES[_fn]) { return synLaunch(_fn); }
+          if (_fn && window.SYN_GAMES && SYN_GAMES[_fn]) {
+            // PER-LEVEL deep-start: thread the clicked row's level id (1-based)
+            // and the active category as `mode`. Openers that accept
+            // (levelId, mode) start at the chosen level; others ignore the args.
+            return synLaunch(_fn, i + 1, activeCat);
+          }
           return SymPreview.open(grammar?showType:'mc',{title:L(game)+' · '+label, illu:game.illu, note:L({gr:'Στατική προεπισκόπηση — δεν ξεκινά το παιχνίδι.',en:'Static preview — does not start the game.'})});
         } },[
           el('span',{class:'lv-row__n'}, dn?'✓':String(i+1).padStart(2,'0')),

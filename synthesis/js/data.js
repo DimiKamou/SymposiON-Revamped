@@ -56,7 +56,16 @@ const CLASSES = [
 // helper to build a game tile. `launch` (optional) = { fn:'openX', args:[] }
 // threaded to screens.js so a tile can dispatch to a real Ver1 opener via
 // synLaunch (else falls back to SymPreview). Existing tiles omit it (undefined).
-const g = (gr, en, meta, illu, launch) => ({ gr, en, meta, illu, launch });
+// `launch.soon:true` (or the gSoon() shorthand) flags a revamp-only tile that
+// has NO backing game yet → rendered with a "ΣΥΝΤΟΜΑ / Coming soon" badge and a
+// friendly notice on click instead of pretending it is a playable game.
+const g = (gr, en, meta, illu, launch) => {
+  const tile = { gr, en, meta, illu, launch };
+  if (launch && launch.soon) tile.soon = true;
+  return tile;
+};
+// shorthand for a coming-soon tile (no real game behind it yet)
+const gSoon = (gr, en, meta, illu) => g(gr, en, meta, illu, { soon: true });
 
 // ── Subjects per class. illu = line-art name from images/illustrations ──
 const SUBJECTS = {
@@ -103,7 +112,7 @@ const SUBJECTS = {
   'gym-c': [
     { id:'eleni', roman:'III', illu:'masks', gr:'Ελένη', en:'Helen', sub:'Euripides · Helen',
       summary:{ gr:'Ευριπίδης — χαρακτήρες, δομή, θέματα τραγωδίας.', en:'Euripides — characters, structure, tragedy.' },
-      games:[ g('Ελένη Quiz','Helen Quiz','MC · ανάλυση','masks'),
+      games:[ gSoon('Ελένη Quiz','Helen Quiz','MC · ανάλυση','masks'),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'archaia-c', roman:'III', illu:'scroll', gr:'Αρχαία Ελληνικά', en:'Ancient Greek', sub:'Ancient Greek',
@@ -122,14 +131,14 @@ const SUBJECTS = {
               g('Λαβύρινθος','Labyrinth','Maze · σύνταξη','labyrinth') ] },
     { id:'ekfrasi', roman:'IV', illu:'quill', gr:'Έκφραση · Έκθεση', en:'Composition', sub:'Modern Greek',
       summary:{ gr:'Κειμενικά είδη, επιχειρηματολογία και λεξιλόγιο.', en:'Text types, argumentation and vocabulary.' },
-      games:[ g('Λεξιλόγιο','Vocabulary','Match · όροι','book'),
+      games:[ g('Λεξιλόγιο','Vocabulary','Κάρτες μνήμης · όροι','book',{fn:'synOpenStudyFlashcards'}),
               g('Crypto Hack','Crypto Hack','Cipher · λέξεις','cipher'),
               g('Rapid Fire','Rapid Fire','Speed quiz','lightning-bolt') ] },
   ],
   'lyk-b': [
     { id:'rhetoric', roman:'IV', illu:'owl', gr:'Ρητορικά Κείμενα', en:'Rhetoric', sub:'Isocrates · Lysias',
       summary:{ gr:'Ρητορική τέχνη, δομή λόγου και ύφος.', en:'The art of rhetoric, structure and style.' },
-      games:[ g('Ανάλυση Λόγου','Speech Analysis','MC · δομή','owl'),
+      games:[ gSoon('Ανάλυση Λόγου','Speech Analysis','MC · δομή','owl'),
               g('Mythology Memory','Memory','Ζεύγη','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'latinika-b', roman:'VI', illu:'walls', gr:'Λατινικά', en:'Latin', sub:'Latin',
@@ -145,7 +154,7 @@ const SUBJECTS = {
       games:[ g('Πολλαπλής Επιλογής','Multiple Choice','Quiz','scroll'),
               g('Κάρτες Μνήμης','Flashcards','Spaced repetition','amphora'),
               g('Χρονολόγιο','Timeline','Σύρε · σειρά','acropolis'),
-              g('Πηγές','Sources','Ανάλυση πηγών','book') ] },
+              gSoon('Πηγές','Sources','Ανάλυση πηγών','book') ] },
     { id:'latinika-c', roman:'VI', illu:'walls', gr:'Λατινικά', en:'Latin', sub:'Latin · Advanced',
       summary:{ gr:'Κατεύθυνση — σύνταξη, κατάταξη και θεωρία.', en:'Advanced — syntax, classification and theory.' },
       games:[ g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
@@ -192,7 +201,7 @@ Object.assign(SUBJECTS, {
       games:[ g('Κλίσις Ρημάτων','Verb Forms','Πίνακες · εἰμί · φημί','column'),
               g('Συνηρημένα','Contract Verbs','τιμῶ · ποιῶ · δηλῶ','scroll'),
               g('Ανώμαλα Ρήματα','Irregular Verbs','Match · κλίση','wreath'),
-              g('Χρόνοι & Εγκλίσεις','Tenses & Moods','Οριστική → Ευκτική','amphora') ] },
+              gSoon('Χρόνοι & Εγκλίσεις','Tenses & Moods','Οριστική → Ευκτική','amphora') ] },
     { id:'ga-nouns', roman:'II', illu:'column', gr:'Ονόματα & Επίθετα', en:'Nouns & Adjectives', sub:'Ancient Greek',
       summary:{ gr:'Οι τρεις κλίσεις, επίθετα και παραθετικά.', en:'The three declensions, adjectives and degrees.' },
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','3 κλίσεις · 200+ λέξεις','column'),
@@ -201,9 +210,9 @@ Object.assign(SUBJECTS, {
               g('Αντωνυμίες','Pronouns','Match · τύποι','amphora') ] },
     { id:'ga-syntax', roman:'III', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
       summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
-      games:[ g('Πτώσεις & Λειτουργίες','Cases & Functions','Σύνταξη · ρόλοι','scroll'),
-              g('Μετοχές','Participles','Επιθετική / επιρρηματική','column'),
-              g('Δευτερεύουσες Προτάσεις','Clauses','Maze · σύνταξη','labyrinth') ] },
+      games:[ gSoon('Πτώσεις & Λειτουργίες','Cases & Functions','Σύνταξη · ρόλοι','scroll'),
+              gSoon('Μετοχές','Participles','Επιθετική / επιρρηματική','column'),
+              gSoon('Δευτερεύουσες Προτάσεις','Clauses','Maze · σύνταξη','labyrinth') ] },
   ],
   'gram-latin': [
     { id:'gl-decl', roman:'I', illu:'column', gr:'Κλίσεις', en:'Declensions', sub:'Latin',
@@ -218,26 +227,26 @@ Object.assign(SUBJECTS, {
               g('Χρόνοι','Tenses','Ενεστώτας → Υπερσυντέλικος','amphora') ] },
     { id:'gl-theory', roman:'III', illu:'book', gr:'Θεωρία & Κείμενα', en:'Theory & Texts', sub:'Latin',
       summary:{ gr:'Συντακτικό, κατάταξη κειμένων και θεωρία.', en:'Syntax, text classification and theory.' },
-      games:[ g('Συντακτικό','Syntax','Maze · πτώσεις','labyrinth'),
+      games:[ gSoon('Συντακτικό','Syntax','Maze · πτώσεις','labyrinth'),
               g('Κατάταξη Κειμένων','Text Sorting','Συντακτικό ανά κείμενο','scroll'),
               g('Θεωρία','Theory','Σημειώσεις · κανόνες','book') ] },
   ],
   'gram-neo': [
     { id:'gn-gram', roman:'I', illu:'book', gr:'Γραμματική', en:'Grammar', sub:'Modern Greek',
       summary:{ gr:'Μέρη του λόγου, κλίσεις και ρήματα.', en:'Parts of speech, declension and verbs.' },
-      games:[ g('Μέρη του Λόγου','Parts of Speech','Match · κατηγορίες','scroll'),
-              g('Κλίσεις','Declensions','Ουσιαστικά & επίθετα','column'),
-              g('Ρήματα & Χρόνοι','Verbs & Tenses','Φωνές · εγκλίσεις','wreath') ] },
+      games:[ gSoon('Μέρη του Λόγου','Parts of Speech','Match · κατηγορίες','scroll'),
+              gSoon('Κλίσεις','Declensions','Ουσιαστικά & επίθετα','column'),
+              gSoon('Ρήματα & Χρόνοι','Verbs & Tenses','Φωνές · εγκλίσεις','wreath') ] },
     { id:'gn-express', roman:'II', illu:'owl', gr:'Έκφραση · Έκθεση', en:'Composition', sub:'Modern Greek',
       summary:{ gr:'Λεξιλόγιο, κειμενικά είδη και επιχειρηματολογία.', en:'Vocabulary, text types and argumentation.' },
-      games:[ g('Λεξιλόγιο','Vocabulary','Match · όροι','book'),
-              g('Κειμενικά Είδη','Text Types','Άρθρο · δοκίμιο · επιστολή','scroll'),
-              g('Επιχειρηματολογία','Argumentation','Δομή · θέση','owl') ] },
+      games:[ gSoon('Λεξιλόγιο','Vocabulary','Match · όροι','book'),
+              gSoon('Κειμενικά Είδη','Text Types','Άρθρο · δοκίμιο · επιστολή','scroll'),
+              gSoon('Επιχειρηματολογία','Argumentation','Δομή · θέση','owl') ] },
     { id:'gn-spell', roman:'III', illu:'cipher', gr:'Ορθογραφία', en:'Spelling', sub:'Modern Greek',
       summary:{ gr:'Τόνοι, ομόηχα, παραγωγή και σύνθεση.', en:'Accents, homophones, derivation and compounds.' },
-      games:[ g('Τόνοι & Σημεία','Accents & Marks','Cipher · κανόνες','cipher'),
-              g('Ομόηχα','Homophones','Match · ζεύγη','amphora'),
-              g('Παραγωγή & Σύνθεση','Derivation','Maze · λέξεις','labyrinth') ] },
+      games:[ gSoon('Τόνοι & Σημεία','Accents & Marks','Cipher · κανόνες','cipher'),
+              gSoon('Ομόηχα','Homophones','Match · ζεύγη','amphora'),
+              gSoon('Παραγωγή & Σύνθεση','Derivation','Maze · λέξεις','labyrinth') ] },
   ],
 });
 
