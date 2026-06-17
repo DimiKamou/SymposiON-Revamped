@@ -5,34 +5,57 @@
    ============================================================ */
 
 #page-admin {
-  --cc-bg:          #15110E;
-  --cc-bg-deep:     #100C0A;
-  --cc-rail:        #1B1611;
-  --cc-surface:     #221C16;
-  --cc-surface-2:   #2A231B;
-  --cc-surface-3:   #322817;
-  --cc-border:      rgba(200,160,100,.18);
-  --cc-border-soft: rgba(200,160,100,.10);
-  --cc-terra:       #C8512E;
-  --cc-terra-b:     #E0653F;
-  --cc-terra-soft:  rgba(200,81,46,.14);
-  --cc-shale:       #8C7D70;
-  --cc-shale-dim:   #6B5F54;
-  --cc-bronze:      #D4AE58;
-  --cc-bronze-s:    #B8954A;
-  --cc-glow:        rgba(212,174,88,.26);
-  --cc-text:        #EDE5DA;
-  --cc-text-dim:    #C7BAAC;
-  --cc-olive:       #9AA05E;
-  --cc-aegean:      #6BA0A3;
-  --cc-plum:        #B07E9A;
+  /* ── Revamp LIGHT "alabaster" remap — tied to the global --sym-* tokens so
+     the admin follows the user's selected theme. #page-admin is a body-level
+     sibling of the themed root, so the --sym-* / derived tokens may not inherit;
+     each reference therefore carries a LIGHT alabaster fallback so the panel is
+     correct on its own and still re-tints when the tokens ARE present. ── */
+  /* Resolve the active theme through its *source* vars (--sym-bg-dark, --sym-ink,
+     --sym-terra…) which every theme-* class sets. When #page-admin sits under a
+     theme root they carry the chosen theme; otherwise the LIGHT alabaster
+     fallbacks apply. We re-expose them as local --ac-* so we never shadow a
+     token by referencing itself. */
+  --ac-bg:     var(--sym-bg-dark, #F7F3EA);
+  --ac-panel:  var(--sym-bg-panel, #FFFFFF);
+  --ac-cream:  var(--sym-cream, #FBF8F1);
+  --ac-fg:     var(--sym-ink, #1E1810);
+  --ac-muted:  var(--sym-stone, #8C7F6B);
+  --ac-terra:  var(--sym-terra, #C5572F);
+  --ac-terra-d:var(--sym-terra-dk, #9C3F1F);
+  --ac-gold:   var(--sym-gold, #A2862F);
+  --ac-sage:   var(--sym-sage, #5B7544);
+
+  --cc-bg:          var(--ac-bg);
+  --cc-bg-deep:     color-mix(in srgb, var(--ac-fg) 4%, var(--ac-bg));
+  --cc-rail:        var(--ac-cream);
+  --cc-surface:     var(--ac-panel);
+  --cc-surface-2:   var(--ac-cream);
+  --cc-surface-3:   color-mix(in srgb, var(--ac-fg) 5%, var(--ac-bg));
+  --cc-border:      color-mix(in srgb, var(--ac-fg) 13%, transparent);
+  --cc-border-soft: color-mix(in srgb, var(--ac-fg) 7%, transparent);
+  --cc-terra:       var(--ac-terra);
+  --cc-terra-b:     var(--ac-terra-d);
+  --cc-terra-soft:  color-mix(in srgb, var(--ac-terra) 14%, transparent);
+  --cc-shale:       var(--ac-muted);
+  --cc-shale-dim:   color-mix(in srgb, var(--ac-fg) 50%, transparent);
+  --cc-bronze:      var(--ac-gold);
+  --cc-bronze-s:    color-mix(in srgb, var(--ac-gold) 82%, var(--ac-fg));
+  --cc-glow:        color-mix(in srgb, var(--ac-gold) 22%, transparent);
+  --cc-text:        var(--ac-fg);
+  --cc-text-dim:    var(--ac-muted);
+  --cc-olive:       var(--ac-sage);
+  --cc-aegean:      color-mix(in srgb, #3E7E86 70%, var(--ac-fg));
+  --cc-plum:        color-mix(in srgb, #9C5E84 72%, var(--ac-fg));
+  /* Expose the revamp helper tokens the rules reference, derived from --ac-*. */
+  --terra-soft:     color-mix(in srgb, var(--ac-terra) 14%, transparent);
+  --gold-soft:      color-mix(in srgb, var(--ac-gold) 16%, transparent);
   --cc-mono:        'JetBrains Mono',ui-monospace,monospace;
   --cc-serif:       'Cormorant Garamond',Georgia,serif;
-  --cc-sans:        'Raleway',system-ui,sans-serif;
+  --cc-sans:        'Inter','Montserrat',system-ui,sans-serif;
 
   display: flex;
   flex-direction: column;
-  background: var(--cc-bg-deep);
+  background: var(--cc-bg);
   color: var(--cc-text);
   font-family: var(--cc-sans);
   -webkit-font-smoothing: antialiased;
@@ -45,8 +68,8 @@
   content: "";
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(80% 50% at 12% -8%, rgba(200,81,46,.05), transparent 55%),
-    radial-gradient(60% 50% at 100% 6%, rgba(212,174,88,.045), transparent 50%);
+    radial-gradient(80% 50% at 12% -8%, var(--terra-soft), transparent 55%),
+    radial-gradient(60% 50% at 100% 6%, var(--gold-soft), transparent 50%);
 }
 
 /* ── Emergency bar ── */
@@ -54,8 +77,8 @@
   position: relative; z-index: 30;
   display: flex; align-items: center; gap: 15px;
   padding: 8px 22px; flex-shrink: 0;
-  background: linear-gradient(180deg,#241511,#1A0F0C);
-  border-bottom: 1px solid rgba(200,160,100,.14);
+  background: linear-gradient(180deg, var(--cc-surface-2), var(--cc-bg-deep));
+  border-bottom: 1px solid var(--cc-border);
   transition: .3s;
 }
 #page-admin .cc-emg::before {
@@ -64,8 +87,8 @@
 }
 #page-admin .cc-emg.wild::before { background: var(--cc-bronze); }
 #page-admin .cc-emg.killed::before { background: var(--cc-terra-b); }
-#page-admin .cc-emg.wild  { background: linear-gradient(180deg,#2A2010,#1C150A); }
-#page-admin .cc-emg.killed { background: linear-gradient(180deg,#2C100A,#1E0B07); }
+#page-admin .cc-emg.wild  { background: linear-gradient(180deg, var(--gold-soft), var(--cc-bg-deep)); }
+#page-admin .cc-emg.killed { background: linear-gradient(180deg, var(--cc-terra-soft), var(--cc-bg-deep)); }
 #page-admin .cc-emg-pulse {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--cc-olive); box-shadow: 0 0 8px var(--cc-olive);
@@ -99,7 +122,7 @@
 #page-admin .cc-tg.sm.on::after { left:17px; }
 #page-admin .cc-emg-kill {
   font-family:var(--cc-mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
-  color:#F2D8CC;background:rgba(224,101,63,.14);border:1px solid rgba(224,101,63,.45);
+  color:var(--cc-terra-b);background:var(--cc-terra-soft);border:1px solid color-mix(in srgb,var(--cc-terra) 45%,transparent);
   padding:7px 14px;border-radius:7px;transition:.15s;cursor:pointer;
 }
 #page-admin .cc-emg-kill:hover { background:var(--cc-terra);color:#fff;border-color:var(--cc-terra); }
@@ -111,7 +134,7 @@
 #page-admin .cc-top {
   display:flex;align-items:center;gap:20px;padding:13px 24px;flex-shrink:0;z-index:20;
   border-bottom:1px solid var(--cc-border-soft);
-  background:linear-gradient(180deg,rgba(27,22,17,.7),rgba(21,17,14,.3));
+  background:linear-gradient(180deg, var(--cc-rail), color-mix(in srgb, var(--cc-rail) 40%, transparent));
   position: relative;
 }
 #page-admin .cc-brand { display:flex;align-items:center;gap:12px;flex-shrink:0; }
@@ -218,9 +241,9 @@
   transition:.14s;cursor:pointer;display:flex;align-items:center;gap:7px;
 }
 #page-admin .cc-act:hover { border-color:var(--cc-bronze-s);color:var(--cc-text); }
-#page-admin .cc-act.primary { background:var(--cc-terra-soft);border-color:var(--cc-terra);color:#F0C9B8; }
+#page-admin .cc-act.primary { background:var(--cc-terra-soft);border-color:var(--cc-terra);color:var(--cc-terra-b); }
 #page-admin .cc-act.primary:hover { background:var(--cc-terra);color:#fff; }
-#page-admin .cc-act.danger-act { border-color:rgba(224,101,63,.3);color:var(--cc-terra-b);background:rgba(224,101,63,.06); }
+#page-admin .cc-act.danger-act { border-color:color-mix(in srgb,var(--cc-terra) 30%,transparent);color:var(--cc-terra-b);background:color-mix(in srgb,var(--cc-terra) 6%,transparent); }
 #page-admin .cc-act.danger-act:hover { background:var(--cc-terra);color:#fff;border-color:var(--cc-terra); }
 
 /* ── Cards & panels ── */
@@ -299,12 +322,12 @@
 
 /* ── Badges ── */
 #page-admin .cc-badge { font-family:var(--cc-mono);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:5px;display:inline-block; }
-#page-admin .cc-badge.free    { background:rgba(107,160,163,.13);color:var(--cc-aegean);border:1px solid rgba(107,160,163,.3); }
-#page-admin .cc-badge.student { background:rgba(154,160,94,.13);color:var(--cc-olive);border:1px solid rgba(154,160,94,.3); }
-#page-admin .cc-badge.teacher { background:rgba(212,174,88,.13);color:var(--cc-bronze);border:1px solid var(--cc-border); }
-#page-admin .cc-badge.active  { background:rgba(154,160,94,.13);color:var(--cc-olive);border:1px solid rgba(154,160,94,.3); }
+#page-admin .cc-badge.free    { background:color-mix(in srgb,var(--cc-aegean) 13%,transparent);color:var(--cc-aegean);border:1px solid color-mix(in srgb,var(--cc-aegean) 30%,transparent); }
+#page-admin .cc-badge.student { background:color-mix(in srgb,var(--cc-olive) 13%,transparent);color:var(--cc-olive);border:1px solid color-mix(in srgb,var(--cc-olive) 30%,transparent); }
+#page-admin .cc-badge.teacher { background:color-mix(in srgb,var(--cc-bronze) 13%,transparent);color:var(--cc-bronze);border:1px solid var(--cc-border); }
+#page-admin .cc-badge.active  { background:color-mix(in srgb,var(--cc-olive) 13%,transparent);color:var(--cc-olive);border:1px solid color-mix(in srgb,var(--cc-olive) 30%,transparent); }
 #page-admin .cc-badge.inactive{ background:var(--cc-surface-3);color:var(--cc-shale);border:1px solid var(--cc-border-soft); }
-#page-admin .cc-badge.expired { background:rgba(107,107,107,.12);color:var(--cc-shale);border:1px solid var(--cc-border-soft); }
+#page-admin .cc-badge.expired { background:var(--cc-surface-3);color:var(--cc-shale);border:1px solid var(--cc-border-soft); }
 
 /* ── Usage bar (coupons) ── */
 #page-admin .cc-use-bar { display:inline-block;width:90px;height:7px;background:var(--cc-surface-3);border-radius:99px;overflow:hidden;vertical-align:middle;margin-right:9px; }
@@ -327,7 +350,7 @@
 }
 #page-admin .cc-role-card.on {
   border-color:var(--cc-bronze);
-  background:linear-gradient(180deg,rgba(212,174,88,.06),var(--cc-surface));
+  background:linear-gradient(180deg, var(--gold-soft), var(--cc-surface));
   box-shadow:inset 2px 0 0 var(--cc-bronze);
 }
 #page-admin .cc-role-hd { display:flex;align-items:center;justify-content:space-between;gap:8px; }
@@ -343,7 +366,7 @@
 #page-admin .cc-adm-av { width:34px;height:34px;border-radius:9px;background:var(--cc-surface-3);border:1px solid var(--cc-border);display:flex;align-items:center;justify-content:center;font-family:var(--cc-serif);font-size:16px;color:var(--cc-bronze);flex-shrink:0; }
 #page-admin .cc-adm-id { flex:1;min-width:0; }
 #page-admin .cc-adm-nm { font-size:13.5px;font-weight:600;color:var(--cc-text);display:flex;align-items:center;gap:8px; }
-#page-admin .cc-adm-you { font-family:var(--cc-mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--cc-bg);background:var(--cc-bronze);border-radius:4px;padding:2px 6px; }
+#page-admin .cc-adm-you { font-family:var(--cc-mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#fff;background:var(--cc-bronze);border-radius:4px;padding:2px 6px; }
 #page-admin .cc-adm-em { font-family:var(--cc-mono);font-size:10.5px;color:var(--cc-shale-dim);margin-top:2px; }
 
 /* ── Feedback rows ── */
@@ -358,9 +381,9 @@
 #page-admin .cc-bn-row { display:flex;align-items:flex-start;gap:13px;padding:13px 0;border-bottom:1px solid var(--cc-border-soft); }
 #page-admin .cc-bn-row:last-child { border-bottom:none; }
 #page-admin .cc-bn-tag { font-family:var(--cc-mono);font-size:8.5px;letter-spacing:1px;padding:3px 8px;border-radius:5px; }
-#page-admin .cc-bn-tag.promo { background:rgba(212,174,88,.15);color:var(--cc-bronze); }
-#page-admin .cc-bn-tag.info  { background:rgba(107,160,163,.15);color:var(--cc-aegean); }
-#page-admin .cc-bn-tag.warning { background:rgba(224,101,63,.12);color:var(--cc-terra-b); }
+#page-admin .cc-bn-tag.promo { background:color-mix(in srgb,var(--cc-bronze) 15%,transparent);color:var(--cc-bronze); }
+#page-admin .cc-bn-tag.info  { background:color-mix(in srgb,var(--cc-aegean) 15%,transparent);color:var(--cc-aegean); }
+#page-admin .cc-bn-tag.warning { background:color-mix(in srgb,var(--cc-terra) 12%,transparent);color:var(--cc-terra-b); }
 
 /* ── Del button ── */
 #page-admin .cc-del { background:none;border:1px solid var(--cc-border-soft);color:var(--cc-shale);border-radius:6px;width:26px;height:26px;font-size:12px;cursor:pointer; }
@@ -371,8 +394,8 @@
 #page-admin .cc-mass-preview { background:var(--cc-bg);border:1px solid var(--cc-border);border-radius:10px;overflow:hidden; }
 #page-admin .cc-mass-hd { background:var(--cc-surface-2);padding:10px 14px;font-size:12.5px;color:var(--cc-text-dim);border-bottom:1px solid var(--cc-border-soft); }
 #page-admin .cc-mass-status { font-family:var(--cc-mono);font-size:9px;padding:2px 7px;border-radius:4px; }
-#page-admin .cc-mass-status.ok  { background:rgba(154,160,94,.15);color:var(--cc-olive); }
-#page-admin .cc-mass-status.err { background:rgba(224,101,63,.12);color:var(--cc-terra-b); }
+#page-admin .cc-mass-status.ok  { background:color-mix(in srgb,var(--cc-olive) 15%,transparent);color:var(--cc-olive); }
+#page-admin .cc-mass-status.err { background:color-mix(in srgb,var(--cc-terra) 12%,transparent);color:var(--cc-terra-b); }
 #page-admin .cc-mass-status.spin { color:var(--cc-shale); }
 
 /* ── Realm editor container ── */
@@ -380,15 +403,15 @@
 
 /* ── Confirm modal ── */
 #page-admin .cc-scrim {
-  position:fixed;inset:0;z-index:60;background:rgba(8,6,5,.72);backdrop-filter:blur(3px);
+  position:fixed;inset:0;z-index:60;background:color-mix(in srgb, var(--ac-fg) 55%, transparent);backdrop-filter:blur(3px);
   display:none;align-items:center;justify-content:center;
 }
 #page-admin .cc-scrim.on { display:flex; }
 #page-admin .cc-modal {
-  width:440px;max-width:92vw;background:var(--cc-surface);border:1px solid rgba(224,101,63,.4);
-  border-radius:15px;padding:26px 28px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7);animation:cc-fade .2s ease;
+  width:440px;max-width:92vw;background:var(--cc-surface);border:1px solid color-mix(in srgb,var(--cc-terra) 40%,transparent);
+  border-radius:15px;padding:26px 28px;box-shadow:0 30px 80px -20px color-mix(in srgb,var(--ac-fg) 28%,transparent);animation:cc-fade .2s ease;
 }
-#page-admin .cc-modal h2 { font-family:var(--cc-serif);font-size:26px;font-weight:600;color:#F2D8CC;display:flex;align-items:center;gap:11px; }
+#page-admin .cc-modal h2 { font-family:var(--cc-serif);font-size:26px;font-weight:600;color:var(--cc-terra-b);display:flex;align-items:center;gap:11px; }
 #page-admin .cc-modal h2 .x { color:var(--cc-terra-b); }
 #page-admin .cc-modal p { font-size:13.5px;color:var(--cc-text-dim);margin:11px 0 18px;line-height:1.6; }
 #page-admin .cc-modal .cc-conf { font-family:var(--cc-mono);font-size:11px;color:var(--cc-shale);margin-bottom:7px; }
@@ -403,7 +426,7 @@
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);z-index:80;
   background:var(--cc-surface);border:1px solid var(--cc-border);border-left:3px solid var(--cc-olive);
   border-radius:10px;padding:13px 20px;font-size:13px;color:var(--cc-text-dim);
-  box-shadow:0 18px 50px -14px rgba(0,0,0,.6);opacity:0;transition:.25s;
+  box-shadow:0 18px 50px -14px color-mix(in srgb,var(--ac-fg) 22%,transparent);opacity:0;transition:.25s;
   pointer-events:none;display:flex;align-items:center;gap:10px;
 }
 #page-admin .cc-toast.on { opacity:1;transform:translateX(-50%) translateY(0); }
@@ -420,14 +443,14 @@
   border: 1px solid; transition: .13s; user-select: none;
   display: inline-flex; align-items: center; gap: 4px;
 }
-#page-admin .cc-tag-chip.new      { color: var(--cc-bronze);   border-color: var(--cc-border);           background: rgba(212,174,88,.07); }
-#page-admin .cc-tag-chip.featured { color: var(--cc-olive);    border-color: rgba(154,160,94,.3);        background: rgba(154,160,94,.07); }
-#page-admin .cc-tag-chip.popular  { color: var(--cc-terra-b);  border-color: rgba(224,101,63,.3);        background: rgba(224,101,63,.07); }
-#page-admin .cc-tag-chip.updated  { color: var(--cc-aegean);   border-color: rgba(107,160,163,.3);       background: rgba(107,160,163,.07); }
-#page-admin .cc-tag-chip.on.new      { background: rgba(212,174,88,.22); border-color: var(--cc-bronze-s);  font-weight: 600; }
-#page-admin .cc-tag-chip.on.featured { background: rgba(154,160,94,.22); border-color: var(--cc-olive);     font-weight: 600; }
-#page-admin .cc-tag-chip.on.popular  { background: rgba(224,101,63,.22); border-color: var(--cc-terra-b);  font-weight: 600; }
-#page-admin .cc-tag-chip.on.updated  { background: rgba(107,160,163,.22);border-color: var(--cc-aegean);   font-weight: 600; }
+#page-admin .cc-tag-chip.new      { color: var(--cc-bronze);   border-color: var(--cc-border);                              background: color-mix(in srgb,var(--cc-bronze) 8%,transparent); }
+#page-admin .cc-tag-chip.featured { color: var(--cc-olive);    border-color: color-mix(in srgb,var(--cc-olive) 30%,transparent);  background: color-mix(in srgb,var(--cc-olive) 8%,transparent); }
+#page-admin .cc-tag-chip.popular  { color: var(--cc-terra-b);  border-color: color-mix(in srgb,var(--cc-terra) 30%,transparent);  background: color-mix(in srgb,var(--cc-terra) 8%,transparent); }
+#page-admin .cc-tag-chip.updated  { color: var(--cc-aegean);   border-color: color-mix(in srgb,var(--cc-aegean) 30%,transparent); background: color-mix(in srgb,var(--cc-aegean) 8%,transparent); }
+#page-admin .cc-tag-chip.on.new      { background: color-mix(in srgb,var(--cc-bronze) 22%,transparent); border-color: var(--cc-bronze-s);  font-weight: 600; }
+#page-admin .cc-tag-chip.on.featured { background: color-mix(in srgb,var(--cc-olive) 22%,transparent);  border-color: var(--cc-olive);     font-weight: 600; }
+#page-admin .cc-tag-chip.on.popular  { background: color-mix(in srgb,var(--cc-terra) 22%,transparent);  border-color: var(--cc-terra-b);  font-weight: 600; }
+#page-admin .cc-tag-chip.on.updated  { background: color-mix(in srgb,var(--cc-aegean) 22%,transparent); border-color: var(--cc-aegean);   font-weight: 600; }
 #page-admin .cc-tag-chip:hover { filter: brightness(1.15); }
 
 /* ── Game meta cards (engines / datasets) ── */
@@ -455,9 +478,9 @@
   background: var(--cc-surface-3); color: var(--cc-shale); cursor: pointer; transition: .12s;
 }
 #page-admin .cc-tier-pill:hover { border-color: var(--cc-bronze-s); color: var(--cc-text-dim); }
-#page-admin .cc-tier-pill.on.free    { background:rgba(107,160,163,.18);border-color:var(--cc-aegean);color:var(--cc-aegean);font-weight:600; }
-#page-admin .cc-tier-pill.on.student { background:rgba(154,160,94,.18); border-color:var(--cc-olive);  color:var(--cc-olive); font-weight:600; }
-#page-admin .cc-tier-pill.on.teacher { background:rgba(212,174,88,.18); border-color:var(--cc-bronze); color:var(--cc-bronze);font-weight:600; }
+#page-admin .cc-tier-pill.on.free    { background:color-mix(in srgb,var(--cc-aegean) 18%,transparent);border-color:var(--cc-aegean);color:var(--cc-aegean);font-weight:600; }
+#page-admin .cc-tier-pill.on.student { background:color-mix(in srgb,var(--cc-olive) 18%,transparent); border-color:var(--cc-olive);  color:var(--cc-olive); font-weight:600; }
+#page-admin .cc-tier-pill.on.teacher { background:color-mix(in srgb,var(--cc-bronze) 18%,transparent); border-color:var(--cc-bronze); color:var(--cc-bronze);font-weight:600; }
 
 /* ── Sync view ── */
 #page-admin .cc-sync-row {
@@ -465,7 +488,7 @@
   padding: 10px 14px; background: var(--cc-surface);
   border: 1px solid var(--cc-border-soft); border-radius: 9px; margin-bottom: 6px;
 }
-#page-admin .cc-sync-row.unregistered { border-color: rgba(224,101,63,.25); }
+#page-admin .cc-sync-row.unregistered { border-color: color-mix(in srgb,var(--cc-terra) 25%,transparent); }
 #page-admin .cc-sync-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
@@ -526,7 +549,7 @@
 }
 #page-admin .tr-t-btn:hover { color: var(--cc-bronze); border-color: var(--cc-bronze-s); }
 #page-admin .tr-t-btn.active {
-  color: var(--cc-bg); background: var(--cc-bronze); border-color: var(--cc-bronze); font-weight: 600;
+  color: #fff; background: var(--cc-bronze); border-color: var(--cc-bronze); font-weight: 600;
 }
 #page-admin .tr-tier-sel { display: flex; gap: 5px; }
 
@@ -567,7 +590,7 @@
   border-radius: 50%; background: var(--cc-shale); margin: 2px; transition: .18s;
 }
 #page-admin .subs-toggle input:checked ~ .subs-toggle-track {
-  background: rgba(154,160,94,.2); border-color: var(--cc-olive);
+  background: color-mix(in srgb,var(--cc-olive) 20%,transparent); border-color: var(--cc-olive);
 }
 #page-admin .subs-toggle input:checked ~ .subs-toggle-track::after {
   transform: translateX(18px); background: var(--cc-olive);
@@ -582,7 +605,7 @@
   border-radius: 6px; width: 32px; height: 28px; cursor: pointer; transition: .12s;
   display: flex; align-items: center; justify-content: center;
 }
-#page-admin .cp-lyo-chip.selected { color: var(--cc-bg); background: var(--cc-olive); border-color: var(--cc-olive); font-weight: 600; }
+#page-admin .cp-lyo-chip.selected { color: #fff; background: var(--cc-olive); border-color: var(--cc-olive); font-weight: 600; }
 #page-admin .cp-lyo-chip:hover { border-color: var(--cc-bronze-s); }
 #page-admin .cp-lyo-group { margin-bottom: 10px; }
 #page-admin .cp-lyo-grp-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -595,7 +618,7 @@
 }
 /* Ολα = first button */
 #page-admin .cp-lyo-picker-hd > .cp-lyo-all-btn:first-of-type {
-  color: var(--cc-bg); background: var(--cc-olive); border-color: var(--cc-olive);
+  color: #fff; background: var(--cc-olive); border-color: var(--cc-olive);
 }
 #page-admin .cp-lyo-picker-hd > .cp-lyo-all-btn:first-of-type:hover { filter: brightness(1.12); }
 /* Κανένα = second button */
@@ -603,16 +626,16 @@
   color: var(--cc-shale); background: none; border-color: var(--cc-border-soft);
 }
 #page-admin .cp-lyo-picker-hd > .cp-lyo-all-btn:last-of-type:hover {
-  color: var(--cc-terra-b); border-color: rgba(224,101,63,.35);
+  color: var(--cc-terra-b); border-color: color-mix(in srgb,var(--cc-terra) 35%,transparent);
 }
 #page-admin .cp-lyo-grp-btn {
   font-family: var(--cc-mono); font-size: 9.5px; color: var(--cc-shale);
   background: none; border: 1px solid var(--cc-border-soft); border-radius: 5px; padding: 3px 8px; cursor: pointer;
 }
-#page-admin .cp-lyo-grp-btn.active { color: var(--cc-olive); border-color: rgba(154,160,94,.4); }
+#page-admin .cp-lyo-grp-btn.active { color: var(--cc-olive); border-color: color-mix(in srgb,var(--cc-olive) 40%,transparent); }
 #page-admin .cp-leveled-tag {
   font-family: var(--cc-mono); font-size: 9px; color: var(--cc-plum);
-  background: rgba(176,126,154,.1); border: 1px solid rgba(176,126,154,.3);
+  background: color-mix(in srgb,var(--cc-plum) 10%,transparent); border: 1px solid color-mix(in srgb,var(--cc-plum) 30%,transparent);
   border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
 }
 #page-admin .cp-cat-section { margin-bottom: 18px; }
@@ -631,8 +654,8 @@
 #page-admin .cp-tip-grp { font-size: 11px; color: var(--cc-shale); margin-bottom: 3px; }
 #page-admin .cp-pvp-tag {
   font-family: var(--cc-mono); font-size: 9px; letter-spacing: .5px;
-  color: var(--cc-terra-b); background: rgba(224,101,63,.1);
-  border: 1px solid rgba(224,101,63,.3); border-radius: 4px; padding: 2px 6px;
+  color: var(--cc-terra-b); background: color-mix(in srgb,var(--cc-terra) 10%,transparent);
+  border: 1px solid color-mix(in srgb,var(--cc-terra) 30%,transparent); border-radius: 4px; padding: 2px 6px;
 }
 
 /* ── Move up/down buttons in curriculum rows ── */
