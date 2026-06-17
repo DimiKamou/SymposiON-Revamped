@@ -72,7 +72,8 @@ const SUBJECTS = {
   'gym-a': [
     { id:'odysseia', roman:'I', illu:'trireme', gr:'Οδύσσεια', en:'Odyssey', sub:'Odyssey',
       summary:{ gr:'Ο νόστος του Οδυσσέα — νησιά, τέρατα, θεοί.', en:'Odysseus\u2019 homecoming — islands, monsters, gods.' },
-      games:[ g('Odyssey Trivia','Odyssey Trivia','MC · Tug of War','trireme'),
+      games:[ g('Ζωφόρος Οδύσσειας','Odyssey Frieze','Καμπάνια · 11 ραψωδίες · διάλογοι','trireme',{fn:'openOdysseiaVoyage'}),
+              g('Odyssey Trivia','Odyssey Trivia','MC · Tug of War','trireme'),
               g('Οδύσσεια 3D','Odyssey 3D','8 νησιά · Μεσόγειος','trojan-horse'),
               g('Χρονολόγιο','Chronicle','Timeline · γεγονότα','walls'),
               g('Mythology Memory','Mythology Memory','Ζεύγη · ήρωες & θεοί','masks'),
@@ -88,7 +89,8 @@ const SUBJECTS = {
   'gym-b': [
     { id:'iliada', roman:'II', illu:'helmet', gr:'Ιλιάδα', en:'Iliad', sub:'Iliad',
       summary:{ gr:'Η μῆνις, οι μάχες, τα τείχη της Τροίας.', en:'The wrath, the battles, the walls of Troy.' },
-      games:[ g('Ιλιάδα Arcade','Iliad Arcade','5 ραψωδίες · waves','shield-spear'),
+      games:[ g('Ζωφόρος Ιλιάδας','Iliad Frieze','Καμπάνια · 8 ραψωδίες · διάλογοι','shield-spear',{fn:'openIliadaVoyage'}),
+              g('Ιλιάδα Arcade','Iliad Arcade','5 ραψωδίες · waves','shield-spear'),
               g('Χρονολόγιο','Chronicle','Timeline · γεγονότα','walls'),
               g('Mythology Memory','Mythology Memory','Ζεύγη · ήρωες & θεοί','masks'),
               g('Rapid Fire','Rapid Fire','Speed quiz · 3 ζωές','cyclops-eye'),
@@ -112,21 +114,21 @@ const SUBJECTS = {
   'gym-c': [
     { id:'eleni', roman:'III', illu:'masks', gr:'Ελένη', en:'Helen', sub:'Euripides · Helen',
       summary:{ gr:'Ευριπίδης — χαρακτήρες, δομή, θέματα τραγωδίας.', en:'Euripides — characters, structure, tragedy.' },
-      games:[ gSoon('Ελένη Quiz','Helen Quiz','MC · ανάλυση','masks'),
+      games:[ g('Ζωφόρος Ελένης','Helen Frieze','Καμπάνια · 7 επεισόδια · διάλογοι','masks',{fn:'openEleniVoyage'}),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
-    // ── Τραγωδίες/έπη Ευριπίδη surfaced as trivia tiles. Ελένη/Τρωάδες/Άλκηστις
-    //    have NO dedicated trivia question dataset in Ver1 or synthesis, so they
-    //    ship as honest coming-soon tiles (gSoon) rather than faked content.
-    //    Ιλιάδα & Οδύσσεια trivia (which DO have datasets) live in gym-a/gym-b. ──
+    // ── Τραγωδίες/έπη Ευριπίδη as the black-figure "Ζωφόρος" voyage games:
+    //    full campaign + dialogue-quizzes + content (window.VOYAGE), launched
+    //    via open*Voyage (games/voyage/<slug>.html). Replaces the old
+    //    coming-soon quiz tiles now that real content exists. ──
     { id:'troades', roman:'III', illu:'masks', gr:'Τρωάδες', en:'Trojan Women', sub:'Euripides · Trojan Women',
       summary:{ gr:'Ευριπίδης — ο θρήνος των αιχμαλώτων της Τροίας.', en:'Euripides — the lament of the captives of Troy.' },
-      games:[ gSoon('Τρωάδες Quiz','Trojan Women Quiz','MC · ανάλυση','masks'),
+      games:[ g('Ζωφόρος Τρωάδων','Trojan Women Frieze','Καμπάνια · 7 επεισόδια · διάλογοι','masks',{fn:'openTroadesVoyage'}),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'alkistis', roman:'III', illu:'masks', gr:'Άλκηστις', en:'Alcestis', sub:'Euripides · Alcestis',
       summary:{ gr:'Ευριπίδης — η θυσία της Άλκηστης για τον Άδμητο.', en:'Euripides — Alcestis’ sacrifice for Admetus.' },
-      games:[ gSoon('Άλκηστις Quiz','Alcestis Quiz','MC · ανάλυση','masks'),
+      games:[ g('Ζωφόρος Αλκήστιδος','Alcestis Frieze','Καμπάνια · 7 επεισόδια · διάλογοι','masks',{fn:'openAlkistisVoyage'}),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'archaia-c', roman:'III', illu:'scroll', gr:'Αρχαία Ελληνικά', en:'Ancient Greek', sub:'Ancient Greek',
