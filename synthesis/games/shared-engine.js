@@ -193,6 +193,7 @@ function gramRunGame(cfg){
     lastVerb:null,activeKeys:[],curr:null,mistakes:[],
   };
 
+  if(!filter){alert("Διάλεξε πρώτα ένα επίπεδο.");return;}
   const keys=keysFn(filter);
   if(!keys.length){alert("Δεν βρέθηκαν ερωτήσεις.");return;}
   state.activeKeys=keys;

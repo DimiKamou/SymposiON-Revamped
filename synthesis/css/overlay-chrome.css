@@ -24,7 +24,10 @@
   display: none;
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  /* Full-screen takeover: sit ABOVE the persistent cookie bar (7500) and guide
+     tips (8000) so a launched game isn't partly covered by them. Stays below the
+     first-run onboarding gate (9000) and the admin panel (9600). */
+  z-index: 8500;
   background: #18100A;            /* var(--dark-base) */
   flex-direction: column;
   padding-bottom: env(safe-area-inset-bottom);
