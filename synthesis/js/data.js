@@ -115,6 +115,20 @@ const SUBJECTS = {
       games:[ gSoon('Ελένη Quiz','Helen Quiz','MC · ανάλυση','masks'),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
+    // ── Τραγωδίες/έπη Ευριπίδη surfaced as trivia tiles. Ελένη/Τρωάδες/Άλκηστις
+    //    have NO dedicated trivia question dataset in Ver1 or synthesis, so they
+    //    ship as honest coming-soon tiles (gSoon) rather than faked content.
+    //    Ιλιάδα & Οδύσσεια trivia (which DO have datasets) live in gym-a/gym-b. ──
+    { id:'troades', roman:'III', illu:'masks', gr:'Τρωάδες', en:'Trojan Women', sub:'Euripides · Trojan Women',
+      summary:{ gr:'Ευριπίδης — ο θρήνος των αιχμαλώτων της Τροίας.', en:'Euripides — the lament of the captives of Troy.' },
+      games:[ gSoon('Τρωάδες Quiz','Trojan Women Quiz','MC · ανάλυση','masks'),
+              g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
+              g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
+    { id:'alkistis', roman:'III', illu:'masks', gr:'Άλκηστις', en:'Alcestis', sub:'Euripides · Alcestis',
+      summary:{ gr:'Ευριπίδης — η θυσία της Άλκηστης για τον Άδμητο.', en:'Euripides — Alcestis’ sacrifice for Admetus.' },
+      games:[ gSoon('Άλκηστις Quiz','Alcestis Quiz','MC · ανάλυση','masks'),
+              g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
+              g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'archaia-c', roman:'III', illu:'scroll', gr:'Αρχαία Ελληνικά', en:'Ancient Greek', sub:'Ancient Greek',
       summary:{ gr:'Σύνταξη, μετοχές και ανώμαλα ρήματα.', en:'Syntax, participles and irregular verbs.' },
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','200+ λέξεις','column'),
