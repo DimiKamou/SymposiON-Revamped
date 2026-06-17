@@ -13,6 +13,24 @@
 
   /* ── shared bits ───────────────────────────────────────────────── */
   function glyph(name, cls){ return el('span', { class:(cls||'sc-gl'), 'data-illu':name }); }
+
+  // ── PvP Arena (Ο Ἀγών) launcher ──
+  // The Arena is a self-contained standalone page (games/pvp-arena/) — its own
+  // topbar/body, localStorage profiles, NO Firebase/realtime. It reads the
+  // shared question bank window.SYM_QUESTIONS; since it loads as a separate
+  // document we hand the live library across via localStorage (the Arena's
+  // prelude hydrates window.SYM_QUESTIONS from it, else falls back to its
+  // bundled js/questions.js sample). Opened in a new tab so the SPA stays put.
+  function launchPvPArena(){
+    try {
+      if (Array.isArray(window.SYM_QUESTIONS) && window.SYM_QUESTIONS.length) {
+        localStorage.setItem('SYM_QUESTIONS', JSON.stringify(window.SYM_QUESTIONS));
+      }
+    } catch (_) {}
+    var base = (window.APP_BASE || (new URL('./', location.href).href));
+    window.open(base + 'games/pvp-arena/index.html', '_blank', 'noopener');
+  }
+  window.launchPvPArena = launchPvPArena;
   // "Coming soon" helpers — tiles flagged `soon:true` in data.js have no real
   // game yet. Reuse the shared badge + friendly notice defined in dir-synthesis.js;
   // fall back to inline equivalents if that module hasn't registered them.
@@ -323,6 +341,7 @@
       { v:'solo', illu:'runner', t:{gr:'Ατομικά',en:'Solo'}, d:{gr:'Παίξε μόνος σου',en:'Play on your own'}, to:()=>go('subject') },
       { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>go('live',{step:'config'}) },
       { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>go('live',{step:'config',cfg:{mode:'team',teams:3,gmode:'tow',time:5,score:['standard'],count:10}}) },
+      { v:'pvp', illu:'crossed-swords', t:{gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'}, d:{gr:'Μονομαχίες & ομαδικοί αγώνες',en:'Duels & free-for-all'}, to:()=>launchPvPArena() },
       { v:'practice', illu:'scroll', t:{gr:'Εξάσκηση',en:'Practice'}, d:{gr:'Χωρίς βαθμολογία',en:'No scoring'}, to:()=>go('subject') },
     ];
     const gmwrap = el('div',{class:'sc-pmodes sc-stagger'}, gmodes.map(m=> el('button',{class:'sc-pmode', onclick:m.to},[
@@ -334,7 +353,42 @@
     body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, L({gr:'Μηχανές',en:'Engines'})));
     const filwrap = el('div',{class:'sc-fils sc-stagger'}, cats.map((c,i)=>chip(c,i===0)));
     body.appendChild(filwrap);
-    body.appendChild(viewBar({ admin:true, left: el('span',{class:'sc-count'}, SY.ENGINES.length+' '+L({gr:'μηχανές',en:'engines'})) }));
+    // ── FULL engine catalogue ──
+    // The panel must surface EVERY launchable game: the curated carousel
+    // (SY.ENGINES) AND every registered Game-Panel engine (window.GP_ENGINES
+    // — naumachia, phalanx, the whole PvP / engines pack, …). Build a merged,
+    // de-duped list keyed by the openFn each tile resolves to via
+    // synResolveLaunch, so nothing shows twice and every tile can launch.
+    const _ALL_ENGINES = (function buildAllEngines(){
+      const out = [], seen = new Set();
+      function keyOf(t){
+        return (window.synResolveLaunch && synResolveLaunch(t)) ||
+               ('label:' + (t.en || t.gr || ''));
+      }
+      // 1) curated carousel first (keeps its hand-picked illu + meta + order)
+      (SY.ENGINES || []).forEach(e => { out.push(e); seen.add(keyOf(e)); });
+      // 2) every GP engine not already represented by a carousel tile
+      (window.GP_ENGINES || []).forEach(g => {
+        // map a GP engine record → a panel tile shape {gr,en,meta,illu,launch}
+        const fn = (window.SYN_LAUNCH_MAP &&
+                    (SYN_LAUNCH_MAP[g.id] || SYN_LAUNCH_MAP[g.label])) || null;
+        const tile = {
+          gr: g.label,
+          en: g.subtitle || g.label,
+          meta: { gr: g.subtitle || '', en: g.subtitle || '' },
+          illu: g.illu || null,
+          icon: g.icon || null,
+          launch: fn ? { fn } : undefined
+        };
+        const k = fn ? fn : ('label:' + g.label);
+        if (seen.has(k)) return;            // already shown via carousel
+        seen.add(k);
+        out.push(tile);
+      });
+      return out;
+    })();
+
+    body.appendChild(viewBar({ admin:true, left: el('span',{class:'sc-count'}, _ALL_ENGINES.length+' '+L({gr:'μηχανές',en:'engines'})) }));
 
     const list = ST().display==='list';
     const grid = el('div',{class:'sc-eng-grid'+(ST().display!=='grid'?' sc-eng-grid--'+ST().display:'')});
@@ -342,14 +396,14 @@
       el('span',{},[ el('span',{class:'sc-upload__t'}, L({gr:'Ανέβασε δικό σου κουίζ',en:'Upload your own quiz'})), el('span',{class:'sc-upload__s'}, 'CSV · JSON · TSV') ]) ]));
 
     // favorites first, then saved order
-    let items = SY.ENGINES.map((e,i)=>({ e, rid:'eng_'+i, a:SY.CLASSES[i%SY.CLASSES.length].accent }));
+    let items = _ALL_ENGINES.map((e,i)=>({ e, rid:'eng_'+i, a:SY.CLASSES[i%SY.CLASSES.length].accent }));
     const ordered = SymStore.order('gamepanel', items.map(x=>x.rid));
     items.sort((a,b)=> ordered.indexOf(a.rid)-ordered.indexOf(b.rid));
     items.sort((a,b)=> (SymStore.isFav(b.rid)?1:0)-(SymStore.isFav(a.rid)?1:0));
     items.forEach(({e,rid,a})=>{
       grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e})},[
         favBtn(rid),
-        el('span',{class:'sc-engc__ban'},[ glyph(e.illu,'sc-engc__illu') ]),
+        el('span',{class:'sc-engc__ban'},[ e.illu ? glyph(e.illu,'sc-engc__illu') : el('span',{class:'sc-engc__illu sc-engc__illu--emoji'}, e.icon || '🎮') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
         el('span',{class:'sc-engc__tools'},[
           el('button',{class:'sc-engc__eye', title:'Preview', onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu}); }, html:'&#128065;'}),

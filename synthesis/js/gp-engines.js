@@ -244,6 +244,102 @@
       tags: ['Τύχη', 'Solo'],
       multiplayer: false,
       tier: 'free'
+    },
+    /* ── engines-pack: remaining HANDOFF rows 5–15 (moirai, ekklisia,
+         oracle, parthenon, olympus, hippodrome, mnemosyne-memory,
+         erinyes). Self-building overlays; launched via SYN_GAMES openFns
+         (js/manifest/engines-pack.js). ── */
+    {
+      id: 'moirai',
+      label: 'Μοίραι',
+      subtitle: 'Wheel of Fates — Ο τροχός των Μοιρών',
+      icon: '🧵',
+      bg: 'linear-gradient(135deg,#12060B,#3A0E22)',
+      desc: 'Γύρισε τον τροχό των Μοιρών με σωστές απαντήσεις — ύφανε το μακρύτερο νήμα ζωής.',
+      tags: ['Τύχη', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      id: 'ekklisia',
+      label: 'Εκκλησία',
+      subtitle: 'Buzzer — Ο αγών της Πνύκας',
+      icon: '🔔',
+      bg: 'linear-gradient(135deg,#0A0E10,#16323A)',
+      desc: 'Κάθε φυλή έχει το δικό της κουμπί — πάτα πρώτος και πάρε τον λόγο στην Πνύκα.',
+      tags: ['Ταχύτητα', 'Πολλοί'],
+      multiplayer: true,
+      tier: 'free'
+    },
+    {
+      id: 'oracle',
+      label: 'Μαντείον',
+      subtitle: 'Wager Quiz — Το μαντείο των Δελφών',
+      icon: '🔮',
+      bg: 'linear-gradient(135deg,#0C0A14,#241A3A)',
+      desc: 'Πόνταρε τη σοφία σου στην Πυθία πριν δεις τον χρησμό — σωστή απάντηση διπλασιάζει.',
+      tags: ['Στοίχημα', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      id: 'parthenon',
+      label: 'Ακρόπολις',
+      subtitle: 'Temple Builder — Τα μνημεία της Ακρόπολης',
+      icon: '🏗️',
+      bg: 'linear-gradient(135deg,#100E0A,#322C1E)',
+      desc: 'Ύψωσε τα μνημεία της Ακρόπολης, μέλος-μέλος, με σωστές απαντήσεις.',
+      tags: ['Χτίσιμο', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      id: 'olympus',
+      label: 'Ανάβασις',
+      subtitle: 'Millionaire — Η ανάβαση στον Όλυμπο',
+      icon: '⛰️',
+      bg: 'linear-gradient(135deg,#0A0C12,#1E2A3A)',
+      desc: 'Ανέβα τις βαθμίδες ως τον Θρόνο του Διός — κατοχύρωσε τα τεμένη.',
+      tags: ['Κλίμακα', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      id: 'hippodrome',
+      label: 'Αρματοδρομία',
+      subtitle: 'Chariot Race — Η αρματοδρομία του Ιπποδρόμου',
+      icon: '🏇',
+      bg: 'linear-gradient(135deg,#140A08,#3A1E10)',
+      desc: 'Οδήγησε το άρμα σου στον τέρμα — τα σερί χτίζουν ταχύτητα.',
+      tags: ['Ταχύτητα', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      // NOTE: the registry already carries a 'mnemosyne' (flashcard Study
+      // Mode). The pack's Μνημοσύνη is a memory-pairs game (openMnemosyne)
+      // — registered under a distinct id so it does not clobber the
+      // flashcard entry or the Engine↔Content matrix grouping.
+      id: 'mnemosyne-memory',
+      label: 'Μνημοσύνη',
+      subtitle: 'Memory — Το δώρο της Μνημοσύνης',
+      icon: '🧠',
+      bg: 'linear-gradient(135deg,#0E0A12,#2A1E3A)',
+      desc: 'Γύρισε τις πλάκες και ταίριαξέ τες — κάθε σωστή απάντηση ξυπνά τη μνήμη.',
+      tags: ['Μνήμη', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
+      id: 'erinyes',
+      label: 'Διωγμός',
+      subtitle: 'The Pursuit — Το κυνήγι των Ερινύων',
+      icon: '🔥',
+      bg: 'linear-gradient(135deg,#160907,#3A0E0A)',
+      desc: 'Οι Ερινύες κυνηγούν τον Ορέστη — τρέξε στο άσυλο ή κλείσε το χάσμα και άρπαξέ τον. Παίζεται και ως 1v1/ομαδικό στην Αρένα.',
+      tags: ['Καταδίωξη', '1v1'],
+      multiplayer: false,
+      tier: 'free'
     }
   ];
 
@@ -262,7 +358,7 @@
       sublabel: 'PvP · Multiplayer',
       icon: '⚔️',
       accent: '#B03A1E',
-      ids: ['naumachia', 'tow']
+      ids: ['naumachia', 'tow', 'ekklisia', 'erinyes']
     },
     {
       id: 'action',
@@ -270,7 +366,7 @@
       sublabel: 'Arcade · Speed',
       icon: '🚀',
       accent: '#2B4FAA',
-      ids: ['invaders', 'rapid-fire', 'blade', 'hegemonia']
+      ids: ['invaders', 'rapid-fire', 'blade', 'hegemonia', 'hippodrome']
     },
     {
       id: 'strategy',
@@ -278,7 +374,7 @@
       sublabel: 'Turn-based · Formation',
       icon: '🛡️',
       accent: '#4A6B28',
-      ids: ['phalanx', 'agora']
+      ids: ['phalanx', 'agora', 'parthenon', 'olympus', 'oracle']
     },
     {
       id: 'puzzle',
@@ -294,7 +390,7 @@
       sublabel: 'Memory · Flashcards',
       icon: '🃏',
       accent: '#5B3A8A',
-      ids: ['myth-memory', 'mnemosyne']
+      ids: ['myth-memory', 'mnemosyne', 'mnemosyne-memory']
     },
     {
       id: 'fortune',
@@ -302,7 +398,7 @@
       sublabel: 'Fortune · Frenzy',
       icon: '⛵',
       accent: '#C4A448',
-      ids: ['golden-fleece', 'halieia', 'discus', 'temple-run']
+      ids: ['golden-fleece', 'halieia', 'discus', 'temple-run', 'moirai']
     }
   ];
 
