@@ -472,8 +472,9 @@ function seg(label, opts, key){
 /* ── boot ───────────────────────────────────────────────────────── */
 function boot(){
   try{ const u=JSON.parse(localStorage.getItem('sym_revamp_unlocked')||'[]'); if(Array.isArray(u)) STATE.unlocked=u; }catch(_){}
-  // TEST SEED: grant 1,000,000 Kleos once so reviewers can buy anything.
-  if(window.SymStore && !SymStore.get('kleos_testseed', 0)){ SymStore.set('kleos', 1000000); SymStore.set('kleos_testseed', 1); }
+  // A brand-new user starts with 0 Kleos and earns it by playing — no demo
+  // seed. (The old reviewer seed granted 1,000,000 Kleos, which made the Agora
+  // look "completed" / everything already affordable for a fresh account.)
   // restore saved theme / cursor; else auto-detect season by date
   const savedTheme = window.SymStore && SymStore.get('theme', null);
   if(savedTheme && THEMES.find(t=>t.id===savedTheme)) STATE.theme = savedTheme;

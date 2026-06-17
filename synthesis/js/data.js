@@ -456,9 +456,15 @@ window.SYM.TITLES = window.SYM_TITLES = [
 window.SYM.ACHIEVEMENTS = (function () {
   const out = [];
   const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-  // deterministic pseudo-progress so the dashboard feels lived-in
-  function prog(seed, goal){ let h=0; for(let i=0;i<seed.length;i++) h=(h*31+seed.charCodeAt(i))>>>0; return Math.round((h%1000)/1000*goal*1.25); }
-  function add(cat, id, gr, en, icon, goal, note){ out.push({ id:cat+'-'+id, cat, gr, en, icon, goal, val:Math.min(goal+ (prog(id,goal)>goal?0:0), prog(id+cat,goal)), note }); }
+  // Real per-user achievement progress. A brand-new user has earned nothing,
+  // so every medal starts at val:0 (no "lived-in" demo progress). Saved
+  // progress is read back from SymStore('ach_progress') keyed by achievement id
+  // as real tracking accrues; absent an entry the value is 0.
+  function prog(id){
+    try { var m = (window.SymStore && SymStore.get('ach_progress', null)) || {}; return Math.max(0, Number(m[id]) || 0); }
+    catch(e){ return 0; }
+  }
+  function add(cat, id, gr, en, icon, goal, note){ var aid=cat+'-'+id; out.push({ id:aid, cat, gr, en, icon, goal, val:Math.min(goal, prog(aid)), note }); }
   // ── milestones ──
   [ ['centurion','Ἑκατοντάρχης','Centurion','shield-round',100,{gr:'Εκατό νίκες.',en:'One hundred victories.'}],
     ['myriad','Μυριάς','The Myriad','acropolis',500,{gr:'500 επιστροφές.',en:'Five hundred returns.'}],
