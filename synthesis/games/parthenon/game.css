@@ -1,0 +1,110 @@
+/* ══════════════════ ΑΚΡΟΠΟΛΙΣ — Raising the Parthenon ══════════════════
+   Builder: each correct answer sets a column/architrave/pediment; race the
+   rival masters to finish the temple. Palette: marble + gold over Hearth.
+═════════════════════════════════════════════════════════════════════════ */
+
+#pn-overlay { --pn-ink:#0B0E0F; }
+#pn-overlay .overlay-topbar { background:rgba(11,14,15,0.92); border-bottom:1px solid rgba(196,164,72,0.22); }
+#pn-overlay .overlay-title { color:var(--sym-gold-lt); text-shadow:0 0 16px rgba(196,164,72,0.35); }
+
+#pn-wrap {
+  min-height:100%;
+  background:
+    radial-gradient(1000px 560px at 50% -8%, rgba(127,176,188,0.14), transparent 60%),
+    radial-gradient(760px 560px at 50% 116%, rgba(196,164,72,0.10), transparent 60%),
+    linear-gradient(180deg, #10171A, #0B0E0F);
+  color:var(--sym-cream); font-family:var(--sym-sans); position:relative; overflow:hidden;
+}
+
+.pn-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.pn-screen.active { display:flex; animation:pn-fade .4s ease; }
+@keyframes pn-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ── Intro ── */
+#pn-screen-intro { align-items:center; justify-content:center; text-align:center; gap:8px; }
+.pn-hero { width:230px; height:154px; margin-bottom:4px; filter:drop-shadow(0 12px 30px rgba(0,0,0,0.5)); }
+.pn-logo { font-family:var(--sym-display); font-weight:700; font-size:clamp(30px,5vw,52px); letter-spacing:0.1em; color:var(--sym-gold-lt); text-shadow:0 0 30px rgba(196,164,72,0.35); }
+.pn-logo-en { font-family:var(--sym-serif); font-style:italic; font-size:21px; color:var(--sym-aegean-lt); margin-bottom:6px; }
+.pn-intro-txt { font-family:var(--sym-serif); font-size:19px; line-height:1.55; color:var(--sym-stone); max-width:600px; margin-bottom:26px; }
+.pn-intro-txt b { color:var(--sym-cream); font-style:normal; }
+
+/* ── Level select ── */
+.pn-levels { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:640px; width:100%; margin-top:6px; }
+@media (max-width:560px){ .pn-levels{grid-template-columns:1fr;} }
+.pn-level {
+  display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; text-align:center;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(196,164,72,0.3); border-radius:6px; padding:18px 14px; color:var(--sym-cream);
+  transition:transform .15s, border-color .15s, box-shadow .2s;
+}
+.pn-level:hover { transform:translateY(-4px); border-color:var(--sym-gold); box-shadow:0 14px 36px rgba(0,0,0,0.4); }
+.pn-level-name { font-family:var(--sym-display); font-size:18px; letter-spacing:2px; color:var(--sym-gold-lt); }
+.pn-level-sub { font-family:var(--sym-serif); font-style:italic; font-size:14.5px; color:var(--sym-stone); line-height:1.35; }
+.pn-level-cost { font-family:var(--sym-mono); font-size:10px; letter-spacing:1px; color:var(--sym-stone-dk); text-transform:uppercase; }
+
+/* ── Stage (temple) ── */
+.pn-stage { display:flex; justify-content:center; margin-bottom:16px; }
+.pn-temple { width:min(420px,80vw); height:auto; }
+.pn-piece { transform-origin:center bottom; }
+.pn-rise { animation:pn-rise .55s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes pn-rise { from{opacity:0; transform:translateY(-26px) scale(.9);} to{opacity:1; transform:none;} }
+
+/* ── Board ── */
+.pn-board { display:flex; flex-direction:column; gap:7px; max-width:620px; width:100%; margin:0 auto 16px; }
+.pn-board-chip { display:grid; grid-template-columns:120px 1fr 48px; align-items:center; gap:10px; font-size:12px; padding:5px 12px; border-radius:18px; background:rgba(255,255,255,0.03); border:1px solid rgba(240,235,224,0.07); }
+.pn-board-chip.me { border-color:var(--sym-gold); background:rgba(196,164,72,0.1); }
+.pn-board-name { font-family:var(--sym-label); font-weight:700; font-size:11px; letter-spacing:0.5px; color:var(--sym-stone); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pn-board-chip.me .pn-board-name { color:var(--sym-gold-lt); }
+.pn-board-bar { height:5px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; }
+.pn-board-fill { display:block; height:100%; background:linear-gradient(90deg, var(--sym-aegean), var(--sym-gold)); border-radius:3px; transition:width .5s cubic-bezier(.3,.85,.3,1); }
+.pn-board-n { font-family:var(--sym-mono); font-size:10px; color:var(--sym-stone); text-align:right; }
+.pn-board-chip.me .pn-board-n { color:var(--sym-gold-lt); }
+
+/* ── Question ── */
+.pn-qbody { max-width:860px; margin:0 auto; width:100%; }
+.pn-q-meta { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.pn-q-num { font-family:var(--sym-mono); font-size:11px; letter-spacing:3px; color:var(--sym-gold-lt); }
+.pn-q-line { flex:1; height:1px; background:linear-gradient(90deg, rgba(196,164,72,0.5), transparent); }
+.pn-built { font-family:var(--sym-mono); font-size:11px; letter-spacing:1px; color:var(--sym-stone); }
+.pn-q-card {
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(196,164,72,0.18); border-left:3px solid var(--sym-gold);
+  border-radius:4px; padding:22px 26px; margin-bottom:18px;
+}
+.pn-q-text { font-family:var(--sym-serif); font-size:clamp(19px,2.7vw,26px); line-height:1.4; color:var(--sym-cream); }
+.pn-answers { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+@media (max-width:600px){ .pn-answers{grid-template-columns:1fr;} }
+.pn-ans {
+  display:flex; align-items:center; gap:13px; text-align:left;
+  background:var(--sym-bg-panel); border:1px solid rgba(240,235,224,0.12); border-radius:3px;
+  padding:14px 17px; cursor:pointer; color:var(--sym-cream);
+  font-family:var(--sym-sans); font-size:16px; line-height:1.35;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.pn-ans:hover:not(:disabled){ border-color:var(--sym-gold-lt); background:rgba(196,164,72,0.08); }
+.pn-ans:active:not(:disabled){ transform:scale(.99); }
+.pn-ans-key { width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(196,164,72,0.45); font-family:var(--sym-display); font-size:14px; color:var(--sym-gold-lt); }
+.pn-ans.correct { border-color:var(--sym-gold); background:rgba(196,164,72,0.18); }
+.pn-ans.correct .pn-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
+.pn-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
+.pn-ans.wrong .pn-ans-key { border-color:var(--sym-blood); color:#E08577; }
+.pn-feedback { text-align:center; min-height:22px; margin-top:14px; font-family:var(--sym-mono); font-size:13px; letter-spacing:2px; }
+.pn-fb-ok { color:var(--sym-gold); }
+.pn-fb-bad { color:var(--sym-blood); }
+
+/* ── End ── */
+#pn-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
+.pn-end-temple { width:min(360px,76vw); height:auto; }
+.pn-end-title { font-family:var(--sym-display); font-size:clamp(28px,5vw,46px); letter-spacing:4px; }
+.pn-end-title.win { color:var(--sym-gold-lt); text-shadow:0 0 30px rgba(196,164,72,0.5); }
+.pn-end-title.lose { color:var(--sym-aegean-lt); }
+.pn-end-sub { font-family:var(--sym-serif); font-style:italic; font-size:18px; color:var(--sym-stone); max-width:520px; line-height:1.5; }
+.pn-final-board { background:var(--sym-bg-panel); border:1px solid rgba(196,164,72,0.18); border-radius:4px; padding:10px 14px; min-width:320px; margin:6px 0; }
+.pn-final-row { display:flex; align-items:center; gap:12px; padding:9px 8px; border-bottom:1px solid rgba(240,235,224,0.06); }
+.pn-final-row:last-child { border-bottom:none; }
+.pn-final-row.me { background:rgba(196,164,72,0.08); border-radius:3px; }
+.pn-final-pos { font-family:var(--sym-display); font-size:16px; color:var(--sym-stone); width:30px; text-align:center; }
+.pn-final-row.me .pn-final-pos { color:var(--sym-gold-lt); }
+.pn-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
+.pn-final-n { font-family:var(--sym-mono); font-size:14px; color:var(--sym-gold-lt); }
+.pn-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }

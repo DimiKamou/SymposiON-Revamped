@@ -115,6 +115,20 @@ const SUBJECTS = {
       games:[ gSoon('Ελένη Quiz','Helen Quiz','MC · ανάλυση','masks'),
               g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
+    // ── Τραγωδίες/έπη Ευριπίδη surfaced as trivia tiles. Ελένη/Τρωάδες/Άλκηστις
+    //    have NO dedicated trivia question dataset in Ver1 or synthesis, so they
+    //    ship as honest coming-soon tiles (gSoon) rather than faked content.
+    //    Ιλιάδα & Οδύσσεια trivia (which DO have datasets) live in gym-a/gym-b. ──
+    { id:'troades', roman:'III', illu:'masks', gr:'Τρωάδες', en:'Trojan Women', sub:'Euripides · Trojan Women',
+      summary:{ gr:'Ευριπίδης — ο θρήνος των αιχμαλώτων της Τροίας.', en:'Euripides — the lament of the captives of Troy.' },
+      games:[ gSoon('Τρωάδες Quiz','Trojan Women Quiz','MC · ανάλυση','masks'),
+              g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
+              g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
+    { id:'alkistis', roman:'III', illu:'masks', gr:'Άλκηστις', en:'Alcestis', sub:'Euripides · Alcestis',
+      summary:{ gr:'Ευριπίδης — η θυσία της Άλκηστης για τον Άδμητο.', en:'Euripides — Alcestis’ sacrifice for Admetus.' },
+      games:[ gSoon('Άλκηστις Quiz','Alcestis Quiz','MC · ανάλυση','masks'),
+              g('Mythology Memory','Mythology Memory','Ζεύγη · δράμα','cards'),
+              g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'archaia-c', roman:'III', illu:'scroll', gr:'Αρχαία Ελληνικά', en:'Ancient Greek', sub:'Ancient Greek',
       summary:{ gr:'Σύνταξη, μετοχές και ανώμαλα ρήματα.', en:'Syntax, participles and irregular verbs.' },
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','200+ λέξεις','column'),
@@ -456,9 +470,15 @@ window.SYM.TITLES = window.SYM_TITLES = [
 window.SYM.ACHIEVEMENTS = (function () {
   const out = [];
   const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-  // deterministic pseudo-progress so the dashboard feels lived-in
-  function prog(seed, goal){ let h=0; for(let i=0;i<seed.length;i++) h=(h*31+seed.charCodeAt(i))>>>0; return Math.round((h%1000)/1000*goal*1.25); }
-  function add(cat, id, gr, en, icon, goal, note){ out.push({ id:cat+'-'+id, cat, gr, en, icon, goal, val:Math.min(goal+ (prog(id,goal)>goal?0:0), prog(id+cat,goal)), note }); }
+  // Real per-user achievement progress. A brand-new user has earned nothing,
+  // so every medal starts at val:0 (no "lived-in" demo progress). Saved
+  // progress is read back from SymStore('ach_progress') keyed by achievement id
+  // as real tracking accrues; absent an entry the value is 0.
+  function prog(id){
+    try { var m = (window.SymStore && SymStore.get('ach_progress', null)) || {}; return Math.max(0, Number(m[id]) || 0); }
+    catch(e){ return 0; }
+  }
+  function add(cat, id, gr, en, icon, goal, note){ var aid=cat+'-'+id; out.push({ id:aid, cat, gr, en, icon, goal, val:Math.min(goal, prog(aid)), note }); }
   // ── milestones ──
   [ ['centurion','Ἑκατοντάρχης','Centurion','shield-round',100,{gr:'Εκατό νίκες.',en:'One hundred victories.'}],
     ['myriad','Μυριάς','The Myriad','acropolis',500,{gr:'500 επιστροφές.',en:'Five hundred returns.'}],
@@ -711,4 +731,44 @@ window.SYM.rewardsForLevel = function(lv){
   ladder.forEach(e => { if (e.lv === lv) best = e; else if (e.lv <= lv && e.lv >= best.lv) best = e; });
   const exact = ladder.find(e => e.lv === lv);
   return exact || best || ladder[0];
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   LEVEL BANK — Ver1-style subject→level→Mix selector metadata.
+   Maps each content-bank game's openFn → the real level data in
+   window.GP_LEVEL_PROVIDERS (gp-levels.js, loaded eagerly) plus the
+   per-game localStorage progress-key prefix the live game writes.
+
+   Only games listed here have genuine, selectable levels → they route
+   through S.level (the bank selector). Every other game (arcade engines,
+   trivia, the GP_ENGINES, single-shot quizzes) launches DIRECTLY.
+
+   ds      — key into window.GP_LEVEL_PROVIDERS (its `levels` array drives
+             the selector: {id, group, section, color, desc}). "Συνδυαστικό"
+             groups already present there ARE the Mix option.
+   prog    — localStorage prefix the live game writes as `<prog><id>` →
+             {completed:bool, best:num}. Absent → that game keeps no
+             per-level progress yet, so the selector shows an honest 0.
+   ════════════════════════════════════════════════════════════════════ */
+window.SYM.LEVEL_BANK = {
+  openLyo:         { ds: 'lyo',         prog: 'lyo_prog_'  },
+  openOusiastika:  { ds: 'ousiastika',  prog: 'ous_prog_'  },
+  openLatNouns:    { ds: 'lat-nouns',   prog: 'latn_prog_' },
+  openAntonymies:  { ds: 'antonymies',  prog: 'ant_prog_'  },
+  openAoristosB:   { ds: 'aoristos-b'   /* live game keeps no per-level progress yet → honest 0 */ },
+  openSynirimmena: { ds: 'synirimmena' },
+  openAfwnolekta:  { ds: 'afwnolekta'  },
+  openRimataMi:    { ds: 'rimata-mi'   }
+};
+// Resolve a revamp tile → its level-bank entry (or null = launch directly).
+// Uses the same openFn resolution synLaunch uses, then checks both the bank
+// map AND that the live provider data actually exists.
+window.SYM.levelBankFor = function (tile) {
+  var fn = (window.synResolveLaunch && window.synResolveLaunch(tile)) || null;
+  if (!fn) return null;
+  var entry = window.SYM.LEVEL_BANK[fn];
+  if (!entry) return null;
+  var prov = window.GP_LEVEL_PROVIDERS && window.GP_LEVEL_PROVIDERS[entry.ds];
+  if (!prov || !prov.levels || !prov.levels.length) return null;
+  return { fn: fn, ds: entry.ds, prog: entry.prog || null, levels: prov.levels };
 };

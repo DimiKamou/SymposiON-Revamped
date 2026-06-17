@@ -1,0 +1,102 @@
+/* ══════════════════ ΜΟΙΡΑΙ — Wheel of the Fates ══════════════════
+   Spin the wheel after a correct answer: multiply your thread, jackpot,
+   or let Atropos cut it. Palette: fate-red + gold over dark Hearth.
+═══════════════════════════════════════════════════════════════════════ */
+
+#mo-overlay { --mo-ink:#0C0806; }
+#mo-overlay .overlay-topbar { background:rgba(12,8,6,0.92); border-bottom:1px solid rgba(158,59,46,0.26); }
+#mo-overlay .overlay-title { color:#E08577; text-shadow:0 0 16px rgba(158,59,46,0.4); }
+
+#mo-wrap {
+  min-height:100%;
+  background:
+    radial-gradient(960px 540px at 50% -10%, rgba(158,59,46,0.16), transparent 60%),
+    radial-gradient(720px 560px at 50% 116%, rgba(196,164,72,0.10), transparent 60%),
+    linear-gradient(180deg, #150B08, #0C0806);
+  color:var(--sym-cream); font-family:var(--sym-sans); position:relative; overflow:hidden;
+}
+
+.mo-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.mo-screen.active { display:flex; animation:mo-fade .4s ease; }
+@keyframes mo-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ── Intro ── */
+#mo-screen-intro { align-items:center; justify-content:center; text-align:center; gap:8px; }
+.mo-spindle { width:120px; height:150px; margin-bottom:4px; filter:drop-shadow(0 8px 26px rgba(158,59,46,0.4)); }
+.mo-logo { font-family:var(--sym-display); font-weight:700; font-size:clamp(30px,5vw,52px); letter-spacing:0.14em; color:#E08577; text-shadow:0 0 30px rgba(158,59,46,0.45); }
+.mo-logo-en { font-family:var(--sym-serif); font-style:italic; font-size:21px; color:var(--sym-gold-lt); margin-bottom:6px; }
+.mo-intro-txt { font-family:var(--sym-serif); font-size:19px; line-height:1.55; color:var(--sym-stone); max-width:600px; margin-bottom:26px; }
+.mo-intro-txt b { color:var(--sym-cream); font-style:normal; }
+
+/* ── Top ── */
+.mo-top { display:flex; align-items:center; justify-content:space-between; gap:18px; max-width:860px; width:100%; margin:0 auto 14px; }
+.mo-thread { display:flex; align-items:baseline; gap:10px; }
+.mo-thread-lbl { font-family:var(--sym-mono); font-size:10px; letter-spacing:2px; color:var(--sym-stone); }
+.mo-thread-val { font-family:var(--sym-display); font-size:30px; color:#E08577; line-height:1; }
+.mo-round { font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-stone); }
+
+.mo-board { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:860px; width:100%; margin:0 auto 16px; }
+.mo-board-chip { display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(240,235,224,0.08); font-size:12px; }
+.mo-board-chip.me { border-color:#E08577; background:rgba(158,59,46,0.14); }
+.mo-board-rank { font-family:var(--sym-mono); font-size:10px; color:var(--sym-stone); }
+.mo-board-name { font-family:var(--sym-serif); font-size:14px; color:var(--sym-cream); }
+.mo-board-t { font-family:var(--sym-mono); font-size:11px; color:#E08577; }
+
+/* ── Question ── */
+.mo-qbody { max-width:860px; margin:0 auto; width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; }
+.mo-q-card {
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(158,59,46,0.2); border-left:3px solid var(--sym-blood);
+  border-radius:4px; padding:24px 28px; margin-bottom:18px;
+}
+.mo-q-text { font-family:var(--sym-serif); font-size:clamp(20px,2.9vw,28px); line-height:1.4; color:var(--sym-cream); }
+.mo-answers { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+@media (max-width:600px){ .mo-answers{grid-template-columns:1fr;} }
+.mo-ans {
+  display:flex; align-items:center; gap:13px; text-align:left;
+  background:var(--sym-bg-panel); border:1px solid rgba(240,235,224,0.12); border-radius:3px;
+  padding:15px 17px; cursor:pointer; color:var(--sym-cream);
+  font-family:var(--sym-sans); font-size:16px; line-height:1.35;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.mo-ans:hover:not(:disabled){ border-color:#E08577; background:rgba(158,59,46,0.08); }
+.mo-ans:active:not(:disabled){ transform:scale(.99); }
+.mo-ans-key { width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(158,59,46,0.45); font-family:var(--sym-display); font-size:14px; color:#E08577; }
+.mo-ans.correct { border-color:var(--sym-gold); background:rgba(196,164,72,0.16); }
+.mo-ans.correct .mo-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
+.mo-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
+.mo-feedback { text-align:center; min-height:22px; margin-top:16px; font-family:var(--sym-mono); font-size:13px; letter-spacing:2px; }
+.mo-fb-ok { color:var(--sym-gold); }
+.mo-fb-bad { color:#E08577; }
+
+/* ── Spin ── */
+#mo-screen-spin { align-items:center; justify-content:center; text-align:center; gap:18px; }
+.mo-spin-head { font-family:var(--sym-display); font-size:clamp(20px,3.4vw,30px); letter-spacing:3px; color:#E08577; }
+.mo-wheel-wrap { position:relative; width:min(320px,80vw); height:min(320px,80vw); display:grid; place-items:center; }
+.mo-pointer { position:absolute; top:-6px; left:50%; transform:translateX(-50%); font-size:30px; color:var(--sym-gold-lt); z-index:3; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+.mo-wheel { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 30px rgba(0,0,0,0.5)); }
+.mo-rot { width:100%; height:100%; transform-origin:50% 50%; will-change:transform; }
+.mo-outcome { min-height:80px; }
+.mo-outcome-big { font-family:var(--sym-display); font-size:clamp(24px,4vw,34px); letter-spacing:2px; }
+.mo-outcome-big.gain { color:var(--sym-gold); text-shadow:0 0 22px rgba(196,164,72,0.45); }
+.mo-outcome-big.loss { color:var(--sym-blood); }
+.mo-outcome-big.steal { color:var(--sym-aegean-lt); text-shadow:0 0 18px rgba(94,139,150,0.4); }
+.mo-outcome-desc { font-family:var(--sym-serif); font-style:italic; font-size:16px; color:var(--sym-stone); margin-top:6px; }
+.mo-cont { margin-top:18px; }
+
+/* ── End ── */
+#mo-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
+.mo-end-spindle { width:130px; height:160px; }
+.mo-end-title { font-family:var(--sym-display); font-size:clamp(28px,5vw,46px); letter-spacing:4px; }
+.mo-end-title.win { color:var(--sym-gold-lt); text-shadow:0 0 30px rgba(196,164,72,0.5); }
+.mo-end-title.lose { color:#E08577; }
+.mo-end-sub { font-family:var(--sym-serif); font-style:italic; font-size:18px; color:var(--sym-stone); max-width:520px; line-height:1.5; }
+.mo-final-board { background:var(--sym-bg-panel); border:1px solid rgba(158,59,46,0.2); border-radius:4px; padding:10px 14px; min-width:320px; margin:6px 0; }
+.mo-final-row { display:flex; align-items:center; gap:12px; padding:9px 8px; border-bottom:1px solid rgba(240,235,224,0.06); }
+.mo-final-row:last-child { border-bottom:none; }
+.mo-final-row.me { background:rgba(158,59,46,0.1); border-radius:3px; }
+.mo-final-pos { font-family:var(--sym-display); font-size:16px; color:var(--sym-stone); width:30px; text-align:center; }
+.mo-final-row.me .mo-final-pos { color:#E08577; }
+.mo-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
+.mo-final-t { font-family:var(--sym-mono); font-size:14px; color:#E08577; }
+.mo-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }

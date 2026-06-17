@@ -155,7 +155,7 @@
   function openAcroteria(ctx) {
     const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) ov.remove(); } });
     const box = el('div', { class:'acro-box' });
-    const kleos = SymStore.get('kleos', 2400);
+    const kleos = SymStore.get('kleos', 0);
     box.appendChild(el('div', { class:'acro-box__bar' }, [
       el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}) ]),
       el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleos.toLocaleString('en-US')), 'Kleos' ]),
@@ -182,7 +182,7 @@
     }
     function buy(a){
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(x=>x.owned).map(x=>x.id));
-      const k = SymStore.get('kleos', 2400);
+      const k = SymStore.get('kleos', 0);
       if(k>=a.cost){ SymStore.set('kleos', k-a.cost); const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned', o); SymStore.set('acro_equipped', a.id);
         const kEl=document.getElementById('acroKleos'); if(kEl) kEl.textContent=(k-a.cost).toLocaleString('en-US');
         if(window.gsap){ for(let i=0;i<14;i++){const sp=document.createElement('span');const r=detail.getBoundingClientRect();sp.style.cssText=`position:fixed;left:${r.left+50}px;top:${r.top+40}px;width:6px;height:6px;border-radius:50%;background:var(--gold,#E0B24C);z-index:9999;pointer-events:none`;document.body.appendChild(sp);const ang=Math.random()*6.28,d=24+Math.random()*46;gsap.to(sp,{x:Math.cos(ang)*d,y:Math.sin(ang)*d,opacity:0,duration:.7,onComplete:()=>sp.remove()});} }
@@ -204,7 +204,7 @@
         ]);
         if(!isOwned){
           // unlock straight from the grid if you can afford it
-          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=SymStore.get('kleos',2400); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
+          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=SymStore.get('kleos',0); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
         }
         grid.appendChild(card);
       });
@@ -269,16 +269,17 @@
       { lbl:{gr:'Μάθηση',en:'Learn'}, items:[
         { id:'home', gr:'Αρχική', en:'Home', ico:'⌂' },
         { id:'assignments', gr:'Εργασίες', en:'Homework', ico:'✓' },
-        { cls:'gym-a', gr:'Γυμνάσιο', en:'Gymnasio', ico:'Ⅰ' },
-        { cls:'lyk-a', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
-        { cls:'gram-archaia', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
+        { id:'gym', gr:'Γυμνάσιο', en:'Gymnasio', ico:'Ⅰ' },
+        { id:'lyk', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
+        { id:'gramhub', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
         { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel', ico:'▦' },
       ]},
       { lbl:{gr:'Παιχνίδι',en:'Play'}, items:[
         { id:'live', gr:'Live Arena', en:'Live Arena', ico:'⚡' },
         { id:'anodos', gr:'Άνοδος', en:'Anodos', ico:'⛰' },
         { id:'tartarus', gr:'Tartarus Review', en:'Tartarus', ico:'❂' },
-        { id:'levelup', gr:'Level Up', en:'Level Up', ico:'✦' },
+        // "Level Up" is a TRIGGER event (fires from progression on level gain),
+        // not a manually navigable screen — so it is intentionally not listed.
       ]},
       { lbl:{gr:'Ἀγορά & Ἥρωας',en:'Agora & Hero'}, items:[
         { id:'temple', gr:'Ἀγορά', en:'Agora', ico:'⛩' },
@@ -320,8 +321,11 @@
     launcher.appendChild(lbtn); launcher.appendChild(menu);
 
     const links = el('div', { class:'syn-nav__links' }, [
-      el('a', { class:'syn-nav__lnk'+(/home|subject|mode|level|gamepanel/.test(screen)?' active':''), href:'javascript:void 0', onclick:()=>symGo('home') }, L({gr:'Παιχνίδια',en:'Games'})),
-      el('a', { class:'syn-nav__lnk'+(screen==='gamepanel'?' active':''), href:'javascript:void 0', onclick:()=>symGo('gamepanel') }, L({gr:'Πίνακας',en:'Panel'})),
+      // "Παιχνίδια" lands on the full 30-game board (gamepanel) — a real
+      // destination, not a re-render of the home it was on (the old "dead
+      // button"). The home hub stays reachable via the SymposiON logo (left).
+      el('a', { class:'syn-nav__lnk'+(/subject|mode|level|gamepanel/.test(screen)?' active':''), href:'javascript:void 0', onclick:()=>symGo('gamepanel') }, L({gr:'Παιχνίδια',en:'Games'})),
+      el('a', { class:'syn-nav__lnk'+(screen==='home'?' active':''), href:'javascript:void 0', onclick:()=>symGo('home') }, L({gr:'Αρχική',en:'Home'})),
       el('a', { class:'syn-nav__lnk syn-nav__lnk--agora'+(screen==='temple'?' active':''), href:'javascript:void 0', onclick:()=>symGo('temple') }, [ el('span',{class:'syn-nav__ico','data-illu':'amphora'}), L({gr:'Ἀγορά',en:'Agora'}) ]),
     ]);
     const act = el('div', { class:'syn-nav__act' }, [
@@ -555,7 +559,13 @@
     (ctx.groups || []).forEach((group, gi) => {
       if (gi > 0) groupsWrap.appendChild(el('span', { class:'syn-cdiv', 'aria-hidden':'true' }));
       const grp = el('div', { class:'syn-cgroup'+(group.grammar?' syn-cgroup--gram':'') });
-      grp.appendChild(el('div', { class:'syn-cgroup__h' }, L(group.label)));
+      // group header now opens the hierarchical grade / grammar hub subpage
+      const groupScreen = group.grammar ? 'gramhub' : (group.id==='lyk' ? 'lyk' : 'gym');
+      grp.appendChild(el('button', { class:'syn-cgroup__h syn-cgroup__h--link',
+        title:L({gr:'Άνοιξε την ενότητα',en:'Open section'}), onclick:()=>symGo(groupScreen),
+        style:'display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;'
+          + 'font:inherit;color:inherit;padding:0;text-align:left' }, [
+        L(group.label), el('span', { class:'syn-cgroup__arr', html:'&rarr;', style:'opacity:.55;font-size:.85em' }) ]));
       const row = el('div', { class:'syn-classes__row' });
       group.ids.forEach(id => {
         const c = ctx.byId(id); if(!c) return;
@@ -563,10 +573,14 @@
         const badge = group.grammar
           ? el('span', { class:'syn-chip__rom syn-chip__rom--gl', 'data-illu':c.glyph })
           : el('span', { class:'syn-chip__rom' }, c.roman);
-        row.appendChild(el('button', {
+        // hover previews the panels in-place; a click opens the class subpage
+        const chipEl = el('button', {
           class:'syn-chip has-accent'+(group.grammar?' syn-chip--gram':'')+(active?' active':''),
-          'data-cls':c.id, style:`--ca:${c.accent}`, onclick:()=>setActiveClass(c.id, true)
-        }, [ badge, el('span',{class:'syn-chip__nm'}, L(c)) ]));
+          'data-cls':c.id, style:`--ca:${c.accent}`,
+          onclick:()=> group.grammar ? symGo('gramtrack', {trackId:c.id}) : symGo('classpage', {cls:c})
+        }, [ badge, el('span',{class:'syn-chip__nm'}, L(c)) ]);
+        chipEl.addEventListener('mouseenter', ()=>{ if(!group.grammar) setActiveClass(c.id, false); });
+        row.appendChild(chipEl);
       });
       grp.appendChild(row);
       groupsWrap.appendChild(grp);

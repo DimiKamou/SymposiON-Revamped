@@ -1,0 +1,116 @@
+/* ══════════════════ ΜΝΗΜΟΣΥΝΗ — memory match ══════════════════
+   Answer to earn a turn of two tiles; match the divine symbols.
+   Palette: aegean memory-water + gold over dark Hearth.
+═══════════════════════════════════════════════════════════════════════ */
+
+#mn-overlay { --mn-ink:#070F12; }
+#mn-overlay .overlay-topbar { background:rgba(7,15,18,0.92); border-bottom:1px solid rgba(94,139,150,0.24); }
+#mn-overlay .overlay-title { color:var(--sym-aegean-lt); text-shadow:0 0 16px rgba(94,139,150,0.4); }
+
+#mn-wrap {
+  min-height:100%;
+  background:
+    radial-gradient(960px 540px at 50% -10%, rgba(94,139,150,0.15), transparent 60%),
+    radial-gradient(720px 560px at 50% 116%, rgba(196,164,72,0.08), transparent 60%),
+    linear-gradient(180deg, #0A151A, #070F12);
+  color:var(--sym-cream); font-family:var(--sym-sans); position:relative; overflow:hidden;
+}
+
+.mn-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.mn-screen.active { display:flex; animation:mn-fade .4s ease; }
+@keyframes mn-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+/* ── Intro ── */
+#mn-screen-intro { align-items:center; justify-content:center; text-align:center; gap:8px; }
+.mn-owl { width:130px; height:130px; margin-bottom:4px; filter:drop-shadow(0 8px 26px rgba(94,139,150,0.4)); }
+.mn-logo { font-family:var(--sym-display); font-weight:700; font-size:clamp(28px,5vw,50px); letter-spacing:0.12em; color:var(--sym-aegean-lt); text-shadow:0 0 30px rgba(94,139,150,0.45); }
+.mn-logo-en { font-family:var(--sym-serif); font-style:italic; font-size:21px; color:var(--sym-gold-lt); margin-bottom:6px; }
+.mn-intro-txt { font-family:var(--sym-serif); font-size:19px; line-height:1.55; color:var(--sym-stone); max-width:600px; margin-bottom:26px; }
+.mn-intro-txt b { color:var(--sym-cream); font-style:normal; }
+
+/* ── Top ── */
+.mn-top { display:flex; align-items:center; justify-content:space-between; gap:18px; max-width:860px; width:100%; margin:0 auto 12px; }
+.mn-pairs { display:flex; align-items:baseline; gap:10px; }
+.mn-pairs-lbl { font-family:var(--sym-mono); font-size:10px; letter-spacing:2px; color:var(--sym-stone); }
+.mn-pairs-val { font-family:var(--sym-display); font-size:26px; color:var(--sym-aegean-lt); line-height:1; }
+.mn-round { font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-stone); }
+
+.mn-board { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:860px; width:100%; margin:0 auto 14px; }
+.mn-board-chip { display:flex; align-items:center; gap:7px; padding:5px 11px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(240,235,224,0.08); font-size:12px; }
+.mn-board-chip.me { border-color:var(--sym-aegean-lt); background:rgba(94,139,150,0.14); }
+.mn-board-rank { font-family:var(--sym-mono); font-size:10px; color:var(--sym-stone); }
+.mn-board-name { font-family:var(--sym-serif); font-size:14px; color:var(--sym-cream); }
+.mn-board-p { font-family:var(--sym-mono); font-size:11px; color:var(--sym-aegean-lt); }
+
+/* ── Memory grid ── */
+.mn-grid-wrap { display:flex; justify-content:center; margin-bottom:14px; }
+.mn-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:clamp(8px,1.4vw,13px); width:min(440px,86vw); }
+.mn-tile {
+  position:relative; aspect-ratio:1; border:none; background:none; cursor:pointer; padding:0;
+  perspective:600px;
+}
+.mn-tile-face {
+  position:absolute; inset:0; display:grid; place-items:center; border-radius:6px;
+  backface-visibility:hidden; transition:transform .35s; font-size:clamp(22px,5vw,34px);
+}
+.mn-back {
+  background:linear-gradient(150deg, #1F3A42, #15282E); border:1px solid rgba(127,176,188,0.3);
+  color:rgba(127,176,188,0.55); font-family:var(--sym-display); transform:rotateY(0deg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+.mn-front {
+  background:linear-gradient(180deg, #F4EEDF, #DCD2BA); border:1px solid var(--sym-gold);
+  transform:rotateY(180deg);
+}
+.mn-tile.up .mn-back, .mn-tile.matched .mn-back { transform:rotateY(180deg); }
+.mn-tile.up .mn-front, .mn-tile.matched .mn-front { transform:rotateY(360deg); }
+.mn-tile:hover:not(.matched):not(.up) .mn-back { border-color:var(--sym-aegean-lt); color:var(--sym-aegean-lt); }
+.mn-tile.matched { animation:mn-pop .4s ease; }
+.mn-tile.matched .mn-front { background:linear-gradient(180deg, #CDE3CB, #A9C99E); border-color:var(--sym-sage); box-shadow:0 0 18px rgba(106,135,82,0.4); }
+@keyframes mn-pop { 0%{transform:scale(1);} 40%{transform:scale(1.08);} 100%{transform:scale(1);} }
+
+/* ── Question ── */
+.mn-qbody { max-width:760px; margin:0 auto; width:100%; transition:opacity .3s; }
+.mn-qbody.flipphase { opacity:0.5; pointer-events:none; }
+.mn-q-card {
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2)), var(--sym-bg-panel);
+  border:1px solid rgba(94,139,150,0.2); border-left:3px solid var(--sym-aegean);
+  border-radius:4px; padding:18px 24px; margin-bottom:14px;
+}
+.mn-q-text { font-family:var(--sym-serif); font-size:clamp(18px,2.4vw,23px); line-height:1.4; color:var(--sym-cream); }
+.mn-answers { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+@media (max-width:600px){ .mn-answers{grid-template-columns:1fr;} }
+.mn-ans {
+  display:flex; align-items:center; gap:12px; text-align:left;
+  background:var(--sym-bg-panel); border:1px solid rgba(240,235,224,0.12); border-radius:3px;
+  padding:12px 15px; cursor:pointer; color:var(--sym-cream);
+  font-family:var(--sym-sans); font-size:15px; line-height:1.3;
+  transition:border-color .15s, background .15s, transform .1s;
+}
+.mn-ans:hover:not(:disabled){ border-color:var(--sym-aegean-lt); background:rgba(94,139,150,0.08); }
+.mn-ans:active:not(:disabled){ transform:scale(.99); }
+.mn-ans-key { width:28px; height:28px; flex-shrink:0; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(94,139,150,0.45); font-family:var(--sym-display); font-size:13px; color:var(--sym-aegean-lt); }
+.mn-ans.correct { border-color:var(--sym-gold); background:rgba(196,164,72,0.16); }
+.mn-ans.correct .mn-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
+.mn-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
+.mn-ans.wrong .mn-ans-key { border-color:var(--sym-blood); color:#E08577; }
+.mn-feedback { text-align:center; min-height:20px; margin-top:12px; font-family:var(--sym-mono); font-size:13px; letter-spacing:2px; }
+.mn-fb-ok { color:var(--sym-gold); }
+.mn-fb-bad { color:#E08577; }
+
+/* ── End ── */
+#mn-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
+.mn-end-owl { width:140px; height:140px; }
+.mn-end-title { font-family:var(--sym-display); font-size:clamp(28px,5vw,46px); letter-spacing:4px; }
+.mn-end-title.win { color:var(--sym-aegean-lt); text-shadow:0 0 30px rgba(94,139,150,0.5); }
+.mn-end-title.lose { color:var(--sym-gold-lt); }
+.mn-end-sub { font-family:var(--sym-serif); font-style:italic; font-size:18px; color:var(--sym-stone); max-width:520px; line-height:1.5; }
+.mn-final-board { background:var(--sym-bg-panel); border:1px solid rgba(94,139,150,0.2); border-radius:4px; padding:10px 14px; min-width:320px; margin:6px 0; }
+.mn-final-row { display:flex; align-items:center; gap:12px; padding:9px 8px; border-bottom:1px solid rgba(240,235,224,0.06); }
+.mn-final-row:last-child { border-bottom:none; }
+.mn-final-row.me { background:rgba(94,139,150,0.1); border-radius:3px; }
+.mn-final-pos { font-family:var(--sym-display); font-size:16px; color:var(--sym-stone); width:30px; text-align:center; }
+.mn-final-row.me .mn-final-pos { color:var(--sym-aegean-lt); }
+.mn-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
+.mn-final-p { font-family:var(--sym-mono); font-size:14px; color:var(--sym-aegean-lt); }
+.mn-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }

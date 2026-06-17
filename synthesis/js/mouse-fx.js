@@ -95,6 +95,8 @@
 
   function onMove(e) {
     if (kind === 'none') return;
+    // A Ver1 game overlay owns the viewport — don't spray particles over it.
+    if (document.body.classList.contains('syn-game-open')) return;
     const t = e.target;
     const over = t && t.closest && t.closest('.stage')
       && !t.closest('.harness') && !t.closest('.tweaks')

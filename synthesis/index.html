@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="css/screens.css"/>
 <link rel="stylesheet" href="css/previews.css"/>
 <link rel="stylesheet" href="css/student.css"/>
+<!-- ══ THEORY lesson subsystem (ported from Ver1) ══ -->
+<link rel="stylesheet" href="css/theory-lessons.css"/>
 <link rel="stylesheet" href="css/system.css"/>
 <link rel="stylesheet" href="css/auth-skin.css"/>
 <!-- Shared game-overlay container chrome (restored from Ver1 main.css so
@@ -32,6 +34,11 @@
 <link rel="stylesheet" href="css/admin-studio.css"/>
 <link rel="stylesheet" href="css/admin-realm.css"/>
 <link rel="stylesheet" href="css/admin-atlas.css"/>
+<!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
+     anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
+     The trivia-panel's own chrome (games/trivia-panel/panel.css) is
+     lazy-loaded by its manifest fragment, so it is NOT linked here. -->
+<link rel="stylesheet" href="css/anathesi.css"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -180,6 +187,11 @@
 <script src="js/dir-synthesis.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/screens-2.js"></script>
+<script src="js/screens-learn.js"></script>
+<!-- ══════════ TEACHER WIZARD (Ver1 anathesi port) ══════════
+     Re-registers window.SYM_SCREENS.anathesi AFTER screens-2.js so the richer
+     all-modes wizard (driven by window.GP_ENGINES) WINS over the simple one. -->
+<script src="js/anathesi.js"></script>
 <script src="js/student.js"></script>
 <script src="js/consent.js"></script>
 <script src="js/system.js"></script>
@@ -213,6 +225,10 @@
 <script src="js/manifest/trivia-iframe.js"></script>
 <script src="js/manifest/multiplayer-fb.js"></script>
 <script src="js/manifest/pvp-pack.js"></script>
+<script src="js/manifest/engines-pack.js"></script>
+<!-- ══════════ TRIVIA-PANEL manifest (Ver1 Universal Trivia Panel port) ══════════
+     Lazy-loads games/trivia-panel/panel.{js,css}; opener window.openTriviaPanel. -->
+<script src="js/manifest/trivia-panel.js"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
 <script src="js/trivia-iframe-launchers.js"></script>
 
@@ -226,12 +242,28 @@
 <script src="js/admin-realm.js"></script>
 <script src="js/admin-studio.js"></script>
 <script src="js/admin-cc.js"></script>
+<script src="js/admin-atlas.js"></script>
 <script src="js/syn-admin.js"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
      Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
      eagerly BEFORE js/app.js so the sign-up flow can call the verifier. -->
 <script src="js/human-verify.js"></script>
+
+<!-- ══════════ THEORY LESSON SUBSYSTEM (ported from Ver1) ══════════
+     The three-mode grammar/theory lesson view (Θεωρία · Πίνακας · Κάρτες)
+     and the codex view, exposed as window.openTheoryLesson / THEORY_META.
+     Opened from the Γραμματική/Θεωρία subpages (js/screens-learn.js). The
+     editor modules (text/parallel/qa) guard their firebase/curator deps and
+     no-op when those globals are absent in synthesis. edit-shared loads
+     first (provides window.TheoryEd); theory-data before codex/lesson. -->
+<script src="js/theory-edit-shared.js"></script>
+<script src="js/theory-data.js"></script>
+<script src="js/theory-codex.js"></script>
+<script src="js/theory-lesson.js"></script>
+<script src="js/theory-text.js"></script>
+<script src="js/theory-parallel.js"></script>
+<script src="js/theory-qa.js"></script>
 
 <script src="js/app.js"></script>
 </body>

@@ -273,16 +273,13 @@ function buildHarness() {
   const brand = el('div', { class:'harness__brand' });
   brand.appendChild(brandMark('hb-mark'));
   brand.appendChild(el('span', { html:'Symposi<b>ON</b>' }));
-  brand.appendChild(el('small', null, 'Home Revamp'));
   bar.appendChild(brand);
 
-  // direction switch
-  const ds = el('div', { class:'dirswitch' });
-  DIRS.forEach(d => ds.appendChild(el('button', {
-    class:'dirswitch__btn' + (d.id===STATE.direction?' active':''), 'data-dir':d.id,
-    onclick:()=>{ STATE.direction=d.id; STATE.screen='home'; STATE.screenParam=null; buildHarness(); render(); }
-  }, [ el('span',{class:'k'}, d.hint), el('span',{class:'n'}, d.n) ])));
-  bar.appendChild(ds);
+  // Direction switcher removed: Synthesis is the one and only production
+  // direction now, so the old prototype "Stoa / Agora / Akrópolis" tabs
+  // (and the "Editorial / Playful / Modern" hints) no longer appear. The
+  // harness keeps only the admin theme/cursor controls. STATE.direction is
+  // pinned to 'synthesis' (see the guard in render()).
 
   bar.appendChild(el('div', { class:'harness__spacer' }));
 
@@ -475,8 +472,9 @@ function seg(label, opts, key){
 /* ── boot ───────────────────────────────────────────────────────── */
 function boot(){
   try{ const u=JSON.parse(localStorage.getItem('sym_revamp_unlocked')||'[]'); if(Array.isArray(u)) STATE.unlocked=u; }catch(_){}
-  // TEST SEED: grant 1,000,000 Kleos once so reviewers can buy anything.
-  if(window.SymStore && !SymStore.get('kleos_testseed', 0)){ SymStore.set('kleos', 1000000); SymStore.set('kleos_testseed', 1); }
+  // A brand-new user starts with 0 Kleos and earns it by playing — no demo
+  // seed. (The old reviewer seed granted 1,000,000 Kleos, which made the Agora
+  // look "completed" / everything already affordable for a fresh account.)
   // restore saved theme / cursor; else auto-detect season by date
   const savedTheme = window.SymStore && SymStore.get('theme', null);
   if(savedTheme && THEMES.find(t=>t.id===savedTheme)) STATE.theme = savedTheme;

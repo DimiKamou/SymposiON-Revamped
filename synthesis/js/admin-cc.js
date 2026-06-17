@@ -88,6 +88,7 @@ function _shell() {
       <span class="cc-emg-ctl">Wildcard Access
         <button class="cc-tg cc-sm" id="cc-wildTg" onclick="ccToggleWild()"></button>
       </span>
+      <button class="cc-emg-kill" onclick="if(window.ccOpenAtlas)ccOpenAtlas()" title="Command Atlas — κάθε εργαλείο σε έναν χάρτη (⌘/Ctrl-K)">🗺 Command Atlas</button>
       <button class="cc-emg-kill" onclick="ccOpenKill()">⏻ Kill Switch</button>
     </div>
 

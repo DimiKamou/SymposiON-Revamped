@@ -21,7 +21,7 @@
   /* ══ TEMPLE OF THE MUSES ══ (kleos · slots · quests · saga · ritual) */
   S.temple = function(home, ctx){
     const accent = '#3E9183';
-    const kleos = SymStore.get('kleos', 2400);
+    const kleos = SymStore.get('kleos', 0);
     const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ἀγορά',en:'Agora · The Marketplace'}),
       title:L({gr:'Στόλισε τον κόσμο σου',en:'Adorn your world'}), sub:L({gr:'Ξόδεψε Kleos σε ακρωτήρια, θέματα, δείκτες & εφέ — κι όλα φοριούνται στην αρχική σου.',en:'Spend Kleos on acroteria, themes, cursors & effects — all worn across your home.'}),
       actions:[ el('div',{class:'sc-kleos'},[ glyph('wreath-laurel','sc-kleos__gl'), el('b',{},kleos.toLocaleString('en-US')), 'Kleos' ]) ] });
@@ -69,7 +69,7 @@
         const card = el('div',{class:'sc-acro'+(isOwned?'':' locked')+(isEq?' eq':'')+(a.premium?' sc-acro--premium':''), onclick:()=>{
           if(isEq) return;
           if(isOwned){ SymStore.set('acro_equipped',a.id); symRender(); return; }
-          const k=SymStore.get('kleos',2400);
+          const k=SymStore.get('kleos',0);
           if(k>=a.cost){ SymStore.set('kleos',k-a.cost); const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned',o); SymStore.set('acro_equipped',a.id); symRender(); }
           else { card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); }
         }},[
@@ -159,7 +159,7 @@
       const box = el('div',{class:'acro-box'});
       box.appendChild(el('div',{class:'acro-box__bar'},[
         el('div',{class:'acro-box__ttl'},[ el('span',{class:'acro-box__ic','data-illu':slot.illu}), L(slot.t) ]),
-        el('div',{class:'acro-box__kleos'},[ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'slotKleos'}, SymStore.get('kleos',2400).toLocaleString('en-US')), 'Kleos' ]),
+        el('div',{class:'acro-box__kleos'},[ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'slotKleos'}, SymStore.get('kleos',0).toLocaleString('en-US')), 'Kleos' ]),
         el('button',{class:'acro-box__x', onclick:()=>ov.remove(), html:'&times;'}),
       ]));
       const grid = el('div',{class:'acro-grid'});
@@ -175,7 +175,7 @@
             el('span',{class:'acro-card__tag'}, isOwned ? (isEq?'✓':L({gr:'στη συλλογή',en:'owned'})) : ('⌾ '+it.price.toLocaleString('en-US'))),
             isOwned
               ? el('button',{class:'acro-card__btn'+(isEq?' on':''), onclick:()=>{ slot.apply(it.id); paint(); symRender(); }}, isEq?L({gr:'✓ Ἐπιλεγμένο',en:'✓ Selected'}):L({gr:'Ἐπίλεξε',en:'Select'}))
-              : el('button',{class:'acro-card__btn acro-card__btn--buy', onclick:()=>{ const k=SymStore.get('kleos',2400); if(k>=it.price){ SymStore.set('kleos',k-it.price); const o=own.slice(); o.push(it.id); SymStore.set(ownKey,o); slot.apply(it.id); const kk=document.getElementById('slotKleos'); if(kk) kk.textContent=(k-it.price).toLocaleString('en-US'); paint(); symRender(); } else { card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } }}, L({gr:'Ξεκλείδωμα',en:'Unlock'})),
+              : el('button',{class:'acro-card__btn acro-card__btn--buy', onclick:()=>{ const k=SymStore.get('kleos',0); if(k>=it.price){ SymStore.set('kleos',k-it.price); const o=own.slice(); o.push(it.id); SymStore.set(ownKey,o); slot.apply(it.id); const kk=document.getElementById('slotKleos'); if(kk) kk.textContent=(k-it.price).toLocaleString('en-US'); paint(); symRender(); } else { card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } }}, L({gr:'Ξεκλείδωμα',en:'Unlock'})),
           ]);
           grid.appendChild(card);
         });
@@ -231,7 +231,7 @@
       el('div',{class:'sc-quest__t'}, L(q.t)),
       el('div',{class:'sc-quest__bar'},[ el('span',{class:'sc-quest__fill',style:`width:${Math.min(100,q.p/q.n*100)}%`}) ]),
       el('div',{class:'sc-quest__foot'},[ el('span',{class:'sc-quest__p'}, q.p+'/'+q.n),
-        el('button',{class:'sc-quest__claim'+(done?'':' off'), disabled:done?null:'', onclick:()=>{ if(done){ SymStore.set('kleos',SymStore.get('kleos',2400)+q.r); symRender(); } }}, done?('+'+q.r+' Kleos'):('🔒 +'+q.r)) ]),
+        el('button',{class:'sc-quest__claim'+(done?'':' off'), disabled:done?null:'', onclick:()=>{ if(done){ SymStore.set('kleos',SymStore.get('kleos',0)+q.r); symRender(); } }}, done?('+'+q.r+' Kleos'):('🔒 +'+q.r)) ]),
     ]); }
     // daily header + free reroll
     const canReroll = rr.n < 1;
@@ -265,7 +265,7 @@
     body.appendChild(saga);
     body.appendChild(el('div',{class:'sc-saga__bar sc-stagger'},[ el('span',{class:'sc-saga__fill',style:`width:${ch/chapters.length*100}%`}), el('span',{class:'sc-saga__t'}, L({gr:'Κεφάλαιο',en:'Chapter'})+' '+ch+' / '+chapters.length) ]));
     body.appendChild(el('div',{class:'sc-rite-cta sc-stagger'},[
-      el('button',{class:'sc-cta sc-cta--solid', onclick:()=>{ if(ch<chapters.length){ SymStore.set('saga_ch', ch+1); const k=SymStore.get('kleos',2400); SymStore.set('kleos',k+250); symRender(); } }},[ el('span',{class:'sc-illu','data-illu':'flame', style:'width:18px;height:18px;display:inline-block;vertical-align:-3px'}), ' ', L({gr:'Τέλεσε Ιεροτελεστία · +250 Kleos',en:'Perform a Rite · +250 Kleos'}) ]),
+      el('button',{class:'sc-cta sc-cta--solid', onclick:()=>{ if(ch<chapters.length){ SymStore.set('saga_ch', ch+1); const k=SymStore.get('kleos',0); SymStore.set('kleos',k+250); symRender(); } }},[ el('span',{class:'sc-illu','data-illu':'flame', style:'width:18px;height:18px;display:inline-block;vertical-align:-3px'}), ' ', L({gr:'Τέλεσε Ιεροτελεστία · +250 Kleos',en:'Perform a Rite · +250 Kleos'}) ]),
       el('span',{class:'sc-rite-cta__n'}, L({gr:'Προχωρά την σάγκα σου.',en:'Advance your saga.'})),
     ]));
 
@@ -284,7 +284,7 @@
       TITLES.forEach(t=>{
         const isOwned = owned.indexOf(t.id)>=0 || t.price===0, isEq = eq===t.id;
         let foot;
-        if(!isOwned) foot = el('button',{class:'sc-boon__btn buy', onclick:()=>{ const k=SymStore.get('kleos',2400); if(k>=t.price){ SymStore.set('kleos',k-t.price); const o=owned.slice(); o.push(t.id); SymStore.set('title_owned',o); SymStore.set('title_eq',t.id); symRender(); } else { titleGrid.classList.add('shake'); setTimeout(()=>titleGrid.classList.remove('shake'),400);} }},[ glyph('wreath-laurel','sc-boon__k'), t.price.toLocaleString('en-US') ]);
+        if(!isOwned) foot = el('button',{class:'sc-boon__btn buy', onclick:()=>{ const k=SymStore.get('kleos',0); if(k>=t.price){ SymStore.set('kleos',k-t.price); const o=owned.slice(); o.push(t.id); SymStore.set('title_owned',o); SymStore.set('title_eq',t.id); symRender(); } else { titleGrid.classList.add('shake'); setTimeout(()=>titleGrid.classList.remove('shake'),400);} }},[ glyph('wreath-laurel','sc-boon__k'), t.price.toLocaleString('en-US') ]);
         else foot = el('button',{class:'sc-boon__btn'+(isEq?' on':''), onclick:()=>{ SymStore.set('title_eq', isEq?'t-neophyte':t.id); symRender(); }}, isEq?L({gr:'✓ Σε χρήση',en:'✓ Worn'}):L({gr:'Φόρεσέ τον',en:'Wear it'}));
         titleGrid.appendChild(el('div',{class:'sc-title-card'+(isEq?' eq':'')+(isOwned?'':' locked')},[
           el('div',{class:'sc-title-card__rk'}, t.rank),
@@ -352,7 +352,7 @@
           el('p',{class:'sc-oracle__reward'},[ glyph('wreath-laurel','sc-oracle__rk'), L(o.reward) ]),
           isOwned
             ? el('button',{class:'sc-boon__btn'+(isEq?' on':''), onclick:()=>{ SymStore.set('oracle_eq',o.id); paintOracles(); }}, isEq?L({gr:'Εξοπλισμένο',en:'Equipped'}):L({gr:'Εξόπλισε',en:'Equip'}))
-            : el('button',{class:'sc-boon__btn buy', onclick:()=>{ const k=SymStore.get('kleos',2400); if(k>=o.price){ SymStore.set('kleos',k-o.price); const ow=owned.slice(); ow.push(o.id); SymStore.set('oracle_owned',ow); SymStore.set('oracle_eq',o.id); symRender(); } else { orcGrid.classList.add('shake'); setTimeout(()=>orcGrid.classList.remove('shake'),400);} }},[ glyph('wreath-laurel','sc-boon__k'), o.price.toLocaleString('en-US') ]),
+            : el('button',{class:'sc-boon__btn buy', onclick:()=>{ const k=SymStore.get('kleos',0); if(k>=o.price){ SymStore.set('kleos',k-o.price); const ow=owned.slice(); ow.push(o.id); SymStore.set('oracle_owned',ow); SymStore.set('oracle_eq',o.id); symRender(); } else { orcGrid.classList.add('shake'); setTimeout(()=>orcGrid.classList.remove('shake'),400);} }},[ glyph('wreath-laurel','sc-boon__k'), o.price.toLocaleString('en-US') ]),
         ]));
       });
       if(window.injectIllus) injectIllus(orcGrid);
