@@ -102,8 +102,11 @@
     for (var i = 0; i < ovs.length; i++) {
       var o = ovs[i];
       if (o.classList.contains('active')) return true;
-      // offsetParent is null for display:none; cheap visibility check
-      if (o.offsetParent !== null && getComputedStyle(o).display !== 'none') return true;
+      // NB: .game-overlay is position:fixed, so offsetParent is null even when
+      // visible — never use it here. Check the computed box directly. Games may
+      // reveal the overlay via .active OR by setting inline display:flex/block.
+      var cs = getComputedStyle(o);
+      if (cs.display !== 'none' && cs.visibility !== 'hidden' && cs.opacity !== '0') return true;
     }
     return false;
   }
