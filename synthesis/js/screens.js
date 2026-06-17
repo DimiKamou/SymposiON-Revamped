@@ -612,9 +612,23 @@
   /* ══ 6 · HERO PROFILE ══ */
   S.profile = function(home, ctx){
     const accent = '#7C5AC2';
-    const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ο Ήρωάς μου',en:'My Hero'}), title:L({gr:'Προφίλ',en:'Profile'}),
-      actions:[ el('button',{class:'sc-cta sc-cta--solid', onclick:()=>go('levelup')},[ '✦ ', L({gr:'Level Up',en:'Level Up'}) ]) ] });
-    const HEROLV = 12;
+    const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ο Ήρωάς μου',en:'My Hero'}), title:L({gr:'Προφίλ',en:'Profile'}) });
+    // ── Live profile: bound to the signed-in user + real progression ──
+    // A brand-new (or signed-out) user therefore shows their own name and
+    // zeroed stats — never the old hardcoded "Ὀδυσσεύς / Lv.12 / 142 games".
+    const prog = (typeof getProgression === 'function' && getProgression()) || {};
+    const xp = Math.max(0, Math.round(prog.xp || 0));
+    const HEROLV = Math.max(0, prog.level != null ? prog.level
+      : (typeof _hjLevel === 'function' ? _hjLevel(xp) : 0));
+    // level L spans xp ∈ [100·L², 100·(L+1)²) under _hjLevel = floor(√(xp/100))
+    const lvBase = 100 * HEROLV * HEROLV;
+    const lvNext = 100 * (HEROLV + 1) * (HEROLV + 1);
+    const lvPct  = lvNext > lvBase ? Math.min(100, Math.max(0, Math.round((xp - lvBase) / (lvNext - lvBase) * 100))) : 0;
+    const fmt = n => Number(n || 0).toLocaleString('el-GR');
+    const u = (typeof currentUser !== 'undefined') ? currentUser : null;
+    const heroName = (u && (u.displayName || (u.email ? u.email.split('@')[0] : null)))
+      || L({gr:'Ήρωας',en:'Hero'});
+    const st = prog.stats || {};
     const eqId = SymStore.get('avatar', 'av-athena');
     const eqAv = SY.AVATARS.find(a=>a.id===eqId) || SY.AVATARS[0];
     const eqTitleId = SymStore.get('title', 't-rhetor');
@@ -623,12 +637,12 @@
     card.appendChild(el('div',{class:'sc-prof__hero'},[
       el('button',{class:'sc-prof__ring sc-prof__ring--btn', title:L({gr:'Άλλαξε avatar',en:'Change avatar'}), onclick:()=>avatarPicker()},[ el('span',{class:'sc-prof__seal','data-illu':eqAv.illu}), el('span',{class:'sc-prof__lvl'}, String(HEROLV)), el('span',{class:'sc-prof__edit',html:'✎'}) ]),
       el('div',{class:'sc-prof__id'},[
-        el('h2',{class:'sc-prof__name'},'Ὀδυσσεύς'),
+        el('h2',{class:'sc-prof__name'}, heroName),
         el('button',{class:'sc-prof__title sc-prof__title--btn', onclick:()=>titlePicker()},[ glyph('crown-laurel','sc-gl'), el('span',{}, L(eqTitle)), el('span',{class:'sc-prof__tedit',html:'✎'}) ]),
-        el('div',{class:'sc-xp'},[ el('div',{class:'sc-xp__bar'},[el('span',{class:'sc-xp__fill',style:'width:68%'})]), el('span',{class:'sc-xp__t'},'3.420 / 5.000 XP') ]),
+        el('div',{class:'sc-xp'},[ el('div',{class:'sc-xp__bar'},[el('span',{class:'sc-xp__fill',style:'width:'+lvPct+'%'})]), el('span',{class:'sc-xp__t'}, fmt(xp)+' / '+fmt(lvNext)+' XP') ]),
       ]),
     ]));
-    card.appendChild(el('div',{class:'sc-prof__stats'},[ stat('142',L({gr:'Παιχνίδια',en:'Games'}),accent), stat('87%',L({gr:'Ακρίβεια',en:'Accuracy'}),accent), stat('21',L({gr:'Σερί',en:'Streak'}),accent), stat('9',L({gr:'Νίκες Live',en:'Live wins'}),accent) ]));
+    card.appendChild(el('div',{class:'sc-prof__stats'},[ stat(fmt(st.sessions||0),L({gr:'Παιχνίδια',en:'Games'}),accent), stat(Math.round(st.accuracy||0)+'%',L({gr:'Ακρίβεια',en:'Accuracy'}),accent), stat(fmt(st.bestStreak||0),L({gr:'Σερί',en:'Streak'}),accent), stat(fmt(st.wins||0),L({gr:'Νίκες Live',en:'Live wins'}),accent) ]));
     body.appendChild(card);
 
     function titlePicker(){
