@@ -732,3 +732,43 @@ window.SYM.rewardsForLevel = function(lv){
   const exact = ladder.find(e => e.lv === lv);
   return exact || best || ladder[0];
 };
+
+/* ════════════════════════════════════════════════════════════════════
+   LEVEL BANK — Ver1-style subject→level→Mix selector metadata.
+   Maps each content-bank game's openFn → the real level data in
+   window.GP_LEVEL_PROVIDERS (gp-levels.js, loaded eagerly) plus the
+   per-game localStorage progress-key prefix the live game writes.
+
+   Only games listed here have genuine, selectable levels → they route
+   through S.level (the bank selector). Every other game (arcade engines,
+   trivia, the GP_ENGINES, single-shot quizzes) launches DIRECTLY.
+
+   ds      — key into window.GP_LEVEL_PROVIDERS (its `levels` array drives
+             the selector: {id, group, section, color, desc}). "Συνδυαστικό"
+             groups already present there ARE the Mix option.
+   prog    — localStorage prefix the live game writes as `<prog><id>` →
+             {completed:bool, best:num}. Absent → that game keeps no
+             per-level progress yet, so the selector shows an honest 0.
+   ════════════════════════════════════════════════════════════════════ */
+window.SYM.LEVEL_BANK = {
+  openLyo:         { ds: 'lyo',         prog: 'lyo_prog_'  },
+  openOusiastika:  { ds: 'ousiastika',  prog: 'ous_prog_'  },
+  openLatNouns:    { ds: 'lat-nouns',   prog: 'latn_prog_' },
+  openAntonymies:  { ds: 'antonymies',  prog: 'ant_prog_'  },
+  openAoristosB:   { ds: 'aoristos-b'   /* live game keeps no per-level progress yet → honest 0 */ },
+  openSynirimmena: { ds: 'synirimmena' },
+  openAfwnolekta:  { ds: 'afwnolekta'  },
+  openRimataMi:    { ds: 'rimata-mi'   }
+};
+// Resolve a revamp tile → its level-bank entry (or null = launch directly).
+// Uses the same openFn resolution synLaunch uses, then checks both the bank
+// map AND that the live provider data actually exists.
+window.SYM.levelBankFor = function (tile) {
+  var fn = (window.synResolveLaunch && window.synResolveLaunch(tile)) || null;
+  if (!fn) return null;
+  var entry = window.SYM.LEVEL_BANK[fn];
+  if (!entry) return null;
+  var prov = window.GP_LEVEL_PROVIDERS && window.GP_LEVEL_PROVIDERS[entry.ds];
+  if (!prov || !prov.levels || !prov.levels.length) return null;
+  return { fn: fn, ds: entry.ds, prog: entry.prog || null, levels: prov.levels };
+};
