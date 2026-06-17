@@ -250,6 +250,44 @@
     { id:'settings',  gr:'Ρυθμίσεις',           en:'Settings',     ico:'⚙' },
   ];
 
+  // Theme + colours picker that lives in the nav, right next to Ἀγορά (replaces
+  // the retired dev "themes/tweaks" top bar). Uses the public theme API
+  // (window.SYM_THEMES + window.symApplyTheme) so it works without the harness.
+  function themeNavPicker() {
+    const THEMES = window.SYM_THEMES || [];
+    const ST = window.STATE || {};
+    const cur = THEMES.find(t => t.id === ST.theme) || THEMES[0];
+    const wrap = el('div', { class:'syn-theme' });
+    const btn = el('button', { class:'syn-theme__btn', 'aria-label':L({gr:'Χρώματα & Θέμα',en:'Colours & theme'}),
+      title:L({gr:'Χρώματα & Θέμα',en:'Colours & theme'}),
+      onclick:(e)=>{ e.stopPropagation(); const open = wrap.classList.toggle('open');
+        if(open){ const close=(ev)=>{ if(!wrap.contains(ev.target)){ wrap.classList.remove('open'); document.removeEventListener('click', close); } };
+          setTimeout(()=>document.addEventListener('click', close), 0); } } },
+      [ el('span', { class:'syn-theme__sw', style: cur ? `background:linear-gradient(135deg,${cur.a} 48%,${cur.b} 48%)` : '' }),
+        el('span', { class:'syn-theme__cv', html:'▾' }) ]);
+    const menu = el('div', { class:'syn-theme__menu' });
+    [['light',{gr:'Φως',en:'Light'}],['dark',{gr:'Σκότος',en:'Dark'}],['vivid',{gr:'Ζωντανά',en:'Vivid'}],
+     ['season',{gr:'Εποχικά',en:'Seasonal'}],['combo',{gr:'Εικόνες',en:'Icons'}],['neon',{gr:'Neon',en:'Neon'}]].forEach(([g,lab])=>{
+      const list = THEMES.filter(t => t.group === g);
+      if(!list.length) return;
+      menu.appendChild(el('div', { class:'syn-theme__sec' }, L(lab)));
+      const grid = el('div', { class:'syn-theme__grid' });
+      list.forEach(t => grid.appendChild(el('button', { class:'syn-theme__opt'+(t.id===ST.theme?' on':''), title:t.nm,
+        onclick:()=>{ if(window.symApplyTheme) symApplyTheme(t.id); } },
+        [ el('span', { class:'syn-theme__optsw', style:`background:linear-gradient(135deg,${t.a} 48%,${t.b} 48%)` }),
+          el('span', { class:'syn-theme__optnm' }, t.nm) ])));
+      menu.appendChild(grid);
+    });
+    // language toggle
+    menu.appendChild(el('div', { class:'syn-theme__sec' }, L({gr:'Γλώσσα',en:'Language'})));
+    const lang = el('div', { class:'syn-theme__lang' });
+    ['gr','en'].forEach(l => lang.appendChild(el('button', { class:((window.SYM_LANG||ST.lang)===l?'on':''),
+      onclick:()=>{ if(window.STATE) STATE.lang=l; window.SYM_LANG=l; if(window.symRender) symRender(); } }, l.toUpperCase())));
+    menu.appendChild(lang);
+    wrap.appendChild(btn); wrap.appendChild(menu);
+    return wrap;
+  }
+
   function synNav(home, ctx) {
     const screen = ctx.screen || 'home';
     const nav = el('nav', { class:'syn-nav' });
@@ -262,7 +300,7 @@
     // Screens launcher
     const launcher = el('div', { class:'syn-screens' });
     const lbtn = el('button', { class:'syn-screens__btn', onclick:(e)=>{ e.stopPropagation(); menu.classList.toggle('open'); } },
-      [ el('span',{class:'syn-screens__grid',html:'▦'}), L({gr:'Οθόνες',en:'Screens'}), el('span',{class:'syn-screens__cv',html:'▾'}) ]);
+      [ el('span',{class:'syn-screens__grid',html:'▦'}), L({gr:'Πλοήγηση',en:'Navigation'}), el('span',{class:'syn-screens__cv',html:'▾'}) ]);
     const menu = el('div', { class:'syn-screens__menu syn-screens__menu--mega' });
     // comprehensive launcher — every part of the site we've built, grouped
     const NAV_GROUPS = [
@@ -327,6 +365,7 @@
       el('a', { class:'syn-nav__lnk'+(/subject|mode|level|gamepanel/.test(screen)?' active':''), href:'javascript:void 0', onclick:()=>symGo('gamepanel') }, L({gr:'Παιχνίδια',en:'Games'})),
       el('a', { class:'syn-nav__lnk'+(screen==='home'?' active':''), href:'javascript:void 0', onclick:()=>symGo('home') }, L({gr:'Αρχική',en:'Home'})),
       el('a', { class:'syn-nav__lnk syn-nav__lnk--agora'+(screen==='temple'?' active':''), href:'javascript:void 0', onclick:()=>symGo('temple') }, [ el('span',{class:'syn-nav__ico','data-illu':'amphora'}), L({gr:'Ἀγορά',en:'Agora'}) ]),
+      themeNavPicker(),
     ]);
     const act = el('div', { class:'syn-nav__act' }, [
       el('button', { class:'syn-live', onclick:()=>symGo('live') }, [ el('span',{class:'syn-live__bolt',html:'&#9889;'}), L(ctx.STR.live) ]),
