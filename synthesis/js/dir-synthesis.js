@@ -16,15 +16,46 @@
   }
   window.synMagnetize = magnetize;
 
+  /* ── "Coming soon" treatment (shared) ──
+     Tiles flagged `soon:true` in data.js have NO backing game yet. Instead of
+     pretending they are playable, we badge them "ΣΥΝΤΟΜΑ / Coming soon" and, on
+     click, show a friendly notice (reusing SymPreview's modal note) rather than
+     a fake game preview. Alabaster style: terra/gold accent, uppercase, small. */
+  function soonBadge() {
+    return el('span', { class:'syn-soon-badge',
+      style:'position:absolute;top:8px;left:8px;z-index:3;display:inline-flex;align-items:center;gap:4px;'
+        + 'padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.09em;'
+        + 'text-transform:uppercase;line-height:1;color:var(--sym-terra-dk,#9C3F1F);'
+        + 'background:color-mix(in srgb, var(--sym-gold,#A2862F) 16%, transparent);'
+        + 'border:1px solid color-mix(in srgb, var(--sym-terra,#C5572F) 38%, transparent);' },
+      [ el('span',{ html:'&#9685;' }), L({ gr:'Σύντομα', en:'Soon' }) ]);
+  }
+  window.synSoonBadge = soonBadge;
+
+  function comingSoon(gm) {
+    const title = L(gm) + ' · ' + L({ gr:'Σύντομα', en:'Coming soon' });
+    const note  = L({ gr:'Αυτό το παιχνίδι ετοιμάζεται — θα είναι σύντομα διαθέσιμο. Ευχαριστούμε για την υπομονή!',
+                      en:'This game is on the way — it will be available soon. Thanks for your patience!' });
+    if (window.SymPreview && SymPreview.open) {
+      SymPreview.open('mc', { title, illu:gm.illu, note });
+    } else if (typeof window.showToast === 'function') {
+      showToast(note, '');
+    }
+  }
+  window.synComingSoon = comingSoon;
+
   function tile(gm, accent, onclick) {
-    return el('a', { class:'syn-tile has-accent', href:'javascript:void 0', style:`--ca:${accent}`,
-      onclick: onclick || null }, [
+    const soon = !!(gm && gm.soon);
+    return el('a', { class:'syn-tile has-accent'+(soon?' syn-tile--soon':''), href:'javascript:void 0',
+      style:`--ca:${accent};position:relative`,
+      onclick: soon ? (e)=>{ if(e&&e.preventDefault) e.preventDefault(); comingSoon(gm); } : (onclick || null) }, [
+      soon ? soonBadge() : null,
       el('span', { class:'syn-tile__ban' }, [ el('span', { class:'syn-tile__illu', 'data-illu':gm.illu }) ]),
       el('span', { class:'syn-tile__body' }, [
         el('span', { class:'syn-tile__nm' }, L(gm)),
         el('span', { class:'syn-tile__mt' }, gm.meta),
       ]),
-      el('span', { class:'syn-tile__play', html:'&#9654;' }),
+      el('span', { class:'syn-tile__play', html: soon ? '&#9679;' : '&#9654;' }),
     ]);
   }
   window.synTile = tile;
