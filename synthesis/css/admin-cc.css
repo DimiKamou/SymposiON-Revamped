@@ -684,6 +684,16 @@
     border-right: none; border-bottom: 1px solid var(--cc-border-soft);
     padding: 10px 12px; flex-shrink: 0;
   }
+  /* The domain buttons live in #cc-dom-list (a plain block div), so making
+     only .cc-drail a row leaves this inner container stacking the buttons
+     vertically — a tall 315px column that pushes the work area off-screen.
+     Turn #cc-dom-list itself into the horizontal scroller. */
+  #page-admin #cc-dom-list {
+    display: flex; flex-direction: row; flex-wrap: nowrap;
+    align-items: center; gap: 6px; width: 100%;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
   #page-admin .cc-drail-lbl,
   #page-admin .cc-drail-foot { display: none; }
   #page-admin .cc-dom {

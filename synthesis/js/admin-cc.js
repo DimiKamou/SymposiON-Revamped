@@ -1099,6 +1099,12 @@ window.ccGoCat = function(id) {
   const work = $('cc-work');
   if (work) {
     work.querySelectorAll('.cc-cat').forEach(b => b.classList.toggle('on', b.textContent.trim() === cat.label));
+    // Keep the breadcrumb + work heading in sync with the chosen category
+    // (otherwise they stay stale on tab switch).
+    const crumbCur = work.querySelector('.cc-crumb .cur');
+    if (crumbCur) crumbCur.textContent = cat.label;
+    const h1 = work.querySelector('.cc-whead h1');
+    if (h1) h1.innerHTML = `${esc(domain.label)} <em>· ${esc(cat.label)}</em>`;
   }
   const panel = $('cc-panel');
   if (!panel) return _renderWork();
