@@ -321,8 +321,11 @@
     launcher.appendChild(lbtn); launcher.appendChild(menu);
 
     const links = el('div', { class:'syn-nav__links' }, [
-      el('a', { class:'syn-nav__lnk'+(/home|subject|mode|level|gamepanel/.test(screen)?' active':''), href:'javascript:void 0', onclick:()=>symGo('home') }, L({gr:'Παιχνίδια',en:'Games'})),
-      el('a', { class:'syn-nav__lnk'+(screen==='gamepanel'?' active':''), href:'javascript:void 0', onclick:()=>symGo('gamepanel') }, L({gr:'Πίνακας',en:'Panel'})),
+      // "Παιχνίδια" lands on the full 30-game board (gamepanel) — a real
+      // destination, not a re-render of the home it was on (the old "dead
+      // button"). The home hub stays reachable via the SymposiON logo (left).
+      el('a', { class:'syn-nav__lnk'+(/subject|mode|level|gamepanel/.test(screen)?' active':''), href:'javascript:void 0', onclick:()=>symGo('gamepanel') }, L({gr:'Παιχνίδια',en:'Games'})),
+      el('a', { class:'syn-nav__lnk'+(screen==='home'?' active':''), href:'javascript:void 0', onclick:()=>symGo('home') }, L({gr:'Αρχική',en:'Home'})),
       el('a', { class:'syn-nav__lnk syn-nav__lnk--agora'+(screen==='temple'?' active':''), href:'javascript:void 0', onclick:()=>symGo('temple') }, [ el('span',{class:'syn-nav__ico','data-illu':'amphora'}), L({gr:'Ἀγορά',en:'Agora'}) ]),
     ]);
     const act = el('div', { class:'syn-nav__act' }, [
