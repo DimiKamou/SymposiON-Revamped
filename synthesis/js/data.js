@@ -134,9 +134,9 @@ const SUBJECTS = {
               g('Rapid Fire','Rapid Fire','Speed quiz','cyclops-eye') ] },
     { id:'latinika-b', roman:'VI', illu:'walls', gr:'Λατινικά', en:'Latin', sub:'Latin',
       summary:{ gr:'Κλίσεις, ρήματα και πρώτα κείμενα.', en:'Declensions, verbs and first texts.' },
-      games:[ g('Κλίση Ουσιαστικών','Noun Declension','5 κλίσεις','column'),
-              g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet'),
-              g('Επίθετα','Adjectives','Κλίση & βαθμοί','wreath'),
+      games:[ g('Κλίση Ουσιαστικών','Noun Declension','5 κλίσεις','column',{fn:'openLatNouns'}),
+              g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
+              g('Επίθετα','Adjectives','Κλίση & βαθμοί','wreath',{fn:'openLatEpitheta'}),
               g('Crypto Hack','Crypto Hack','Vocabula','amphora') ] },
   ],
   'lyk-c': [
@@ -148,10 +148,10 @@ const SUBJECTS = {
               g('Πηγές','Sources','Ανάλυση πηγών','book') ] },
     { id:'latinika-c', roman:'VI', illu:'walls', gr:'Λατινικά', en:'Latin', sub:'Latin · Advanced',
       summary:{ gr:'Κατεύθυνση — σύνταξη, κατάταξη και θεωρία.', en:'Advanced — syntax, classification and theory.' },
-      games:[ g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet'),
-              g('Κατάταξη Κειμένων','Text Sorting','Συντακτικό','scroll'),
-              g('Επίθετα ανά Κείμενο','Adjectives by Text','Κλίση & βαθμοί','wreath'),
-              g('Θεωρία','Theory','Σημειώσεις · κανόνες','book') ] },
+      games:[ g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
+              g('Κατάταξη Κειμένων','Text Sorting','Συντακτικό','scroll',{fn:'openLatKata'}),
+              g('Επίθετα ανά Κείμενο','Adjectives by Text','Κλίση & βαθμοί','wreath',{fn:'openLatEpithetaKata'}),
+              g('Θεωρία','Theory','Σημειώσεις · κανόνες','book',{fn:'openLatAnwmalaTheory'}) ] },
   ],
 };
 

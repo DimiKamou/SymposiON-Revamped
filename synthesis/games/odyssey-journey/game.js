@@ -31,6 +31,9 @@
   // ── Public API ─────────────────────────────────────────────
   window.initOdysseyJourney = function (lang) {
     currentLang = lang || 'gr';
+    const _ov = document.getElementById('odyssey-journey-overlay');
+    if (_ov) { _ov.style.display = 'flex'; _ov.classList.add('active'); }
+    document.body.style.overflow = 'hidden';
     try { completedSet = new Set(JSON.parse(localStorage.getItem('oj-completed') || '[]')); } catch (e) { completedSet = new Set(); }
     gameWrap = document.getElementById('odyssey-journey-wrap');
     if (!gameWrap) return;
@@ -48,6 +51,9 @@
     locationGroups = []; selectedLoc = null; quizState = null;
     wakeParticles = []; islandLights = [];
     window.removeEventListener('resize', onResize);
+    const _ov = document.getElementById('odyssey-journey-overlay');
+    if (_ov) { _ov.classList.remove('active'); _ov.style.display = 'none'; }
+    document.body.style.overflow = '';
   };
 
   window.ojNavigateTo  = navigateTo;

@@ -83,6 +83,7 @@ let _mm = {
 window.openMythMemory = function () {
   const ov = document.getElementById('myth-memory-overlay');
   if (!ov) return;
+  ov.style.display = 'flex';
   ov.classList.add('active');
   document.body.style.overflow = 'hidden';
   if (!document.getElementById('mm-screen-menu')) _mmBuild();
