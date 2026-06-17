@@ -15,11 +15,17 @@
 #admin-tab-realm *{ box-sizing:border-box; }
 
 #admin-tab-realm .cur-root{
-  --sym-bg:#0A0907; --sym-bg-card:#15120D; --sym-bg-raise:#1d1812;
-  --sym-fg:#F1E9D6; --sym-fg-muted:#897A5A; --sym-ink:#0A0907;
-  --sym-gold:#D2A24A; --sym-gold-lt:#F2CD78; --sym-gold-dk:#9E7322;
-  --sym-terra:#E07A3C; --sym-accent:#D2A24A; --sym-accent2:#E07A3C;
-  --sym-hairline:color-mix(in srgb,#D2A24A 18%,transparent);
+  /* Revamp LIGHT remap. #admin-tab-realm renders inside the body-level
+     #page-admin host, so the derived --bg/--fg/--gold tokens may not inherit;
+     resolve through the theme *source* vars (--sym-bg-dark, --sym-ink…) with
+     LIGHT alabaster fallbacks. RT.apply() can still re-tint by overriding these. */
+  --sym-bg:var(--sym-bg-dark, #F7F3EA);
+  --sym-bg-card:var(--sym-bg-panel, #FFFFFF);
+  --sym-bg-raise:var(--sym-cream, #FBF8F1);
+  --sym-fg:var(--sym-ink, #1E1810); --sym-fg-muted:var(--sym-stone, #8C7F6B);
+  --sym-gold:#A2862F; --sym-gold-lt:color-mix(in srgb,#A2862F 70%,#fff); --sym-gold-dk:#9C3F1F;
+  --sym-terra:#C5572F; --sym-accent:#A2862F; --sym-accent2:#C5572F;
+  --sym-hairline:color-mix(in srgb, var(--sym-ink, #1E1810) 13%, transparent);
   --hair:var(--sym-hairline);
   --gold-grad:linear-gradient(135deg,var(--sym-gold-lt) 0%,var(--sym-gold) 46%,var(--sym-gold-dk) 100%);
   position:relative; width:100%; height:calc(100vh - 60px); min-height:560px;
@@ -159,7 +165,7 @@
 
 /* PREVIEW PANE */
 #admin-tab-realm .cur-preview{ border-left:1px solid var(--hair); display:flex; flex-direction:column; min-width:0;
-  background:color-mix(in srgb,var(--sym-bg) 60%,#000); }
+  background:color-mix(in srgb,var(--sym-fg) 4%,var(--sym-bg)); }
 #admin-tab-realm .cur-preview-bar{ display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--hair); flex:none; }
 #admin-tab-realm .cur-preview-l{ font-family:var(--t-mono); font-size:9px; letter-spacing:1.6px; text-transform:uppercase; color:var(--sym-fg-muted);
   display:flex; align-items:center; gap:7px; }
@@ -169,14 +175,14 @@
 #admin-tab-realm .cur-open:hover{ border-bottom-color:var(--sym-accent); }
 #admin-tab-realm .cur-preview-stage{ flex:1; min-height:0; display:flex; align-items:flex-start; justify-content:center; padding:16px; overflow:hidden;
   background:repeating-linear-gradient(45deg,transparent 0 12px,color-mix(in srgb,var(--sym-fg) 2%,transparent) 12px 13px); }
-#admin-tab-realm .cur-preview-frame{ flex:none; width:1180px; height:760px; transform-origin:top center; box-shadow:0 24px 60px rgba(0,0,0,.5); border:1px solid var(--hair); overflow:hidden; }
+#admin-tab-realm .cur-preview-frame{ flex:none; width:1180px; height:760px; transform-origin:top center; box-shadow:0 24px 60px color-mix(in srgb,var(--sym-fg) 18%,transparent); border:1px solid var(--hair); overflow:hidden; }
 #admin-tab-realm .cur-preview-foot{ flex:none; padding:10px 14px; border-top:1px solid var(--hair); font-family:var(--t-serif); font-style:italic;
   font-size:12.5px; color:var(--sym-fg-muted); text-align:center; }
 
 /* DATA DRAWER */
-#admin-tab-realm .cur-drawer-scrim{ position:fixed; inset:0; z-index:60; background:color-mix(in srgb,#000 62%,transparent); display:flex; align-items:center; justify-content:center; padding:40px; }
+#admin-tab-realm .cur-drawer-scrim{ position:fixed; inset:0; z-index:60; background:color-mix(in srgb,var(--sym-fg) 55%,transparent); display:flex; align-items:center; justify-content:center; padding:40px; }
 #admin-tab-realm .cur-drawer{ width:min(720px,100%); max-height:84vh; display:flex; flex-direction:column; background:var(--sym-bg-card);
-  border:1px solid color-mix(in srgb,var(--sym-accent) 40%,transparent); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+  border:1px solid color-mix(in srgb,var(--sym-accent) 40%,transparent); box-shadow:0 30px 80px color-mix(in srgb,var(--sym-fg) 24%,transparent); }
 #admin-tab-realm .cur-drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--hair); }
 #admin-tab-realm .cur-drawer-head h3{ margin:0; font-family:var(--t-display); font-weight:700; font-size:18px; }
 #admin-tab-realm .cur-drawer .coll-note{ padding:12px 18px 0; margin:0; }

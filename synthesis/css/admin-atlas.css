@@ -6,22 +6,26 @@
 
 /* ── Token bridge ──────────────────────────────────────────────── */
 #admin-atlas {
-  --at-bg:      var(--sym-bg,       #15110E);
-  --at-deep:    color-mix(in srgb, var(--sym-bg, #15110E) 70%, #000);
-  --at-rail:    color-mix(in srgb, var(--sym-bg, #15110E) 85%, #000);
-  --at-surf:    var(--sym-bg-card,  #221C16);
-  --at-surf2:   color-mix(in srgb, var(--sym-bg-card, #221C16) 88%, var(--sym-fg, #EDE5DA) 4%);
-  --at-line:    var(--sym-hairline, rgba(200,160,100,.18));
-  --at-soft:    color-mix(in srgb, var(--sym-hairline, rgba(200,160,100,.10)) 55%, transparent);
-  --at-gold:    var(--sym-gold,     #D4AE58);
-  --at-gold-s:  color-mix(in srgb, var(--sym-gold,  #D4AE58) 26%, transparent);
-  --at-gold-b:  color-mix(in srgb, var(--sym-gold,  #D4AE58) 70%, transparent);
-  --at-terra:   var(--sym-terra,    #C8512E);
-  --at-terra-s: color-mix(in srgb, var(--sym-terra, #C8512E) 14%, transparent);
-  --at-fg:      var(--sym-fg,       #EDE5DA);
-  --at-muted:   var(--sym-fg-muted, #8C7D70);
-  --at-aegean:  var(--med-aegean,   #6BA0A3);
-  --at-olive:   var(--med-olive,    #9AA05E);
+  /* Revamp LIGHT bridge. The overlay is body-level (position:fixed), so the
+     active theme's --sym-* may not inherit; resolve through the theme *source*
+     vars (--sym-bg-dark, --sym-ink…) with LIGHT alabaster fallbacks. deep/rail
+     derive from the ink so they read as soft recessed alabaster, not muddy. */
+  --at-bg:      var(--sym-bg-dark,   #F7F3EA);
+  --at-fg:      var(--sym-ink,       #1E1810);
+  --at-deep:    color-mix(in srgb, var(--at-fg) 5%, var(--at-bg));
+  --at-rail:    color-mix(in srgb, var(--sym-cream, #FBF8F1) 88%, var(--at-bg));
+  --at-surf:    var(--sym-bg-panel,  #FFFFFF);
+  --at-surf2:   var(--sym-cream,     #FBF8F1);
+  --at-line:    color-mix(in srgb, var(--at-fg) 13%, transparent);
+  --at-soft:    color-mix(in srgb, var(--at-fg) 7%,  transparent);
+  --at-gold:    var(--sym-gold,      #A2862F);
+  --at-gold-s:  color-mix(in srgb, var(--at-gold) 26%, transparent);
+  --at-gold-b:  color-mix(in srgb, var(--at-gold) 70%, transparent);
+  --at-terra:   var(--sym-terra,     #C5572F);
+  --at-terra-s: color-mix(in srgb, var(--at-terra) 14%, transparent);
+  --at-muted:   var(--sym-stone,     #8C7F6B);
+  --at-aegean:  var(--med-aegean,    #3E7E86);
+  --at-olive:   var(--sym-sage,      #5B7544);
   --at-mono:    var(--sym-font-mono, 'JetBrains Mono', ui-monospace, monospace);
   --at-serif:   var(--sym-font-serif,'Cormorant Garamond', Georgia, serif);
 }
@@ -208,7 +212,7 @@
 }
 .atlas-tile:hover {
   transform: translateY(-3px); border-color: var(--at-line);
-  box-shadow: 0 14px 36px -14px rgba(0,0,0,.7);
+  box-shadow: 0 14px 36px -14px color-mix(in srgb, var(--at-fg) 22%, transparent);
   background: linear-gradient(180deg, var(--at-surf2), var(--at-surf));
 }
 .atlas-tile:hover::before { background: var(--at-gold); }
@@ -250,7 +254,7 @@
 /* Keyboard focus */
 .atlas-tile.kbd {
   transform: translateY(-3px); border-color: var(--at-gold);
-  box-shadow: 0 0 0 1px var(--at-gold-s) inset, 0 14px 36px -14px rgba(0,0,0,.7);
+  box-shadow: 0 0 0 1px var(--at-gold-s) inset, 0 14px 36px -14px color-mix(in srgb, var(--at-fg) 22%, transparent);
   background: linear-gradient(180deg, var(--at-surf2), var(--at-surf));
 }
 .atlas-tile.kbd::before { background: var(--at-gold); }
@@ -281,7 +285,7 @@
   transform: translateX(-50%) translateY(18px);
   display: flex; align-items: center; gap: 11px;
   background: var(--at-surf2); border: 1px solid var(--at-gold); border-radius: 11px;
-  padding: 12px 18px; box-shadow: 0 18px 50px -12px rgba(0,0,0,.85);
+  padding: 12px 18px; box-shadow: 0 18px 50px -12px color-mix(in srgb, var(--at-fg) 28%, transparent);
   opacity: 0; pointer-events: none;
   transition: .28s cubic-bezier(.2,.9,.3,1); max-width: 88vw;
 }
