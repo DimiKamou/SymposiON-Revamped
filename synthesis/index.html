@@ -228,6 +228,11 @@
 <script src="js/admin-cc.js"></script>
 <script src="js/syn-admin.js"></script>
 
+<!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
+     Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
+     eagerly BEFORE js/app.js so the sign-up flow can call the verifier. -->
+<script src="js/human-verify.js"></script>
+
 <script src="js/app.js"></script>
 </body>
 </html>
