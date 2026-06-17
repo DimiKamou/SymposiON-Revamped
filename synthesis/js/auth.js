@@ -234,10 +234,12 @@ function signInWithGoogle() {
 
 // ── EMAIL/PASSWORD SIGN-IN ──
 function signInWithEmail() {
-  if (!_firebaseReady) { _showNotConfigured(); return; }
+  // Client-side validation runs BEFORE the Firebase-ready guard so empty/invalid
+  // submits show the specific validation message even when Firebase is unavailable.
   const email = document.getElementById('auth-email')?.value?.trim()    ?? '';
   const pass  = document.getElementById('auth-password')?.value          ?? '';
   if (!email || !pass) { _showAuthError('Συμπλήρωσε email και κωδικό.'); return; }
+  if (!_firebaseReady) { _showNotConfigured(); return; }
   _setAuthLoading(true);
   try {
     _auth.signInWithEmailAndPassword(email, pass)
@@ -256,13 +258,15 @@ function signInWithEmail() {
 
 // ── EMAIL/PASSWORD SIGN-UP ──
 function signUpWithEmail() {
-  if (!_firebaseReady) { _showNotConfigured(); return; }
+  // Client-side validation runs BEFORE the Firebase-ready guard so empty/invalid
+  // submits show the specific validation message even when Firebase is unavailable.
   const name  = document.getElementById('auth-name')?.value?.trim()            ?? '';
   const email = document.getElementById('auth-signup-email')?.value?.trim()    ?? '';
   const pass  = document.getElementById('auth-signup-password')?.value          ?? '';
   if (!name)              { _showAuthError('Συμπλήρωσε το όνομά σου.'); return; }
   if (!email)             { _showAuthError('Συμπλήρωσε email.'); return; }
   if (pass.length < 6)   { _showAuthError('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.'); return; }
+  if (!_firebaseReady) { _showNotConfigured(); return; }
   _setAuthLoading(true);
   try {
     _auth.createUserWithEmailAndPassword(email, pass)

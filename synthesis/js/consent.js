@@ -56,7 +56,8 @@
       const cont = el('button',{class:'syn-cta syn-cta--solid', disabled:'', onclick:()=>{
         const age = THIS_YEAR - year;
         SS().set('age_bracket', age < CONSENT_AGE ? 'minor' : (age<18?'teen':'adult'));
-        paintConsent(card, false);   // parental-consent step removed — everyone goes straight to Terms
+        if (age < CONSENT_AGE) paintGuardian(card);   // under 15 → parental-consent step
+        else paintConsent(card, false);               // 15+ → straight to Terms
       }}, [ L({gr:'Συνέχεια',en:'Continue'}), el('span',{html:'&rarr;'}) ]);
       card.appendChild(el('div',{class:'ob-foot'}, [ cont ]));
       return card;
@@ -156,12 +157,13 @@
            en:'We use essential cookies and — with your consent — analytics. '}),
         el('a',{class:'cg-link', href:'javascript:void 0', onclick:(e)=>{ e.preventDefault(); privacy(); }}, L({gr:'Μάθε περισσότερα',en:'Learn more'})),
       ]));
-      const set = (v)=>{ SS().set('cookie_consent', v); bar.classList.remove('in'); setTimeout(()=>bar.remove(),250); };
+      const set = (v)=>{ SS().set('cookie_consent', v); bar.classList.remove('in'); document.body.classList.remove('ck-bar-open'); setTimeout(()=>bar.remove(),250); };
       bar.appendChild(el('div',{class:'ck-bar__btns'},[
         el('button',{class:'ck-btn ck-btn--ghost', onclick:()=>set('necessary')}, L({gr:'Μόνο απαραίτητα',en:'Necessary only'})),
         el('button',{class:'ck-btn ck-btn--solid', onclick:()=>set('all')}, L({gr:'Αποδοχή όλων',en:'Accept all'})),
       ]));
       document.body.appendChild(bar);
+      document.body.classList.add('ck-bar-open');   // reserve page space so the fixed bar never covers content
       requestAnimationFrame(()=>bar.classList.add('in'));
       setTimeout(()=>bar.classList.add('in'), 60);
     }
