@@ -15,18 +15,20 @@
 .dir-synthesis.density-compact { --pad: clamp(16px, 3.5vw, 54px); }
 
 /* ── NAV (playful pill) ── */
-.syn-nav { padding: 16px var(--pad) 0; position:sticky; top:60px; z-index:40; }
+/* Nav sits near the top now that the dev harness is hidden; taller + roomier so
+   the brand, links, theme picker and action icons don't feel stacked. */
+.syn-nav { padding: 18px var(--pad) 0; position:sticky; top:14px; z-index:40; }
 .syn-nav__in {
-  display:flex; align-items:center; gap:18px;
+  display:flex; align-items:center; gap:22px;
   background:color-mix(in srgb, var(--card) 86%, transparent); backdrop-filter:blur(12px);
-  border:1px solid var(--line); border-radius:999px; padding:9px 9px 9px 20px;
+  border:1px solid var(--line); border-radius:999px; padding:13px 16px 13px 26px;
   box-shadow:0 10px 30px var(--shadow);
 }
 .syn-brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--fg); }
 .syn-brand__mark { width:28px; height:28px; color:var(--fg); }
 .syn-brand__wm { font-weight:800; font-size:19px; letter-spacing:-.01em; }
 .syn-brand__wm span { color:var(--terra); }
-.syn-nav__links { display:flex; gap:6px; margin-left:8px; flex:1; }
+.syn-nav__links { display:flex; align-items:center; gap:9px; margin-left:8px; flex:1; }
 .syn-nav__lnk { font-size:13.5px; font-weight:600; color:var(--fg-70); text-decoration:none; padding:8px 14px; border-radius:999px; transition:.16s; }
 .syn-nav__lnk:hover { background:var(--sink); color:var(--fg); }
 .syn-nav__lnk.active { background:var(--terra-soft); color:var(--terra-dk); }
@@ -49,7 +51,28 @@
 .syn-classes__showw .syn-promo .syn-promo__cta:hover { background:color-mix(in srgb,#fff 88%, var(--gold)); }
 .syn-classes__showw .syn-promo .syn-promo__dot { background:color-mix(in srgb,#fff 38%, transparent); }
 .syn-classes__showw .syn-promo .syn-promo__dot.on { background:#fff; }
-.syn-nav__act { display:flex; align-items:center; gap:9px; }
+.syn-nav__act { display:flex; align-items:center; gap:13px; }
+
+/* ── Theme / colours picker in the nav (next to Ἀγορά) ── */
+.syn-theme { position:relative; display:inline-flex; }
+.syn-theme__btn { display:inline-flex; align-items:center; gap:6px; background:var(--sink); border:1px solid var(--line); border-radius:999px; padding:6px 10px; cursor:pointer; color:var(--fg); transition:.16s; }
+.syn-theme__btn:hover { border-color:var(--terra); }
+.syn-theme__sw { width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.18); }
+.syn-theme__cv { font-size:10px; opacity:.6; }
+.syn-theme__menu { position:absolute; top:calc(100% + 10px); right:0; width:300px; max-height:70vh; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 50px var(--shadow); padding:12px; display:none; z-index:60; }
+.syn-theme.open .syn-theme__menu { display:block; }
+.syn-theme__sec { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-50); margin:10px 2px 6px; }
+.syn-theme__sec:first-child { margin-top:2px; }
+.syn-theme__grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.syn-theme__opt { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:10px; border:1px solid transparent; background:var(--sink); cursor:pointer; color:var(--fg); text-align:left; font-family:inherit; }
+.syn-theme__opt:hover { border-color:var(--line-bold); }
+.syn-theme__opt.on { border-color:var(--terra); background:var(--terra-soft); }
+.syn-theme__optsw { width:20px; height:20px; flex:none; border-radius:6px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.2); }
+.syn-theme__optnm { font-size:11.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.syn-theme__lang { display:flex; gap:6px; }
+.syn-theme__lang button { flex:1; padding:7px 0; border-radius:9px; border:1px solid var(--line); background:var(--sink); color:var(--fg-70); font-weight:700; font-size:12px; cursor:pointer; letter-spacing:.06em; }
+.syn-theme__lang button.on { border-color:var(--terra); background:var(--terra-soft); color:var(--terra-dk); }
+@media (max-width: 880px){ .syn-theme__menu { right:auto; left:0; } }
 .syn-live { display:inline-flex; align-items:center; gap:6px; background:var(--gold-soft); color:var(--gold); border:0; font-family:var(--sans); font-weight:700; font-size:13px; padding:9px 15px; border-radius:999px; cursor:pointer; }
 .syn-btn { font-family:var(--sans); font-weight:700; font-size:13.5px; padding:10px 18px; border-radius:999px; cursor:pointer; border:0; transition:.16s; }
 .syn-btn--ghost { background:transparent; color:var(--fg); }

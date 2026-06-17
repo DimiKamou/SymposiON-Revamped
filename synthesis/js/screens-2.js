@@ -215,16 +215,22 @@
       { t:{gr:'Κορυφή στον πίνακα της τάξης',en:'Top your class leaderboard'}, n:1, r:650 },
       { t:{gr:'Απάντησε 200 σωστά',en:'Answer 200 correctly'}, n:200, r:450 },
     ];
-    const DAY = Math.floor(Date.now()/86400000);
-    const WEEK = Math.floor((Date.now()/86400000 + 3)/7); // Monday-based
+    // Quest day/week roll over at 03:00 LOCAL time (not UTC midnight). Shift the
+    // clock back 3h + the local TZ offset, then bucket by day.
+    const _qShift = (new Date().getTimezoneOffset()*60000) + 3*3600000;
+    const DAY = Math.floor((Date.now() - _qShift)/86400000);
+    const WEEK = Math.floor(((Date.now() - _qShift)/86400000 + 3)/7); // Monday-based, 03:00 roll
     let rr = SymStore.get('quest_reroll', {d:DAY,n:0}); if(rr.d!==DAY){ rr={d:DAY,n:0}; SymStore.set('quest_reroll',rr); }
     const dOff = SymStore.get('quest_daily_off',0);
     function pickN(pool, n, seed){ const a=pool.slice(), out=[]; let x=seed>>>0; for(let k=0;k<n && a.length;k++){ x=(x*9301+49297)%233280; out.push(a.splice(Math.floor(x/233280*a.length),1)[0]); } return out; }
-    function qh(str){ let h=2166136261; for(let k=0;k<str.length;k++){ h^=str.charCodeAt(k); h=Math.imul(h,16777619); } return h>>>0; }
-    function withProg(q, salt){ const p=Math.min(q.n, Math.round((qh(L(q.t)+salt)%100)/100*q.n*1.18)); return Object.assign({},q,{p}); }
+    // REAL progress only — no demo "lived-in" fill. A quest is at 0 until actual
+    // gameplay tracking writes into SymStore('quest_prog'); so a fresh user (and
+    // the admin) never sees a quest pre-completed. Progress is keyed per day/week
+    // salt so it resets with the quest cycle.
+    function withProg(q, salt){ const prog=SymStore.get('quest_prog',{})||{}; const key=salt+'|'+L(q.t); const p=Math.max(0, Math.min(q.n, Number(prog[key])||0)); return Object.assign({},q,{p}); }
     const daily  = pickN(DAILY_POOL, 5, DAY + dOff*101).map(q=>withProg(q,'d'+DAY+dOff));
     const weekly = pickN(WEEKLY_POOL, 5, WEEK).map(q=>withProg(q,'w'+WEEK));
-    const hrsToDay = 24 - new Date().getUTCHours();
+    const _h = new Date().getHours(); const hrsToDay = ((27 - _h) % 24) || 24; // hours to next 03:00 local
     const daysToMon = ((8 - (((new Date().getUTCDay())||7))) % 7) || 7;
     function questCard(q, kindLabel){ const done=q.p>=q.n; return el('div',{class:'sc-quest'+(done?' done':'')},[
       el('span',{class:'sc-quest__kind'}, kindLabel),

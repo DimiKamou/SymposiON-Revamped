@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ιλιάδα — Η Ζωφόρος της Μήνιδος</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="frieze/voyage.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<rect width="100" height="100" fill="#B0562C"/>
+<g fill="#171009"><circle cx="42" cy="40" r="9"/><path d="M38 28 q-5 -14 5 -20 q12 -4 16 6 q-9 0 -12 8" /><path d="M32 50 L66 66" stroke="#171009" stroke-width="4"/><circle cx="62" cy="60" r="15"/></g>
+</svg>
+</template>
+
+<script>
+window.VOYAGE = {
+  kick: "ΟΜΗΡΟΥ ΙΛΙΑΣ · Α → Ω",
+  titleA: "Η Ζωφόρος",
+  titleB: "της Μήνιδος",
+  sub: "Οκτώ σταθμοί σε μία μελανόμορφη ζωφόρο. Κατέβα τον δέκατο χρόνο του πολέμου — από την οργή του Αχιλλέα ώς τον θρήνο για τον Έκτορα.",
+  unit: "Ραψωδία",
+  shipFig: "chariot",
+  ground: "#B45A30",
+  adminPass: "odyssea",
+  arrival: { glyph: "urn", text: "Τροία — τάφος του Έκτορος" },
+  stations: [
+    { r: "Α", t: "Η Μήνις του Αχιλλέα", reg: "Στρατόπεδο Αχαιών", ch: "Αχιλλέας", done: 3, fig: "wrath", hero: true,
+      kick: "Το Προοίμιο · η Μήνις",
+      proem: ["Μῆνιν ἄειδε, θεά, Πηληϊάδεω Ἀχιλῆος",
+              "οὐλομένην, ἣ μυρί᾽ Ἀχαιοῖς ἄλγε᾽ ἔθηκε,",
+              "πολλὰς δ᾽ ἰφθίμους ψυχὰς Ἄϊδι προΐαψεν."],
+      gloss: "«Τη μάνητα τραγούδα, θεά, του Πηλείδη Αχιλλέα…»",
+      cap: "Ο Αγαμέμνονας ατιμάζει τον Αχιλλέα παίρνοντάς του τη Βρισηίδα. Καθώς ο ήρωας τραβά το σπαθί, η Αθηνά τον συγκρατεί από τα μαλλιά. Αποσύρεται οργισμένος — κι η μῆνίς του γίνεται το θέμα όλου του έπους." },
+    { r: "Β–Δ", t: "Οι Στρατοί & οι Όρκοι", reg: "Πεδίο της Τροίας", ch: "Μενέλαος", done: 2, fig: "clash" },
+    { r: "Ζ", t: "Έκτορας & Ανδρομάχη", reg: "Σκαιές Πύλες", ch: "Ανδρομάχη", done: 2, fig: "hectorAndromache", hero: true,
+      kick: "Εστίαση · Ο αποχαιρετισμός",
+      cap: "Πριν τη μάχη, ο Έκτορας αποχαιρετά την Ανδρομάχη στις Σκαιές Πύλες. Το μωρό Αστυάνακτας τρομάζει από το λοφίο της περικεφαλαίας — κι ο πατέρας γελά, τη βγάζει και κρατά τον γιο του στην αγκαλιά." },
+    { r: "Ι", t: "Η Πρεσβεία στον Αχιλλέα", reg: "Σκηνή του Αχιλλέα", ch: "Οδυσσέας", done: 0, fig: "lyre" },
+    { r: "Π", t: "Ο Πάτροκλος", reg: "Τείχη της Τροίας", ch: "Πάτροκλος", done: 0, lock: true, fig: "patroclus" },
+    { r: "Σ", t: "Η Ασπίδα του Αχιλλέα", reg: "Εργαστήρι Ηφαίστου", ch: "Θέτις", done: 0, lock: true, fig: "shield" },
+    { r: "Χ", t: "Η Μονομαχία", reg: "Έξω από τα τείχη", ch: "Αχιλλέας", done: 0, lock: true, fig: "duel", hero: true,
+      kick: "Εστίαση · Έκτωρ & Αχιλλεύς",
+      cap: "Ο Αχιλλέας καταδιώκει τον Έκτορα τρεις φορές γύρω από την Τροία. Με την Αθηνά να τον ξεγελά, ο Έκτορας στρέφεται να αντισταθεί — και πέφτει από το δόρυ του Αχιλλέα μπροστά στους γονείς του." },
+    { r: "Ω", t: "Ο Πρίαμος Ικέτης", reg: "Σκηνή του Αχιλλέα", ch: "Πρίαμος", done: 0, lock: true, fig: "priam", hero: true,
+      kick: "Εστίαση · Η τελευταία ραψωδία",
+      cap: "Ο γέρος Πρίαμος μπαίνει κρυφά στο στρατόπεδο και φιλά τα χέρια που σκότωσαν τον γιο του, ικετεύοντας για το σώμα του Έκτορα. Ο Αχιλλέας δακρύζει, θυμάται τον δικό του πατέρα, και το παραδίνει." }
+  ]
+};
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="text/babel" src="frieze/figures-epic.jsx"></script>
+<script type="text/babel" src="frieze/game-store.jsx"></script>
+<script type="text/babel" src="frieze/game-panel.jsx"></script>
+<script type="text/babel" src="frieze/voyage-core.jsx"></script>
+</body>
+</html>

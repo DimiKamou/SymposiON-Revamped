@@ -261,6 +261,20 @@ const DIRS = [
 // directly. Guard for the case where auth.js hasn't defined it yet.
 function harnessAllowed(){ return (typeof isAdmin !== 'undefined') && !!isAdmin; }
 
+// Theme application, exposed for ALL users (not only admins). The dev harness
+// early-returns for non-admins and used to be the only thing that defined
+// window.symApplyTheme — but the nav theme picker (next to Ἀγορά) needs it for
+// everyone. buildHarness re-assigns an identical fn for admins; harmless.
+function symApplyThemeGlobal(id){
+  STATE.theme = id; if (window.SymStore) SymStore.set('theme', id);
+  const t = THEMES.find(x => x.id === id);
+  STATE.season = (t && t.season) || null;
+  if (window.SymSeasons) SymSeasons.apply(STATE.season);
+  if (typeof buildHarness === 'function') buildHarness();
+  render();
+}
+window.symApplyTheme = symApplyThemeGlobal;
+
 function buildHarness() {
   const bar = document.getElementById('harness');
   if (!bar) return;

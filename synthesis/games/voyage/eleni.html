@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ευριπίδη Ελένη — Η Ζωφόρος του Ειδώλου</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="frieze/voyage.css" />
+</head>
+<body>
+<div id="root"></div>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<rect width="100" height="100" fill="#B0562C"/>
+<path d="M30 22 Q50 14 70 22 Q76 56 64 84 Q56 96 50 96 Q44 96 36 84 Q24 56 30 22 Z" fill="#171009"/>
+<path d="M37 44 Q44 39 51 44 Q44 49 37 44 Z M53 44 Q60 39 67 44 Q60 49 53 44 Z" fill="#B0562C"/>
+</svg>
+</template>
+
+<script>
+window.VOYAGE = {
+  kick: "ΕΥΡΙΠΙΔΗ ΕΛΕΝΗ · ΤΡΑΓΩΔΙΑ",
+  titleA: "Η Ζωφόρος",
+  titleB: "του Ειδώλου",
+  sub: "Επτά σταθμοί σε μία μελανόμορφη ζωφόρο. Κατέβα την πλάνη και την αλήθεια — από το είδωλο της Τροίας ώς τον αληθινό νόστο της Ελένης.",
+  unit: "Επεισόδιο",
+  shipFig: "mask",
+  adminPass: "odyssea",
+  arrival: { glyph: "stars", text: "Σπάρτη — ο νόστος της αληθινής Ελένης" },
+  stations: [
+    { r: "Π", rlabel: "Πρόλογος", t: "Το Είδωλον", reg: "Μνήμα Πρωτέα, Αίγυπτος", ch: "Ελένη", done: 3, fig: "eidolon", hero: true,
+      kick: "Πρόλογος · η πλάνη",
+      proem: ["Νείλου μὲν αἵδε καλλιπάρθενοι ῥοαί,",
+              "ὃς ἀντὶ δίας ψακάδος Αἰγύπτου πέδον",
+              "λευκῆς τακείσης χιόνος ὑγραίνει γύας."],
+      gloss: "«Αυτά είναι του Νείλου τα ωραιοπάρθενα νερά…»",
+      cap: "Η Ελένη δεν πήγε ποτέ στην Τροία· ένα είδωλο, πλασμένο από την Ήρα, πήρε τη θέση της. Η αληθινή Ελένη, αγνή, περιμένει στην Αίγυπτο, ικέτισσα στον τάφο του Πρωτέα.",
+      quiz: [
+        { q: "Ποια θεά έπλασε το είδωλο της Ελένης και γιατί;", a: "Η Ήρα — οργισμένη που ο Πάρις δεν την προτίμησε στην «κρίση», του έδωσε ένα ομοίωμα από αιθέρα αντί για την πραγματική Ελένη." },
+        { q: "Σε ποιου τον τάφο καταφεύγει ικέτισσα η Ελένη;", a: "Στον τάφο του Πρωτέα, του παλιού βασιλιά της Αιγύπτου." }
+      ] },
+    { r: "Α", rlabel: "Α΄ Επεισόδιο", t: "Ο Τεύκρος", reg: "Αίγυπτος", ch: "Τεύκρος", done: 2, fig: "archer" },
+    { r: "Β", rlabel: "Β΄ Επεισόδιο", t: "Ο Ναυαγός Μενέλαος", reg: "Η ακτή", ch: "Μενέλαος", done: 1, fig: "castaway" },
+    { r: "Γ", rlabel: "Γ΄ Επεισόδιο", t: "Ο Αναγνωρισμός", reg: "Το ανάκτορο", ch: "Ελένη & Μενέλαος", done: 1, fig: "reunion", hero: true,
+      kick: "Εστίαση · Ο αναγνωρισμός",
+      cap: "Όταν το είδωλο σβήνει στον αέρα, ο Μενέλαος αναγνωρίζει επιτέλους την αληθινή του γυναίκα. Ύστερα από δεκαεπτά χρόνια χωρισμού, οι δυο τους ξανασμίγουν.",
+      quiz: [
+        { q: "Τι κάνει τον Μενέλαο να πειστεί τελικά ότι αυτή είναι η αληθινή Ελένη;", a: "Ένας αγγελιαφόρος τού φέρνει την είδηση ότι το είδωλο χάθηκε στον αέρα — άρα η Ελένη που έχει μπροστά του είναι η πραγματική." }
+      ] },
+    { r: "Δ", rlabel: "Δ΄ Επεισόδιο", t: "Η Θεονόη", reg: "Το ανάκτορο", ch: "Θεονόη", done: 0, lock: true, fig: "priestess" },
+    { r: "Ε", rlabel: "Ε΄ Επεισόδιο", t: "Το Τέχνασμα", reg: "Το ανάκτορο", ch: "Ελένη", done: 0, lock: true, fig: "libation" },
+    { r: "Ω", rlabel: "Έξοδος", t: "Η Φυγή & οι Διόσκουροι", reg: "Η θάλασσα", ch: "Διόσκουροι", done: 0, lock: true, fig: "dioscuri", hero: true,
+      kick: "Έξοδος · ο θεϊκός επίλογος",
+      cap: "Ξεγελώντας τον βασιλιά Θεοκλύμενο, οι δυο τους ξεφεύγουν με πλοίο. Ψηλά εμφανίζονται οι Διόσκουροι, τ’ αδέλφια της Ελένης, και βεβαιώνουν τον νόστο.",
+      quiz: [
+        { q: "Με τι τέχνασμα ξεγελούν τον Θεοκλύμενο για να διαφύγουν;", a: "Η Ελένη του λέει πως ο Μενέλαος πνίγηκε και ζητά πλοίο για να τελέσει ταφή στη θάλασσα — και μ’ αυτό το πλοίο δραπετεύουν." },
+        { q: "Ποιοι εμφανίζονται ως «από μηχανής θεοί» στο τέλος;", a: "Οι Διόσκουροι, Κάστωρ και Πολυδεύκης, τ’ αδέλφια της Ελένης." }
+      ] }
+  ]
+};
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="text/babel" src="frieze/figures-tragedy.jsx"></script>
+<script type="text/babel" src="frieze/game-store.jsx"></script>
+<script type="text/babel" src="frieze/game-panel.jsx"></script>
+<script type="text/babel" src="frieze/voyage-core.jsx"></script>
+</body>
+</html>
