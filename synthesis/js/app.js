@@ -120,6 +120,10 @@ function render() {
     activeClass: (window.SYM.classById && window.SYM.classById(STATE.classId)) || window.SYM.CLASSES.find(c => c.id === STATE.classId),
   };
 
+  // Keep the admin-only dev harness in sync with the current `isAdmin` state
+  // (cheap: each builder early-returns when admin gating fails).
+  buildHarness(); buildTweaks();
+
   const fn = window.SYM_DIR[STATE.direction];
   ctx.screen = STATE.screen;
   ctx.param = STATE.screenParam;
@@ -251,8 +255,19 @@ const DIRS = [
   { id:'akropolis', k:'Γ',  n:'Akrópolis',hint:'Modern' },
 ];
 
+// The prototype dev harness + tweaks are ADMIN-ONLY. `isAdmin` is a bare
+// top-level binding from auth.js (a classic script loaded before this one);
+// it lives in the shared global lexical scope, NOT on window — reference it
+// directly. Guard for the case where auth.js hasn't defined it yet.
+function harnessAllowed(){ return (typeof isAdmin !== 'undefined') && !!isAdmin; }
+
 function buildHarness() {
   const bar = document.getElementById('harness');
+  if (!bar) return;
+  // Hide the dev harness for non-admins; keep the node empty + collapsed so it
+  // can never overlap the real nav or clip on mobile.
+  if (!harnessAllowed()) { bar.innerHTML = ''; bar.style.display = 'none'; return; }
+  bar.style.display = '';
   bar.innerHTML = '';
 
   const brand = el('div', { class:'harness__brand' });
@@ -407,6 +422,10 @@ let tweaksOpen = false;
 function toggleTweaks(){ tweaksOpen = !tweaksOpen; document.getElementById('tweaks').classList.toggle('open', tweaksOpen); buildHarness(); }
 function buildTweaks(){
   const p = document.getElementById('tweaks');
+  if (!p) return;
+  // Tweaks panel is part of the dev harness — admin-only.
+  if (!harnessAllowed()) { p.innerHTML=''; p.classList.remove('open'); p.style.display='none'; tweaksOpen=false; return; }
+  p.style.display='';
   p.innerHTML='';
   p.appendChild(el('div',{class:'tweaks__hd'},[ el('span',{},'Tweaks'), el('button',{onclick:toggleTweaks, html:'&times;'}) ]));
   const body = el('div',{class:'tweaks__body'});
@@ -497,6 +516,14 @@ function boot(){
   window.addEventListener('sym-store', (e)=> agoraSync(e.detail && e.detail.key));
   window.addEventListener('storage', (e)=>{ if (e.key && e.key.indexOf('sym_revamp_')===0) agoraSync(e.key.replace('sym_revamp_','')); });
   buildHarness(); buildTweaks(); render();
+  // The harness is built once here, before auth resolves — so for the default
+  // (non-admin) state it stays hidden. Re-evaluate after auth flips `isAdmin`:
+  // auth.js toggles `body.is-admin` when admin is confirmed, so observe that.
+  window.symRefreshHarness = function(){ buildHarness(); buildTweaks(); };
+  try {
+    const _admObs = new MutationObserver(() => window.symRefreshHarness());
+    _admObs.observe(document.body, { attributes:true, attributeFilter:['class'] });
+  } catch(_){}
   // PREVIEW: optionally auto-open the theme/cursor picker (used by the overview panel)
   try { const q = new URLSearchParams(location.search); if (q.get('menu') === 'themes') setTimeout(()=>{ const m=document.querySelector('.theme-menu'); if(m) m.classList.add('open'); }, 60); } catch(_){}
   if(window.SymSeasons){ SymSeasons.apply(STATE.season); SymSeasons.applyCosmetic(SymStore.get('cosm_particle', null)); }
