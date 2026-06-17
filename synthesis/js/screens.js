@@ -31,6 +31,27 @@
     SymPreview.open('mc', { title:L(g)+' · '+L({gr:'Σύντομα',en:'Coming soon'}), illu:g.illu,
       note:L({gr:'Αυτό το παιχνίδι ετοιμάζεται — θα είναι σύντομα διαθέσιμο.',en:'This game is on the way — available soon.'}) });
   }
+  // ── LAUNCH DISPATCH ──────────────────────────────────────────────
+  // A game only shows the Ver1-style level selector (S.level) when it is a
+  // real CONTENT-BANK game: one whose openFn has a window.SYM.LEVEL_BANK entry
+  // backed by live level data in window.GP_LEVEL_PROVIDERS. Everything else —
+  // arcade engines, trivia, the GP_ENGINES, single-shot quizzes — launches
+  // DIRECTLY. Returns the bank entry ({fn,ds,prog,levels}) or null.
+  function gameNeedsLevelPicker(game){
+    if (!game || game.soon) return null;
+    return (window.SYM && typeof SYM.levelBankFor === 'function') ? SYM.levelBankFor(game) : null;
+  }
+  // Resolve+launch a tile. Content-bank games → level selector. Self-contained
+  // games → launch the real opener immediately. Coming-soon → friendly notice.
+  // Safe fallback: if nothing resolves, fall through to the level screen so a
+  // tile is never unlaunchable.
+  function launchTile(game, ctx){
+    if (game && game.soon) return comingSoon(game);
+    if (gameNeedsLevelPicker(game)) return go('level', ctx);
+    const fn = window.synResolveLaunch && synResolveLaunch(game);
+    if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
+    return go('level', ctx);   // fallback — keeps every tile launchable
+  }
   function pill(t, accent){ return el('span',{class:'sc-pill has-accent', style:`--ca:${accent||SITE}`}, t); }
   function stat(v, label, accent){ return el('div', { class:'sc-stat has-accent', style:`--ca:${accent||SITE}` }, [
     el('div',{class:'sc-stat__v'}, v), el('div',{class:'sc-stat__l'}, label) ]); }
@@ -138,7 +159,7 @@
       games.forEach(({g,rid},i)=>{
         const soon = !!g.soon;
         const card = el('a', { class:'sc-gcard'+(soon?' sc-gcard--soon':''), href:'javascript:void 0', style:'position:relative', 'data-rid':rid,
-          onclick: soon ? (e)=>{ e.preventDefault(); comingSoon(g); } : ()=>go('level',{subject,game:g,cls}) }, [
+          onclick: soon ? (e)=>{ e.preventDefault(); comingSoon(g); } : ()=>launchTile(g,{subject,game:g,cls}) }, [
           soon ? soonBadge() : null,
           el('div',{class:'sc-gcard__ban'},[ favBtn(rid), glyph(g.illu,'sc-gcard__illu'), (!soon&&i%3===0?el('span',{class:'sc-tag'},L({gr:'Δωρεάν',en:'Free'})):null),
             isAdmin()&&window.__symEdit? el('span',{class:'sc-gcard__drag',html:'⠿'}):null ]),
@@ -208,10 +229,12 @@
       title:L({gr:'Επίλεξε Λειτουργία',en:'Choose a mode'}), sub:L({gr:'Πώς θες να παίξεις απόψε;',en:'How do you want to play tonight?'}),
       actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(game),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
     const modes = [
-      { gr:'Μόνος', en:'Solo', d:{gr:'Παίξε με τον ρυθμό σου',en:'Play at your own pace'}, illu:'runner', to:()=>go('level',{subject,game,cls}) },
-      { gr:'Διελκυστίνδα', en:'Tug of War', d:{gr:'1 vs 1 · τράβα τη γραμμή',en:'1 vs 1 · pull the line'}, illu:'rope', to:()=>go('level',{subject,game,cls}) },
+      // Solo / Practice → real-launch dispatch: content-bank games open the
+      // level selector, self-contained games launch straight into the game.
+      { gr:'Μόνος', en:'Solo', d:{gr:'Παίξε με τον ρυθμό σου',en:'Play at your own pace'}, illu:'runner', to:()=>launchTile(game,{subject,game,cls}) },
+      { gr:'Διελκυστίνδα', en:'Tug of War', d:{gr:'1 vs 1 · τράβα τη γραμμή',en:'1 vs 1 · pull the line'}, illu:'rope', to:()=>launchTile(game,{subject,game,cls}) },
       { gr:'Live Arena', en:'Live Arena', d:{gr:'Όλη η τάξη ζωντανά',en:'The whole class, live'}, illu:'lightning-bolt', to:()=>go('live'), hot:1 },
-      { gr:'Εξάσκηση', en:'Practice', d:{gr:'Χωρίς βαθμολογία',en:'No scoring, just drills'}, illu:'scroll', to:()=>go('level',{subject,game,cls}) },
+      { gr:'Εξάσκηση', en:'Practice', d:{gr:'Χωρίς βαθμολογία',en:'No scoring, just drills'}, illu:'scroll', to:()=>launchTile(game,{subject,game,cls}) },
     ];
     const grid = el('div', { class:'sc-modes sc-stagger has-accent', style:`--ca:${accent}` });
     modes.forEach(m=> grid.appendChild(el('button', { class:'sc-mode'+(m.hot?' sc-mode--hot':''), onclick:m.to }, [
@@ -222,39 +245,64 @@
     body.appendChild(grid);
   };
 
-  /* ══ 3 · LEVEL SELECT ══ (+ grammar showcase preview) */
+  /* ══ 3 · LEVEL SELECT ══  Ver1-style content BANK selector.
+     Driven by the real level data in window.GP_LEVEL_PROVIDERS (gp-levels.js):
+     pick a subject/category → pick a specific LEVEL, or pick "Μείξη / Mix"
+     (the Συνδυαστικό group). Each row launches the live game scoped to the
+     clicked level via synLaunch(fn, levelId, group). Per-user progress is read
+     honestly from each game's own localStorage keys — 0 for a new user. */
   S.level = function(home, ctx){
     const { cls, subject, game, accent } = defaults(ctx);
     const showType = SymPreview.typeFor(game);
-    const grammar = showType==='grammar-verb' || showType==='grammar-noun';
-
-    const CATS = grammar && showType==='grammar-verb'
-      ? [ { id:'oristiki', t:{gr:'Οριστική',en:'Indicative'}, done:8, total:8 },
-          { id:'ypotaktiki', t:{gr:'Υποτακτική',en:'Subjunctive'}, done:0, total:6 },
-          { id:'eyktiki', t:{gr:'Ευκτική',en:'Optative'}, done:0, total:8 },
-          { id:'prostaktiki', t:{gr:'Προστακτική',en:'Imperative'}, done:0, total:8 },
-          { id:'onomatikoi', t:{gr:'Ονοματικοί Τύποι',en:'Nominal forms'}, done:0, total:5 },
-          { id:'syndyastiko', t:{gr:'Συνδυαστικό',en:'Combined'}, done:0, total:1 } ]
-      : grammar
-      ? [ { id:'a', t:{gr:'Α΄ Κλίση',en:'1st declension'}, done:5, total:5 },
-          { id:'b', t:{gr:'Β΄ Κλίση',en:'2nd declension'}, done:0, total:5 },
-          { id:'g', t:{gr:'Γ΄ Κλίση',en:'3rd declension'}, done:0, total:6 },
-          { id:'epith', t:{gr:'Επίθετα',en:'Adjectives'}, done:0, total:4 },
-          { id:'syndyastiko', t:{gr:'Συνδυαστικό',en:'Combined'}, done:0, total:2 } ]
-      : [ { id:'easy', t:{gr:'Εισαγωγή',en:'Intro'}, done:3, total:4 },
-          { id:'mid', t:{gr:'Ενδιάμεσο',en:'Intermediate'}, done:1, total:5 },
-          { id:'hard', t:{gr:'Προχωρημένο',en:'Advanced'}, done:0, total:5 },
-          { id:'boss', t:{gr:'Αφεντικά',en:'Bosses'}, done:0, total:2 } ];
-
-    const ROWS = {
-      oristiki: ['Ενεστώτας, Μέλλοντας — Ενεργητική Φωνή','Παρατατικός, Αόριστος — Ενεργητική Φωνή','Παρακείμενος, Υπερσυντέλικος — Ενεργητική','Όλοι οι χρόνοι — Ενεργητική Φωνή','Ενεστώτας, Μέλλοντας — Μέση Φωνή','Παρατατικός, Αόριστος — Μέση Φωνή','Όλοι οι χρόνοι — Μέση Φωνή','Όλοι οι χρόνοι — Ενεργητική & Μέση'],
-    };
-    const totalAll = CATS.reduce((s,c)=>s+c.total,0), doneAll = CATS.reduce((s,c)=>s+c.done,0);
+    const bank = gameNeedsLevelPicker(game);
 
     const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(game),
       title:L(game),
       actions:[ el('button',{class:'lv-share', onclick:()=>go('live')},[ glyph('grid-blocks','lv-share__gl'), L({gr:'Μοιράσου στην τάξη',en:'Share to class'}) ]) ] });
 
+    // ── No real level bank (reached only via launchTile's safe fallback for a
+    //    game without GP_LEVEL_PROVIDERS data): offer a single honest launch. ──
+    if (!bank) {
+      const fn = window.synResolveLaunch && synResolveLaunch(game);
+      const card = el('div',{class:'lv-shell sc-stagger has-accent', style:`--ca:${accent}`});
+      card.appendChild(el('button',{class:'lv-cat lv-cat--custom', style:'width:100%', onclick:()=>{
+        if (game && game.soon) return comingSoon(game);
+        if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
+        return SymPreview.open(showType,{title:L(game), illu:game.illu});
+      }},[ el('div',{class:'lv-cat__b'},[
+        el('span',{class:'lv-cat__t'}, L({gr:'Ξεκίνα το παιχνίδι',en:'Start the game'})),
+        el('span',{class:'lv-cat__m'}, L({gr:'Χωρίς επίπεδα — άμεση έναρξη',en:'No levels — launches directly'})) ]),
+        el('span',{class:'lv-cat__n'},'→') ]));
+      body.appendChild(card);
+      return;
+    }
+
+    // ── Build categories from the real provider level list, grouped by `group`
+    //    (preserving order). The "Συνδυαστικό" group IS the Mix option. ──
+    const fn = bank.fn, prog = bank.prog;
+    const order = [];
+    const byGroup = {};
+    bank.levels.forEach(lv => {
+      const g = lv.group || L({gr:'Επίπεδα',en:'Levels'});
+      if (!byGroup[g]) { byGroup[g] = []; order.push(g); }
+      byGroup[g].push(lv);
+    });
+    // per-level honest progress: localStorage[prog+id] → {completed:bool}
+    function lvDone(id){
+      if (!prog) return false;
+      try { const v = JSON.parse(localStorage.getItem(prog + id) || 'null'); return !!(v && v.completed); }
+      catch(_) { return false; }
+    }
+    const isMix = (g)=> /συνδυ|μείξ|combined|mix/i.test(g);
+    const CATS = order.map((g,i)=>{
+      const levels = byGroup[g];
+      const done = levels.reduce((s,lv)=> s + (lvDone(lv.id)?1:0), 0);
+      return { id:'c'+i, group:g, t:{gr:g,en:g}, mix:isMix(g), levels, done, total:levels.length };
+    });
+    const totalAll = CATS.reduce((s,c)=>s+c.total,0) || 1;
+    const doneAll  = CATS.reduce((s,c)=>s+c.done,0);
+
+    // honest completion bar (0/Y for a fresh user)
     body.appendChild(el('div',{class:'lv-progress sc-stagger'},[
       el('div',{class:'lv-progress__bar'},[ el('span',{class:'lv-progress__fill',style:`width:${doneAll/totalAll*100}%`}) ]),
       el('span',{class:'lv-progress__t'}, doneAll+'/'+totalAll+' '+L({gr:'ολοκληρωμένα',en:'completed'})),
@@ -264,48 +312,49 @@
     const rail = el('div',{class:'lv-cats'});
     rail.appendChild(el('div',{class:'lv-cats__hd'}, L({gr:'Κατηγορίες',en:'Categories'})));
     const list = el('div',{class:'lv-list'});
-    let activeCat = CATS[0].id;
+    // default to the first non-mix category so Mix is an explicit choice
+    let activeCat = (CATS.find(c=>!c.mix) || CATS[0]).id;
+
+    function launchLevel(lv, group){
+      if (game && game.soon) return comingSoon(game);
+      if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn, lv.id, group);
+      return SymPreview.open(showType,{title:L(game), illu:game.illu});
+    }
 
     function paintList(){
       const cat = CATS.find(c=>c.id===activeCat) || CATS[0];
       list.innerHTML='';
       list.appendChild(el('div',{class:'lv-list__hd'},[
-        el('span',{class:'lv-list__ttl'}, L(cat.t)),
+        el('span',{class:'lv-list__ttl'}, cat.group),
         el('span',{class:'lv-list__ct'}, cat.total+' '+L({gr:'επίπεδα',en:'levels'})),
       ]));
-      const rows = ROWS[cat.id] || Array.from({length:cat.total},(_,i)=>L({gr:'Επίπεδο',en:'Level'})+' '+(i+1));
-      rows.forEach((label,i)=>{
-        const dn = i<cat.done, now = i===cat.done;
-        list.appendChild(el('button',{class:'lv-row'+(dn?' done':now?' now':''), onclick:()=>{
-          // coming-soon tile → friendly notice, never a fake preview
-          if (game && game.soon) { return comingSoon(game); }
-          const _fn = (window.synResolveLaunch && synResolveLaunch(game));
-          if (_fn && window.SYN_GAMES && SYN_GAMES[_fn]) {
-            // PER-LEVEL deep-start: thread the clicked row's level id (1-based)
-            // and the active category as `mode`. Openers that accept
-            // (levelId, mode) start at the chosen level; others ignore the args.
-            return synLaunch(_fn, i + 1, activeCat);
-          }
-          return SymPreview.open(grammar?showType:'mc',{title:L(game)+' · '+label, illu:game.illu, note:L({gr:'Στατική προεπισκόπηση — δεν ξεκινά το παιχνίδι.',en:'Static preview — does not start the game.'})});
-        } },[
+      cat.levels.forEach((lv,i)=>{
+        const dn = lvDone(lv.id);
+        const label = lv.desc || (L({gr:'Επίπεδο',en:'Level'})+' '+(i+1));
+        list.appendChild(el('button',{class:'lv-row'+(dn?' done':'')+(lv.color?' lv-row--'+lv.color:''),
+          onclick:()=>launchLevel(lv, cat.group) },[
           el('span',{class:'lv-row__n'}, dn?'✓':String(i+1).padStart(2,'0')),
-          el('span',{class:'lv-row__t'}, label),
+          el('span',{class:'lv-row__t'},[
+            lv.section ? el('span',{class:'lv-row__sec'}, lv.section+' · ') : null,
+            label ]),
           el('span',{class:'lv-row__go'}, (dn?L({gr:'Ξανά',en:'Replay'}):L({gr:'Ξεκίνα',en:'Start'}))+' →'),
         ]));
       });
     }
     CATS.forEach(c=>{
-      rail.appendChild(el('button',{class:'lv-cat'+(c.id===activeCat?' active':''),'data-c':c.id, onclick:()=>{ activeCat=c.id; rail.querySelectorAll('.lv-cat').forEach(b=>b.classList.toggle('active', b.dataset.c===c.id)); paintList(); }},[
-        el('div',{class:'lv-cat__b'},[ el('span',{class:'lv-cat__t'}, L(c.t)), el('span',{class:'lv-cat__m'}, c.done+'/'+c.total+' '+L({gr:'ολοκλ.',en:'done'})) ]),
-        el('span',{class:'lv-cat__n'+(c.done===c.total?' full':'')}, c.done),
+      rail.appendChild(el('button',{class:'lv-cat'+(c.id===activeCat?' active':'')+(c.mix?' lv-cat--mix':''),'data-c':c.id,
+        onclick:()=>{ activeCat=c.id; rail.querySelectorAll('.lv-cat').forEach(b=>b.classList.toggle('active', b.dataset.c===c.id)); paintList(); }},[
+        el('div',{class:'lv-cat__b'},[
+          el('span',{class:'lv-cat__t'}, c.mix ? (L({gr:'Μείξη',en:'Mix'})+' · '+c.group) : c.group),
+          el('span',{class:'lv-cat__m'}, c.mix
+            ? L({gr:'Συνδυαστικά επίπεδα — όλα μαζί',en:'Combined levels — all together'})
+            : (c.done+'/'+c.total+' '+L({gr:'ολοκλ.',en:'done'}))) ]),
+        el('span',{class:'lv-cat__n'+(c.total&&c.done===c.total?' full':'')}, c.mix?'∞':c.done),
       ]));
     });
-    rail.appendChild(el('button',{class:'lv-cat lv-cat--custom', onclick:()=>SymPreview.open(grammar?showType:'mc',{title:L({gr:'Προσαρμοσμένο',en:'Custom'})})},[
-      el('div',{class:'lv-cat__b'},[ el('span',{class:'lv-cat__t'}, L({gr:'Προσαρμοσμένο',en:'Custom'})), el('span',{class:'lv-cat__m'}, L({gr:'Φωνή, Εγκλίσεις, Χρόνοι & Τύποι',en:'Voice, moods, tenses & forms'})) ]),
-    ]));
     if(isAdmin()){
-      rail.appendChild(el('button',{class:'lv-cat lv-cat--admin', onclick:()=>SymPreview.open('mc',{title:L({gr:'Διαχείριση κατηγοριών',en:'Manage categories'}), note:L({gr:'Πρόσθεση, μετονομασία & σειρά κατηγοριών — από τον πίνακα διαχείρισης.',en:'Add, rename & reorder categories — from admin.'})})},[
-        el('div',{class:'lv-cat__b'},[ el('span',{class:'lv-cat__t'}, '✎ '+L({gr:'Επεξεργασία κατηγοριών',en:'Edit categories'})), el('span',{class:'lv-cat__m'}, L({gr:'Admin: πρόσθεση / σειρά',en:'Admin: add / reorder'})) ]),
+      rail.appendChild(el('button',{class:'lv-cat lv-cat--admin', onclick:()=>SymPreview.open('mc',{title:L({gr:'Διαχείριση κατηγοριών',en:'Manage categories'}), note:L({gr:'Οι κατηγορίες & τα επίπεδα προέρχονται από τα δεδομένα του παιχνιδιού.',en:'Categories & levels come from the game data.'})})},[
+        el('div',{class:'lv-cat__b'},[ el('span',{class:'lv-cat__t'}, '✎ '+L({gr:'Κατηγορίες',en:'Categories'})), el('span',{class:'lv-cat__m'}, L({gr:'Από τα δεδομένα του παιχνιδιού',en:'From the game data'})) ]),
       ]));
     }
     shell.appendChild(rail); shell.appendChild(list);
