@@ -84,7 +84,7 @@ const STUDIO_SEED = {
 
 // ── working model + nav state ───────────────────────────────────
 const M = { tree: { grades: [] }, content: Object.create(null), curriculum: Object.create(null), loadingCid: null, ready: false };
-const S = { grade:null, subject:null, game:null, unit:null, tab:'units' };
+const S = { grade:null, subject:null, game:null, unit:null, tab:'units', section:null };
 
 // ── accessors ───────────────────────────────────────────────────
 const grade    = key => M.tree.grades.find(g => g.key === key);
@@ -169,7 +169,7 @@ function boot() {
   const pend = window.__studioPending; window.__studioPending = null;
   S.grade = (pend && pend.grade) || null;
   S.subject = (pend && pend.subject) || null;
-  S.game = S.unit = null; S.tab = 'units';
+  S.game = S.unit = null; S.tab = 'units'; S.section = null;
   if (!window.ContentSource) {
     const p = document.getElementById('cc-panel');
     if (p) p.innerHTML = `<div class="cc-note">Site Studio needs <code>js/content-source.js</code> — not loaded.</div>`;
@@ -209,7 +209,8 @@ function gradesView() {
   }).join('');
   return `${crumb()}
     <div class="cc-note"><b>Site Studio.</b> The whole catalog as a live tree — exactly what students see. Drill in to <b>reorder</b>, <b>rename</b>, <b>add</b> or <b>remove</b> games on any subject, then open a game to edit its <b>rhapsodies, questions and texts</b> (or its <b>paradigm tables</b>). No code, no redeploy — every change is validated &amp; audited server-side.</div>
-    <div class="st-bulkbar"><button class="st-add" onclick="ccSAddGrammarAll()"><span class="ai">＋</span> Γραμματική σε όλες τις τάξεις (Α΄ Γυμν. → Γ΄ Λυκ.)</button></div>
+    <div class="st-bulkbar"><button class="st-add" onclick="ccSAddGrammarAll()"><span class="ai">＋</span> Γραμματική σε όλες τις τάξεις (Α΄ Γυμν. → Γ΄ Λυκ.)</button>
+      <button class="st-add ts-entry" onclick="ccTSEnter()"><span class="ai">🏆</span> Trivia Subjects — μετονομασία &amp; ρυθμίσεις</button></div>
     <div class="st-grid">${cards || '<div class="st-empty">No grades.</div>'}</div>`;
 }
 
@@ -241,6 +242,37 @@ function gamesView() {
   const sub = subject(S.grade, S.subject);
   const rows = sub.games.map((gm, i) => {
     const editable = !!gm.content;
+    if (gm.sys && gm.type === 'trivia') {
+      // The trivia launcher's name lives in the Trivia Subjects editor (titleEm),
+      // not the catalog — show the live title and route renaming there so it's
+      // one coherent place (and persists via the direct-write config path).
+      const tkey = String(gm.content || '').replace(/-trivia$/, '');
+      const TSUB = (typeof window !== 'undefined' && window.TRIVIA_SUBJECTS) ? window.TRIVIA_SUBJECTS[tkey] : null;
+      const tlbl = TSUB ? (((TSUB.titlePre ? TSUB.titlePre + ' ' : '') + ((TSUB.titleEm && TSUB.titleEm.gr) || gm.label))) : gm.label;
+      const open = TSUB ? `ccTSEnter('${esc(tkey)}')` : 'ccTSEnter()';
+      return `<div class="st-row sys">
+        <span class="st-grip ghost">▪</span>
+        <span class="st-row-ic">${esc(gm.ic)}</span>
+        <div class="st-row-main"><div class="st-sysnm">${esc(tlbl)}</div>
+          <div class="st-row-sub"><span class="st-type">Trivia</span> · <span class="st-systag">όνομα από τα Trivia Subjects</span></div></div>
+        <button class="st-edit" onclick="${open}">✎ Trivia Subjects →</button>
+      </div>`;
+    }
+    if (gm.type === 'history-game') {
+      // Istoria keeps its own per-course content editor (admin.html). Open it
+      // scoped to this grade's course; renaming still goes through the catalog.
+      const course = encodeURIComponent(S.grade || 'g3');
+      const url = (typeof window !== 'undefined' && window.APP_BASE ? window.APP_BASE : '') + 'games/istoria/admin.html?course=' + course;
+      return `<div class="st-row">
+        <span class="st-grip ghost">▪</span>
+        <span class="st-row-ic">${esc(gm.ic || '🗺️')}</span>
+        <div class="st-row-main">
+          <input class="st-inp nm" value="${esc(gm.label)}" onchange="ccSGameField('${gm.id}','label',this.value)" aria-label="Game name"/>
+          <div class="st-row-sub"><span class="st-type">Ιστορία · Atlas/Agon</span> · <span class="st-systag">περιεχόμενο ανά τάξη</span></div></div>
+        <button class="st-edit" onclick="window.open('${url}','_blank','noopener')">✎ Επεξεργασία περιεχομένου →</button>
+        ${gm.sys ? '' : `<button class="st-del" title="remove game" onclick="ccSGameDel('${gm.id}')">✕</button>`}
+      </div>`;
+    }
     if (gm.sys) {
       return `<div class="st-row sys">
         <span class="st-grip ghost">▪</span>
@@ -279,7 +311,20 @@ function gamesView() {
 function gameContentView() {
   const gm = gameNode(S.grade, S.subject, S.game);
   const cid = gm.content;
-  if (M.loadingCid === cid) return `${crumb()}<div class="cc-note">Loading content for <b>${esc(gm.label)}</b>…</div>`;
+  // istoria/history keeps its content in its OWN per-course editor (admin.html),
+  // not in gameContent — route there instead of an empty/stuck content view.
+  if (gm.type === 'history-game') {
+    const course = encodeURIComponent(S.grade || 'g3');
+    const url = (typeof window !== 'undefined' && window.APP_BASE ? window.APP_BASE : '') + 'games/istoria/admin.html?course=' + course;
+    return `${crumb()}
+      <div class="st-gamehd"><span class="st-row-ic big">${esc(gm.ic || '🗺️')}</span>
+        <div style="flex:1;min-width:0"><div class="st-gamehd-nm">${esc(gm.label)}</div>
+          <div class="st-gamehd-sub">Ιστορία · Atlas/Agon — περιεχόμενο ανά τάξη (<code>${esc(S.grade || 'g3')}</code>)</div></div>
+        <button class="st-open" onclick="window.open('${url}','_blank','noopener')" title="Άνοιγμα σε νέα καρτέλα">↗ Νέα καρτέλα</button></div>
+      <div class="cc-note">7 τύποι ασκήσεων ανά τάξη (κωδικός επεξεργαστή: <code>admin</code>). Αλλαγές αποθηκεύονται στο Firestore (<code>game_data/istoria:${esc(S.grade || 'g3')}</code>) — οι μαθητές τις βλέπουν στην επόμενη φόρτωση.</div>
+      <iframe class="st-embed" src="${esc(url)}" title="Ιστορία — Επεξεργαστής Περιεχομένου" loading="lazy"></iframe>`;
+  }
+  if (cid && M.loadingCid === cid) return `${crumb()}<div class="cc-note">Loading content for <b>${esc(gm.label)}</b>…</div>`;
   const data = gameData(cid);
   if (!data) {
     return `${crumb()}<div class="cc-note">This game (<code>${esc(gm.type)}</code>) has no editable question/paradigm content yet. Trivia &amp; conjugation/declension games are editable; others store their content as levels or decks.</div>`;
@@ -318,31 +363,128 @@ function gameContentView() {
       ${all.length ? rows : '<div class="st-empty"><div class="st-empty-t">No texts yet</div><div class="st-empty-s">Add a passage to a rhapsody.</div></div>'}
       <button class="st-add" onclick="ccSTextAdd()"><span class="ai">＋</span> Add text</button>`;
   }
+  const canPreview = (typeof launchStudioTrivia === 'function') && totalQ > 0;
+  const previewBtn = canPreview
+    ? `<button class="st-preview" onclick="ccSPreviewTrivia()" title="Παίξε το quiz με τις τρέχουσες (μη αποθηκευμένες) ερωτήσεις">▶ Δοκιμή</button>`
+    : '';
   return `${crumb()}
     <div class="st-gamehd"><span class="st-row-ic big">${esc(gm.ic)}</span>
-      <div><div class="st-gamehd-nm">${esc(gm.label)}</div>
-        <div class="st-gamehd-sub"><code>gameContent/${esc(cid)}</code> · ${totalQ} ερωτήσεις σε ${data.units.length} ${esc(data.unitWord.toLowerCase())}ς</div></div></div>
+      <div style="flex:1;min-width:0"><div class="st-gamehd-nm">${esc(gm.label)}</div>
+        <div class="st-gamehd-sub"><code>gameContent/${esc(cid)}</code> · ${totalQ} ερωτήσεις σε ${data.units.length} ${esc(data.unitWord.toLowerCase())}ς</div></div>
+      ${previewBtn}</div>
     ${tabs}${body}`;
 }
 
 // DEPTH 4 — questions in a unit
-function questionsView() {
-  const data = gameData(gmContent()); const u = data.units.find(x => x.key === S.unit);
-  if (!u) { S.unit = null; return gameContentView(); }
-  const rows = u.questions.map((q, i) => `<div class="st-q drag" draggable="true" data-i="${i}"
-      ondragstart="ccSDrag.start(event,'q',${i})" ondragover="ccSDrag.over(event)" ondrop="ccSDrag.drop(event,'q',${i})" ondragend="ccSDrag.end(event)">
-    <div class="st-q-hd"><span class="st-grip">⠿</span><span class="st-q-n">${i + 1}</span>
-      <input class="st-inp q" value="${esc(q.q)}" onchange="ccSQField(${i},'q',this.value)" placeholder="Ερώτηση…" aria-label="Question"/>
-      <button class="st-del" title="delete question" onclick="ccSQDel(${i})">✕</button></div>
-    <div class="st-opts">${q.opts.map((o, oi) => `<label class="st-opt ${q.ans === oi ? 'correct' : ''}">
+// ── question types (reimagined editor) ──────────────────────────
+// Every question keeps a valid { opts, ans } "shadow" so the server accepts it
+// (functions/index.js validates only opts.length>=2 & ans-in-range) and every
+// MC engine still plays it. The optional `type` + type fields drive richer
+// authoring. Absent type ⇒ 'mc'. mc/tf play natively today; fill/match/order are
+// stored + play AS multiple-choice (native rendering is a documented follow-up).
+const TYPE_OPTS = [['mc', 'Πολλαπλή'], ['tf', 'Σωστό/Λάθος'], ['fill', 'Συμπλήρωση κενού'], ['match', 'Αντιστοίχιση'], ['order', 'Σειρά']];
+const TYPE_PLAYS = { mc: true, tf: true, fill: false, match: false, order: false };
+function _qTypeBadge(t) {
+  const ok = !!TYPE_PLAYS[t];
+  return `<span class="st-typebadge ${ok ? 'plays' : 'stored'}" title="${ok ? 'Παίζει αυτούσιο στα παιχνίδια' : 'Αποθηκεύεται & παίζεται ως πολλαπλή — πλήρες παίξιμο σε επόμενη φάση'}">${ok ? 'Παίζει' : 'Αποθ.'}</span>`;
+}
+function _convertType(q, t) {
+  q.type = (t === 'mc') ? undefined : t;
+  if (t === 'tf') { q.opts = ['Σωστό', 'Λάθος']; if (!(q.ans === 0 || q.ans === 1)) q.ans = 0; }
+  else if (t === 'fill') { q.gap = q.gap || (q.opts && q.opts[q.ans]) || ''; }
+  else if (t === 'match') { if (!Array.isArray(q.pairs)) q.pairs = [['', ''], ['', ''], ['', '']]; }
+  else if (t === 'order') { if (!Array.isArray(q.seq)) q.seq = ['', '', '']; }
+}
+// Keep { opts, ans } valid (server invariant + MC engines + rapid-fire) for non-MC types.
+function _syncShadow(q) {
+  const t = q.type || 'mc';
+  if (t === 'mc' || t === 'tf') return;
+  if (t === 'fill') {
+    const gap = q.gap || '';
+    const d = (q.opts || []).filter((o, idx) => o && idx !== q.ans && o !== gap).slice(0, 3);
+    q.opts = [gap, ...d]; q.ans = 0;
+  } else if (t === 'match') {
+    q.opts = (q.pairs || []).map(p => (p && p[1]) || '').filter(Boolean).slice(0, 4); q.ans = 0;
+    if (!q.q) q.q = 'Αντιστοίχισε';
+  } else if (t === 'order') {
+    q.opts = (q.seq || []).filter(Boolean).slice(0, 4); q.ans = 0;
+  }
+  while (q.opts.length < 2) q.opts.push('—');
+}
+function _qBody(q, i, t) {
+  if (t === 'tf') {
+    return `<div class="st-opts">${['Σωστό', 'Λάθος'].map((o, oi) => `<label class="st-opt ${q.ans === oi ? 'correct' : ''}">
+      <input type="radio" name="ans${i}" ${q.ans === oi ? 'checked' : ''} onchange="ccSQAns(${i},${oi})" title="Σήμανε το σωστό"/>
+      <span class="st-opt-dot"></span><input class="st-inp o ts-ro" value="${o}" readonly tabindex="-1"/></label>`).join('')}</div>`;
+  }
+  if (t === 'fill') {
+    const dis = (q.opts || []).map((o, oi) => oi === q.ans ? '' : `<label class="st-opt"><span class="st-opt-dot off"></span><input class="st-inp o" value="${esc(o)}" onchange="ccSQOpt(${i},${oi},this.value)" aria-label="Distractor"/></label>`).join('');
+    return `<div class="st-fill">
+      <label class="st-flabel">Σωστή λέξη — γεμίζει το <code>___</code></label>
+      <input class="st-inp" value="${esc(q.gap || '')}" onchange="ccSQGap(${i},this.value)" placeholder="π.χ. Όμηρος" aria-label="Gap answer"/>
+      <button class="st-add sm" onclick="ccSQMarkGap(${i})">＋ Βάλε ___ κενό στην ερώτηση</button>
+      <div class="st-fill-sub">Περισπασμοί (για παίξιμο ως πολλαπλή):</div>
+      <div class="st-opts">${dis}</div></div>`;
+  }
+  if (t === 'match') {
+    return `<div class="st-pairs">${(q.pairs || []).map((p, pi) => `<div class="st-pair">
+      <input class="st-inp" value="${esc((p && p[0]) || '')}" onchange="ccSQPair(${i},${pi},0,this.value)" placeholder="στήλη Α" aria-label="Left ${pi + 1}"/>
+      <span class="st-pair-arrow">↔</span>
+      <input class="st-inp" value="${esc((p && p[1]) || '')}" onchange="ccSQPair(${i},${pi},1,this.value)" placeholder="στήλη Β" aria-label="Right ${pi + 1}"/>
+      ${(q.pairs || []).length > 2 ? `<button class="st-del" title="Αφαίρεση" onclick="ccSQPairDel(${i},${pi})">✕</button>` : ''}</div>`).join('')}
+      <button class="st-add sm" onclick="ccSQPairAdd(${i})"><span class="ai">＋</span> ζεύγος</button></div>`;
+  }
+  if (t === 'order') {
+    return `<div class="st-seq">${(q.seq || []).map((s, si) => `<div class="st-seqitem">
+      <span class="st-seq-n">${si + 1}</span>
+      <input class="st-inp" value="${esc(s || '')}" onchange="ccSQSeq(${i},${si},this.value)" placeholder="βήμα ${si + 1}" aria-label="Step ${si + 1}"/>
+      ${(q.seq || []).length > 2 ? `<button class="st-del" title="Αφαίρεση" onclick="ccSQSeqDel(${i},${si})">✕</button>` : ''}</div>`).join('')}
+      <button class="st-add sm" onclick="ccSQSeqAdd(${i})"><span class="ai">＋</span> βήμα</button>
+      <div class="st-fill-sub">Η σειρά που τα γράφεις = η σωστή σειρά.</div></div>`;
+  }
+  // mc (default) — 2–8 options, add/remove
+  return `<div class="st-opts">${q.opts.map((o, oi) => `<label class="st-opt ${q.ans === oi ? 'correct' : ''}">
       <input type="radio" name="ans${i}" ${q.ans === oi ? 'checked' : ''} onchange="ccSQAns(${i},${oi})" title="Mark correct"/>
       <span class="st-opt-dot"></span>
       <input class="st-inp o" value="${esc(o)}" onchange="ccSQOpt(${i},${oi},this.value)" aria-label="Option ${oi + 1}"/>
-    </label>`).join('')}</div></div>`).join('');
+      ${q.opts.length > 2 ? `<button class="st-opt-del" title="Αφαίρεση επιλογής" onclick="ccSQOptDel(${i},${oi})">✕</button>` : ''}</label>`).join('')}
+    ${q.opts.length < 8 ? `<button class="st-add sm" onclick="ccSQOptAdd(${i})"><span class="ai">＋</span> επιλογή</button>` : ''}</div>`;
+}
+
+function questionsView() {
+  const data = gameData(gmContent()); const u = data.units.find(x => x.key === S.unit);
+  if (!u) { S.unit = null; return gameContentView(); }
+  const rows = u.questions.map((q, i) => {
+    const t = q.type || 'mc';
+    return `<div class="st-q drag t-${t}" draggable="true" data-i="${i}"
+        ondragstart="ccSDrag.start(event,'q',${i})" ondragover="ccSDrag.over(event)" ondrop="ccSDrag.drop(event,'q',${i})" ondragend="ccSDrag.end(event)">
+      <div class="st-q-hd"><span class="st-grip">⠿</span><span class="st-q-n">${i + 1}</span>
+        <select class="st-qtype" onchange="ccSQType(${i},this.value)" title="Τύπος ερώτησης" aria-label="Question type">${TYPE_OPTS.map(([v, lbl]) => `<option value="${v}" ${t === v ? 'selected' : ''}>${lbl}</option>`).join('')}</select>
+        ${_qTypeBadge(t)}
+        <input class="st-inp q" value="${esc(q.q)}" onchange="ccSQField(${i},'q',this.value)" placeholder="Ερώτηση…" aria-label="Question"/>
+        <button class="st-del" title="Διπλασιασμός" onclick="ccSQDup(${i})">⧉</button>
+        <button class="st-del" title="Διαγραφή" onclick="ccSQDel(${i})">✕</button></div>
+      ${_qBody(q, i, t)}</div>`;
+  }).join('');
+  const imp = (_imp && _imp.unit === S.unit) ? _qImportPanel(u) : '';
   return `${crumb()}
-    <div class="cc-note">Editing <b>${esc(data.unitWord)} ${esc(u.label)}</b>. Click an option's dot to mark the <b>correct</b> answer (green). Drag ⠿ to reorder. Saved &amp; audited — students get it on next load.</div>
+    <div class="cc-note">Editing <b>${esc(data.unitWord)} ${esc(u.label)}</b>. Pick a <b>type</b> per question. <span class="st-typebadge plays">Παίζει</span> = παίζει αυτούσιο · <span class="st-typebadge stored">Αποθ.</span> = αποθηκεύεται &amp; παίζεται ως πολλαπλή. Σήμανε το σωστό με την κουκκίδα. Drag ⠿ to reorder. Saved &amp; audited.</div>
     <div class="st-qlist">${rows || '<div class="st-empty">No questions yet.</div>'}</div>
-    <button class="st-add" onclick="ccSQAdd()"><span class="ai">＋</span> Add question</button>`;
+    <div class="st-qactions">
+      <select class="st-addsel" aria-label="Πρόσθεσε ερώτηση — διάλεξε τύπο" onchange="if(this.value){ccSQAdd(this.value);this.selectedIndex=0;}">
+        <option value="">＋ Πρόσθεσε ερώτηση…</option>
+        <option value="mc">Πολλαπλή επιλογή</option>
+        <option value="tf">Σωστό / Λάθος</option>
+        <option value="fill">Συμπλήρωση κενού</option>
+        <option value="match">Αντιστοίχιση</option>
+        <option value="order">Σειρά</option>
+      </select>
+      <input type="file" id="q-imp-file" class="qimp-file" accept=".csv,.tsv,.txt,.json" onchange="ccQImportFile(this)" aria-label="Import questions file"/>
+      <button class="st-add qimp-btn" onclick="document.getElementById('q-imp-file').click()" title="Μαζική εισαγωγή από CSV/JSON"><span class="ai">⬆</span> Εισαγωγή αρχείου</button>
+      <button class="st-open" onclick="ccQTemplate()" title="Κατέβασε υπόδειγμα CSV">⬇ Πρότυπο</button>
+    </div>
+    <div class="qimp-hint">Μαζική εισαγωγή: <b>CSV</b> (Excel → «Αποθήκευση ως CSV») ή <b>JSON</b>. Στήλες: <code>ερώτηση, επιλογή Α, Β, Γ, Δ, σωστή</code>. Το <b>Καταιγισμός</b> φτιάχνει αυτόματα Σωστό/Λάθος, Αντιστοίχιση &amp; Σειρά.</div>
+    ${imp}`;
 }
 
 // ════════ PARADIGM (ported from cc-studio-paradigm.js) ══════════
@@ -396,6 +538,7 @@ function paradigmTableView() {
 
 // ── router ──
 function view() {
+  if (S.section === 'trivia') return triviaView();
   if (!S.grade)   return gradesView();
   if (!S.subject) return subjectsView();
   if (!S.game)    return gamesView();
@@ -408,6 +551,7 @@ function view() {
 
 // ════════ navigation ════════════════════════════════════════════
 window.ccSGo = (g = null, s = null, gm = null) => {
+  S.section = null;
   S.grade = g; S.subject = s; S.game = gm; S.unit = null; S.tab = 'units';
   if (gm) {
     const node = gameNode(g, s, gm);
@@ -418,6 +562,19 @@ window.ccSGo = (g = null, s = null, gm = null) => {
 };
 window.ccSOpenUnit = key => { S.unit = key; paint(); };
 window.ccSTab = t => { S.tab = t; paint(); };
+// Playtest the trivia quiz with the LIVE in-editor content (unsaved edits
+// included) — opens the shared trivia overlay over the Studio panel.
+window.ccSPreviewTrivia = () => {
+  const gm = gameNode(S.grade, S.subject, S.game);
+  if (!gm) return;
+  const data = gameData(gm.content);
+  if (!data || data.schema !== 'quiz') return;
+  const total = (data.units || []).reduce((n, u) => n + ((u.questions && u.questions.length) || 0), 0);
+  if (!total) { if (typeof showToast === 'function') showToast('Πρόσθεσε ερωτήσεις για δοκιμή.'); return; }
+  if (typeof launchStudioTrivia === 'function') {
+    launchStudioTrivia(data, gm.label, (typeof siteLang !== 'undefined' && siteLang === 'en') ? 'en' : 'gr');
+  }
+};
 window.ccPOpenUnit = key => { S.unit = key; paint(); };
 
 async function ensureContent(cid) {
@@ -609,13 +766,175 @@ function curUnit() { const d = gameData(gmContent()); return d.units.find(x => x
 window.ccSQField = (i, f, v) => { curUnit().questions[i][f] = v; audit('studio.question.edit'); };
 window.ccSQOpt = (i, oi, v) => { curUnit().questions[i].opts[oi] = v; audit('studio.question.opt'); };
 window.ccSQAns = (i, oi) => { curUnit().questions[i].ans = oi; audit('studio.question.answer'); paint(); };
-window.ccSQAdd = () => { curUnit().questions.push({ q: 'Νέα ερώτηση;', opts: ['Επιλογή Α', 'Επιλογή Β', 'Επιλογή Γ', 'Επιλογή Δ'], ans: 0 });
-  audit('studio.question.add'); paint(); toast('Question added'); };
+window.ccSQAdd = (t) => {
+  t = t || 'mc';
+  let q;
+  if (t === 'tf')         q = { type: 'tf', q: 'Νέα πρόταση…', opts: ['Σωστό', 'Λάθος'], ans: 0 };
+  else if (t === 'fill')  q = { type: 'fill', q: 'Συμπλήρωσε το ___ .', gap: '', opts: [], ans: 0 };
+  else if (t === 'match') q = { type: 'match', q: 'Αντιστοίχισε', pairs: [['', ''], ['', ''], ['', '']], opts: [], ans: 0 };
+  else if (t === 'order') q = { type: 'order', q: 'Βάλε σε σειρά', seq: ['', '', ''], opts: [], ans: 0 };
+  else                    q = { q: 'Νέα ερώτηση;', opts: ['Επιλογή Α', 'Επιλογή Β', 'Επιλογή Γ', 'Επιλογή Δ'], ans: 0 };
+  _syncShadow(q);
+  curUnit().questions.push(q);
+  audit('studio.question.add'); paint(); toast('Προστέθηκε ερώτηση');
+};
 window.ccSQDel = i => { curUnit().questions.splice(i, 1); audit('studio.question.delete'); paint(); toast('Question deleted'); };
+// ── reimagined per-type authoring ──
+window.ccSQType = (i, t) => { const q = curUnit().questions[i]; _convertType(q, t); _syncShadow(q); audit('studio.question.type'); paint(); };
+window.ccSQDup = i => { const u = curUnit(); u.questions.splice(i + 1, 0, clone(u.questions[i])); audit('studio.question.add'); paint(); toast('Διπλασιάστηκε'); };
+window.ccSQOptAdd = i => { const q = curUnit().questions[i]; if ((q.opts || []).length < 8) { q.opts.push(''); audit('studio.question.opt'); paint(); } };
+window.ccSQOptDel = (i, oi) => { const q = curUnit().questions[i]; if (q.opts.length > 2) { q.opts.splice(oi, 1); if (q.ans >= q.opts.length) q.ans = 0; else if (q.ans > oi) q.ans--; audit('studio.question.opt'); paint(); } };
+window.ccSQGap = (i, v) => { const q = curUnit().questions[i]; q.gap = v; _syncShadow(q); audit('studio.question.edit'); };
+window.ccSQMarkGap = i => { const q = curUnit().questions[i]; if (!/___/.test(q.q || '')) { q.q = (q.q || '').replace(/\s*$/, '') + ' ___'; audit('studio.question.edit'); paint(); } };
+window.ccSQPair = (i, pi, side, v) => { const q = curUnit().questions[i]; (q.pairs[pi] = q.pairs[pi] || ['', ''])[side] = v; _syncShadow(q); audit('studio.question.edit'); };
+window.ccSQPairAdd = i => { const q = curUnit().questions[i]; (q.pairs = q.pairs || []).push(['', '']); _syncShadow(q); audit('studio.question.edit'); paint(); };
+window.ccSQPairDel = (i, pi) => { const q = curUnit().questions[i]; q.pairs.splice(pi, 1); _syncShadow(q); audit('studio.question.edit'); paint(); };
+window.ccSQSeq = (i, si, v) => { const q = curUnit().questions[i]; q.seq[si] = v; _syncShadow(q); audit('studio.question.edit'); };
+window.ccSQSeqAdd = i => { const q = curUnit().questions[i]; (q.seq = q.seq || []).push(''); _syncShadow(q); audit('studio.question.edit'); paint(); };
+window.ccSQSeqDel = (i, si) => { const q = curUnit().questions[i]; q.seq.splice(si, 1); _syncShadow(q); audit('studio.question.edit'); paint(); };
+
+// ════════ bulk import — premade questions from CSV / JSON ════════
+// Append many { q, opts, ans } questions to the open rhapsody at once. MC is
+// the authoring format; Καταιγισμός derives Σωστό/Λάθος, Αντιστοίχιση & Σειρά
+// from it automatically. Saved via the normal content-save path (audit()).
+let _imp = null;   // { unit, fileName, rows:[valid questions], errors:[{line,msg}] }
+
+// Resolve a "correct" token (A–H / Α–Θ / 1–N / exact option text) → 0-based index.
+function _resolveCorrect(tok, opts) {
+  tok = String(tok == null ? '' : tok).trim();
+  if (!tok) return -1;
+  const ti = opts.findIndex(o => o.trim().toLowerCase() === tok.toLowerCase());
+  if (ti >= 0) return ti;                                   // exact text
+  if (/^\d+$/.test(tok)) { const n = +tok - 1; return (n >= 0 && n < opts.length) ? n : -1; }  // 1-based number
+  if (tok.length === 1) {                                   // single letter (Latin or Greek)
+    const up = tok.toUpperCase();
+    const lat = 'ABCDEFGH'.indexOf(up); if (lat >= 0 && lat < opts.length) return lat;
+    const gr = 'ΑΒΓΔΕΖΗΘ'.indexOf(up);  if (gr >= 0 && gr < opts.length) return gr;
+  }
+  return -1;
+}
+function _mkQuestion(q, opts, correctTok, line, errors) {
+  q = String(q == null ? '' : q).trim();
+  opts = (opts || []).map(o => String(o == null ? '' : o).trim()).filter(o => o !== '');
+  if (!q) { errors.push({ line, msg: 'κενή ερώτηση' }); return null; }
+  if (opts.length < 2) { errors.push({ line, msg: 'χρειάζονται ≥2 επιλογές' }); return null; }
+  if (opts.length > 6) opts = opts.slice(0, 6);
+  const ans = _resolveCorrect(correctTok, opts);
+  if (ans < 0) { errors.push({ line, msg: 'άγνωστη σωστή απάντηση «' + String(correctTok).trim() + '»' }); return null; }
+  return { q, opts, ans };
+}
+// Minimal CSV parser: quoted fields, "" escapes, newlines inside quotes, and
+// comma / tab / semicolon delimiters (Excel in some locales exports ';').
+function _parseCSV(text) {
+  const nl = text.indexOf('\n'); const first = nl < 0 ? text : text.slice(0, nl);
+  const cnt = ch => first.split(ch).length - 1;
+  let delim = ','; if (cnt('\t') > cnt(',') && cnt('\t') >= cnt(';')) delim = '\t'; else if (cnt(';') > cnt(',')) delim = ';';
+  const rows = []; let row = [], field = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+      else field += c;
+    } else if (c === '"') inQ = true;
+    else if (c === delim) { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+// Parse a CSV or JSON file into { rows:[{q,opts,ans}], errors:[{line,msg}] }.
+function _parseImport(text, fileName) {
+  text = String(text || '').replace(/^﻿/, '');
+  const isJson = /\.json$/i.test(fileName) || /^\s*[[{]/.test(text);
+  const rows = [], errors = [];
+  if (isJson) {
+    let data; try { data = JSON.parse(text); } catch (e) { throw new Error('μη έγκυρο JSON'); }
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.questions) ? data.questions : null);
+    if (!arr) throw new Error('το JSON πρέπει να είναι πίνακας ερωτήσεων');
+    arr.forEach((it, i) => {
+      if (!it || typeof it !== 'object') { errors.push({ line: i + 1, msg: 'μη έγκυρη εγγραφή' }); return; }
+      const q = it.q != null ? it.q : it.question;
+      const opts = Array.isArray(it.opts) ? it.opts : (Array.isArray(it.options) ? it.options : []);
+      const correctTok = (typeof it.ans === 'number') ? String(it.ans + 1)
+        : (it.correct != null ? it.correct : it.answer);
+      const mk = _mkQuestion(q, opts, correctTok, i + 1, errors); if (mk) rows.push(mk);
+    });
+  } else {
+    const table = _parseCSV(text);
+    let start = 0;
+    if (table.length && /^(question|ερώτηση|quest|q)$/i.test(String(table[0][0] || '').trim())) start = 1;
+    for (let r = start; r < table.length; r++) {
+      const cells = table[r];
+      if (!cells || cells.every(c => String(c).trim() === '')) continue;
+      if (cells.length < 3) { errors.push({ line: r + 1, msg: 'χρειάζονται: ερώτηση, επιλογές, σωστή' }); continue; }
+      const mk = _mkQuestion(cells[0], cells.slice(1, -1), cells[cells.length - 1], r + 1, errors);
+      if (mk) rows.push(mk);
+    }
+  }
+  return { rows, errors };
+}
+function _qDownload(filename, text, mime) {
+  try {
+    const url = URL.createObjectURL(new Blob([text], { type: mime || 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+  } catch (e) { toast('Αποτυχία λήψης.'); }
+}
+
+window.ccQImportFile = (input) => {
+  const f = input.files && input.files[0]; input.value = ''; if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = _parseImport(String(reader.result || ''), f.name);
+      _imp = { unit: S.unit, fileName: f.name, rows: parsed.rows, errors: parsed.errors };
+      paint();
+      if (!parsed.rows.length) toast('Δεν βρέθηκαν έγκυρες ερωτήσεις.');
+    } catch (e) { _imp = null; toast('Αποτυχία: ' + (e && e.message || e)); }
+  };
+  reader.onerror = () => toast('Αποτυχία ανάγνωσης αρχείου.');
+  reader.readAsText(f, 'utf-8');
+};
+window.ccQImportConfirm = () => {
+  if (!_imp || _imp.unit !== S.unit || !_imp.rows.length) return;
+  const u = curUnit(); if (!u) { _imp = null; return; }
+  const n = _imp.rows.length;
+  u.questions.push(...clone(_imp.rows));
+  _imp = null; audit('studio.question.import'); paint(); toast(n + ' ερωτήσεις προστέθηκαν');
+};
+window.ccQImportCancel = () => { _imp = null; paint(); };
+window.ccQTemplate = () => {
+  _qDownload('trivia-template.csv', '﻿' +
+    'question,optionA,optionB,optionC,optionD,correct\n' +
+    '"Ποιος συνέθεσε την Ιλιάδα;",Όμηρος,Ησίοδος,Σαπφώ,Πίνδαρος,A\n' +
+    '"Πόσες ραψωδίες έχει η Ιλιάδα;",12,18,24,36,C\n' +
+    '"Η μητέρα του Αχιλλέα ήταν η…",Ήρα,Θέτιδα,Αθηνά,Αφροδίτη,B\n',
+    'text/csv;charset=utf-8');
+};
+function _qImportPanel(u) {
+  const e = _imp;
+  const errs = e.errors.length
+    ? `<div class="qimp-errors">${e.errors.slice(0, 6).map(x => `<div>γρ. ${x.line}: ${esc(x.msg)}</div>`).join('')}${e.errors.length > 6 ? `<div>…και ${e.errors.length - 6} ακόμη</div>` : ''}</div>`
+    : '';
+  const prev = e.rows.slice(0, 4).map(q =>
+    `<div class="qimp-pq"><b>${esc(q.q)}</b><div class="qimp-po">${q.opts.map((o, i) => `<span class="${i === q.ans ? 'ok' : ''}">${esc(o)}</span>`).join('')}</div></div>`).join('');
+  return `<div class="qimp-panel">
+    <div class="qimp-hd"><b>${esc(e.fileName)}</b> — <span class="qimp-ok-n">${e.rows.length}</span> έγκυρες${e.errors.length ? ` · <span class="qimp-err">${e.errors.length} με σφάλμα</span>` : ''}
+      <button class="st-del" title="Κλείσιμο" onclick="ccQImportCancel()">✕</button></div>
+    ${errs}
+    <div class="qimp-preview">${prev || '<div class="st-empty">Καμία έγκυρη ερώτηση.</div>'}${e.rows.length > 4 ? `<div class="qimp-more">…+${e.rows.length - 4} ακόμη</div>` : ''}</div>
+    <div class="qimp-actions">
+      <button class="st-add" onclick="ccQImportConfirm()" ${e.rows.length ? '' : 'disabled'}><span class="ai">＋</span> Προσθήκη ${e.rows.length} στη «${esc(u.label)}»</button>
+      <button class="st-open" onclick="ccQImportCancel()">Άκυρο</button>
+    </div>
+  </div>`;
+}
 
 // ════════ texts ═════════════════════════════════════════════════
 window.ccSTextField = (ukey, ti, f, v) => { const u = gameData(gmContent()).units.find(x => x.key === ukey); u.texts[ti][f] = v; audit('studio.text.edit'); };
-window.ccSTextAdd = () => { const d = gameData(gmContent()); const u = d.units[0]; (u.texts = u.texts || []).push({ title: 'Νέο κείμενο', body: '' });
+window.ccSTextAdd = () => { const d = gameData(gmContent()); const u = (S.unit && d.units.find(x => x.key === S.unit)) || d.units[0]; (u.texts = u.texts || []).push({ title: 'Νέο κείμενο', body: '' });
   audit('studio.text.add'); paint(); toast(`Text added to ${d.unitWord} ${u.key}`); };
 window.ccSTextDel = (ukey, ti) => { const u = gameData(gmContent()).units.find(x => x.key === ukey); u.texts.splice(ti, 1); audit('studio.text.delete'); paint(); toast('Text deleted'); };
 
@@ -748,6 +1067,331 @@ function _laSave() {
       if (window.CurriculumGate) CurriculumGate.bust(cls); _status('saved'); }
     catch (e) { _status('error', _errMsg(e)); }
   }, 700);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  TRIVIA SUBJECTS — editor for the trivia launcher presets
+//  (games/trivia-panel/panel.js · window.TRIVIA_SUBJECTS). Renames, adds,
+//  removes and re-themes the subject presets a teacher sees when a trivia
+//  opens. Persisted to config/triviaSubjects (admin-writable, world-readable)
+//  so edits survive reloads AND redeploys — no code change. Export-to-code
+//  regenerates the SUBJECTS literal for committing back into panel.js.
+// ════════════════════════════════════════════════════════════════════
+const TS = { subjects: null, order: [], loaded: false, loading: false, editing: null, showCode: false };
+let _tsTimer = null;
+
+// [field key, label, placeholder] for the eight bilingual {gr,en} presets.
+const TS_BIL = [
+  ['eyebrow', 'Υπέρτιτλος · eyebrow', 'ΟΜΗΡΙΚΟ ΕΠΟΣ'],
+  ['titleEm', 'Τίτλος (έμφαση) · titleEm', 'Ἰλιάδας'],
+  ['sub',     'Υπότιτλος · sub', 'Ένα παιχνίδι επικής γνώσης'],
+  ['heading', 'Επικεφαλίδα επιλογής · heading', 'Επιλογή Ραψωδιών'],
+  ['unit',    'Μονάδα ενικός · unit', 'Ραψωδία'],
+  ['units',   'Μονάδες πληθ. · units', 'ραψωδίες'],
+  ['whole',   'Όλη η ύλη · whole', 'Ολόκληρη η Ιλιάδα'],
+  ['pickOne', 'Προτροπή · pickOne', '— διάλεξε ραψωδία —'],
+];
+const TS_GLYPHS = ['amphora', 'compass', 'column', 'laurel', 'swords', 'bolt', 'rope', 'dice'];
+
+function _tsDeepMerge(base, ov) {
+  const out = clone(base || {});
+  if (!ov || typeof ov !== 'object') return out;
+  Object.keys(ov).forEach(k => {
+    const v = ov[k];
+    if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = _tsDeepMerge(out[k], v);
+    else out[k] = Array.isArray(v) ? v.slice() : v;
+  });
+  return out;
+}
+// Guarantee a subject's full editable shape (mirrors panel.js _mergeSubject).
+function _tsNormalize(s) {
+  s = s || {};
+  const o = {
+    glyph: s.glyph || 'amphora',
+    engineDataset: s.engineDataset || '',
+    titlePre: (s.titlePre != null) ? String(s.titlePre) : 'Trivia',
+    cols: (+s.cols > 0) ? +s.cols : 8,
+    sections: Array.isArray(s.sections) ? s.sections.map(String) : [],
+    initial: Array.isArray(s.initial) ? s.initial.map(String) : [],
+  };
+  TS_BIL.forEach(([k]) => { const b = s[k] || {}; o[k] = { gr: b.gr != null ? String(b.gr) : '', en: b.en != null ? String(b.en) : '' }; });
+  o.initial = o.initial.filter(x => o.sections.includes(x));
+  return o;
+}
+// Build the editor model: code defaults ⊕ saved Firestore override.
+function _tsBuild(base, doc) {
+  const subjects = {};
+  const baseKeys = Object.keys(base || {});
+  let order;
+  if (doc && doc.subjects && typeof doc.subjects === 'object') {
+    const src = doc.subjects;
+    order = ((Array.isArray(doc.order) && doc.order.length) ? doc.order : Object.keys(src)).filter(k => src[k]);
+    order.forEach(k => { subjects[k] = _tsNormalize(_tsDeepMerge(base[k] || {}, src[k])); });
+  } else {
+    order = baseKeys;
+    baseKeys.forEach(k => { subjects[k] = _tsNormalize(base[k]); });
+  }
+  return { subjects, order };
+}
+
+async function tsLoad() {
+  if (TS.loaded || TS.loading) return;
+  TS.loading = true;
+  const base = (window.TriviaSubjects && window.TriviaSubjects.base)
+    ? window.TriviaSubjects.base()
+    : (window.TRIVIA_SUBJECTS ? clone(window.TRIVIA_SUBJECTS) : {});
+  let doc = null;
+  try {
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+      const snap = await firebase.firestore().doc('config/triviaSubjects').get(); if (snap.exists) doc = snap.data();
+    }
+  }
+  catch (_) { /* offline / perms — start from the code defaults */ }
+  const built = _tsBuild(base, doc);
+  TS.subjects = built.subjects; TS.order = built.order;
+  TS.loaded = true; TS.loading = false;
+  if (S.section === 'trivia') paint();
+}
+
+// Debounced authoritative whole-doc write (so removals actually stick), then
+// re-merge live into the panel via the editor bridge. Mirrors _laSave.
+function tsSave() {
+  _status('saving'); clearTimeout(_tsTimer);
+  _tsTimer = setTimeout(async () => {
+    try {
+      const subjects = clone(TS.subjects), order = TS.order.slice();
+      if (typeof firebase !== 'undefined' && firebase.firestore) {
+        const uid = (firebase.auth && firebase.auth().currentUser && firebase.auth().currentUser.uid) || null;
+        await firebase.firestore().doc('config/triviaSubjects').set({
+          subjects, order,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: uid,
+        });
+      }
+      if (window.TriviaSubjects && window.TriviaSubjects.apply) window.TriviaSubjects.apply({ subjects, order });
+      _status('saved');
+    } catch (e) { _status('error', _errMsg(e)); }
+  }, 700);
+}
+
+const _tsSubj = key => TS.subjects && TS.subjects[key];
+
+// ── edit ops (each mutates TS then schedules a save) ──
+window.ccTSField = (key, field, v) => { const s = _tsSubj(key); if (!s) return; s[field] = (field === 'cols') ? Math.max(1, Math.min(12, +v || 8)) : v; tsSave(); };
+window.ccTSBil = (key, field, lang, v) => { const s = _tsSubj(key); if (!s || !s[field]) return; s[field][lang] = v; tsSave(); };
+window.ccTSSecEdit = (key, i, v) => { const s = _tsSubj(key); if (!s) return; v = String(v).trim(); if (!v) { paint(); return; } const old = s.sections[i]; s.sections[i] = v; const j = s.initial.indexOf(old); if (j >= 0) s.initial[j] = v; tsSave(); paint(); };
+window.ccTSSecAdd = key => { const s = _tsSubj(key); if (!s) return; let n = s.sections.length + 1; while (s.sections.includes(String(n))) n++; s.sections.push(String(n)); tsSave(); paint(); };
+window.ccTSSecDel = (key, i) => { const s = _tsSubj(key); if (!s) return; const tok = s.sections.splice(i, 1)[0]; s.initial = s.initial.filter(x => x !== tok); tsSave(); paint(); };
+window.ccTSInitial = (key, i) => { const s = _tsSubj(key); if (!s) return; const tok = s.sections[i]; if (tok == null) return; const j = s.initial.indexOf(tok); if (j >= 0) s.initial.splice(j, 1); else s.initial.push(tok); tsSave(); paint(); };
+
+window.ccTSAdd = () => {
+  const inp = document.getElementById('ts-newkey');
+  const raw = ((inp && inp.value) || '').trim();
+  if (!/^[a-z][a-z0-9_-]*$/i.test(raw)) { toast('Δώσε ένα έγκυρο key (γράμμα πρώτο, π.χ. mythology).'); return; }
+  if (TS.subjects[raw]) { toast('Υπάρχει ήδη subject «' + raw + '».'); return; }
+  TS.subjects[raw] = _tsNormalize({ titleEm: { gr: raw, en: raw }, sections: ['1', '2', '3'], initial: ['1'], cols: 8 });
+  TS.order.push(raw);
+  tsSave(); TS.editing = raw; TS.showCode = false; paint();
+};
+window.ccTSDup = key => {
+  const s = _tsSubj(key); if (!s) return;
+  let nk = key + '-copy', n = 2; while (TS.subjects[nk]) nk = key + '-copy' + (n++);
+  TS.subjects[nk] = clone(s); TS.order.splice(TS.order.indexOf(key) + 1, 0, nk);
+  tsSave(); TS.editing = nk; paint();
+};
+window.ccTSDel = key => {
+  const s = _tsSubj(key); if (!s) return;
+  _confirm({
+    title: `Διαγραφή «${esc(s.titleEm.gr || key)}»;`, danger: true,
+    intro: `Αφαιρεί το trivia subject <code>${esc(key)}</code> από τον launcher. Αν είναι συνδεδεμένο σε κουμπί (π.χ. <code>openTriviaPanel('${esc(key)}')</code>), φρόντισε να το αλλάξεις κι εκεί.`,
+    lines: [{ k: 'Key', v: esc(key) }, { k: 'Ενότητες', v: String(s.sections.length) }],
+    confirmLabel: 'Διαγραφή', onConfirm: () => {
+      delete TS.subjects[key]; TS.order = TS.order.filter(k => k !== key);
+      if (TS.editing === key) TS.editing = null;
+      tsSave(); paint(); toast('Trivia subject removed');
+    },
+  });
+};
+window.ccTSMove = (key, dir) => {
+  const i = TS.order.indexOf(key), j = i + dir;
+  if (i < 0 || j < 0 || j >= TS.order.length) return;
+  TS.order.splice(j, 0, TS.order.splice(i, 1)[0]);
+  tsSave(); paint();
+};
+
+// ── navigation ──
+window.ccTSEnter = (openKey) => { S.section = 'trivia'; S.grade = S.subject = S.game = S.unit = null; TS.editing = (typeof openKey === 'string' && openKey) ? openKey : null; TS.showCode = false; paint(); if (!TS.loaded) tsLoad(); };
+window.ccTSOpen = key => { TS.editing = key; TS.showCode = false; paint(); };
+window.ccTSBack = () => { TS.editing = null; paint(); };
+
+// ── live preview: push current (unsaved) edits to the real panel, open it ──
+window.ccTSPreview = key => {
+  if (window.TriviaSubjects && window.TriviaSubjects.apply) window.TriviaSubjects.apply({ subjects: clone(TS.subjects), order: TS.order.slice() });
+  if (typeof openTriviaPanel === 'function') openTriviaPanel(key);
+  else toast('Το trivia panel δεν είναι φορτωμένο σε αυτή τη σελίδα.');
+};
+
+// ── export to code (regenerate the panel.js SUBJECTS literal) ──
+function _tsQ(s) { return "'" + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n') + "'"; }
+const _tsBilLit = o => '{gr:' + _tsQ(o && o.gr) + ',en:' + _tsQ(o && o.en) + '}';
+const _tsArrLit = a => '[' + (a || []).map(_tsQ).join(',') + ']';
+const _tsKeyLit = k => /^[A-Za-z_$][\w$]*$/.test(k) ? k : _tsQ(k);
+function _tsGenerateCode() {
+  const body = TS.order.map(key => {
+    const s = TS.subjects[key];
+    return (
+`    ${_tsKeyLit(key)}: {
+      glyph:${_tsQ(s.glyph)}, engineDataset:${_tsQ(s.engineDataset)},
+      eyebrow:${_tsBilLit(s.eyebrow)},
+      titlePre:${_tsQ(s.titlePre)}, titleEm:${_tsBilLit(s.titleEm)},
+      sub:${_tsBilLit(s.sub)},
+      heading:${_tsBilLit(s.heading)},
+      unit:${_tsBilLit(s.unit)}, units:${_tsBilLit(s.units)},
+      whole:${_tsBilLit(s.whole)},
+      pickOne:${_tsBilLit(s.pickOne)},
+      sections:${_tsArrLit(s.sections)},
+      initial:${_tsArrLit(s.initial)}, cols:${(+s.cols > 0) ? +s.cols : 8},
+    },`);
+  }).join('\n');
+  return 'const SUBJECTS = {\n' + body + '\n};';
+}
+window.ccTSExport = () => { TS.showCode = true; paint(); };
+window.ccTSExportClose = () => { TS.showCode = false; paint(); };
+window.ccTSCopy = () => {
+  const code = _tsGenerateCode();
+  const done = () => toast('SUBJECTS code copied');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(code).then(done, _tsCopyFallback); return; }
+  } catch (_) {}
+  _tsCopyFallback();
+};
+function _tsCopyFallback() {
+  const ta = document.getElementById('ts-code'); if (!ta) return;
+  try { ta.removeAttribute('readonly'); ta.focus(); ta.select(); document.execCommand('copy'); ta.setAttribute('readonly', ''); toast('SUBJECTS code copied'); } catch (_) {}
+}
+
+// ── views ──
+function triviaView() {
+  if (!TS.loaded) return `${_tsCrumb()}<div class="cc-note">Loading the trivia subjects…</div>`;
+  return (TS.editing && _tsSubj(TS.editing)) ? triviaEditView(TS.editing) : triviaListView();
+}
+function _tsCrumb(editingKey) {
+  const parts = [
+    `<button class="st-crumb root" onclick="ccSGo()">◆ Site</button>`,
+    `<span class="st-sep">›</span><button class="st-crumb${editingKey ? '' : ' cur'}" onclick="ccTSEnter()">🏆 Trivia Subjects</button>`,
+  ];
+  if (editingKey) { const s = _tsSubj(editingKey); parts.push(`<span class="st-sep">›</span><span class="st-crumb cur">${esc((s && s.titleEm.gr) || editingKey)}</span>`); }
+  return `<div class="st-bar"><div class="st-crumbs">${parts.join('')}</div><div class="st-status idle" id="st-status"></div></div>`;
+}
+
+function triviaListView() {
+  const G = (window.TriviaSubjects && window.TriviaSubjects.glyph) ? window.TriviaSubjects.glyph : null;
+  const rows = TS.order.map((key, i) => {
+    const s = TS.subjects[key];
+    const ic = G ? G(s.glyph, 22) : '🏆';
+    return `<div class="st-row">
+      <span class="ts-reorder">
+        <button class="ts-arrow" title="Move up" onclick="ccTSMove('${key}',-1)" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button class="ts-arrow" title="Move down" onclick="ccTSMove('${key}',1)" ${i === TS.order.length - 1 ? 'disabled' : ''}>▼</button>
+      </span>
+      <span class="ts-glyph" aria-hidden="true">${ic}</span>
+      <span class="st-key">${esc(key)}</span>
+      <div class="st-row-main">
+        <input class="st-inp nm" value="${esc(s.titleEm.gr)}" onchange="ccTSBil('${key}','titleEm','gr',this.value)" aria-label="Title (Greek)" placeholder="Τίτλος (έμφαση)"/>
+        <div class="st-row-sub"><code>${esc(s.engineDataset || '—')}</code> · ${s.sections.length} ${s.sections.length === 1 ? 'ενότητα' : 'ενότητες'} · ${esc(s.titlePre)} ${esc(s.titleEm.en)}</div>
+      </div>
+      <button class="st-open" onclick="ccTSOpen('${key}')">Open →</button>
+      <button class="st-del" title="Duplicate" onclick="ccTSDup('${key}')">⧉</button>
+      <button class="st-del" title="Delete subject" onclick="ccTSDel('${key}')">✕</button>
+    </div>`;
+  }).join('');
+  return `${_tsCrumb()}
+    <div class="cc-note"><b>Trivia Subjects.</b> These presets drive the trivia launcher (<code>window.TRIVIA_SUBJECTS</code>) — the eyebrow, title, subtitle and the unit labels/sections a teacher picks before a game. Rename the bold title inline (e.g. «Ἰλιάδας» → «Λογοτεχνίας»), or open a subject to edit every field in both languages. Saved to <code>config/triviaSubjects</code> — live on next open, surviving reloads &amp; redeploys.</div>
+    <div class="st-list">${rows || '<div class="st-empty">No trivia subjects.</div>'}</div>
+    <div class="ts-newrow">
+      <input class="st-inp" id="ts-newkey" placeholder="key (π.χ. mythology)" aria-label="New subject key" onkeydown="if(event.key==='Enter'){event.preventDefault();ccTSAdd();}"/>
+      <button class="st-add" onclick="ccTSAdd()"><span class="ai">＋</span> New subject</button>
+      <button class="st-add ts-export" onclick="ccTSExport()"><span class="ai">⌁</span> Export to code</button>
+    </div>
+    ${TS.showCode ? _tsCodePanel() : ''}`;
+}
+
+function _tsCodePanel() {
+  return `<div class="ts-code-wrap">
+    <div class="ts-code-hd">
+      <div>Paste into <code>games/trivia-panel/panel.js</code> — replaces the <code>const SUBJECTS = {…}</code> block. For version control only; the live site already reads your saved edits from Firestore.</div>
+      <div class="ts-code-actions">
+        <button class="st-open" onclick="ccTSCopy()">⧉ Copy</button>
+        <button class="st-del" title="Close" onclick="ccTSExportClose()">✕</button>
+      </div>
+    </div>
+    <textarea class="ts-code" id="ts-code" readonly rows="18" spellcheck="false" onclick="this.select()">${esc(_tsGenerateCode())}</textarea>
+  </div>`;
+}
+
+function triviaEditView(key) {
+  const s = _tsSubj(key);
+  const G = (window.TriviaSubjects && window.TriviaSubjects.glyph) ? window.TriviaSubjects.glyph : null;
+  const bil = (field, label, ph) => `<div class="ts-field">
+      <label class="ts-flabel${field === 'titleEm' ? ' hot' : ''}">${esc(label)}${field === 'titleEm' ? ' <span class="ts-hot-tag">rename</span>' : ''}</label>
+      <div class="ts-bil">
+        <input class="st-inp" value="${esc(s[field].gr)}" onchange="ccTSBil('${key}','${field}','gr',this.value)" placeholder="${esc(ph)}" aria-label="${esc(label)} Greek"/>
+        <input class="st-inp en" value="${esc(s[field].en)}" onchange="ccTSBil('${key}','${field}','en',this.value)" placeholder="English" aria-label="${esc(label)} English"/>
+      </div>
+    </div>`;
+  const glyphOpts = TS_GLYPHS.map(g => `<option value="${g}" ${s.glyph === g ? 'selected' : ''}>${g}</option>`).join('');
+  const secChips = s.sections.map((tok, i) => {
+    const on = s.initial.includes(tok);
+    return `<span class="ts-sec${on ? ' start' : ''}">
+      <button class="ts-sec-star" title="${on ? 'Προεπιλεγμένη στην εκκίνηση' : 'Όρισε ως προεπιλογή εκκίνησης (initial)'}" onclick="ccTSInitial('${key}',${i})">★</button>
+      <input class="ts-sec-in" value="${esc(tok)}" onchange="ccTSSecEdit('${key}',${i},this.value)" aria-label="Section ${i + 1}"/>
+      <button class="ts-sec-x" title="Remove" onclick="ccTSSecDel('${key}',${i})">✕</button>
+    </span>`;
+  }).join('');
+  return `${_tsCrumb(key)}
+    <div class="st-gamehd">
+      <span class="ts-glyph big" aria-hidden="true">${G ? G(s.glyph, 34) : '🏆'}</span>
+      <div style="flex:1;min-width:0">
+        <div class="st-gamehd-nm">${esc(s.titlePre)} <em style="color:var(--cc-bronze)">${esc(s.titleEm.gr || key)}</em></div>
+        <div class="st-gamehd-sub"><code>TRIVIA_SUBJECTS.${esc(key)}</code> · <code>openTriviaPanel('${esc(key)}')</code></div>
+      </div>
+      <button class="st-preview" onclick="ccTSPreview('${key}')" title="Preview the launcher with these (unsaved) edits">▶ Preview</button>
+    </div>
+
+    <div class="ts-group"><div class="ts-group-h">Ταυτότητα · Identity</div>
+      <div class="ts-fgrid">
+        <div class="ts-field"><label class="ts-flabel">Key</label><input class="st-inp ts-ro" value="${esc(key)}" readonly title="The launch id — fixed (referenced by openTriviaPanel calls in code)."/></div>
+        <div class="ts-field"><label class="ts-flabel">Glyph · εικονίδιο</label><select class="st-inp ts-sel" onchange="ccTSField('${key}','glyph',this.value)" aria-label="Glyph">${glyphOpts}</select></div>
+        <div class="ts-field"><label class="ts-flabel">Engine dataset</label><input class="st-inp" value="${esc(s.engineDataset)}" onchange="ccTSField('${key}','engineDataset',this.value)" placeholder="iliada / odyssey / istoria" aria-label="Engine dataset"/></div>
+        <div class="ts-field"><label class="ts-flabel">Στήλες · cols</label><input class="st-inp" type="number" min="1" max="12" value="${+s.cols || 8}" onchange="ccTSField('${key}','cols',this.value)" aria-label="Grid columns"/></div>
+        <div class="ts-field"><label class="ts-flabel">Πρόθεμα τίτλου · titlePre</label><input class="st-inp" value="${esc(s.titlePre)}" onchange="ccTSField('${key}','titlePre',this.value)" placeholder="Trivia" aria-label="Title prefix"/></div>
+      </div>
+    </div>
+
+    <div class="ts-group"><div class="ts-group-h">Επικεφαλίδα · Header text</div>
+      <div class="ts-fcol">
+        ${bil('eyebrow', 'Υπέρτιτλος · eyebrow', 'ΟΜΗΡΙΚΟ ΕΠΟΣ')}
+        ${bil('titleEm', 'Τίτλος (έμφαση) · titleEm', 'Ἰλιάδας')}
+        ${bil('sub', 'Υπότιτλος · sub', 'Ένα παιχνίδι επικής γνώσης')}
+      </div>
+    </div>
+
+    <div class="ts-group"><div class="ts-group-h">Ετικέτες ύλης · Content labels</div>
+      <div class="ts-fcol">
+        ${bil('heading', 'Επικεφαλίδα επιλογής · heading', 'Επιλογή Ραψωδιών')}
+        ${bil('unit', 'Μονάδα ενικός · unit', 'Ραψωδία')}
+        ${bil('units', 'Μονάδες πληθ. · units', 'ραψωδίες')}
+        ${bil('whole', 'Όλη η ύλη · whole', 'Ολόκληρη η Ιλιάδα')}
+        ${bil('pickOne', 'Προτροπή · pickOne', '— διάλεξε ραψωδία —')}
+      </div>
+    </div>
+
+    <div class="ts-group"><div class="ts-group-h">Ενότητες · Sections <span class="ts-group-note">★ = προεπιλεγμένη στην εκκίνηση (initial)</span></div>
+      <div class="ts-secs">${secChips || '<span class="st-empty" style="padding:6px 8px">Καμία ενότητα.</span>'}
+        <button class="ts-sec-add" title="Add section" onclick="ccTSSecAdd('${key}')">＋</button>
+      </div>
+    </div>
+
+    <button class="st-add" onclick="ccTSBack()">‹ Όλα τα subjects</button>`;
 }
 
 })();
