@@ -170,6 +170,16 @@ body {
 body.symc-on .stage, body.symc-on .stage * { cursor: none !important; }
 #symc-ring, #symc-glyph { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 100000; opacity: 0; }
 body.symc-show #symc-ring, body.symc-show #symc-glyph { opacity: 1; }
+/* While a Ver1 game overlay is open, the custom stage cursor (z-index 100000)
+   would float over the game and the native pointer would be hidden, making
+   in-game controls unusable. Suppress the custom cursor + mouse-FX trail and
+   restore the native cursor for the duration of the game. */
+body.syn-game-open #symc-ring,
+body.syn-game-open #symc-glyph,
+body.syn-game-open #sym-mousefx { display: none !important; }
+body.syn-game-open.symc-on .stage,
+body.syn-game-open.symc-on .stage * { cursor: auto !important; }
+.game-overlay, .game-overlay * { cursor: auto; }
 #symc-ring { transition: opacity .25s; }
 #symc-ring .rc { display: block; width: 38px; height: 38px; margin: -19px 0 0 -19px; color: color-mix(in srgb, var(--terra) 62%, transparent); transition: transform .2s; }
 #symc-ring .rc svg { display: block; width: 100%; height: 100%; }

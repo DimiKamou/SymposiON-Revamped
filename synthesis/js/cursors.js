@@ -89,6 +89,42 @@
     window.addEventListener('mousedown', () => { if (enabled) pulse(); });
     document.addEventListener('mouseover', e => { if (enabled && hot(e.target)) ring.classList.add('hot'); }, true);
     document.addEventListener('mouseout',  e => { if (enabled && hot(e.target)) ring.classList.remove('hot'); }, true);
+    initGameWatch();
+  }
+
+  // A launched Ver1 game owns the full viewport via a `.game-overlay`. While one
+  // is visible we toggle `body.syn-game-open` so CSS hides the custom cursor /
+  // mouse-FX and restores the native pointer. Robust to games that toggle their
+  // own visibility (class `.active`, inline display, or attribute changes).
+  let _gameOpen = false;
+  function anyGameOpen() {
+    var ovs = document.querySelectorAll('.game-overlay');
+    for (var i = 0; i < ovs.length; i++) {
+      var o = ovs[i];
+      if (o.classList.contains('active')) return true;
+      // offsetParent is null for display:none; cheap visibility check
+      if (o.offsetParent !== null && getComputedStyle(o).display !== 'none') return true;
+    }
+    return false;
+  }
+  function syncGameOpen() {
+    var open = anyGameOpen();
+    if (open === _gameOpen) return;
+    _gameOpen = open;
+    document.body.classList.toggle('syn-game-open', open);
+    if (open) document.body.classList.remove('symc-show');
+  }
+  function initGameWatch() {
+    if (window.__symGameWatch) return;
+    window.__symGameWatch = true;
+    var mo = new MutationObserver(function () {
+      // coalesce bursts of mutations into one check
+      if (mo._t) return;
+      mo._t = requestAnimationFrame(function () { mo._t = 0; syncGameOpen(); });
+    });
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true,
+      attributeFilter: ['class', 'style'] });
+    syncGameOpen();
   }
 
   function hot(t) {
@@ -96,7 +132,7 @@
   }
 
   function onMove(e) {
-    if (!enabled) return;
+    if (!enabled || _gameOpen) return;
     const over = e.target.closest &&
       e.target.closest('.stage') &&
       !e.target.closest('.harness') && !e.target.closest('.tweaks') && !e.target.closest('.theme-menu');
