@@ -922,3 +922,14 @@
 .sc-eng-grid--list .sc-engc__illu { width:26px; height:26px; }
 .sc-eng-grid--compact { grid-template-columns:repeat(auto-fill,minmax(156px,1fr)); gap:9px; }
 .sc-eng-grid--gallery { grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px; }
+
+/* ── Hero Profile · Ζωφόρος (voyage literature) progress ── */
+.sc-voyworks { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; }
+.sc-voywork { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--card); cursor:pointer; text-align:left; font-family:inherit; color:var(--fg); transition:.16s; }
+.sc-voywork:hover { border-color:var(--ca,var(--terra)); transform:translateY(-1px); }
+.sc-voywork.on { border-color:color-mix(in srgb,var(--ca,var(--terra)) 55%,transparent); background:color-mix(in srgb,var(--ca,var(--terra)) 7%,var(--card)); }
+.sc-voywork__ic { width:30px; height:30px; flex:none; color:var(--ca,var(--terra)); opacity:.9; }
+.sc-voywork__b { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.sc-voywork__nm { font-family:var(--serif,'Cormorant Garamond',serif); font-size:16px; font-weight:600; line-height:1.05; }
+.sc-voywork__m { font-size:10.5px; color:var(--fg-50); letter-spacing:.02em; }
+.sc-voywork__go { color:var(--ca,var(--terra)); opacity:.7; font-size:14px; }

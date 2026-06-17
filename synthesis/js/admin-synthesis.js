@@ -356,6 +356,7 @@
       ['discounts', '%', { gr: 'Εκπτωτικοί Κωδικοί', en: 'Discount Codes' }],
       ['subs', '◷', { gr: 'Συνδρομές', en: 'Subscriptions' }],
       ['studio', '✎', { gr: 'Studio (Περιεχόμενο)', en: 'Studio (Content)' }],
+      ['voyage', '⚱', { gr: 'Ζωφόρος (Λογοτεχνία)', en: 'Frieze (Literature)' }],
       ['realm', '⛩', { gr: 'Curator · Ναός', en: 'Curator · Realm' }],
       ['games', '▦', { gr: 'Παιχνίδια (QA)', en: 'Games (QA)' }],
       ['tartarus', '❂', { gr: 'Tartarus', en: 'Tartarus' }],
@@ -845,6 +846,31 @@
           }
         } else {
           pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Το AdminStudio δεν είναι διαθέσιμο.', en: 'AdminStudio is not available.' })));
+        }
+      }
+      else if (activeSec === 'voyage') {
+        // Ζωφόρος literature games — edit episodes/quizzes via each game's own
+        // built-in editor (SymVoyage.openEditor unlocks it; content persists to
+        // the same zofatos:content override the student game reads).
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ζωφόρος — Λογοτεχνικά παιχνίδια', en: 'Frieze — Literature games' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Άνοιξε ένα έργο σε λειτουργία επεξεργασίας για να αλλάξεις επεισόδια, διαλόγους & ερωτήσεις. Οι αλλαγές αποθηκεύονται και εμφανίζονται στους μαθητές.', en: 'Open a work in edit mode to change episodes, dialogues & questions. Changes persist and show to students.' })));
+        if (window.SymVoyage) {
+          var vs = window.SymVoyage.summary();
+          var vwrap = el('div', { class: 'sc-voyadmin' });
+          vs.works.forEach(function (w) {
+            vwrap.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+              el('span', { class: 'sc-voyadmin__ic', 'data-illu': w.illu }),
+              el('div', { class: 'sc-voyadmin__b' }, [
+                el('div', { class: 'sc-voyadmin__nm' }, w.gr + ' · ' + w.en),
+                el('div', { class: 'sc-voyadmin__m' }, w.started ? (w.answered + ' ✓ · ' + w.stations + ' ' + L({ gr: 'σταθμοί', en: 'stations' })) : L({ gr: 'Καμία δραστηριότητα ακόμη', en: 'No activity yet' })),
+              ]),
+              el('button', { class: 'sc-mini', onclick: (function (slug) { return function () { window.SymVoyage.open(slug, false); }; })(w.slug) }, L({ gr: '▷ Προεπισκόπηση', en: '▷ Preview' })),
+              el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: (function (slug) { return function () { window.SymVoyage.openEditor(slug); }; })(w.slug) }, L({ gr: '✎ Επεξεργασία', en: '✎ Edit' })),
+            ]));
+          });
+          pane.appendChild(vwrap);
+        } else {
+          pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Τα παιχνίδια Ζωφόρος δεν φορτώθηκαν.', en: 'Voyage games not loaded.' })));
         }
       }
       else if (activeSec === 'atlas') {

@@ -746,6 +746,28 @@
     body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, L({gr:'Παράσημα',en:'Badges'})));
     const badges = [['trophy','Πρωταθλητής'],['medal','Άριστα'],['wreath','Νικητής'],['owl','Σοφός'],['flame','Σερί 20'],['star-streak','Πρώτος'],['shield-round','Αμυντικός'],['lightning-bolt','Ταχύς']];
     body.appendChild(el('div',{class:'sc-badges sc-stagger'}, badges.map((b,i)=>el('div',{class:'sc-badge'+(i>5?' locked':''),style:`--ca:${accent}`},[ glyph(b[0],'sc-badge__gl'), el('span',{class:'sc-badge__t'}, b[1]) ]))));
+
+    // ── Ζωφόρος (Λογοτεχνία) — real progress from the voyage games ──
+    if(window.SymVoyage){
+      const vs = SymVoyage.summary();
+      body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:`margin-top:6px`}, L({gr:'Ζωφόρος · Λογοτεχνία',en:'Frieze · Literature'})));
+      if(vs.totalAnswered>0){
+        body.appendChild(el('div',{class:'sc-loadout sc-stagger', style:'margin:0 0 8px'},[
+          el('b',{}, String(vs.totalAnswered)), ' '+L({gr:'σωστές απαντήσεις · ',en:'correct · '}),
+          el('b',{}, String(vs.worksStarted)+'/'+vs.works.length), ' '+L({gr:'έργα ξεκινημένα',en:'works started'}) ]));
+      }
+      const vgrid = el('div',{class:'sc-voyworks sc-stagger has-accent', style:`--ca:${accent}`});
+      vs.works.forEach(w=>{
+        vgrid.appendChild(el('button',{class:'sc-voywork'+(w.started?' on':''), title:L({gr:'Άνοιξε',en:'Open'}),
+          onclick:()=>{ if(window.SymVoyage) SymVoyage.open(w.slug, false); }},[
+          el('span',{class:'sc-voywork__ic','data-illu':w.illu}),
+          el('span',{class:'sc-voywork__b'},[
+            el('span',{class:'sc-voywork__nm'}, w.gr),
+            el('span',{class:'sc-voywork__m'}, w.started ? (w.answered+' ✓ · '+w.stations+' '+L({gr:'σταθμοί',en:'stations'})) : L({gr:'Δεν ξεκίνησε',en:'Not started'})) ]),
+          el('span',{class:'sc-voywork__go',html: w.started?'▸':'○'}) ]));
+      });
+      body.appendChild(vgrid);
+    }
   };
 
   /* ══ 7 · LEVEL UP ══ */
