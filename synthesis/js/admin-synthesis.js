@@ -120,6 +120,174 @@
     return Array.isArray(subs) ? subs : [];
   }
 
+  /* ════════════════ REAL STATS (no fake demo numbers) ═════════════════
+     Games  → real count of launchable games (window.SYN_GAMES) or, failing
+              that, distinct game tiles authored across SYM.SUBJECTS.
+     Users / Subscribers / MRR / Churn → Firestore when present (GUARDED),
+              otherwise an HONEST local value (0 / SymStore-tracked). Never
+              invents 3.218 / €5.4k. Async Firestore results patch the DOM
+              live via statSet(...). */
+  function fsReady() {
+    try { return typeof firebase !== 'undefined' && !!(firebase && firebase.firestore); }
+    catch (_e) { return false; }
+  }
+  // Real games count from authored data (never a hardcoded 41).
+  function gamesCount() {
+    var n = 0;
+    try { n = Object.keys(window.SYN_GAMES || {}).length; } catch (_e) { n = 0; }
+    if (n > 0) return n;
+    // Fallback: distinct game tiles across all subjects (by stable game key).
+    var seen = {}, subj = (SYM().SUBJECTS || {});
+    Object.keys(subj).forEach(function (cid) {
+      (subj[cid] || []).forEach(function (s) {
+        (s.games || []).forEach(function (tile) { seen[gameKey(tile)] = 1; });
+      });
+    });
+    return Object.keys(seen).length;
+  }
+  // Locally-tracked honest counters (start at 0; trigger sites may bump them).
+  function localStat(key) {
+    var v = SS() ? SS().get(key, 0) : 0;
+    return (typeof v === 'number' && isFinite(v)) ? v : 0;
+  }
+  // Patch every rendered copy of a named stat value in the live DOM.
+  function statSet(name, text) {
+    try {
+      document.querySelectorAll('.sc-stat__v[data-stat="' + name + '"]').forEach(function (n) {
+        n.textContent = text;
+      });
+    } catch (_e) { /* DOM gone — fine */ }
+  }
+  // Fire Firestore count queries (GUARDED) and patch the DOM when they return.
+  // Each collection's size is the real metric; degrades silently with no firebase.
+  function loadFirestoreStats() {
+    if (!fsReady()) return;
+    var db;
+    try { db = firebase.firestore(); } catch (_e) { return; }
+    function count(coll, cb) {
+      try {
+        var c = db.collection(coll);
+        // Prefer the lightweight count() aggregate when available.
+        if (typeof c.count === 'function') {
+          c.count().get().then(function (snap) {
+            try { cb(snap.data().count); } catch (_e) { cb(null); }
+          }).catch(function () { cb(null); });
+        } else {
+          c.get().then(function (snap) { cb(snap.size); }).catch(function () { cb(null); });
+        }
+      } catch (_e) { cb(null); }
+    }
+    count('users', function (n) {
+      if (n != null) statSet('users', String(n));
+    });
+    // Active subscriptions + MRR derived from real subscription docs.
+    try {
+      db.collection('subscriptions').where('status', '==', 'active').get()
+        .then(function (snap) {
+          var active = snap.size, mrr = 0;
+          snap.forEach(function (d) {
+            var v = d.data() || {};
+            var p = Number(v.priceMonthly != null ? v.priceMonthly : v.price);
+            if (isFinite(p)) mrr += p;
+          });
+          statSet('subs', String(active));
+          statSet('mrr', '€' + (mrr >= 1000 ? (mrr / 1000).toFixed(1) + 'k' : String(Math.round(mrr))));
+        })
+        .catch(function () { /* rules/offline — keep local */ });
+    } catch (_e) { /* no firebase — fine */ }
+  }
+
+  /* ════════════════ BULK GRANT (CSV upload + template) ═══════════════
+     Grants persist to SymStore('access_grants', []) and mirror to Firestore
+     collection 'accessGrants' (GUARDED). CSV columns: email,role,class,tier,
+     duration. Parser handles commas/semicolons, a header row and quoted
+     fields (ported approach from admin-studio.js's ccQImport*). */
+  var GRANT_KEY = 'access_grants';
+  var GRANT_ROLES = ['student', 'teacher', 'admin'];
+  var GRANT_TIERS = ['free', 'pro', 'school'];
+  function grantsLoad() {
+    var arr = SS() ? SS().get(GRANT_KEY, []) : [];
+    return Array.isArray(arr) ? arr : [];
+  }
+  function grantsSave(arr) {
+    if (SS()) SS().set(GRANT_KEY, arr);
+    try {
+      if (fsReady()) {
+        var db = firebase.firestore();
+        arr.forEach(function (g) {
+          if (!g || !g.email) return;
+          db.collection('accessGrants').doc(String(g.email).toLowerCase())
+            .set(g, { merge: true })
+            .catch(function () { /* offline / rules — degrade silently */ });
+        });
+      }
+    } catch (_e) { /* no firebase — fine */ }
+  }
+  // Client-side download via Blob + object URL (no server).
+  function csvDownload(filename, text) {
+    try {
+      var url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+      var a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { try { URL.revokeObjectURL(url); a.remove(); } catch (_e) {} }, 0);
+      return true;
+    } catch (_e) { return false; }
+  }
+  function grantTemplateCSV() {
+    return 'email,role,class,tier,duration\n'
+      + 'student@example.com,student,Β΄ Γυμνασίου,pro,12m\n'
+      + 'teacher@example.com,teacher,Όλες,school,perm\n';
+  }
+  // RFC-ish CSV: comma OR semicolon delimiter, quoted fields, header row.
+  function parseCSV(text) {
+    var nl = text.indexOf('\n'); var first = nl < 0 ? text : text.slice(0, nl);
+    var cnt = function (ch) { return first.split(ch).length - 1; };
+    var delim = ','; if (cnt(';') > cnt(',')) delim = ';'; else if (cnt('\t') > cnt(',')) delim = '\t';
+    var rows = [], row = [], field = '', inQ = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inQ) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+        else field += c;
+      } else if (c === '"') inQ = true;
+      else if (c === delim) { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+  function validEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim()); }
+  // Parse a grant CSV → [{email,role,class,tier,duration,ok,err}] (preview rows).
+  function parseGrantCSV(text) {
+    text = String(text || '').replace(/^﻿/, '');
+    var table = parseCSV(text);
+    var out = [];
+    if (!table.length) return out;
+    var start = 0;
+    var h0 = String(table[0][0] || '').trim().toLowerCase();
+    if (h0 === 'email' || h0 === 'e-mail') start = 1;
+    for (var r = start; r < table.length; r++) {
+      var cells = table[r];
+      if (!cells || cells.every(function (c) { return String(c).trim() === ''; })) continue;
+      var email = String(cells[0] || '').trim();
+      var role = String(cells[1] || 'student').trim().toLowerCase();
+      var klass = String(cells[2] || '').trim();
+      var tier = String(cells[3] || 'pro').trim().toLowerCase();
+      var dur = String(cells[4] || '').trim();
+      var errs = [];
+      if (!validEmail(email)) errs.push('email');
+      if (role && GRANT_ROLES.indexOf(role) < 0) errs.push('role');
+      if (tier && GRANT_TIERS.indexOf(tier) < 0) errs.push('tier');
+      out.push({
+        email: email, role: role || 'student', 'class': klass,
+        tier: tier || 'pro', duration: dur,
+        ok: errs.length === 0, err: errs
+      });
+    }
+    return out;
+  }
+
   /* ════════════════ MAIN SCREEN ════════════════════════════════════ */
   function adminScreen(home /*, ctx */) {
     // Admin-only — bounce non-admins home.
@@ -135,9 +303,11 @@
     var SymStore = SS();
     var go = function (s, p) { return window.symGo(s, p); };
     var glyph = function (name, cls) { return el('span', { class: cls || 'sc-gl', 'data-illu': name }); };
-    var stat = function (v, label, ac) {
+    var stat = function (v, label, ac, name) {
+      var vEl = el('div', { class: 'sc-stat__v' }, v);
+      if (name) vEl.setAttribute('data-stat', name);
       return el('div', { class: 'sc-stat has-accent', style: '--ca:' + (ac || accent) },
-        [el('div', { class: 'sc-stat__v' }, v), el('div', { class: 'sc-stat__l' }, label)]);
+        [vEl, el('div', { class: 'sc-stat__l' }, label)]);
     };
 
     var body = P(home, {
@@ -147,13 +317,17 @@
       sub: L({ gr: 'Revamp-native — πραγματικές λειτουργίες.', en: 'Revamp-native — real functions.' }),
     });
 
-    // Top stat band + Classic Command Center link.
+    // Top stat band + Classic Command Center link. REAL values only — games is
+    // computed from authored data; users/subs/MRR start from honest local
+    // counters and are patched live when Firestore answers (loadFirestoreStats).
     body.appendChild(el('div', { class: 'sc-stats sc-stats--4 sc-stagger' }, [
-      stat('3.218', L({ gr: 'Χρήστες', en: 'Users' }), accent),
-      stat('1.094', L({ gr: 'Συνδρομές', en: 'Subscribers' }), accent),
-      stat('€5.4k', 'MRR', accent),
-      stat('41', L({ gr: 'Παιχνίδια', en: 'Games' }), accent),
+      stat(String(localStat('stat_users')), L({ gr: 'Χρήστες', en: 'Users' }), accent, 'users'),
+      stat(String(localStat('stat_subs')), L({ gr: 'Συνδρομές', en: 'Subscribers' }), accent, 'subs'),
+      stat('€' + String(localStat('stat_mrr')), 'MRR', accent, 'mrr'),
+      stat(String(gamesCount()), L({ gr: 'Παιχνίδια', en: 'Games' }), accent, 'games'),
     ]));
+    // Kick off the guarded Firestore reads; they patch the DOM when they return.
+    loadFirestoreStats();
     body.appendChild(el('div', { class: 'sc-adminx__bar sc-stagger' }, [
       el('button', {
         class: 'sc-cta sc-cta--ghost sc-cta--sm', onclick: function () {
@@ -381,6 +555,257 @@
       ]));
     }
 
+    /* ════════════════ MESSAGES (real store + compose) ══════════════════
+       Messages live in SymStore('admin_messages', []) and mirror to Firestore
+       config/messages (GUARDED). The composer (title/body/audience + Send)
+       appends to the store and surfaces a notification via SymSys.notify so a
+       sent message reaches users. Starts EMPTY — the admin adds messages. */
+    var MSG_KEY = 'admin_messages';
+    function msgLoad() {
+      var arr = SS() ? SS().get(MSG_KEY, []) : [];
+      return Array.isArray(arr) ? arr : [];
+    }
+    function msgSave(arr) {
+      if (SS()) SS().set(MSG_KEY, arr);
+      // Mirror to Firestore config/messages — GUARDED (sandbox has no firebase).
+      try {
+        if (fsReady()) {
+          firebase.firestore().collection('config').doc('messages')
+            .set({ items: arr, updatedAt: Date.now() }, { merge: true })
+            .catch(function () { /* offline / rules — degrade silently */ });
+        }
+      } catch (_e) { /* no firebase global — fine */ }
+    }
+    function renderMessaging() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Μηνύματα προς χρήστες', en: 'Messages to users' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+        gr: 'Σύνταξε ένα μήνυμα και στείλ’ το. Αποθηκεύεται τοπικά (SymStore) και — όταν υπάρχει σύνδεση — συγχρονίζεται στο Firestore. Κάθε αποστολή εμφανίζεται και ως ειδοποίηση στους χρήστες.',
+        en: 'Compose a message and send it. It persists locally (SymStore) and — when connected — syncs to Firestore. Each send also surfaces as a user notification.'
+      })));
+
+      var AUDIENCES = [
+        ['all', { gr: 'Όλοι', en: 'Everyone' }],
+        ['free', { gr: 'Δωρεάν χρήστες', en: 'Free users' }],
+        ['pro', { gr: 'Συνδρομητές Pro', en: 'Pro subscribers' }],
+        ['school', { gr: 'Σχολεία', en: 'Schools' }],
+        ['teachers', { gr: 'Καθηγητές', en: 'Teachers' }],
+      ];
+      function audLabel(id) { for (var i = 0; i < AUDIENCES.length; i++) if (AUDIENCES[i][0] === id) return L(AUDIENCES[i][1]); return id; }
+
+      // ── compose form ─────────────────────────────────────────────────
+      var titleIn = el('input', { class: 'sc-field__i', id: 'msgTitle', placeholder: L({ gr: 'Τίτλος μηνύματος', en: 'Message title' }) });
+      var bodyIn = el('textarea', { class: 'sc-textarea', id: 'msgBody', rows: '3', placeholder: L({ gr: 'Κείμενο μηνύματος…', en: 'Message body…' }) });
+      var audSel = el('select', { class: 'sc-field__i sc-select', id: 'msgAud' }, AUDIENCES.map(function (a) { return el('option', { value: a[0] }, L(a[1])); }));
+      var sendBtn = el('button', {
+        class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function (e) {
+          var title = titleIn.value.trim(), body = bodyIn.value.trim(), aud = audSel.value;
+          if (!title && !body) { titleIn.focus(); return; }
+          var arr = msgLoad();
+          var msg = { id: 'm-' + Date.now().toString(36), title: title, body: body, audience: aud, ts: Date.now() };
+          arr.unshift(msg);
+          msgSave(arr);
+          // Surface to the user notification system (guarded).
+          try {
+            if (window.SymSys && typeof window.SymSys.notify === 'function') {
+              window.SymSys.notify({ ic: '✉', screen: 'home', t: { gr: title || body, en: title || body } });
+            }
+          } catch (_e) { /* no notify — fine */ }
+          titleIn.value = ''; bodyIn.value = '';
+          e.currentTarget.textContent = '✓ ' + L({ gr: 'Στάλθηκε', en: 'Sent' });
+          setTimeout(function () { paint(); }, 600);
+        }
+      }, [el('span', { style: 'margin-right:6px' }, '✉'), L({ gr: 'Αποστολή μηνύματος', en: 'Send message' })]);
+
+      pane.appendChild(el('div', { class: 'sc-form sc-msgform' }, [
+        el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέο μήνυμα', en: 'New message' })),
+        titleIn,
+        bodyIn,
+        el('div', { class: 'sc-msgform__row' }, [
+          el('label', { class: 'sc-field', style: 'flex:1;min-width:160px' }, [
+            el('span', { class: 'sc-field__l' }, L({ gr: 'Παραλήπτες', en: 'Audience' })), audSel,
+          ]),
+          sendBtn,
+        ]),
+      ]));
+
+      // ── existing messages list ────────────────────────────────────────
+      pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:18px 0 8px' }, L({ gr: 'Σταλμένα μηνύματα', en: 'Sent messages' })));
+      var msgs = msgLoad();
+      if (!msgs.length) {
+        pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Κανένα μήνυμα ακόμη — σύνταξε το πρώτο σου παραπάνω.', en: 'No messages yet — compose your first one above.' })));
+      } else {
+        var mlist = el('div', { class: 'sc-msglist' });
+        msgs.forEach(function (m) {
+          var when = '';
+          try { when = new Date(m.ts).toLocaleString(); } catch (_e) { when = ''; }
+          mlist.appendChild(el('div', { class: 'sc-msgcard' }, [
+            el('div', { class: 'sc-msgcard__hd' }, [
+              el('span', { class: 'sc-msgcard__t' }, m.title || L({ gr: '(χωρίς τίτλο)', en: '(no title)' })),
+              el('span', { class: 'sc-msgcard__aud' }, audLabel(m.audience)),
+            ]),
+            (m.body ? el('p', { class: 'sc-msgcard__b' }, m.body) : null),
+            el('div', { class: 'sc-msgcard__ft' }, [
+              el('span', { class: 'sc-msgcard__tm' }, when),
+              el('button', { class: 'sc-mini', onclick: function () {
+                var cur = msgLoad().filter(function (x) { return x.id !== m.id; });
+                msgSave(cur); paint();
+              } }, L({ gr: 'Διαγραφή', en: 'Delete' })),
+            ]),
+          ]));
+        });
+        pane.appendChild(mlist);
+      }
+
+      // ── message templates (kept) ──────────────────────────────────────
+      pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:20px 0 8px' }, L({ gr: 'Πρότυπα Μηνυμάτων', en: 'Message Templates' })));
+      pane.appendChild(msgEditor('msg_signup', { gr: 'Μήνυμα εγγραφής (welcome)', en: 'Sign-up welcome message' }, 'Καλώς ήρθες στο SymposiON, {name}! Ο αρχαίος κόσμος σε περιμένει — ξεκίνα το πρώτο σου παιχνίδι και κέρδισε Kleos.'));
+      pane.appendChild(msgEditor('msg_sub', { gr: 'Μήνυμα συνδρομής (μετά την πληρωμή)', en: 'Subscription confirmation message' }, 'Ευχαριστούμε για τη συνδρομή σου, {name}! Η πρόσβαση Pro είναι ενεργή. Καλή μάθηση & καλό παιχνίδι!'));
+      pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Διαθέσιμες μεταβλητές: {name}, {plan}, {expiry}', en: 'Available variables: {name}, {plan}, {expiry}' })));
+    }
+
+    /* ════════════════ GRANT ACCESS (single + bulk CSV) ═════════════════ */
+    function renderGrant() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Χορήγησε δωρεάν πρόσβαση', en: 'Grant free access' })));
+
+      // ── single grant ─────────────────────────────────────────────────
+      var emailFld = field2(L({ gr: 'Email χρήστη', en: 'User email' }), 'student@example.com');
+      var roleSel = rowSel(L({ gr: 'Ρόλος', en: 'Role' }), ['student', 'teacher', 'admin']);
+      var classSel = rowSel(L({ gr: 'Τάξη', en: 'Class' }), ['Όλες', 'Β΄ Γυμνασίου', 'Γ΄ Λυκείου', 'Λατινικά']);
+      var tierSel = rowSel(L({ gr: 'Πακέτο', en: 'Tier' }), ['free', 'pro', 'school']);
+      var durSel = rowSel(L({ gr: 'Διάρκεια', en: 'Duration' }), ['1m', '3m', '12m', 'perm']);
+      pane.appendChild(el('div', { class: 'sc-form' }, [
+        emailFld, roleSel, classSel, tierSel, durSel,
+        el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:6px', onclick: function (e) {
+          var email = (emailFld.querySelector('input') || {}).value || '';
+          email = email.trim();
+          if (!validEmail(email)) { emailFld.querySelector('input').focus(); return; }
+          var g = {
+            email: email.toLowerCase(),
+            role: (roleSel.querySelector('select') || {}).value || 'student',
+            'class': (classSel.querySelector('select') || {}).value || '',
+            tier: (tierSel.querySelector('select') || {}).value || 'pro',
+            duration: (durSel.querySelector('select') || {}).value || '',
+            ts: Date.now()
+          };
+          var arr = grantsLoad(); arr.unshift(g); grantsSave(arr);
+          emailFld.querySelector('input').value = '';
+          e.currentTarget.textContent = '✓ ' + L({ gr: 'Χορηγήθηκε', en: 'Granted' });
+          setTimeout(function () { paint(); }, 700);
+        } }, L({ gr: 'Χορήγηση πρόσβασης', en: 'Grant access' })),
+      ]));
+
+      // ── BULK grant via CSV ────────────────────────────────────────────
+      pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:20px 0 8px' }, L({ gr: 'Μαζική χορήγηση', en: 'Bulk grant' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 10px' }, L({
+        gr: 'Κατέβασε το πρότυπο, συμπλήρωσε γραμμές (email,role,class,tier,duration) και ανέβασέ το για προεπισκόπηση & μαζική χορήγηση.',
+        en: 'Download the template, fill rows (email,role,class,tier,duration) and upload it for a preview & mass grant.'
+      })));
+
+      var bulkWrap = el('div', { class: 'sc-bulk' });
+      pane.appendChild(bulkWrap);
+
+      var fileIn = el('input', { type: 'file', accept: '.csv,.txt', class: 'sc-bulk__file', id: 'grantCsv',
+        onchange: function (ev) {
+          var f = ev.target.files && ev.target.files[0]; ev.target.value = '';
+          if (!f) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            window.__grantPreview = parseGrantCSV(String(reader.result || ''));
+            paintBulk();
+          };
+          reader.onerror = function () { window.__grantPreview = null; paintBulk(); };
+          reader.readAsText(f, 'utf-8');
+        }
+      });
+
+      bulkWrap.appendChild(el('div', { class: 'sc-bulk__bar' }, [
+        el('button', { class: 'sc-cta sc-cta--ghost sc-cta--sm', onclick: function (e) {
+          var ok = csvDownload('symposion-grants-template.csv', grantTemplateCSV());
+          var prev = e.currentTarget.textContent;
+          e.currentTarget.textContent = ok ? '✓ ' + L({ gr: 'Κατέβηκε', en: 'Downloaded' }) : L({ gr: 'Σφάλμα', en: 'Failed' });
+          setTimeout(function () { try { e.currentTarget.textContent = prev; } catch (_e) {} }, 1400);
+        } }, [el('span', { style: 'margin-right:6px' }, '⬇'), L({ gr: 'Κατέβασε πρότυπο', en: 'Download template' })]),
+        el('label', { class: 'sc-cta sc-cta--ghost sc-cta--sm', for: 'grantCsv', style: 'cursor:pointer' },
+          [el('span', { style: 'margin-right:6px' }, '⬆'), L({ gr: 'Ανέβασε αρχείο', en: 'Upload file' })]),
+        fileIn,
+      ]));
+
+      var preview = el('div', { class: 'sc-bulk__preview' });
+      bulkWrap.appendChild(preview);
+
+      function paintBulk() {
+        preview.innerHTML = '';
+        var rows = window.__grantPreview;
+        if (!rows) return;
+        if (!rows.length) {
+          preview.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Δεν βρέθηκαν γραμμές στο αρχείο.', en: 'No rows found in the file.' })));
+          return;
+        }
+        var okN = rows.filter(function (r) { return r.ok; }).length;
+        var badN = rows.length - okN;
+        preview.appendChild(el('div', { class: 'sc-bulk__sum' },
+          L({ gr: 'Προεπισκόπηση: ', en: 'Preview: ' }) + okN + ' ' + L({ gr: 'έγκυρες', en: 'valid' })
+          + (badN ? ' · ' + badN + ' ' + L({ gr: 'με σφάλμα', en: 'with errors' }) : '')));
+
+        var tbl = el('div', { class: 'sc-table sc-bulk__tbl' });
+        tbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [
+          el('span', {}, 'Email'), el('span', {}, L({ gr: 'Ρόλος', en: 'Role' })),
+          el('span', {}, L({ gr: 'Πακέτο', en: 'Tier' })), el('span', {}, L({ gr: 'Κατάσταση', en: 'Status' })),
+        ]));
+        rows.forEach(function (r) {
+          tbl.appendChild(el('div', { class: 'sc-tr' + (r.ok ? '' : ' sc-tr--bad') }, [
+            el('span', { class: 'sc-tr__task' }, r.email || '—'),
+            el('span', {}, r.role),
+            el('span', {}, r.tier),
+            el('span', {}, r.ok
+              ? el('em', { class: 'sc-badge2 sc-badge2--done' }, 'OK')
+              : el('em', { class: 'sc-badge2 sc-badge2--open' }, '✕ ' + r.err.join(', '))),
+          ]));
+        });
+        preview.appendChild(tbl);
+
+        preview.appendChild(el('div', { style: 'display:flex;gap:8px;margin-top:12px;flex-wrap:wrap' }, [
+          el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm' + (okN ? '' : ' off'), onclick: function (e) {
+            var valid = rows.filter(function (r) { return r.ok; });
+            if (!valid.length) return;
+            var arr = grantsLoad();
+            valid.forEach(function (r) {
+              arr.unshift({ email: r.email.toLowerCase(), role: r.role, 'class': r['class'], tier: r.tier, duration: r.duration, ts: Date.now() });
+            });
+            grantsSave(arr);
+            window.__grantPreview = null;
+            e.currentTarget.textContent = '✓ ' + valid.length + ' ' + L({ gr: 'χορηγήθηκαν', en: 'granted' });
+            setTimeout(function () { paint(); }, 900);
+          } }, L({ gr: 'Χορήγηση σε όλους', en: 'Grant all' }) + (okN ? ' (' + okN + ')' : '')),
+          el('button', { class: 'sc-mini', onclick: function () { window.__grantPreview = null; paintBulk(); } }, L({ gr: 'Ακύρωση', en: 'Cancel' })),
+        ]));
+      }
+      paintBulk();
+
+      // ── existing grants list ──────────────────────────────────────────
+      var grants = grantsLoad();
+      if (grants.length) {
+        pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:20px 0 8px' }, L({ gr: 'Χορηγήσεις', en: 'Grants' }) + ' (' + grants.length + ')'));
+        var gtbl = el('div', { class: 'sc-table' });
+        gtbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [
+          el('span', {}, 'Email'), el('span', {}, L({ gr: 'Ρόλος', en: 'Role' })),
+          el('span', {}, L({ gr: 'Πακέτο', en: 'Tier' })), el('span', {}, ''),
+        ]));
+        grants.forEach(function (g) {
+          gtbl.appendChild(el('div', { class: 'sc-tr' }, [
+            el('span', { class: 'sc-tr__task' }, g.email),
+            el('span', {}, g.role || '—'),
+            el('span', {}, el('em', { class: 'sc-badge2 sc-badge2--' + (g.tier === 'free' ? 'open' : 'done') }, g.tier || '—')),
+            el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () {
+              var cur = grantsLoad().filter(function (x) { return x.email !== g.email || x.ts !== g.ts; });
+              grantsSave(cur); paint();
+            } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
+          ]));
+        });
+        pane.appendChild(gtbl);
+      }
+    }
+
     /* ════════════════ PAINT ════════════════════════════════════════ */
     function paint() {
       pane.innerHTML = '';
@@ -484,7 +909,13 @@
       }
       else if (activeSec === 'subs') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Συνδρομές & Πακέτα', en: 'Subscriptions & Bundles' })));
-        pane.appendChild(el('div', { class: 'sc-stats' }, [stat('1.094', L({ gr: 'Ενεργές', en: 'Active' }), accent), stat('€5.4k', 'MRR', accent), stat('3.1%', L({ gr: 'Churn', en: 'Churn' }), accent)]));
+        // REAL figures — honest local counters, patched live by Firestore (statSet).
+        pane.appendChild(el('div', { class: 'sc-stats' }, [
+          stat(String(localStat('stat_subs')), L({ gr: 'Ενεργές', en: 'Active' }), accent, 'subs'),
+          stat('€' + String(localStat('stat_mrr')), 'MRR', accent, 'mrr'),
+          stat(String(localStat('stat_churn')) + '%', L({ gr: 'Churn', en: 'Churn' }), accent, 'churn'),
+        ]));
+        loadFirestoreStats();
         var defPlans = [{ id: 'student', nm: 'Μαθητής', price: '4.99', n: '892' }, { id: 'teacher', nm: 'Καθηγητής', price: '7.99', n: '160' }, { id: 'school', nm: 'School', price: '49', n: '17' }];
         var customPlans = SymStore ? SymStore.get('admin_plans', []) : [];
         pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:14px 0 8px' }, L({ gr: 'Πακέτα', en: 'Plans' })));
@@ -507,10 +938,7 @@
         ]));
       }
       else if (activeSec === 'messaging') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Πρότυπα Μηνυμάτων', en: 'Message Templates' })));
-        pane.appendChild(msgEditor('msg_signup', { gr: 'Μήνυμα εγγραφής (welcome)', en: 'Sign-up welcome message' }, 'Καλώς ήρθες στο SymposiON, {name}! Ο αρχαίος κόσμος σε περιμένει — ξεκίνα το πρώτο σου παιχνίδι και κέρδισε Kleos.'));
-        pane.appendChild(msgEditor('msg_sub', { gr: 'Μήνυμα συνδρομής (μετά την πληρωμή)', en: 'Subscription confirmation message' }, 'Ευχαριστούμε για τη συνδρομή σου, {name}! Η πρόσβαση Pro είναι ενεργή. Καλή μάθηση & καλό παιχνίδι!'));
-        pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Διαθέσιμες μεταβλητές: {name}, {plan}, {expiry}', en: 'Available variables: {name}, {plan}, {expiry}' })));
+        renderMessaging();
       }
       else if (activeSec === 'hero') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Hero Carousel — διαφάνειες αρχικής', en: 'Hero Carousel — homepage slides' })));
@@ -559,7 +987,8 @@
       else if (activeSec === 'feedback') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Σχόλια & Αναφορές χρηστών', en: 'User feedback & reports' })));
         var stored = (SymStore && SymStore.get('user_feedback', [])) || [];
-        pane.appendChild(el('div', { class: 'sc-stats', style: 'margin-bottom:12px' }, [stat(String(stored.length + 218), L({ gr: 'Σχόλια', en: 'Reviews' }), accent), stat(String(stored.filter(function (f) { return f.kind === 'bug'; }).length), L({ gr: 'Bugs', en: 'Bugs' }), accent), stat(String(stored.filter(function (f) { return f.new; }).length + 12), L({ gr: 'Νέα', en: 'New' }), accent)]));
+        // REAL stored counts — no fake +218 / +12 offsets.
+        pane.appendChild(el('div', { class: 'sc-stats', style: 'margin-bottom:12px' }, [stat(String(stored.length), L({ gr: 'Σχόλια', en: 'Reviews' }), accent), stat(String(stored.filter(function (f) { return f.kind === 'bug'; }).length), L({ gr: 'Bugs', en: 'Bugs' }), accent), stat(String(stored.filter(function (f) { return f.new; }).length), L({ gr: 'Νέα', en: 'New' }), accent)]));
         pane.appendChild(el('button', { class: 'sc-mini sc-mini--accent', style: 'margin-bottom:12px', onclick: function () { if (window.SymInfoPanel) SymInfoPanel.feedback(); } }, L({ gr: 'Άνοιγμα φόρμας σχολίων', en: 'Open feedback form' })));
         var fwrap = el('div', { class: 'sc-fbs' });
         stored.forEach(function (f, idx) {
@@ -628,14 +1057,7 @@
         [['Ενεργό spaced-repetition', 1], ['Κοινοποίηση σε καθηγητές', 1], ['Auto-clear 90 ημερών', 0]].forEach(function (r) { pane.appendChild(toggleRow({ gr: r[0], en: r[0] }, r[1])); });
       }
       else if (activeSec === 'grant') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Χορήγησε δωρεάν πρόσβαση', en: 'Grant free access' })));
-        pane.appendChild(el('div', { class: 'sc-form' }, [
-          field2(L({ gr: 'Email χρήστη', en: 'User email' }), 'student@example.com'),
-          rowSel(L({ gr: 'Ρόλος', en: 'Role' }), ['Μαθητής', 'Καθηγητής', 'Admin']),
-          rowSel(L({ gr: 'Τάξη', en: 'Class' }), ['Όλες', 'Β΄ Γυμνασίου', 'Γ΄ Λυκείου', 'Λατινικά']),
-          rowSel(L({ gr: 'Διάρκεια', en: 'Duration' }), ['1 μήνας', '3 μήνες', '12 μήνες', 'Μόνιμα']),
-          el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:6px', onclick: function (e) { e.currentTarget.textContent = '✓ ' + L({ gr: 'Χορηγήθηκε', en: 'Granted' }); } }, L({ gr: 'Χορήγηση πρόσβασης', en: 'Grant access' })),
-        ]));
+        renderGrant();
       }
       else if (activeSec === 'pricing') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Τιμολόγηση', en: 'Pricing' })));

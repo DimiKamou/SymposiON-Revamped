@@ -87,3 +87,25 @@
   .sc-ac__head { align-items:flex-start; }
   .sc-ac__levels { grid-template-columns:1fr; }
 }
+
+/* ── Messages (compose + list) ───────────────────────────────────────── */
+.sc-msgform { display:flex; flex-direction:column; gap:9px; }
+.sc-msgform__row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+.sc-msglist { display:flex; flex-direction:column; gap:10px; }
+.sc-msgcard { border:1px solid var(--line); background:var(--card); border-radius:12px; padding:12px 14px; }
+.sc-msgcard__hd { display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap; }
+.sc-msgcard__t { font-family:var(--disp); font-weight:600; font-size:15px; color:var(--fg); }
+.sc-msgcard__aud { font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--muted);
+  background:var(--sink); border-radius:999px; padding:3px 10px; }
+.sc-msgcard__b { margin:7px 0 0; font-size:13.5px; line-height:1.5; color:var(--fg); white-space:pre-wrap; }
+.sc-msgcard__ft { display:flex; align-items:center; gap:10px; justify-content:space-between; margin-top:9px; }
+.sc-msgcard__tm { font-size:11.5px; color:var(--muted); }
+
+/* ── Bulk grant (CSV upload + preview) ──────────────────────────────── */
+.sc-bulk { display:flex; flex-direction:column; gap:12px; }
+.sc-bulk__bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.sc-bulk__file { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.sc-bulk__preview { display:flex; flex-direction:column; gap:10px; }
+.sc-bulk__sum { font-size:12.5px; font-weight:600; color:var(--terra-dk); }
+.sc-bulk__tbl .sc-tr--bad { background:color-mix(in srgb,#B0395A 8%,transparent); }
+.sc-bulk__tbl .sc-tr--bad .sc-tr__task { color:#B0395A; }
