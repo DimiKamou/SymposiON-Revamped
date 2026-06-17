@@ -398,5 +398,221 @@ window.GP_LEVEL_PROVIDERS = (function () {
   ];
   P['rimata-mi'] = dictProvider(RMI_LEVELS);
 
+  /* ── epitheta — array DB (EPT_DB), sub-code union ───────────
+     Source: games/epitheta/game.js  EPT_LEVELS (line 7) + _eptFilterAdj.
+     EPT_DB entries carry a singular `sub` string; match by membership. */
+  const EPT_LEVELS = [
+    { id: 1, group: 'Τρικατάληκτα Α΄/Β΄ κλίση', color: 'lgreen',  desc: 'Θηλ. -η: σοφός, ἀγαθός, καλός, δίκαιος', sub: ['kata1'] },
+    { id: 2, group: 'Τρικατάληκτα Α΄/Β΄ κλίση', color: 'lyellow', desc: 'Θηλ. -α (ε/ι/ρ): ἄξιος, νέος, μικρός, ἐλεύθερος', sub: ['kata2'] },
+    { id: 3, group: 'Τρικατάληκτα Α΄/Β΄ κλίση', color: 'lred',    desc: 'Α΄/Β΄ κλίση — Όλα', sub: ['kata1', 'kata2'] },
+    { id: 4, group: 'Τρικατάληκτα Α΄/Γ΄ κλίση', color: 'lgreen',  desc: '-ύς, -εῖα, -ύ: ἡδύς, βαθύς, ταχύς, εὐθύς', sub: ['kata3'] },
+    { id: 5, group: 'Δικατάληκτα', color: 'lyellow', desc: 'Β΄ κλίση -ος/-ον: ἄδικος, βάρβαρος, ἔρημος', sub: ['d2b'] },
+    { id: 6, group: 'Δικατάληκτα', color: 'lyellow', desc: 'Γ΄ κλίση -ης/-ές: ἀληθής, εὐγενής, σαφής', sub: ['d2g'] },
+    { id: 7, group: 'Δικατάληκτα', color: 'lred',    desc: 'Δικατάληκτα — Όλα', sub: ['d2b', 'd2g'] },
+    { id: 8, group: 'Ανώμαλα', color: 'lpurple', desc: 'μέγας, μεγάλη, μέγα — πολύς, πολλή, πολύ', sub: ['anwm'] },
+    { id: 9, group: 'Master Challenge', color: 'lred', desc: 'Τρικατάληκτα + Δικατάληκτα + Ανώμαλα — Όλα', sub: ['all'] },
+  ];
+  P['epitheta'] = subArrayProvider(EPT_LEVELS, (n, s) => n.sub === s);
+
+  /* ── paratheta — keyed dict (PAR_G), category × degree ──────
+     Source: games/paratheta/game.js  PAR_LVL (line 335) + parKeys.
+     PAR_G is a dict keyed by "positive|degree"; each entry has
+     {category, degree, …}. level.filter = { categories, degrees }. */
+  const PAR_LEVELS = [
+    { id: 1,  group: 'Επίθετα σε -ος', color: 'lgreen',  desc: 'Συγκριτικός βαθμός',        f: { categories: ['os'], degrees: ['συγκριτικός'] } },
+    { id: 2,  group: 'Επίθετα σε -ος', color: 'lyellow', desc: 'Υπερθετικός βαθμός',        f: { categories: ['os'], degrees: ['υπερθετικός'] } },
+    { id: 3,  group: 'Επίθετα σε -ος', color: 'lred',    desc: 'Συγκριτικός & Υπερθετικός', f: { categories: ['os'], degrees: ['συγκριτικός', 'υπερθετικός'] } },
+    { id: 4,  group: 'Επίθετα σε -ης', color: 'lgreen',  desc: 'Συγκριτικός βαθμός',        f: { categories: ['is'], degrees: ['συγκριτικός'] } },
+    { id: 5,  group: 'Επίθετα σε -ης', color: 'lyellow', desc: 'Υπερθετικός βαθμός',        f: { categories: ['is'], degrees: ['υπερθετικός'] } },
+    { id: 6,  group: 'Επίθετα σε -ης', color: 'lred',    desc: 'Συγκριτικός & Υπερθετικός', f: { categories: ['is'], degrees: ['συγκριτικός', 'υπερθετικός'] } },
+    { id: 7,  group: 'Ανώμαλα Επίθετα', color: 'lgreen',  desc: 'Συγκριτικός βαθμός',        f: { categories: ['irregular'], degrees: ['συγκριτικός'] } },
+    { id: 8,  group: 'Ανώμαλα Επίθετα', color: 'lyellow', desc: 'Υπερθετικός βαθμός',        f: { categories: ['irregular'], degrees: ['υπερθετικός'] } },
+    { id: 9,  group: 'Ανώμαλα Επίθετα', color: 'lred',    desc: 'Συγκριτικός & Υπερθετικός', f: { categories: ['irregular'], degrees: ['συγκριτικός', 'υπερθετικός'] } },
+    { id: 10, group: 'Συνδυαστικό', color: 'lred', desc: 'Ομαλά (-ος & -ης) + Ανώμαλα — Όλοι οι βαθμοί', f: { categories: ['os', 'is', 'irregular'], degrees: ['συγκριτικός', 'υπερθετικός'] } },
+  ];
+  P['paratheta'] = {
+    levels: uiLevels(PAR_LEVELS),
+    filterRaw(dict, ids) {
+      if (!dict || typeof dict !== 'object' || Array.isArray(dict)) return dict;
+      const sel = PAR_LEVELS.filter(l => ids.includes(l.id) && l.f);
+      if (!sel.length) return dict;
+      return dictSubset(dict, e => sel.some(l =>
+        l.f.categories.includes(e.category) && l.f.degrees.includes(e.degree)));
+    },
+  };
+
+  /* ── pathitiko — keyed dict (PATH_G) ────────────────────────
+     Source: games/pathitiko/game.js  PATH_LVL (line 156) + pathKeys.
+     PATH_G keyed by `${verb}|${form}|${tense}|${mood}`; entry props
+     {verb, cat, form, tense, mood}. filter = { verbs|verb_cats, tenses,
+     moods, forms } (all `.includes` membership). Inlined form/mood sets. */
+  const PATH_P = ['α ενικό', 'β ενικό', 'γ ενικό', 'α πληθυντικό', 'β πληθυντικό', 'γ πληθυντικό'];
+  const PATH_IP = ['β ενικό', 'γ ενικό', 'β πληθυντικό', 'γ πληθυντικό'];
+  const _MEL = 'παθ. μέλλοντας', _AOR = 'παθ. αόριστος';
+  const _MEL_FORMS = [...PATH_P, 'απαρέμφατο', 'μετοχή'];
+  const _AOR_FORMS = [...PATH_P, ...PATH_IP.filter(x => !PATH_P.includes(x)), 'απαρέμφατο', 'μετοχή'];
+  const _MEL_MOODS = ['οριστική', 'ευκτική', '—'];
+  const _AOR_MOODS = ['οριστική', 'υποτακτική', 'ευκτική', 'προστακτική', '—'];
+  const _dedup = a => a.filter((v, i) => a.indexOf(v) === i);
+  const PATH_LEVELS = [
+    { id: 1,  group: 'Παθητικός Μέλλοντας (βασικά)', color: 'lgreen',  desc: 'Οριστική — Παθ. Μέλλοντας', f: { verbs: ['λύω'], tenses: [_MEL], moods: ['οριστική'], forms: PATH_P } },
+    { id: 2,  group: 'Παθητικός Μέλλοντας (βασικά)', color: 'lyellow', desc: 'Ευκτική — Παθ. Μέλλοντας', f: { verbs: ['λύω'], tenses: [_MEL], moods: ['ευκτική'], forms: PATH_P } },
+    { id: 3,  group: 'Παθητικός Μέλλοντας (βασικά)', color: 'lpurple', desc: 'Απαρέμφατο & Μετοχή — Παθ. Μέλλοντας', f: { verbs: ['λύω'], tenses: [_MEL], moods: ['—'], forms: ['απαρέμφατο', 'μετοχή'] } },
+    { id: 4,  group: 'Παθητικός Μέλλοντας (βασικά)', color: 'lred',    desc: 'Όλες οι εγκλίσεις — Παθ. Μέλλοντας', f: { verbs: ['λύω'], tenses: [_MEL], moods: _MEL_MOODS, forms: _MEL_FORMS } },
+    { id: 5,  group: 'Παθητικός Αόριστος (βασικά)', color: 'lgreen',  desc: 'Οριστική — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: ['οριστική'], forms: PATH_P } },
+    { id: 6,  group: 'Παθητικός Αόριστος (βασικά)', color: 'lgreen',  desc: 'Υποτακτική — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: ['υποτακτική'], forms: PATH_P } },
+    { id: 7,  group: 'Παθητικός Αόριστος (βασικά)', color: 'lyellow', desc: 'Ευκτική — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: ['ευκτική'], forms: PATH_P } },
+    { id: 8,  group: 'Παθητικός Αόριστος (βασικά)', color: 'lyellow', desc: 'Προστακτική — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: ['προστακτική'], forms: PATH_IP } },
+    { id: 9,  group: 'Παθητικός Αόριστος (βασικά)', color: 'lpurple', desc: 'Απαρέμφατο & Μετοχή — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: ['—'], forms: ['απαρέμφατο', 'μετοχή'] } },
+    { id: 10, group: 'Παθητικός Αόριστος (βασικά)', color: 'lred',    desc: 'Όλες οι εγκλίσεις — Παθ. Αόριστος', f: { verbs: ['λύω'], tenses: [_AOR], moods: _AOR_MOODS, forms: _AOR_FORMS } },
+    { id: 11, group: 'Συνδυαστικό (βασικά)', color: 'lred', desc: 'Μέλλοντας + Αόριστος — Βασικά', f: { verbs: ['λύω'], tenses: [_MEL, _AOR], moods: _dedup([..._MEL_MOODS, ..._AOR_MOODS]), forms: _dedup([..._MEL_FORMS, ..._AOR_FORMS]) } },
+    { id: 12, group: 'Αφωνόληκτα — Χειλικόληκτα (φθ)', color: 'lgreen',  desc: 'Μέλλοντας — χειλικά (λείπω, πέμπω, καλύπτω)', f: { verb_cats: ['χειλικό'], tenses: [_MEL], moods: _MEL_MOODS, forms: _MEL_FORMS } },
+    { id: 13, group: 'Αφωνόληκτα — Χειλικόληκτα (φθ)', color: 'lyellow', desc: 'Αόριστος — χειλικά (λείπω, πέμπω, καλύπτω)', f: { verb_cats: ['χειλικό'], tenses: [_AOR], moods: _AOR_MOODS, forms: _AOR_FORMS } },
+    { id: 14, group: 'Αφωνόληκτα — Χειλικόληκτα (φθ)', color: 'lred',    desc: 'Μέλλοντας + Αόριστος — χειλικά', f: { verb_cats: ['χειλικό'], tenses: [_MEL, _AOR], moods: _dedup([..._MEL_MOODS, ..._AOR_MOODS]), forms: _dedup([..._MEL_FORMS, ..._AOR_FORMS]) } },
+    { id: 15, group: 'Αφωνόληκτα — Ουρανόφωνα (χθ)', color: 'lgreen',  desc: 'Μέλλοντας — ουρανικά (πράττω, ἄγω, φυλάττω…)', f: { verb_cats: ['ουρανικό'], tenses: [_MEL], moods: _MEL_MOODS, forms: _MEL_FORMS } },
+    { id: 16, group: 'Αφωνόληκτα — Ουρανόφωνα (χθ)', color: 'lyellow', desc: 'Αόριστος — ουρανικά', f: { verb_cats: ['ουρανικό'], tenses: [_AOR], moods: _AOR_MOODS, forms: _AOR_FORMS } },
+    { id: 17, group: 'Αφωνόληκτα — Ουρανόφωνα (χθ)', color: 'lred',    desc: 'Μέλλοντας + Αόριστος — ουρανικά', f: { verb_cats: ['ουρανικό'], tenses: [_MEL, _AOR], moods: _dedup([..._MEL_MOODS, ..._AOR_MOODS]), forms: _dedup([..._MEL_FORMS, ..._AOR_FORMS]) } },
+    { id: 18, group: 'Αφωνόληκτα — Οδοντόφωνα (σθ)', color: 'lgreen',  desc: 'Μέλλοντας — οδοντικά (νομίζω, πείθω, ψεύδω)', f: { verb_cats: ['οδοντικό'], tenses: [_MEL], moods: _MEL_MOODS, forms: _MEL_FORMS } },
+    { id: 19, group: 'Αφωνόληκτα — Οδοντόφωνα (σθ)', color: 'lyellow', desc: 'Αόριστος — οδοντικά', f: { verb_cats: ['οδοντικό'], tenses: [_AOR], moods: _AOR_MOODS, forms: _AOR_FORMS } },
+    { id: 20, group: 'Αφωνόληκτα — Οδοντόφωνα (σθ)', color: 'lred',    desc: 'Μέλλοντας + Αόριστος — οδοντικά', f: { verb_cats: ['οδοντικό'], tenses: [_MEL, _AOR], moods: _dedup([..._MEL_MOODS, ..._AOR_MOODS]), forms: _dedup([..._MEL_FORMS, ..._AOR_FORMS]) } },
+    { id: 21, group: 'Αφωνόληκτα — Συνδυαστικό', color: 'lred', desc: 'Μέλλοντας — όλες κατηγορίες (φθ / χθ / σθ)', f: { verb_cats: ['χειλικό', 'ουρανικό', 'οδοντικό'], tenses: [_MEL], moods: _MEL_MOODS, forms: _MEL_FORMS } },
+    { id: 22, group: 'Αφωνόληκτα — Συνδυαστικό', color: 'lred', desc: 'Αόριστος — όλες κατηγορίες (φθ / χθ / σθ)', f: { verb_cats: ['χειλικό', 'ουρανικό', 'οδοντικό'], tenses: [_AOR], moods: _AOR_MOODS, forms: _AOR_FORMS } },
+    { id: 23, group: 'Αφωνόληκτα — Συνδυαστικό', color: 'lred', desc: 'Μέλλοντας + Αόριστος — όλα τα αφωνόληκτα', f: { verb_cats: ['χειλικό', 'ουρανικό', 'οδοντικό'], tenses: [_MEL, _AOR], moods: _dedup([..._MEL_MOODS, ..._AOR_MOODS]), forms: _dedup([..._MEL_FORMS, ..._AOR_FORMS]) } },
+  ];
+  function _pathMatch(g, f) {
+    if (f.verbs && !f.verbs.includes(g.verb)) return false;
+    if (f.verb_cats && !f.verb_cats.includes(g.cat)) return false;
+    if (f.tenses && !f.tenses.includes(g.tense)) return false;
+    if (f.moods && !f.moods.includes(g.mood)) return false;
+    if (f.forms && !f.forms.includes(g.form)) return false;
+    return true;
+  }
+  P['pathitiko'] = {
+    levels: uiLevels(PATH_LEVELS),
+    filterRaw(dict, ids) {
+      if (!dict || typeof dict !== 'object' || Array.isArray(dict)) return dict;
+      const sel = PATH_LEVELS.filter(l => ids.includes(l.id) && l.f);
+      if (!sel.length) return dict;
+      return dictSubset(dict, g => sel.some(l => _pathMatch(g, l.f)));
+    },
+  };
+
+  /* ── noun-fill — array DB (OUS_DB, shared w/ ousiastika) ─────
+     Source: games/noun-fill/game.js  DECL_LEVELS (line 21) + _nFillStart.
+     OUS_DB entries: {l, d (declension), t (gender), s:[cases], …}.
+     filter = { d (12 = A΄+B΄), gender ('a|b' union), ending } — `ending`
+     matched against the accent-stripped nominative (n.s[0]). */
+  const NFILL_LEVELS = [
+    { id: 1, group: 'Α΄ Κλίση', color: 'lgreen',  desc: 'Α΄ Κλίση — Θηλυκά σε -α (χώρα, θάλασσα)', f: { d: 1, gender: 'θηλυκό', ending: 'α' } },
+    { id: 2, group: 'Α΄ Κλίση', color: 'lgreen',  desc: 'Α΄ Κλίση — Θηλυκά σε -η (τιμή, νίκη)', f: { d: 1, gender: 'θηλυκό', ending: 'η' } },
+    { id: 3, group: 'Α΄ Κλίση', color: 'lyellow', desc: 'Α΄ Κλίση — Αρσενικά σε -ας (νεανίας)', f: { d: 1, gender: 'αρσενικό', ending: 'ας' } },
+    { id: 4, group: 'Α΄ Κλίση', color: 'lyellow', desc: 'Α΄ Κλίση — Αρσενικά σε -ης (πολίτης)', f: { d: 1, gender: 'αρσενικό', ending: 'ης' } },
+    { id: 5, group: 'Α΄ Κλίση', color: 'lred',    desc: 'Α΄ Κλίση — Όλα', f: { d: 1 } },
+    { id: 6, group: 'Β΄ Κλίση', color: 'lgreen',  desc: 'Β΄ Κλίση — Αρσ./Θηλ. σε -ος (λόγος, νόσος)', f: { d: 2, gender: 'αρσενικό|θηλυκό' } },
+    { id: 7, group: 'Β΄ Κλίση', color: 'lyellow', desc: 'Β΄ Κλίση — Ουδέτερα σε -ον (δῶρον)', f: { d: 2, gender: 'ουδέτερο' } },
+    { id: 8, group: 'Β΄ Κλίση', color: 'lred',    desc: 'Β΄ Κλίση — Όλα', f: { d: 2 } },
+    { id: 9, group: 'Συνδυαστικό', color: 'lred', desc: 'Α΄ + Β΄ Κλίση — Όλα μαζί', f: { d: 12 } },
+  ];
+  function _stripAccents(s) {
+    try { return s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (_) { return s; }
+  }
+  function _nfillMatch(n, f) {
+    if (f.d === 12) { if (n.d !== 1 && n.d !== 2) return false; }
+    else if (typeof f.d === 'number' && n.d !== f.d) return false;
+    if (f.gender && !f.gender.split('|').includes(n.t)) return false;
+    if (f.ending) { const nom = _stripAccents(String((n.s && n.s[0]) || '')); if (!nom.endsWith(f.ending)) return false; }
+    return true;
+  }
+  P['noun-fill'] = {
+    levels: uiLevels(NFILL_LEVELS),
+    filterRaw(arr, ids) {
+      if (!Array.isArray(arr)) return arr;
+      const sel = NFILL_LEVELS.filter(l => ids.includes(l.id) && l.f);
+      if (!sel.length) return arr;
+      return arr.filter(n => sel.some(l => _nfillMatch(n, l.f)));
+    },
+  };
+
+  /* ── lat-epitheta — array DB (LAT_A_DB), sub-code union ──────
+     Source: games/lat-epitheta/game.js  LATE_LEVELS (line 15) + _lateFilter.
+     id 9 (`degrees`) is a special "identify the degree" mode, not a bank
+     filter (game returns null) — kept in the level list for the selector. */
+  const LATE_LEVELS = [
+    { id: 1,  group: 'Β΄ Κλίση Επιθέτων', color: 'lgreen',  desc: 'Τρικατάληκτα -us/-a/-um: bonus, magnus, malus', sub: ['2nd_us'] },
+    { id: 2,  group: 'Β΄ Κλίση Επιθέτων', color: 'lyellow', desc: 'Σε -er: pulcher, liber (συγκοπτ. & μη)', sub: ['2nd_er'] },
+    { id: 3,  group: 'Β΄ Κλίση Επιθέτων', color: 'lred',    desc: 'Β΄ Κλίση — Όλα', sub: ['2nd_us', '2nd_er'] },
+    { id: 4,  group: 'Γ΄ Κλίση Επιθέτων', color: 'lgreen',  desc: 'Δικατάληκτα -is/-e: omnis, brevis, celer', sub: ['3rd_2'] },
+    { id: 5,  group: 'Γ΄ Κλίση Επιθέτων', color: 'lyellow', desc: 'Μονοκατάληκτα: felix, acer', sub: ['3rd_1'] },
+    { id: 6,  group: 'Γ΄ Κλίση Επιθέτων', color: 'lred',    desc: 'Γ΄ Κλίση — Όλα', sub: ['3rd_2', '3rd_1'] },
+    { id: 7,  group: 'Παραθετικά', color: 'lpurple', desc: 'Συγκριτικός (-ior/-ius): altior', sub: ['comp'] },
+    { id: 8,  group: 'Παραθετικά', color: 'lpurple', desc: 'Υπερθετικός (-issimus): altissimus', sub: ['superl'] },
+    { id: 9,  group: 'Παραθετικά', color: 'lred',    desc: 'Παραθετικά — Αναγνώριση βαθμών', sub: ['degrees'] },
+    { id: 10, group: 'Master Challenge', color: 'lred', desc: 'Όλα μαζί', sub: ['all'] },
+  ];
+  P['lat-epitheta'] = subArrayProvider(LATE_LEVELS, (a, s) => a.sub === s);
+
+  /* ── lat-antonymies (Latin PRONOUNS) — array DB (LAT_P_DB) ───
+     Source: games/lat-antonymies/data.js LAT_P_PACKS (line 305) +
+     game.js _latpLvls (line 94) + _latpFilter. ids mirror the game's
+     map index (0-based). LAT_P_DB entries carry a `sub` string. */
+  const LATP_LEVELS = [
+    { id: 0,  group: 'Προσωπικές', color: 'lgreen',  desc: 'Προσωπικές (ego, tu, sui)', sub: ['pers1', 'pers2', 'pers3'] },
+    { id: 1,  group: 'Κτητικές', color: 'lgreen',  desc: 'Κτητικές — ενός κτήτορα (meus / tuus / suus)', sub: ['poss_meus', 'poss_tuus', 'poss_suus'] },
+    { id: 2,  group: 'Κτητικές', color: 'lgreen',  desc: 'Κτητικές — πολλών κτητόρων (noster / vester)', sub: ['poss_noster', 'poss_vester'] },
+    { id: 3,  group: 'Δεικτικές', color: 'lyellow', desc: 'Δεικτικές — hic & iste', sub: ['dem_hic', 'dem_iste'] },
+    { id: 4,  group: 'Δεικτικές', color: 'lyellow', desc: 'Δεικτικές — ille', sub: ['dem_ille'] },
+    { id: 5,  group: 'Δεικτικές', color: 'lyellow', desc: 'Δεικτικές — talis & tantus', sub: ['dem_talis', 'dem_tantus'] },
+    { id: 6,  group: 'Οριστικές', color: 'lred',    desc: 'Οριστικές — is & ipse', sub: ['det_is', 'det_ipse'] },
+    { id: 7,  group: 'Οριστικές', color: 'lred',    desc: 'Οριστικές — idem', sub: ['det_idem'] },
+    { id: 8,  group: 'Αναφορικές', color: 'lred',   desc: 'Αναφορικές — qui & quantus', sub: ['rel_qui', 'rel_quantus'] },
+    { id: 9,  group: 'Ερωτηματικές', color: 'lred', desc: 'Ερωτηματικές — quis & quantus;', sub: ['int_quis', 'int_quantus'] },
+    { id: 10, group: 'Αόριστες', color: 'lpurple', desc: 'Αόριστες — aliquis & aliqui', sub: ['ind_aliquis', 'ind_aliqui'] },
+    { id: 11, group: 'Αόριστες', color: 'lpurple', desc: 'Αόριστες — quidam (ουσ. & επιθ.)', sub: ['ind_quidam_s', 'ind_quidam_a'] },
+    { id: 12, group: 'Αόριστες', color: 'lpurple', desc: 'Αόριστες — nemo, nihil, neuter, nullus', sub: ['ind_nemo', 'ind_nihil', 'ind_neuter', 'ind_nullus'] },
+    { id: 13, group: 'Συνδυαστικό', color: 'lpurple', desc: 'Όλες οι αντωνυμίες', sub: ['all'] },
+  ];
+  P['lat-antonymies'] = subArrayProvider(LATP_LEVELS, (p, s) => p.sub === s);
+
+  /* ── lat-verbs — array DB (LAT_V_DB) by conjugation packs ────
+     Source: games/lat-verbs/game.js LATV_LEVEL_GROUPS (line 15) +
+     data.js LAT_V_PACKS (line 236). Levels use the pack id (a STRING) —
+     the selector passes it straight to openLatVerbs. filterRaw narrows
+     LAT_V_DB by the selected packs' conjugations (best-effort: the game
+     itself expands per-tense cells via _latvBuildPool at launch). */
+  const LATV_PACK_CONJ = {
+    '1_ind_act': [1], '1_sub_act': [1], '1_pas': [1],
+    '2_ind_act': [2], '2_sub_act': [2], '2_pas': [2],
+    '3_ind_act': [3], '3_sub_act': [3], '3_pas': [3],
+    '4_ind_act': [4], '4_sub_act': [4], '4_pas': [4],
+    'all_pres': [1, 2, 3, 4], 'all_act': [1, 2, 3, 4], 'master': [1, 2, 3, 4],
+  };
+  const LATV_LEVELS = [
+    { id: '1_ind_act', group: 'Α΄ Συζυγία (amare)', color: 'lgreen',  desc: 'Α΄ Συζυγία — Οριστική Εν.' },
+    { id: '1_sub_act', group: 'Α΄ Συζυγία (amare)', color: 'lgreen',  desc: 'Α΄ Συζυγία — Υποτακτική Εν.' },
+    { id: '1_pas',     group: 'Α΄ Συζυγία (amare)', color: 'lgreen',  desc: 'Α΄ Συζυγία — Παθητική Φωνή' },
+    { id: '2_ind_act', group: 'Β΄ Συζυγία (delere)', color: 'lyellow', desc: 'Β΄ Συζυγία — Οριστική Εν.' },
+    { id: '2_sub_act', group: 'Β΄ Συζυγία (delere)', color: 'lyellow', desc: 'Β΄ Συζυγία — Υποτακτική Εν.' },
+    { id: '2_pas',     group: 'Β΄ Συζυγία (delere)', color: 'lyellow', desc: 'Β΄ Συζυγία — Παθητική Φωνή' },
+    { id: '3_ind_act', group: 'Γ΄ Συζυγία (legere)', color: 'lgreen',  desc: 'Γ΄ Συζυγία — Οριστική Εν.' },
+    { id: '3_sub_act', group: 'Γ΄ Συζυγία (legere)', color: 'lgreen',  desc: 'Γ΄ Συζυγία — Υποτακτική Εν.' },
+    { id: '3_pas',     group: 'Γ΄ Συζυγία (legere)', color: 'lgreen',  desc: 'Γ΄ Συζυγία — Παθητική Φωνή' },
+    { id: '4_ind_act', group: 'Δ΄ Συζυγία (audire)', color: 'lyellow', desc: 'Δ΄ Συζυγία — Οριστική Εν.' },
+    { id: '4_sub_act', group: 'Δ΄ Συζυγία (audire)', color: 'lyellow', desc: 'Δ΄ Συζυγία — Υποτακτική Εν.' },
+    { id: '4_pas',     group: 'Δ΄ Συζυγία (audire)', color: 'lyellow', desc: 'Δ΄ Συζυγία — Παθητική Φωνή' },
+    { id: 'all_pres',  group: 'Συνδυαστικά', color: 'lred', desc: 'Όλες — Ενεστώτας Οριστικής' },
+    { id: 'all_act',   group: 'Συνδυαστικά', color: 'lred', desc: 'Όλες — Ενεργητική Φωνή' },
+    { id: 'master',    group: 'Συνδυαστικά', color: 'lred', desc: 'Master — Όλα μαζί' },
+  ];
+  P['lat-verbs'] = {
+    levels: uiLevels(LATV_LEVELS),
+    filterRaw(arr, ids) {
+      if (!Array.isArray(arr)) return arr;
+      const conjs = ids.reduce((a, id) => a.concat(LATV_PACK_CONJ[id] || []), []);
+      if (!conjs.length) return arr;
+      const set = new Set(conjs);
+      return arr.filter(v => set.has(v.conj));
+    },
+  };
+
   return P;
 })();
