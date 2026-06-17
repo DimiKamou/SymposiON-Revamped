@@ -391,7 +391,47 @@
       ]));
     }
 
-    return { maybeStart, open, reset };
+    /* ── focused MODE picker for the SIGN-UP flow ──
+       A single-step role chooser (student / teacher / parent). Unlike open()
+       it does NOT navigate or mark the whole onboarding done — it just records
+       the chosen mode and resolves a Promise so sign-up can continue. */
+    function pickMode(){
+      return new Promise(function(resolve){
+        var mov = el('div',{class:'ob-ov', role:'dialog', 'aria-modal':'true'});
+        window.symApplyThemeClass(mov);
+        var card = el('div',{class:'ob-card'});
+        mov.appendChild(card);
+        document.body.appendChild(mov);
+        function done(chosen){
+          if(window.STATE){ STATE.role = chosen || 'student'; }
+          try{ SS().set('signup_mode', chosen || 'student'); }catch(_){}
+          mov.classList.remove('in'); setTimeout(function(){ mov.remove(); }, 280);
+          resolve(chosen || 'student');
+        }
+        card.appendChild(el('p',{class:'ob-eyebrow'}, 'SymposiON'));
+        card.appendChild(el('h2',{class:'ob-ttl', html:L({gr:'Ποιος <em>είσαι</em>;',en:'Who <em>are</em> you?'})}));
+        card.appendChild(el('p',{class:'ob-sub'}, L({gr:'Διάλεξε τη λειτουργία σου — θα στήσουμε τα πάντα στα μέτρα σου.',
+          en:'Pick your mode — we’ll set everything up for you.'})));
+        var roles = el('div',{class:'ob-roles'});
+        function mk(id, ic, nm, ds){ return el('button',{class:'ob-role',
+          onclick:function(){ done(id); }},[
+          el('span',{class:'ob-role__ic','data-illu':ic}),
+          el('span',{class:'ob-role__nm'}, L(nm)), el('span',{class:'ob-role__ds'}, L(ds)) ]); }
+        roles.appendChild(mk('student','owl', {gr:'Μαθητής',en:'Student'}, {gr:'Παίξε, μάθε, ανέβα επίπεδα.',en:'Play, learn, level up.'}));
+        roles.appendChild(mk('teacher','quill', {gr:'Καθηγητής',en:'Teacher'}, {gr:'Φτιάξε τάξη & ανάθεσε εργασίες.',en:'Build a class & assign work.'}));
+        card.appendChild(roles);
+        card.appendChild(el('button',{class:'ob-role', style:'margin-top:12px;width:100%;flex-direction:row;align-items:center;gap:14px',
+          onclick:function(){ done('parent'); }},[
+          el('span',{class:'ob-role__ic','data-illu':'wreath-laurel'}),
+          el('span',{},[ el('span',{class:'ob-role__nm', style:'display:block'}, L({gr:'Γονέας',en:'Parent'})),
+            el('span',{class:'ob-role__ds'}, L({gr:'Δες την πρόοδο του παιδιού σου.',en:'Follow your child’s progress.'})) ]) ]));
+        if(window.injectIllus) injectIllus(card);
+        requestAnimationFrame(function(){ mov.classList.add('in'); });
+        setTimeout(function(){ if(mov) mov.classList.add('in'); }, 60);
+      });
+    }
+
+    return { maybeStart, open, reset, pickMode };
   })();
 
   /* ───────────────────────── GUIDE MODE ─────────────────────────── */

@@ -356,7 +356,10 @@ function buildHarness() {
 
   function themePrice(t){ return t.lock ? 2600 : (t.group==='neon' ? 2200 : (t.group==='combo' ? 1800 : (t.group==='vivid' ? 1400 : 0))); }
   function freeThemeIds(){ return THEMES.filter(t=>themePrice(t)===0).map(t=>t.id); }
-  function themeOwned(id){ const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true; return (SymStore.get('own_theme', freeThemeIds())||[]).indexOf(id)>=0; }
+  function themeOwned(id){ const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true;
+    // Member perk: themes granted to signed-up users live in STATE.unlocked.
+    if (window.STATE && Array.isArray(STATE.unlocked) && STATE.unlocked.indexOf(id)>=0) return true;
+    return (SymStore.get('own_theme', freeThemeIds())||[]).indexOf(id)>=0; }
 
   function themeOpt(t, inSeason){
     const price = themePrice(t);
@@ -532,12 +535,13 @@ function boot(){
   // STUDENT layer: mount the Guide FAB; run consent gate → first-visit onboarding (suppressed in ?screen= preview mode)
   if (window.SymGuide) SymGuide.mount();
   if (window.SymSys) SymSys.initOffline();
-  try {
-    if (!new URLSearchParams(location.search).has('screen')) {
-      if (window.SymConsent) SymConsent.start();        // cookie bar only — GDPR age-gate now runs on sign-up
-      if (window.SymOnboard) SymOnboard.maybeStart();    // first-visit orientation
-    }
-  } catch(_) {}
+  // NOTE: No popups on boot. The cookie banner (SymConsent.start) and the
+  // first-visit onboarding overlay (SymOnboard.maybeStart) are intentionally
+  // NOT called here — a brand-new visitor sees zero popups. The GDPR age-gate
+  // and the role/mode picker now run only inside the SIGN-UP flow (see
+  // window.SymSignupFlow below + js/auth.js / js/dir-synthesis.js). Terms &
+  // Privacy stay reachable from the footer. SymGuide stays mounted (above)
+  // but never auto-pops the role picker.
   // click-to-throw burst over the design stage (ignore taps on controls)
   document.addEventListener('click', (e)=>{
     if(!window.SymSeasons || !window.SymSeasons.clickThrow) return;

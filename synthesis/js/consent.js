@@ -169,4 +169,37 @@
 
     return { start, requireConsent, terms, privacy, cookieBanner, reset:()=>{ SS().set('consent',0); openGate(); } };
   })();
+
+  /* ════════════════════════════════════════════════════════════════════
+     SIGN-UP FLOW orchestrator — the single source of truth for the order:
+       (1) human-verify  →  (2) AGE question  →  (3) MODE / role pick  →  onReady
+     Wired from BOTH the nav sign-up button (dir-synthesis) and
+     signUpWithEmail() (auth.js) so the experience is identical everywhere.
+     Every external dependency is GUARDED (the human-verify + anti-bot module
+     and the consent / onboard modules may be absent in isolated tests).
+     ════════════════════════════════════════════════════════════════════ */
+  window.SymSignupFlow = function (onReady) {
+    var done = (typeof onReady === 'function') ? onReady : function(){};
+    Promise.resolve()
+      // (1) human verification — guarded; if the module is absent we skip it.
+      .then(function () {
+        if (window.SymHumanVerify) { try { return window.SymHumanVerify(); } catch (_) {} }
+        return null;
+      })
+      // (2) AGE question + short Terms accept (SymConsent.requireConsent).
+      .then(function () {
+        return new Promise(function (resolve) {
+          if (window.SymConsent && SymConsent.requireConsent) SymConsent.requireConsent(resolve);
+          else resolve();
+        });
+      })
+      // (3) MODE / role pick (student · teacher · parent).
+      .then(function () {
+        if (window.SymOnboard && SymOnboard.pickMode) { try { return SymOnboard.pickMode(); } catch (_) {} }
+        return null;
+      })
+      // (4) hand control back to the caller (open the signup modal / submit).
+      .then(function () { done(); })
+      .catch(function (e) { try { console.warn('[symposion] signup flow aborted:', e); } catch (_) {} });
+  };
 })();

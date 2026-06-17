@@ -79,6 +79,7 @@ function _attachAuthListener() {
   _auth.onAuthStateChanged(user => {
     currentUser = user;
     if (user) {
+      grantMemberThemes();   // member perk: free premium themes (idempotent)
       _loadUserRole(user?.uid)
         .then(() => {
           if (typeof initProgression === 'function') return initProgression(user?.uid);
@@ -104,6 +105,48 @@ function _attachAuthListener() {
     }
   });
 }
+
+// ── MEMBER PERK: free premium themes for signed-up users ──
+// When a user is signed in we grant a tasteful set of normally-locked themes.
+// Adds their ids to STATE.unlocked (deduped, persisted to sym_revamp_unlocked),
+// mirrors them into SymStore 'own_theme' so the theme picker shows them
+// unlocked, then refreshes the harness. Idempotent — safe to call repeatedly.
+const MEMBER_FREE_THEMES = [
+  'tyrian',        // Tyrian Purple — unlockable
+  'golden-fleece', // Golden Fleece — unlockable
+  'royalcourt',    // Royal Court — combo
+  'ultraviolet',   // Ultraviolet — vivid
+  'synthwave',     // Synthwave — neon
+  'petrol',        // Petrol — combo
+];
+window.MEMBER_FREE_THEMES = MEMBER_FREE_THEMES;
+
+function grantMemberThemes() {
+  try {
+    const ST = window.STATE;
+    // 1) STATE.unlocked — merge + dedupe.
+    if (ST) {
+      const set = new Set(Array.isArray(ST.unlocked) ? ST.unlocked : []);
+      MEMBER_FREE_THEMES.forEach(id => set.add(id));
+      ST.unlocked = Array.from(set);
+      // 2) Persist to localStorage 'sym_revamp_unlocked'.
+      try { localStorage.setItem('sym_revamp_unlocked', JSON.stringify(ST.unlocked)); } catch (_) {}
+    }
+    // 3) Mirror into SymStore 'own_theme' so the picker renders them unlocked.
+    if (window.SymStore) {
+      const owned = SymStore.get('own_theme', null);
+      const base = Array.isArray(owned) ? owned.slice() : [];
+      let changed = !Array.isArray(owned);
+      MEMBER_FREE_THEMES.forEach(id => { if (base.indexOf(id) < 0) { base.push(id); changed = true; } });
+      if (changed) SymStore.set('own_theme', base);
+    }
+    // 4) Refresh the theme picker / harness so the change shows immediately.
+    if (typeof window.symRefreshHarness === 'function') window.symRefreshHarness();
+  } catch (e) {
+    try { console.warn('[symposion auth] grantMemberThemes failed:', e); } catch (_) {}
+  }
+}
+window.grantMemberThemes = grantMemberThemes;
 
 // Run synchronously — firebase.auth() must be available before
 // favorites.js, scores.js, and other scripts run their own IIFEs.
@@ -256,13 +299,65 @@ function signInWithEmail() {
   }
 }
 
+// ── ANTI-BOT: install a honeypot on the sign-up form (idempotent) ──
+// Guarded — the anti-bot module (window.SymAntiBot) may be absent in tests.
+let _signupHoneypot = null;
+function _installSignupHoneypot() {
+  if (!window.SymAntiBot || typeof SymAntiBot.honeypot !== 'function') return null;
+  const form = document.getElementById('auth-view-signup')
+            || document.getElementById('auth-modal')
+            || document.querySelector('#auth-view-signup, form');
+  if (!form) return null;
+  if (!_signupHoneypot || _signupHoneypot._form !== form) {
+    try { _signupHoneypot = SymAntiBot.honeypot(form); if (_signupHoneypot) _signupHoneypot._form = form; }
+    catch (_) { _signupHoneypot = null; }
+  }
+  return _signupHoneypot;
+}
+
 // ── EMAIL/PASSWORD SIGN-UP ──
+// The full sign-up gate runs first: human-verify → AGE → MODE/role (via
+// window.SymSignupFlow), with anti-bot defences (honeypot, throttle, sanitize).
+// Each external dependency is GUARDED so the form still works if a module is
+// absent (e.g. in an isolated test harness).
 function signUpWithEmail() {
+  const hp = _installSignupHoneypot();
+
+  // Anti-bot: silently abort if the hidden honeypot field was filled.
+  if (hp && typeof hp.isBot === 'function') {
+    try { if (hp.isBot()) { _showAuthError('Κάτι πήγε στραβά. Δοκίμασε ξανά.'); return; } } catch (_) {}
+  }
+
+  // Anti-bot: throttle attempts (max 5 per 60s) with a friendly notice.
+  if (window.SymAntiBot && typeof SymAntiBot.throttle === 'function') {
+    try {
+      const t = SymAntiBot.throttle('signup', 5, 60000);
+      if (t && t.allowed === false) {
+        const secs = Math.ceil((t.retryAfter || 0) / 1000);
+        _showAuthError('Πάρα πολλές απόπειρες. Δοκίμασε ξανά' + (secs ? ' σε ' + secs + 'δ.' : ' αργότερα.'));
+        return;
+      }
+    } catch (_) {}
+  }
+
+  // Run the gated flow (human-verify → age → mode) THEN create the account.
+  if (window.SymSignupFlow) {
+    window.SymSignupFlow(_doEmailSignUp);
+  } else {
+    _doEmailSignUp();
+  }
+}
+
+function _doEmailSignUp() {
   // Client-side validation runs BEFORE the Firebase-ready guard so empty/invalid
   // submits show the specific validation message even when Firebase is unavailable.
-  const name  = document.getElementById('auth-name')?.value?.trim()            ?? '';
-  const email = document.getElementById('auth-signup-email')?.value?.trim()    ?? '';
+  let name  = document.getElementById('auth-name')?.value?.trim()            ?? '';
+  let email = document.getElementById('auth-signup-email')?.value?.trim()    ?? '';
   const pass  = document.getElementById('auth-signup-password')?.value          ?? '';
+  // Anti-bot: sanitize the user-supplied name & email before use (guarded).
+  if (window.SymAntiBot && typeof SymAntiBot.sanitize === 'function') {
+    try { name = SymAntiBot.sanitize(name); email = SymAntiBot.sanitize(email); } catch (_) {}
+  }
   if (!name)              { _showAuthError('Συμπλήρωσε το όνομά σου.'); return; }
   if (!email)             { _showAuthError('Συμπλήρωσε email.'); return; }
   if (pass.length < 6)   { _showAuthError('Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.'); return; }
