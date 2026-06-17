@@ -166,4 +166,118 @@
 .lyo-chrono-inp.lwrong{border-color:#c0392b;color:#e67e6a;background:rgba(192,57,43,.1);}
 .lyo-chrono-hint{grid-column:2;font-size:.83rem;padding:3px 8px;color:#8a7a60;}
 @media(max-width:500px){.lyo-chrono-row{grid-template-columns:1fr;gap:4px;}}
+
+/* ════════════════════════════════════════════════════════════════════
+   TWO-PANE LEVEL PICKER (.gpx-*) — the shared grammar level-selection UI
+   emitted by shared-engine.js (gramBuildLevelGrid / gramBuildSubPicker).
+   Ver1 shipped these rules in css/grammar-lessons.css + css/main.css,
+   which were NOT carried into the synthesis shell — so every grammar
+   game (incl. the reference Συνηρημένα) rendered its level screen as an
+   unstyled stack. Restored here, scoped to .gpx-pick / .gram-qs-page,
+   with the lyo dark palette baked in (gold #c9a44a · cream #e8dcc8 ·
+   line #3d3020) so it sits on the dark game overlay on any site theme.
+   ════════════════════════════════════════════════════════════════════ */
+.gpx-pick{
+  --gpx-gold:#c9a44a; --gpx-gold-lt:#e8c87a; --gpx-cream:#e8dcc8;
+  --gpx-dim:#8a7a60; --gpx-line:#3d3020; --gpx-panel:#241e16; --gpx-ink:#15110b;
+  color:var(--gpx-cream);
+}
+.gpx-pick .gpx-prog{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.gpx-pick .gpx-bar{flex:1;height:4px;border-radius:3px;overflow:hidden;background:rgba(201,164,74,.14);}
+.gpx-pick .gpx-bar>i{display:block;height:100%;border-radius:3px;background:var(--gpx-gold);}
+.gpx-pick .gpx-prog span{font-size:.74rem;letter-spacing:.04em;color:var(--gpx-dim);white-space:nowrap;}
+/* two-pane body */
+.gpx-pick .gpx-body{display:flex;gap:0;border:1px solid var(--gpx-line);border-radius:14px;overflow:hidden;min-height:0;}
+.gpx-pick .gpx-rail{width:228px;flex-shrink:0;display:flex;flex-direction:column;gap:3px;padding:14px 12px;
+  border-right:1px solid var(--gpx-line);max-height:62vh;overflow:auto;}
+.gpx-pick .gpx-rail-lbl{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gpx-dim);padding:2px 8px 6px;}
+.gpx-pick .gpx-railitem{display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;padding:9px 10px;border-radius:9px;
+  background:none;border:1px solid transparent;border-left:2px solid transparent;color:inherit;transition:background .15s,border-color .15s;}
+.gpx-pick .gpx-railitem:hover{background:rgba(201,164,74,.06);}
+.gpx-pick .gpx-railitem.on{background:rgba(201,164,74,.12);border-color:rgba(201,164,74,.36);border-left-color:var(--gpx-gold);}
+.gpx-pick .gpx-railbody{flex:1;min-width:0;}
+.gpx-pick .gpx-railitem .nm{display:block;font-weight:600;font-size:.86rem;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--gpx-cream);}
+.gpx-pick .gpx-railitem.on .nm{color:var(--gpx-gold-lt);}
+.gpx-pick .gpx-railitem .bl{display:block;font-size:.72rem;color:var(--gpx-dim);margin-top:1px;}
+/* progress ring */
+.gpx-pick .gpx-ring{position:relative;width:28px;height:28px;flex-shrink:0;}
+.gpx-pick .gpx-ring .trk{stroke:rgba(232,220,200,.14);}
+.gpx-pick .gpx-ring .fil{stroke:var(--gpx-gold);transition:stroke-dashoffset .5s ease;}
+.gpx-pick .gpx-ring i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:.6rem;font-weight:700;color:var(--gpx-dim);}
+/* detail pane */
+.gpx-pick .gpx-detail{flex:1;min-width:0;padding:14px 16px 16px;max-height:62vh;overflow:auto;}
+.gpx-pick .gpx-detail-hd{display:flex;align-items:baseline;gap:9px;margin-bottom:11px;}
+.gpx-pick .gpx-detail-hd h3{margin:0;font-size:1rem;font-weight:600;color:var(--gpx-gold-lt);letter-spacing:.02em;font-family:'Cinzel',serif;}
+.gpx-pick .gpx-detail-hd .meta{font-size:.78rem;color:var(--gpx-dim);}
+.gpx-pick .gpx-subdiv{display:flex;align-items:center;gap:7px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gpx-dim);margin:13px 0 7px;font-family:'Cinzel',serif;}
+.gpx-pick .gpx-subdiv .ct{margin-left:auto;font-size:.62rem;}
+.gpx-pick .gpx-rows{display:flex;flex-direction:column;gap:7px;}
+/* level row */
+.gpx-pick .gpx-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;cursor:pointer;padding:10px 13px;border-radius:11px;
+  background:rgba(232,220,200,.04);border:1px solid var(--gpx-line);color:var(--gpx-cream);transition:border-color .16s,transform .12s,box-shadow .16s;}
+.gpx-pick .gpx-row:hover{border-color:rgba(201,164,74,.55);transform:translateY(-1px);box-shadow:0 5px 18px rgba(201,164,74,.12);}
+.gpx-pick .gpx-row.on{border-color:var(--gpx-gold);background:rgba(201,164,74,.1);}
+.gpx-pick .gpx-box{display:flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;border-radius:6px;border:1px solid var(--gpx-line);color:transparent;}
+.gpx-pick .gpx-row.on .gpx-box{background:var(--gpx-gold);border-color:var(--gpx-gold);color:var(--gpx-ink);}
+.gpx-pick .gpx-num{display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;border-radius:8px;
+  border:1px solid var(--gpx-line);font-weight:700;font-size:.8rem;color:var(--gpx-gold);font-family:'Cinzel',serif;}
+.gpx-pick .gpx-row.s-new .gpx-num{color:var(--gpx-dim);}
+.gpx-pick .gpx-rowbody{min-width:0;flex:1;}
+.gpx-pick .gpx-desc{display:block;font-size:.86rem;line-height:1.3;color:var(--gpx-cream);}
+.gpx-pick .gpx-rowgrp{display:block;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gpx-dim);margin-top:3px;}
+.gpx-pick .gpx-score{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;font-size:.72rem;font-weight:600;white-space:nowrap;}
+.gpx-pick .gpx-score i{font-style:normal;font-size:.62rem;opacity:.7;margin-left:1px;}
+.gpx-pick .gpx-score.done{color:var(--gpx-gold-lt);}
+.gpx-pick .gpx-score.act{color:var(--gpx-gold);}
+.gpx-pick .gpx-score.new{color:var(--gpx-dim);font-weight:500;}
+.gpx-pick .gpx-empty{padding:34px 16px;text-align:center;color:var(--gpx-dim);font-size:.9rem;}
+/* hide the legacy post-game badge some games append — gpx-score is authoritative */
+.gpx-pick .gpx-row .lvl-badge{display:none;}
+/* custom-config entry in the rail (e.g. lyo "Προσαρμοσμένο") */
+.gpx-pick .gpx-railitem.gpx-extra{margin-top:8px;border:1px dashed var(--gpx-line);border-left-width:1px;}
+.gpx-pick .gpx-railitem.gpx-extra:hover{border-color:rgba(201,164,74,.5);}
+.gpx-pick .gpx-railitem.gpx-extra .nm{color:var(--gpx-gold-lt);}
+.gpx-locked-note{padding:30px 22px;text-align:center;color:#8a7a60;font-size:.9rem;font-style:italic;}
+@media(max-width:720px){
+  .gpx-pick .gpx-body{flex-direction:column;}
+  .gpx-pick .gpx-rail{width:100%;max-height:none;border-right:none;border-bottom:1px solid var(--gpx-line);flex-direction:row;flex-wrap:wrap;}
+  .gpx-pick .gpx-rail-lbl{width:100%;}
+  .gpx-pick .gpx-railitem{width:auto;flex:1 1 45%;}
+  .gpx-pick .gpx-detail{max-height:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  .gpx-pick .gpx-row,.gpx-pick .gpx-ring .fil{transition:none;}
+  .gpx-pick .gpx-row:hover{transform:none;}
+}
+
+/* ── Mode / launch settings page (gramOpenQuizSettings) — full-page, two-pane
+   like the level picker: rail of quiz modes + arcade games, controls on side. ── */
+.gram-qs-page{position:fixed;inset:0;z-index:9000;display:none;overflow:auto;background:#18100a;color:#e8dcc8;padding:30px 22px 52px;}
+.gram-qs-page.active{display:block;}
+.gram-qs-page .gram-qs-inner{max-width:1120px;margin:0 auto;}
+.gram-qs-page .gram-qs-inner>h2{margin:10px 0 2px;font-size:1.7rem;color:#e8c87a;font-family:'Cinzel',serif;}
+.gram-qs-page .gpx-body{margin-top:16px;min-height:58vh;}
+.gram-qs-page .gpx-rail{width:290px;}
+.gram-qs-page .gpx-railitem{padding:11px 12px;}
+.gram-qs-page .gpx-railitem .nm{font-size:.94rem;}
+.gram-qs-page .gpx-detail{padding:20px 26px;}
+.gram-qs-page .gram-qs-desc{color:#8a7a60;font-style:italic;margin:2px 0 18px;font-size:1.02rem;}
+.gram-qs-page .gram-qs-fieldlbl{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:#8a7a60;margin:8px 0 10px;font-family:'Cinzel',serif;}
+.gram-qs-page .lmode-sel{display:grid;gap:11px;margin:0 0 18px;}
+.gram-qs-page .lmode-btn{padding:16px 16px;}
+.gram-qs-page .gram-qs-eng-ic{display:flex;align-items:center;justify-content:center;width:22px;color:#c9a44a;}
+.gram-qs-page .gram-qs-railfav{margin-left:auto;flex-shrink:0;}
+.gram-qs-page .gram-qs-go{margin-top:20px;}
+.gram-qs-page .gram-qs-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.gram-qs-page .gram-qs-home{background:none;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:1.05rem;letter-spacing:.03em;color:#e8c87a;}
+.gram-qs-page .gram-qs-home b{color:#c9a44a;font-weight:700;}
+.gram-qs-page .gram-qs-home:hover{filter:brightness(1.12);}
+
+/* segmented controls (time / lives) used inside the picker & settings page */
+.gpx-seg{display:flex;flex-wrap:wrap;gap:7px;}
+.gpx-segbtn{cursor:pointer;min-width:44px;text-align:center;padding:8px 13px;border-radius:9px;
+  background:rgba(232,220,200,.05);border:1px solid #3d3020;color:#8a7a60;font-family:'Cinzel',serif;font-size:.85rem;transition:all .14s;}
+.gpx-segbtn:hover{color:#e8dcc8;border-color:rgba(201,164,74,.45);}
+.gpx-segbtn.on{color:#15110b;font-weight:600;border-color:transparent;background:#c9a44a;}
+@media(prefers-reduced-motion:reduce){.gpx-segbtn{transition:none;}}
 </style>

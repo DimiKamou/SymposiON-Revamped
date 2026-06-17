@@ -18,21 +18,32 @@ const DECL_ENDINGS = {
   'ον_ουδ': {sg:['ον','ου','ῳ','ον','ον'], pl:['α','ων','οις','α','α']},
 };
 
+// group + desc added so the shared two-pane picker (gramBuildLevelGrid) can
+// render this screen identically to the other grammar games (Συνηρημένα etc.).
+// `label` kept as the legacy alias (== desc) for any older reader.
 const DECL_LEVELS = [
-  {id:1, label:"Α΄ Κλίση — Θηλυκά σε -α (χώρα, θάλασσα)", filter:{d:1, gender:'θηλυκό', ending:'α'}, color:'lgreen'},
-  {id:2, label:"Α΄ Κλίση — Θηλυκά σε -η (τιμή, νίκη)",   filter:{d:1, gender:'θηλυκό', ending:'η'}, color:'lgreen'},
-  {id:3, label:"Α΄ Κλίση — Αρσενικά σε -ας (νεανίας)",    filter:{d:1, gender:'αρσενικό', ending:'ας'}, color:'lyellow'},
-  {id:4, label:"Α΄ Κλίση — Αρσενικά σε -ης (πολίτης)",    filter:{d:1, gender:'αρσενικό', ending:'ης'}, color:'lyellow'},
-  {id:5, label:"Α΄ Κλίση — Όλα",                           filter:{d:1}, color:'lred'},
-  {id:6, label:"Β΄ Κλίση — Αρσ./Θηλ. σε -ος (λόγος, νόσος)", filter:{d:2, gender:'αρσενικό|θηλυκό'}, color:'lgreen'},
-  {id:7, label:"Β΄ Κλίση — Ουδέτερα σε -ον (δῶρον)",      filter:{d:2, gender:'ουδέτερο'}, color:'lyellow'},
-  {id:8, label:"Β΄ Κλίση — Όλα",                           filter:{d:2}, color:'lred'},
-  {id:9, label:"Α΄ + Β΄ Κλίση — Όλα μαζί",                 filter:{d:12}, color:'lred'},
+  {id:1, group:'Α΄ Κλίση', desc:"Θηλυκά σε -α (χώρα, θάλασσα)", label:"Α΄ Κλίση — Θηλυκά σε -α (χώρα, θάλασσα)", filter:{d:1, gender:'θηλυκό', ending:'α'}, color:'lgreen'},
+  {id:2, group:'Α΄ Κλίση', desc:"Θηλυκά σε -η (τιμή, νίκη)",   label:"Α΄ Κλίση — Θηλυκά σε -η (τιμή, νίκη)",   filter:{d:1, gender:'θηλυκό', ending:'η'}, color:'lgreen'},
+  {id:3, group:'Α΄ Κλίση', desc:"Αρσενικά σε -ας (νεανίας)",    label:"Α΄ Κλίση — Αρσενικά σε -ας (νεανίας)",    filter:{d:1, gender:'αρσενικό', ending:'ας'}, color:'lyellow'},
+  {id:4, group:'Α΄ Κλίση', desc:"Αρσενικά σε -ης (πολίτης)",    label:"Α΄ Κλίση — Αρσενικά σε -ης (πολίτης)",    filter:{d:1, gender:'αρσενικό', ending:'ης'}, color:'lyellow'},
+  {id:5, group:'Α΄ Κλίση', desc:"Α΄ Κλίση — Όλα",               label:"Α΄ Κλίση — Όλα",                           filter:{d:1}, color:'lred'},
+  {id:6, group:'Β΄ Κλίση', desc:"Αρσ./Θηλ. σε -ος (λόγος, νόσος)", label:"Β΄ Κλίση — Αρσ./Θηλ. σε -ος (λόγος, νόσος)", filter:{d:2, gender:'αρσενικό|θηλυκό'}, color:'lgreen'},
+  {id:7, group:'Β΄ Κλίση', desc:"Ουδέτερα σε -ον (δῶρον)",      label:"Β΄ Κλίση — Ουδέτερα σε -ον (δῶρον)",      filter:{d:2, gender:'ουδέτερο'}, color:'lyellow'},
+  {id:8, group:'Β΄ Κλίση', desc:"Β΄ Κλίση — Όλα",               label:"Β΄ Κλίση — Όλα",                           filter:{d:2}, color:'lred'},
+  {id:9, group:'Συνδυαστικό', desc:"Α΄ + Β΄ Κλίση — Όλα μαζί",  label:"Α΄ + Β΄ Κλίση — Όλα μαζί",                 filter:{d:12}, color:'lred'},
 ];
 
 function openNounFill() {
   document.getElementById('noun-fill-overlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  // noun-fill's word bank is OUS_DB (defined in ousiastika/data.js). The lazy
+  // manifest only loads this game's game.js, so OUS_DB may be absent on a fresh
+  // launch → the round build threw "OUS_DB is not defined". Lazy-load it first
+  // (a classic <script>, so its top-level const becomes globally visible).
+  if (typeof OUS_DB === 'undefined' && typeof window.lazyLoad === 'function') {
+    window.lazyLoad(['games/ousiastika/data.js']).then(_nFillBuild).catch(_nFillBuild);
+    return;
+  }
   _nFillBuild();
 }
 function closeNounFill() {
@@ -43,28 +54,16 @@ function nounFillGoLevels() { _nFillBuild(); }
 
 function _nFillBuild() {
   const wrap = document.getElementById('noun-fill-wrap');
-  let levelsHTML = '';
-  const groups = {
-    'Α΄ Κλίση': DECL_LEVELS.filter(l=>l.id<=5),
-    'Β΄ Κλίση': DECL_LEVELS.filter(l=>l.id>=6&&l.id<=8),
-    'Συνδυαστικό': DECL_LEVELS.filter(l=>l.id===9),
-  };
-  for (const [g, lvls] of Object.entries(groups)) {
-    levelsHTML += `<div class="lmood-sec"><div class="lmood-hd">${g}</div><div class="lvl-grid">`;
-    lvls.forEach(l => {
-      levelsHTML += `<div class="lvl-card ${l.color}" onclick="_nFillStart(${l.id})" style="cursor:pointer;">
-        <div class="lnum">ΕΠΙΠΕΔΟ ${l.id}</div>
-        <div class="ldesc">${l.label}</div></div>`;
-    });
-    levelsHTML += `</div></div>`;
-  }
-
+  // Level screen now renders through the SHARED two-pane picker
+  // (gramBuildLevelGrid → .gpx-pick) inside the standard .lcard.lscreen-levels
+  // chrome, so it matches Συνηρημένα and the rest of the grammar games.
   wrap.innerHTML = `
-  <div style="max-width:700px;margin:0 auto;padding:20px 16px;font-family:'Crimson Text',serif;color:#e8dcc8;">
-    <div id="nfill-screen-levels">
-      <h1 style="font-family:'Cinzel',serif;font-size:1.7rem;color:#c9a44a;text-align:center;margin-bottom:6px;">Συμπλήρωση Κατάληξης</h1>
-      <p style="text-align:center;color:#8a7a60;font-style:italic;margin-bottom:24px;">Γράψε τη σωστή κατάληξη του ουσιαστικού</p>
-      ${levelsHTML}
+  <div style="max-width:720px;margin:0 auto;padding:20px 16px;font-family:'Crimson Text',serif;color:#e8dcc8;">
+    <div id="nfill-screen-levels" class="lcard lscreen-levels" style="max-height:none;">
+      <h1>Συμπλήρωση Κατάληξης</h1>
+      <p class="lsubtitle">Γράψε τη σωστή κατάληξη του ουσιαστικού</p>
+      <hr class="ldivider">
+      <div id="nfill-level-grid"></div>
     </div>
     <div id="nfill-screen-game" style="display:none;">
       <div style="background:#1a1610;border:1px solid #3d3020;border-radius:12px;padding:20px;">
@@ -119,6 +118,11 @@ function _nFillBuild() {
 
   document.getElementById('nfill-fi-input').onkeydown = e => { if(e.key==='Enter') _nFillSubmit(); };
   gramBuildKeyboard('nfill');
+  // Shared two-pane level picker (rail = κλίσεις, rows = levels) — same look as
+  // Συνηρημένα. Selecting a level launches the round via _nFillStart.
+  if (typeof gramBuildLevelGrid === 'function') {
+    gramBuildLevelGrid('nfill', DECL_LEVELS, lvl => _nFillStart(lvl.id));
+  }
 }
 
 function _nFillLevels(){
@@ -170,7 +174,10 @@ function _nFillNext(){
   const fb=document.getElementById('nfill-feedback');if(fb){fb.textContent='';fb.style.color='#8a7a60';}
   const inp=document.getElementById('nfill-fi-input');
   if(inp){inp.value='';inp.disabled=false;inp.style.borderColor='#7a6030';}
-  _gramDiac['nfill']=null;
+  // Reset the polytonic keyboard via the shared helper. (The old line referenced
+  // a non-existent `_gramDiac` global → threw "_gramDiac is not defined" and
+  // halted the round before the first noun rendered.)
+  if (typeof gramClearDiacritics === 'function') gramClearDiacritics('nfill');
   document.querySelectorAll('#nfill-diac-row .lpoly-dkey').forEach(b=>b.classList.remove('ldkey-active'));
   gramRenderVowels('nfill');
 
