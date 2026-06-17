@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Apple of Discord">
-  <path d="M 50 28 Q 38 26 30 36 Q 22 48 26 64 Q 32 80 44 86 Q 50 88 56 86 Q 68 80 74 64 Q 78 48 70 36 Q 62 26 50 28 Z"></path>
-  <path d="M 36 38 Q 40 50 50 50 Q 60 50 64 38" stroke-opacity="0.45"></path>
-  <path d="M 30 56 Q 40 64 50 60" stroke-opacity="0.45"></path>
-  <path d="M 50 28 Q 50 22 54 18 Q 58 14 62 16 Q 60 24 54 26"></path>
-  <path d="M 50 28 L 50 22" stroke-opacity="0.7"></path>
-  <ellipse cx="40" cy="42" rx="3" ry="2" stroke-opacity="0.5" fill="currentColor"></ellipse>
-</svg>

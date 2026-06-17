@@ -1,59 +1,55 @@
 # SymposiON — Revamped
 
-The full **SymposiON** platform (the real app — login, ~47 games, trivia, Live Arena /
-Battle Royale / Άνοδος modes, teacher/admin/parent panels) being **re-skinned to the v2
-"Synthesis" design**.
+The SymposiON platform: the **"Synthesis" revamp front-end** (applied as designed) powered
+natively by the original app's full engine — login, ~50+ games, modes, trivia, admin,
+all merged into one app.
 
-> Goal: keep the original site's functionality exactly as it is, and make it **look like**
-> the Synthesis redesign (warm-dark classical theme, Oswald/Alegreya/Montserrat type).
-
-## Layout
+## The app lives in `synthesis/`
 
 ```
-paideia/                     ← THE APP (ported from DimiKamou/SymposiON-Ver1, as-is)
-  index.html                 ← entry shell (home + all panels + game overlays)
-  css/                       ← 29 stylesheets …
-    synthesis-skin.css       ← ★ the re-skin layer (loaded last; additive; reversible)
-  js/                        ← app core, nav, router, auth, progression, scores …
-  games/                     ← 47 playable games (each = data.js + game.js [+ css])
-  images/                    ← brand, illustrations (104 SVGs), cursors, badges, bg-symbols
-  functions/                 ← Firebase Cloud Functions (Stripe/PayPal, gradeAnswer)
-  firebase.json, *.rules     ← Firebase Hosting / Firestore / Storage config
-design-reference/            ← the v2 "Synthesis" prototype (the design source of truth)
-  home-revamp/               ← token-driven design system (tokens.css = the palette/type)
-  email-automation/
-docs/                        ← migration plans + design approach/brief
-index.html                   ← redirect → paideia/index.html
+synthesis/
+  index.html          ← open this (Live Server) — the app entry
+  css/  js/           ← revamp shell + merged engine + the game-launch manifest (js/manifest/*)
+  games/              ← the real games (each launched on demand via synLaunch)
+  overlays/           ← game/panel overlay partials, injected on launch
+  images/             ← brand, illustrations, cursors, badges
+  docs/               ← INTEGRATION-SPEC.md (how the merge works)
+  firebase.json, .firebaserc, *.rules, functions/   ← Firebase backend (hosting + Firestore/Storage rules + Cloud Functions)
 ```
 
-## Run it locally
+The repo root `index.html` just redirects into `synthesis/`.
 
-The app is a **no-build static site** (Firebase 9 compat SDK from CDN). Serve and open:
+## Run locally
+
+No build step. Serve and open:
 
 ```bash
 python3 -m http.server 8000
-# http://localhost:8000/            → redirects into the app
-# http://localhost:8000/paideia/    → the app directly
+# → http://localhost:8000/synthesis/    (or http://localhost:8000/ which redirects there)
 ```
+or right-click `synthesis/index.html` → **Open with Live Server**.
 
-Login and game data come from the project's existing Firebase backend (the web API key in
-`paideia/js/firebase-config.js` is a public client identifier, not a secret).
+> If you ever see an *old* screen, it's browser cache / a stale service worker from a previous
+> visit — hard-refresh (Ctrl/Cmd+Shift+R), or DevTools → Application → unregister service workers
+> + clear site data, or use an Incognito window.
 
-Deploy (unchanged from the original): `cd paideia && firebase deploy`.
+## Deploy (Firebase Hosting + Functions)
 
-## The re-skin — `paideia/css/synthesis-skin.css`
+```bash
+cd synthesis
+firebase deploy          # hosting (public ".") + Firestore/Storage rules + Cloud Functions
+```
+Firebase config is the project's public client config (`js/firebase-config.js`) — safe to commit.
 
-Loaded **last**, so it overrides the original `theme-obsidian` styles. It is **additive and
-fully reversible** (delete the one `<link>` in `paideia/index.html` to restore the original
-look). This first pass establishes the foundation:
+## What's inside
 
-- **Type system** — Oswald (display/headings), Montserrat (body/UI), Alegreya (lede/editorial).
-- **Palette** — Synthesis "Theme 4" warm-dark tokens (`#18120A` base, `#241A11` panels,
-  `#D97B5C` terra, `#C9A44A` gold, `#F0EBE0` text), remapped onto the OG app's existing
-  CSS variables (`--terra`, `--gold`, `--dark-base`, `--bg-card`, `--sym-*`, …).
-- **Accent harmonisation** — links, primary buttons/CTAs, selection, scrollbars.
+- **Revamp shell** (the "Synthesis" design): home, Agora/Akropolis/Stoa screens, onboarding,
+  guide, consent/cookies, notifications/search, settings.
+- **~51 game folders / 56 wired launchers** — Greek & Latin grammar, canvas/arcade, trivia,
+  iframe games (istoria, symposion board), study/Mnemosyne, multiplayer/Firebase (live-arena,
+  golden-fleece, halieia), plus the PvP pack (krypteia, hegemonia, discus, toxotes, agora).
+- **Auth/login** (Firebase) and the **admin Command Center** (gated to the admin account).
+- Game-launch system: `js/syn-launch.js` + `js/manifest/*.js` (`SYN_GAMES` / `SYN_LAUNCH_MAP`)
+  → `synLaunch(openFn)` injects the overlay + css + lazy-loads the game, then calls it.
 
-### Still to do (component-level fidelity)
-Matching the prototype screen-for-screen — the film-strip nav, the hero spec card, the
-class-chip rows, the Άνοδος / Rapid-Fire feature cards — is the next phase. Those need
-visual iteration against the running app.
+See `synthesis/docs/INTEGRATION-SPEC.md` for the full merge architecture.

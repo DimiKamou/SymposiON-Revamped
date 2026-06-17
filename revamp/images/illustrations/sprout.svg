@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Sprout">
-  <path d="M 50 78 L 50 48"></path>
-  <path d="M 50 56 Q 34 54 30 38 Q 46 38 50 52" stroke="currentColor"></path>
-  <path d="M 50 50 Q 66 48 70 32 Q 54 32 50 46" stroke="currentColor"></path>
-  <path d="M 38 78 Q 50 74 62 78" opacity="0.5"></path>
-  <path d="M 42 82 L 58 82" opacity="0.4"></path>
-</svg>

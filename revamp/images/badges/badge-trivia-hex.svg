@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Trivia · Hex emblem">
-  <path d="M 60 8 L 105 34 L 105 86 L 60 112 L 15 86 L 15 34 Z" stroke-width="1.2" opacity="0.55"></path>
-  <path d="M 60 18 L 96 39 L 96 81 L 60 102 L 24 81 L 24 39 Z"></path>
-  
-  <path d="M 40 44 L 76 44 Q 82 44 82 50 L 82 66 Q 82 72 76 72 L 56 72 L 46 82 L 46 72 L 40 72 Q 34 72 34 66 L 34 50 Q 34 44 40 44 Z"></path>
-  <path d="M 52 54 Q 52 50 58 50 Q 64 50 64 55 Q 64 59 59 60 L 59 63" stroke="#E08456" stroke-width="2"></path>
-  <circle cx="59" cy="68" r="1.8" fill="#E08456" stroke="none"></circle>
-</svg>

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Running Wave Band">
-  <path d="M 4 36 Q 4 12 24 12 Q 44 12 44 30 Q 44 40 34 40 Q 28 40 28 32"></path>
-  <path d="M 44 36 Q 44 12 64 12 Q 84 12 84 30 Q 84 40 74 40 Q 68 40 68 32"></path>
-  <path d="M 84 36 Q 84 12 104 12 Q 124 12 124 30 Q 124 40 114 40 Q 108 40 108 32"></path>
-  <path d="M 124 36 Q 124 12 144 12 Q 164 12 164 30 Q 164 40 154 40 Q 148 40 148 32"></path>
-  <path d="M 164 36 Q 164 12 184 12 Q 204 12 204 30 Q 204 40 194 40 Q 188 40 188 32"></path>
-  <path d="M 204 36 Q 204 12 224 12 Q 244 12 244 30"></path>
-  <line x1="0" y1="44" x2="240" y2="44" stroke-width="1.2" stroke-opacity="0.6"></line>
-</svg>

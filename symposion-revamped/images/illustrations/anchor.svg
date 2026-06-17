@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Anchor / Harbor">
-  <circle cx="50" cy="22" r="7"></circle>
-  <line x1="50" y1="29" x2="50" y2="80"></line>
-  <line x1="34" y1="40" x2="66" y2="40"></line>
-  <path d="M 22 56 Q 22 80 50 80 Q 78 80 78 56"></path>
-  <path d="M 22 56 L 16 50 M 22 56 L 30 54" stroke-opacity="0.7"></path>
-  <path d="M 78 56 L 84 50 M 78 56 L 70 54" stroke-opacity="0.7"></path>
-  <path d="M 8 80 Q 24 74 40 80 T 72 80 T 96 78" stroke-opacity="0.4"></path>
-</svg>

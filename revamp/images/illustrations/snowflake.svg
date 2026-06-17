@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Snowflake Meander">
-  <line x1="50" y1="20" x2="50" y2="80"></line><line x1="24" y1="35" x2="76" y2="65"></line><line x1="76" y1="35" x2="24" y2="65"></line>
-  <path d="M 50 28 L 44 32 M 50 28 L 56 32 M 50 72 L 44 68 M 50 72 L 56 68" opacity="0.7"></path>
-  <path d="M 32 38 L 32 44 M 32 38 L 38 38 M 68 62 L 68 56 M 68 62 L 62 62" opacity="0.7"></path>
-  <path d="M 68 38 L 62 38 M 68 38 L 68 44 M 32 62 L 38 62 M 32 62 L 32 56" opacity="0.7"></path>
-</svg>

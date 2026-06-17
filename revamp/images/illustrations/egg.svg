@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Painted Egg">
-  <path d="M 50 22 Q 30 30 30 56 Q 30 80 50 82 Q 70 80 70 56 Q 70 30 50 22 Z"></path>
-  <path d="M 32 44 Q 50 50 68 44" opacity="0.6"></path>
-  <path d="M 30 58 Q 50 64 70 58" opacity="0.6"></path>
-  <path d="M 38 52 L 42 48 L 46 52 L 50 48 L 54 52 L 58 48 L 62 52" stroke="currentColor" opacity="0.5"></path>
-  <circle cx="42" cy="68" r="2" fill="currentColor" stroke="none" opacity="0.6"></circle><circle cx="50" cy="70" r="2" fill="currentColor" stroke="none" opacity="0.6"></circle><circle cx="58" cy="68" r="2" fill="currentColor" stroke="none" opacity="0.6"></circle>
-</svg>
