@@ -269,9 +269,9 @@
       { lbl:{gr:'Μάθηση',en:'Learn'}, items:[
         { id:'home', gr:'Αρχική', en:'Home', ico:'⌂' },
         { id:'assignments', gr:'Εργασίες', en:'Homework', ico:'✓' },
-        { cls:'gym-a', gr:'Γυμνάσιο', en:'Gymnasio', ico:'Ⅰ' },
-        { cls:'lyk-a', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
-        { cls:'gram-archaia', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
+        { id:'gym', gr:'Γυμνάσιο', en:'Gymnasio', ico:'Ⅰ' },
+        { id:'lyk', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
+        { id:'gramhub', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
         { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel', ico:'▦' },
       ]},
       { lbl:{gr:'Παιχνίδι',en:'Play'}, items:[
@@ -555,7 +555,13 @@
     (ctx.groups || []).forEach((group, gi) => {
       if (gi > 0) groupsWrap.appendChild(el('span', { class:'syn-cdiv', 'aria-hidden':'true' }));
       const grp = el('div', { class:'syn-cgroup'+(group.grammar?' syn-cgroup--gram':'') });
-      grp.appendChild(el('div', { class:'syn-cgroup__h' }, L(group.label)));
+      // group header now opens the hierarchical grade / grammar hub subpage
+      const groupScreen = group.grammar ? 'gramhub' : (group.id==='lyk' ? 'lyk' : 'gym');
+      grp.appendChild(el('button', { class:'syn-cgroup__h syn-cgroup__h--link',
+        title:L({gr:'Άνοιξε την ενότητα',en:'Open section'}), onclick:()=>symGo(groupScreen),
+        style:'display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;'
+          + 'font:inherit;color:inherit;padding:0;text-align:left' }, [
+        L(group.label), el('span', { class:'syn-cgroup__arr', html:'&rarr;', style:'opacity:.55;font-size:.85em' }) ]));
       const row = el('div', { class:'syn-classes__row' });
       group.ids.forEach(id => {
         const c = ctx.byId(id); if(!c) return;
@@ -563,10 +569,14 @@
         const badge = group.grammar
           ? el('span', { class:'syn-chip__rom syn-chip__rom--gl', 'data-illu':c.glyph })
           : el('span', { class:'syn-chip__rom' }, c.roman);
-        row.appendChild(el('button', {
+        // hover previews the panels in-place; a click opens the class subpage
+        const chipEl = el('button', {
           class:'syn-chip has-accent'+(group.grammar?' syn-chip--gram':'')+(active?' active':''),
-          'data-cls':c.id, style:`--ca:${c.accent}`, onclick:()=>setActiveClass(c.id, true)
-        }, [ badge, el('span',{class:'syn-chip__nm'}, L(c)) ]));
+          'data-cls':c.id, style:`--ca:${c.accent}`,
+          onclick:()=> group.grammar ? symGo('gramtrack', {trackId:c.id}) : symGo('classpage', {cls:c})
+        }, [ badge, el('span',{class:'syn-chip__nm'}, L(c)) ]);
+        chipEl.addEventListener('mouseenter', ()=>{ if(!group.grammar) setActiveClass(c.id, false); });
+        row.appendChild(chipEl);
       });
       grp.appendChild(row);
       groupsWrap.appendChild(grp);
