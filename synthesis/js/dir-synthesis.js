@@ -278,7 +278,8 @@
         { id:'live', gr:'Live Arena', en:'Live Arena', ico:'⚡' },
         { id:'anodos', gr:'Άνοδος', en:'Anodos', ico:'⛰' },
         { id:'tartarus', gr:'Tartarus Review', en:'Tartarus', ico:'❂' },
-        { id:'levelup', gr:'Level Up', en:'Level Up', ico:'✦' },
+        // "Level Up" is a TRIGGER event (fires from progression on level gain),
+        // not a manually navigable screen — so it is intentionally not listed.
       ]},
       { lbl:{gr:'Ἀγορά & Ἥρωας',en:'Agora & Hero'}, items:[
         { id:'temple', gr:'Ἀγορά', en:'Agora', ico:'⛩' },

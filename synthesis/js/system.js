@@ -15,23 +15,31 @@
   const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
   /* ───────────────────────── NOTIFICATIONS ─────────────────────── */
-  const NOTIFS = [
-    { id:'n-due',   ic:'⏰', screen:'assignments', time:{gr:'1ω',en:'1h'},
-      t:{gr:'«Ιλιάδα Trivia» λήγει αύριο',en:'“Iliad Trivia” is due tomorrow'} },
-    { id:'n-fb',    ic:'✎', screen:'assignments', time:{gr:'3ω',en:'3h'},
-      t:{gr:'Η κ. Καραγιάννη σχολίασε την εργασία σου',en:'Ms. Karagianni commented on your work'} },
-    { id:'n-lvl',   ic:'✦', screen:'profile', time:{gr:'Χθες',en:'Yesterday'},
-      t:{gr:'Έφτασες στο Επίπεδο 13!',en:'You reached Level 13!'} },
-    { id:'n-chal',  ic:'⚡', screen:'live', time:{gr:'Χθες',en:'Yesterday'},
-      t:{gr:'Ο Νίκος σε προκαλεί σε Live Arena',en:'Nikos challenges you in Live Arena'} },
-    { id:'n-kleos', ic:'⌾', screen:'temple', time:{gr:'2μ',en:'2d'},
-      t:{gr:'Κέρδισες 250 Kleos',en:'You earned 250 Kleos'} },
-  ];
+  // Notifications are driven by REAL trigger events (level-up, Kleos earned,
+  // teacher feedback, Live Arena challenges) — NOT seeded demo data. A brand
+  // new user therefore starts with an empty list and a "0" bell (no badge).
+  // Trigger sites push real items via SymSys.notify({ic,screen,t}); they are
+  // persisted in SymStore('notifs') and capped to the most recent 30.
+  function notifList(){
+    var arr = SS().get('notifs', null);
+    return Array.isArray(arr) ? arr : [];
+  }
+  function notify(evt){
+    if(!evt || !evt.t) return;
+    var list = notifList().slice();
+    var id = evt.id || ('n-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6));
+    list.unshift({ id:id, ic:evt.ic||'✦', screen:evt.screen||'home', t:evt.t,
+      time: evt.time || { gr:'τώρα', en:'now' }, ts: Date.now() });
+    if(list.length > 30) list = list.slice(0, 30);
+    SS().set('notifs', list);
+    if(typeof window.symRender === 'function') try { symRender(); } catch(_){}
+    return id;
+  }
   const readSet = () => SS().get('notif_read', []);
   const isRead  = id => readSet().indexOf(id) >= 0;
-  const unread  = () => NOTIFS.filter(n => !isRead(n.id)).length;
+  const unread  = () => notifList().filter(n => !isRead(n.id)).length;
   function markRead(id){ const r=readSet(); if(r.indexOf(id)<0){ r.push(id); SS().set('notif_read', r); } }
-  function markAll(){ SS().set('notif_read', NOTIFS.map(n=>n.id)); }
+  function markAll(){ SS().set('notif_read', notifList().map(n=>n.id)); }
 
   function bellButton(){
     const wrap = el('div',{class:'sys-pop-wrap'});
@@ -47,7 +55,12 @@
       el('span',{class:'sys-panel__t'}, L({gr:'Ειδοποιήσεις',en:'Notifications'})),
       el('button',{class:'sys-panel__all', onclick:()=>{ markAll(); symRender(); }}, L({gr:'Όλα ως διαβασμένα',en:'Mark all read'})),
     ]));
-    NOTIFS.forEach(no=>{
+    const list = notifList();
+    if(!list.length){
+      panel.appendChild(el('div',{class:'sys-notif sys-notif--empty'},
+        L({gr:'Καμία ειδοποίηση ακόμη.',en:'No notifications yet.'})));
+    }
+    list.forEach(no=>{
       const row = el('button',{class:'sys-notif'+(isRead(no.id)?' read':''),
         onclick:()=>{ markRead(no.id); symGo(no.screen); } },[
         el('span',{class:'sys-notif__ic'}, no.ic),
@@ -201,5 +214,5 @@
     if(window.injectIllus) injectIllus(body);
   };
 
-  window.SymSys = { bellButton, searchButton, openSearch, initOffline, unread };
+  window.SymSys = { bellButton, searchButton, openSearch, initOffline, unread, notify };
 })();

@@ -273,16 +273,13 @@ function buildHarness() {
   const brand = el('div', { class:'harness__brand' });
   brand.appendChild(brandMark('hb-mark'));
   brand.appendChild(el('span', { html:'Symposi<b>ON</b>' }));
-  brand.appendChild(el('small', null, 'Home Revamp'));
   bar.appendChild(brand);
 
-  // direction switch
-  const ds = el('div', { class:'dirswitch' });
-  DIRS.forEach(d => ds.appendChild(el('button', {
-    class:'dirswitch__btn' + (d.id===STATE.direction?' active':''), 'data-dir':d.id,
-    onclick:()=>{ STATE.direction=d.id; STATE.screen='home'; STATE.screenParam=null; buildHarness(); render(); }
-  }, [ el('span',{class:'k'}, d.hint), el('span',{class:'n'}, d.n) ])));
-  bar.appendChild(ds);
+  // Direction switcher removed: Synthesis is the one and only production
+  // direction now, so the old prototype "Stoa / Agora / Akrópolis" tabs
+  // (and the "Editorial / Playful / Modern" hints) no longer appear. The
+  // harness keeps only the admin theme/cursor controls. STATE.direction is
+  // pinned to 'synthesis' (see the guard in render()).
 
   bar.appendChild(el('div', { class:'harness__spacer' }));
 
