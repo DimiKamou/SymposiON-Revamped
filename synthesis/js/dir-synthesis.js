@@ -389,7 +389,10 @@
             onclick:()=>{ if(hasAuth) window.openAuthModal('login'); else symGo('login'); } }, L(ctx.STR.signin)),
           el('button', { class:'syn-btn syn-btn--solid',
             onclick:()=>{ var go=()=>{ if(hasAuth) window.openAuthModal('signup'); else symGo('login'); };
-                          if(window.SymConsent&&SymConsent.requireConsent) SymConsent.requireConsent(go); else go(); } }, L(ctx.STR.signup)),
+                          // Sign-up flow order: human-verify → age → mode → open signup.
+                          if(window.SymSignupFlow) window.SymSignupFlow(go);
+                          else if(window.SymConsent&&SymConsent.requireConsent) SymConsent.requireConsent(go);
+                          else go(); } }, L(ctx.STR.signup)),
         ];
       })(),
     ]);
