@@ -32,6 +32,11 @@
 <link rel="stylesheet" href="css/admin-studio.css"/>
 <link rel="stylesheet" href="css/admin-realm.css"/>
 <link rel="stylesheet" href="css/admin-atlas.css"/>
+<!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
+     anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
+     The trivia-panel's own chrome (games/trivia-panel/panel.css) is
+     lazy-loaded by its manifest fragment, so it is NOT linked here. -->
+<link rel="stylesheet" href="css/anathesi.css"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -180,6 +185,10 @@
 <script src="js/dir-synthesis.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/screens-2.js"></script>
+<!-- ══════════ TEACHER WIZARD (Ver1 anathesi port) ══════════
+     Re-registers window.SYM_SCREENS.anathesi AFTER screens-2.js so the richer
+     all-modes wizard (driven by window.GP_ENGINES) WINS over the simple one. -->
+<script src="js/anathesi.js"></script>
 <script src="js/student.js"></script>
 <script src="js/consent.js"></script>
 <script src="js/system.js"></script>
@@ -213,6 +222,9 @@
 <script src="js/manifest/trivia-iframe.js"></script>
 <script src="js/manifest/multiplayer-fb.js"></script>
 <script src="js/manifest/pvp-pack.js"></script>
+<!-- ══════════ TRIVIA-PANEL manifest (Ver1 Universal Trivia Panel port) ══════════
+     Lazy-loads games/trivia-panel/panel.{js,css}; opener window.openTriviaPanel. -->
+<script src="js/manifest/trivia-panel.js"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
 <script src="js/trivia-iframe-launchers.js"></script>
 
