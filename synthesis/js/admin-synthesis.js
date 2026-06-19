@@ -245,7 +245,7 @@
   function grantTemplateCSV() {
     return 'email,role,class,tier,duration\n'
       + 'student@example.com,student,Β΄ Γυμνασίου,pro,12m\n'
-      + 'teacher@example.com,teacher,Όλες,school,perm\n';
+      + 'teacher@example.com,teacher,Όλες,teacher,perm\n';
   }
   // RFC-ish CSV: comma OR semicolon delimiter, quoted fields, header row.
   function parseCSV(text) {
@@ -690,7 +690,7 @@
       var emailFld = field2(L({ gr: 'Email χρήστη', en: 'User email' }), 'student@example.com');
       var roleSel = rowSel(L({ gr: 'Ρόλος', en: 'Role' }), ['student', 'teacher', 'admin']);
       var classSel = rowSel(L({ gr: 'Τάξη', en: 'Class' }), ['Όλες', 'Β΄ Γυμνασίου', 'Γ΄ Λυκείου', 'Λατινικά']);
-      var tierSel = rowSel(L({ gr: 'Πακέτο', en: 'Tier' }), ['free', 'pro', 'school']);
+      var tierSel = rowSel(L({ gr: 'Πακέτο', en: 'Tier' }), grantTiers());
       var durSel = rowSel(L({ gr: 'Διάρκεια', en: 'Duration' }), ['1m', '3m', '12m', 'perm']);
       pane.appendChild(el('div', { class: 'sc-form' }, [
         emailFld, roleSel, classSel, tierSel, durSel,
@@ -1167,13 +1167,8 @@
             ]),
           ]));
         });
-        [{ n: 'Μαρία Κ.', r: 5, t: 'Τα παιδιά λατρεύουν τη Διελκυστίνδα!', new: 1 }, { n: 'κ. Παπαδόπουλος', r: 5, t: 'Ο πίνακας αδυναμιών με βοηθά. Εξαιρετικό.' }, { n: 'Νίκος Δ.', r: 4, t: 'Πολύ καλό, θα ήθελα περισσότερα Λατινικά.' }].forEach(function (f) {
-          fwrap.appendChild(el('div', { class: 'sc-fb' + (f.new ? ' new' : '') }, [
-            el('div', { class: 'sc-fb__hd' }, [el('span', { class: 'sc-fb__n' }, f.n), el('span', { class: 'sc-fb__stars' }, '★★★★★'.slice(0, f.r) + '☆☆☆☆☆'.slice(0, 5 - f.r)), (f.new ? el('span', { class: 'sc-fb__new' }, L({ gr: 'ΝΕΟ', en: 'NEW' })) : null)]),
-            el('p', { class: 'sc-fb__t' }, f.t),
-            el('div', { class: 'sc-fb__act' }, [el('button', { class: 'sc-mini' }, L({ gr: 'Απάντηση', en: 'Reply' })), el('button', { class: 'sc-mini' }, L({ gr: 'Προβολή', en: 'Feature' }))]),
-          ]));
-        });
+        // (removed hardcoded demo reviews — the section now shows only real
+        //  stored feedback, so the count matches the visible cards.)
         pane.appendChild(fwrap);
       }
       else if (activeSec === 'guides') {

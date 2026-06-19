@@ -321,4 +321,3 @@
    soften the shared card shadow for the light theme. */
 .gpx-row,.gpx-railitem,.gpx-segbtn{font-family:'Montserrat',system-ui,sans-serif;}
 .lcard{box-shadow:0 18px 50px color-mix(in srgb,var(--sym-fg,#1E1810) 16%,transparent);}
-</style>

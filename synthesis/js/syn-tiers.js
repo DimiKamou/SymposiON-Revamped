@@ -41,7 +41,12 @@
   function ids() { return all().map(function (t) { return t.id; }); }
   function byId(id) { return all().find(function (t) { return t.id === id; }) || null; }
   function label(id) { var t = byId(id); return t ? { gr: t.gr, en: t.en } : { gr: id, en: id }; }
-  function rank(id) { var i = ids().indexOf(id); return i < 0 ? 0 : i; }
+  function rank(id) {
+    var bi = BUILTIN.findIndex(function (t) { return t.id === id; });
+    if (bi >= 0) return bi;                                    // free=0 · student=1 · teacher=2 · pro=3
+    var c = _custom().find(function (t) { return t.id === id; });
+    return (c && typeof c.rank === 'number') ? c.rank : 1;     // custom default = student-level (never auto-outrank Pro)
+  }
   // does a user's tier satisfy a required tier? (free=0 … custom appended above)
   function meets(userTier, requiredTier) {
     if (!requiredTier) return true;                 // no requirement

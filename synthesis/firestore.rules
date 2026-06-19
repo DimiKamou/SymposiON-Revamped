@@ -227,6 +227,13 @@ service cloud.firestore {
       allow write: if can('users');
     }
 
+    // Access grants written by the admin Grant Access panel (single + bulk CSV).
+    // (Without this, grant writes were silently denied → localStorage-only.)
+    match /accessGrants/{docId} {
+      allow read:  if can('users');
+      allow write: if can('users');
+    }
+
 
     // ══════════════════════════════════════════════════════════
     //  LEADERBOARDS & LIVE GAMES

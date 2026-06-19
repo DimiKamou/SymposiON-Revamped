@@ -138,6 +138,7 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Agora Surfers':            'openAgoraSurfers',
   'Mythology Memory':         'openMythMemory',
   'Epic Puzzle':              'openEpicPuzzle',
+  'epic-puzzle':              'openEpicPuzzle',
   'Odyssey 3D':               'initOdysseyJourney',
   "Grammarian's Blade":       'openBlade',
   'Ξίφος Γραμματικού':        'openBlade',
