@@ -317,11 +317,44 @@ window.ContentSource = (function () {
     return true;
   }
 
+  // Local-only persistence: SymStore mirror + in-memory cache. Used for
+  // reload-survival without a remote write (e.g. boot re-apply, or right after
+  // the Studio's own validated callable write).
+  function _persistLocal(contentId, content) {
+    if (!contentId || !content) return false;
+    _ssSet(contentKey(contentId), clone(content));
+    _cache[contentId] = clone(content);
+    return true;
+  }
+
   async function saveContent(contentId, content) {
     if (!contentId || !content) return false;
     const doc = clone(content);
-    _ssSet(contentKey(contentId), doc);
-    _cache[contentId] = doc;
+    _persistLocal(contentId, doc);               // offline mirror — always
+
+    // Authoritative Firestore write goes through the validated callable
+    // (adminSaveGameContent) — security rules block raw client writes to
+    // gameContent/* for non-bootstrap admins, and the callable re-checks the
+    // quiz/paradigm invariants server-side. Only eligible when the doc matches
+    // the callable's contract (units[] + a known schema).
+    const eligible = Array.isArray(doc.units) && (doc.schema === 'quiz' || doc.schema === 'paradigm');
+    if (eligible && typeof firebase !== 'undefined' && firebase.functions) {
+      try {
+        await firebase.functions().httpsCallable('adminSaveGameContent')({ contentId: contentId, content: doc });
+        return true;
+      } catch (e) {
+        const code = (e && e.code) || '';
+        // A validation rejection must NOT silently fall back to a raw write
+        // that bypasses the very check that failed — surface it instead.
+        if (code === 'invalid-argument' || code === 'functions/invalid-argument') {
+          try { console.warn('[content-source] server rejected content:', e && e.message); } catch (_) {}
+          return false;
+        }
+        // Unauthenticated/unavailable/internal → fall through to the raw write.
+        try { console.warn('[content-source] callable unavailable, raw write:', e && e.message); } catch (_) {}
+      }
+    }
+    // Fallback: direct write (bootstrap admin, non-quiz/paradigm docs, offline).
     const db = _db();
     if (db) {
       try { await db.doc(contentKey(contentId)).set(doc, { merge: false }); } catch (_) { /* SymStore-only */ }
@@ -386,8 +419,10 @@ window.ContentSource = (function () {
   // always persist (so a reload reflects it even when the global isn't on this
   // page — synthesis loads QUESTIONS/OD_QUESTIONS inside the game iframes).
   function applyContentToGlobals(contentId, data) {
-    // Always persist first — guarantees reload-survival.
-    try { saveContent(contentId, data); } catch (_) {}
+    // Mirror to SymStore for reload-survival. The authoritative remote write is
+    // owned by the caller (Site Studio calls adminSaveGameContent directly), so
+    // this path is local-only — no duplicate/rules-blocked Firestore write.
+    try { _persistLocal(contentId, data); } catch (_) {}
 
     if (!data || data.schema !== 'quiz' || !Array.isArray(data.units)) return false;
     const tgt = _quizTargets(contentId);
