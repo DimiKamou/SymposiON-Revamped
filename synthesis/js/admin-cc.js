@@ -1256,4 +1256,11 @@ window._renderAdminPage = function() {
   if (typeof _adminLoadPricing === 'function' && _cat === 'plans') _adminLoadPricing();
 };
 
+// Expose the Class Plan view so the LIGHT admin (admin-synthesis.js) can mount
+// the real per-class curriculum planner (datasets/engines/levels/tier) in its
+// Access section — same pattern AdminStudio uses. Does not alter the Classic CC.
+window.AdminCC = window.AdminCC || {};
+window.AdminCC.classPlanHTML = function () { try { return VIEWS.classplan(); } catch (e) { return ''; } };
+window.AdminCC.classPlanInit = function () { try { if (VIEWS.classplan && VIEWS.classplan._init) VIEWS.classplan._init(); } catch (e) {} };
+
 })();
