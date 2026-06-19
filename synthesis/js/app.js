@@ -120,6 +120,13 @@ function render() {
     activeClass: (window.SYM.classById && window.SYM.classById(STATE.classId)) || window.SYM.CLASSES.find(c => c.id === STATE.classId),
   };
 
+  // Mirror the Ver1 global the leveled-game curriculum gate + iframe launchers
+  // read, and warm the per-class curriculum cache so the grammar level pickers
+  // can filter synchronously (replaces Ver1 nav.js's prefetch-on-grade-nav).
+  // prefetch() self-dedupes per grade and no-ops until firebase is ready.
+  window.currentGradeKey = STATE.classId;
+  if (window.CurriculumGate) CurriculumGate.prefetch(STATE.classId);
+
   // Keep the admin-only dev harness in sync with the current `isAdmin` state
   // (cheap: each builder early-returns when admin gating fails).
   buildHarness(); buildTweaks();

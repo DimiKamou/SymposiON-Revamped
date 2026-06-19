@@ -291,6 +291,34 @@
 <script src="js/theory-qa.js"></script>
 
 <script src="js/app.js"></script>
+
+<!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════
+     Show the branded SymLoader (the real one is defined in app.js, loaded just
+     above — its earlier loader.js namesake is shadowed) at boot, then hide it
+     once Firebase auth resolves so the shell paints in its final signed-in/out
+     state (no logged-out→in flash). Fail-open: if the Firebase CDN is blocked/
+     offline, the polls give up after ~3s and a 4s hard fail-safe reveals the
+     app regardless. -->
+<script>
+(function () {
+  if (typeof SymLoader === 'undefined' || !SymLoader.show) return;
+  SymLoader.show();
+  var _hidden = false, _tries = 0;
+  function _hide(){ if (_hidden) return; _hidden = true; setTimeout(function(){ SymLoader.hide(); }, 180); }
+  var gate = setInterval(function () {
+    _tries++;
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length
+        && (typeof _firebaseReady === 'undefined' || _firebaseReady)) {
+      clearInterval(gate);
+      try { firebase.auth().onAuthStateChanged(function () { _hide(); }); }
+      catch (e) { _hide(); }
+    } else if (_tries > 60) {        // ~3s — Firebase never came up (CDN blocked / offline)
+      clearInterval(gate); _hide();
+    }
+  }, 50);
+  setTimeout(function () { clearInterval(gate); _hide(); }, 4000);   // absolute fail-safe
+})();
+</script>
 </body>
 </html>
 

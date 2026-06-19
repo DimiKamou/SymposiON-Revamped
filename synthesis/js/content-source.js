@@ -476,3 +476,49 @@ window.ContentSource = (function () {
     buildCatalogFromSYM, seedContent,
   };
 })();
+
+/* ════════════════════════════════════════════════════════════
+   CurriculumGate — runtime enforcement of per-class level access.
+   Ported from Ver1 (paideia/js/content-source.js). Reads
+   classes/{gradeKey}/curriculum/main (written by the Class Plan and
+   Site Studio's «Διαθέσιμο για αυτή την τάξη» Levels & Access panel) and
+   tells the leveled-game pickers in games/shared-engine.js which levels
+   the browsed class may use. Fail-open: any missing doc / unconfigured
+   dataset / not-yet-loaded grade ⇒ no restriction.
+
+   NOTE: this was dropped in the synthesis content-source.js rewrite, which
+   is why the Studio visibility toggle persisted but never took effect —
+   admin-studio.js calls `if(window.CurriculumGate) CurriculumGate.bust(cls)`
+   and shared-engine.js gates on `window.CurriculumGate`, both of which were
+   permanently false. Restoring it here re-activates both call-sites.
+   ════════════════════════════════════════════════════════════ */
+window.CurriculumGate = (function () {
+  'use strict';
+  const _cache = Object.create(null);            // gradeKey -> data|null (null = no doc)
+  const _db = () => (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+
+  async function load(gradeKey) {
+    if (!gradeKey) return null;
+    if (gradeKey in _cache) return _cache[gradeKey];
+    const db = _db();
+    if (!db) return null;                         // firebase not ready yet — DON'T cache, allow a later retry
+    _cache[gradeKey] = null;                      // in-flight marker (also the no-doc default)
+    try { const s = await db.doc(`classes/${gradeKey}/curriculum/main`).get(); if (s.exists) _cache[gradeKey] = s.data(); }
+    catch (_) {}
+    return _cache[gradeKey];
+  }
+  function prefetch(gradeKey) { if (gradeKey && !(gradeKey in _cache)) load(gradeKey); }
+  function bust(gradeKey) { if (gradeKey) delete _cache[gradeKey]; else Object.keys(_cache).forEach(k => delete _cache[k]); }
+
+  // Set of allowed level ids, or null = unrestricted (don't filter).
+  function allowedLevels(datasetId, gradeKey) {
+    const d = _cache[gradeKey];
+    if (!d || !d.datasets) return null;            // no curriculum for this grade
+    const e = d.datasets[datasetId];
+    if (!e) return null;                           // dataset not configured ⇒ unrestricted
+    if (e.enabled === false) return new Set();     // explicitly disabled ⇒ no levels
+    if (!Array.isArray(e.levels)) return null;     // no level list ⇒ unrestricted
+    return new Set(e.levels);
+  }
+  return { load, prefetch, bust, allowedLevels };
+})();
