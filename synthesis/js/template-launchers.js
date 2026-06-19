@@ -16,6 +16,21 @@
   function _appBase() { return window.APP_BASE || (new URL('./', location.href).href); }
   var OVID = 'template-overlay';
 
+  // Light, synthesis-matching chrome for the launcher frame (the inner tool keeps
+  // its own self-contained parchment/ATLAS theme inside the iframe). Theme-adaptive
+  // via --sym-* tokens (cursors.js stamps the theme class on the .game-overlay).
+  (function _chromeStyle() {
+    if (typeof document === 'undefined' || document.getElementById('tmpl-chrome-css')) return;
+    var st = document.createElement('style'); st.id = 'tmpl-chrome-css';
+    st.textContent =
+      '#template-overlay{background:var(--sym-bg,#F7F3EA);}' +
+      '#template-overlay .overlay-topbar{background:var(--sym-bg-card,#fff);border-bottom:1.5px solid color-mix(in srgb,var(--sym-terra,#C5572F) 50%,transparent);}' +
+      '#template-overlay .overlay-back{color:var(--sym-fg-muted,#8C7F6B);border:1px solid color-mix(in srgb,var(--sym-fg,#1E1810) 14%,transparent);background:transparent;}' +
+      '#template-overlay .overlay-back:hover{color:var(--sym-terra,#C5572F);border-color:var(--sym-terra,#C5572F);}' +
+      '#template-overlay .overlay-title{color:var(--sym-terra,#C5572F);font-family:"Alegreya",serif;}';
+    document.head.appendChild(st);
+  })();
+
   function closeTemplate() {
     var ov = document.getElementById(OVID);
     if (ov) {
@@ -45,7 +60,7 @@
         '</div>' +
         '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
           '<iframe title="" allow="fullscreen" ' +
-            'style="width:100%;height:100%;border:none;display:block;background:#15100A"></iframe>' +
+            'style="width:100%;height:100%;border:none;display:block;background:var(--sym-bg,#F7F3EA)"></iframe>' +
         '</div>';
       document.body.appendChild(ov);
       ov.querySelector('.overlay-back').addEventListener('click', closeTemplate);
