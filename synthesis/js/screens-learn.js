@@ -124,7 +124,7 @@
     }
     const onclick = () => {
       const fn = window.synResolveLaunch && window.synResolveLaunch(gm);
-      if (fn && window.synLaunch) { window.synLaunch(fn); return; }
+      if (fn && window.synLaunch) { window.synLaunch(fn, ...((gm.launch && gm.launch.args) || [])); return; }
       // no real opener wired → reuse the existing mode/level flow
       const subj = _subjectOf(gm, cls);
       go('mode', { subject: subj, game: gm, cls });
@@ -170,6 +170,11 @@
     }
 
     subjects.forEach((s, i) => {
+      // admin-assigned template tiles for this class+subject — merged at render
+      // time so they appear exactly like the hardcoded voyage tiles (no data.js
+      // edits, idempotent per render). See js/syn-assignments.js.
+      const _extra = (window.synAssignedTiles && window.synAssignedTiles(node.id, s.id)) || [];
+      const _games = (s.games || []).concat(_extra);
       const block = el('section', { class: 'syn-subj has-accent', style: `--ca:${accent}` });
       block.appendChild(el('div', { class: 'syn-subj__hd' }, [
         el('span', { class: 'syn-subj__no' }, String(i + 1).padStart(2, '0')),
@@ -180,10 +185,10 @@
         ]),
         el('a', { class: 'syn-subj__all', href: 'javascript:void 0',
           onclick: () => go('subject', { subject: s, cls: node }) }, [
-          L({ gr: 'Όλα', en: 'All' }), el('span', { class: 'syn-subj__cnt' }, (s.games || []).length) ]),
+          L({ gr: 'Όλα', en: 'All' }), el('span', { class: 'syn-subj__cnt' }, _games.length) ]),
       ]));
       block.appendChild(el('div', { class: 'syn-subj__grid' },
-        (s.games || []).map(gm => gameTile(gm, node, accent))));
+        _games.map(gm => gameTile(gm, node, accent))));
       body.appendChild(block);
     });
   }

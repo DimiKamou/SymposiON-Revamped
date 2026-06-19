@@ -120,6 +120,15 @@
     return Array.isArray(subs) ? subs : [];
   }
 
+  /* ── Template assignments (admin assigns a Trivia/Istoria template to a
+     class+subject → student tile, consumed by js/syn-assignments.js). Stored
+     in SymStore + a single guarded Firestore mirror config/templateAssignments. */
+  function taLoad() { var a = SS() ? SS().get('template_assignments', []) : []; return Array.isArray(a) ? a : []; }
+  function taSave(arr) {
+    if (SS()) SS().set('template_assignments', arr);
+    try { if (fsReady()) firebase.firestore().collection('config').doc('templateAssignments').set({ items: arr, updatedAt: Date.now() }, { merge: true }).catch(function () {}); } catch (_e) {}
+  }
+
   /* ════════════════ REAL STATS (no fake demo numbers) ═════════════════
      Games  → real count of launchable games (window.SYN_GAMES) or, failing
               that, distinct game tiles authored across SYM.SUBJECTS.
@@ -917,6 +926,55 @@
           ]));
         });
         pane.appendChild(twrap);
+
+        // ── Assign a template to a class + subject → student tile ──────────
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ανάθεση προτύπου σε τάξη / μάθημα', en: 'Assign template to class / subject' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Διάλεξε τύπο, τάξη & μάθημα — το πρότυπο εμφανίζεται ως πλακίδιο στη σελίδα του μαθήματος (όπως ο Ζωφόρος Ιλιάδας).', en: 'Pick type, class & subject — the template appears as a tile on that subject page (like the Iliad Frieze).' })));
+        (function () {
+          var aType = 'trivia', aClass = '', aSubj = '';
+          var typeS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { aType = e.target.value; } }, [el('option', { value: 'trivia' }, 'Trivia'), el('option', { value: 'history' }, L({ gr: 'Ιστορία', en: 'History' }))]);
+          var subjS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { aSubj = e.target.value; } }, []);
+          function fillSubj() {
+            subjS.innerHTML = ''; aSubj = '';
+            subjS.appendChild(el('option', { value: '' }, L({ gr: '— μάθημα —', en: '— subject —' })));
+            acSubjects(aClass).forEach(function (s) { subjS.appendChild(el('option', { value: s.id }, L(s))); });
+          }
+          var classS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { aClass = e.target.value; fillSubj(); } },
+            [el('option', { value: '' }, L({ gr: '— τάξη —', en: '— class —' }))].concat((SYM().CLASSES || []).map(function (c) { return el('option', { value: c.id }, L(c)); })));
+          var labGr = el('input', { class: 'sc-field__i', placeholder: L({ gr: 'Τίτλος (π.χ. Trivia Λογοτεχνίας)', en: 'Title (gr)' }) });
+          var labEn = el('input', { class: 'sc-field__i', placeholder: 'Title (en)' });
+          fillSubj();
+          pane.appendChild(el('div', { class: 'sc-voyadmin', style: 'gap:8px' }, [
+            el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τύπος', en: 'Type' })), typeS]),
+            el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τάξη', en: 'Class' })), classS]),
+            el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα', en: 'Subject' })), subjS]),
+            el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τίτλος', en: 'Title' })), labGr]),
+            el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, 'EN'), labEn]),
+            el('button', {
+              class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+                if (!aClass || !aSubj || !labGr.value.trim()) return;
+                var arr = taLoad();
+                arr.push({ id: 'ta-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), classId: aClass, subjectId: aSubj, type: aType, label: { gr: labGr.value.trim(), en: labEn.value.trim() || labGr.value.trim() }, meta: aType === 'history' ? 'Ιστορία' : 'Trivia', illu: aType === 'history' ? 'scroll' : 'amphora', preset: aSubj, course: 'g3', ts: Date.now() });
+                taSave(arr); paint();
+              }
+            }, L({ gr: '＋ Ανάθεση', en: '＋ Assign' })),
+          ]));
+          var list = taLoad();
+          if (list.length) {
+            var lw = el('div', { class: 'sc-voyadmin', style: 'margin-top:12px' });
+            list.forEach(function (a) {
+              var c = (SYM().classById && SYM().classById(a.classId));
+              lw.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+                el('div', { class: 'sc-voyadmin__b' }, [
+                  el('div', { class: 'sc-voyadmin__nm' }, L(a.label)),
+                  el('div', { class: 'sc-voyadmin__m' }, (c ? L(c) : a.classId) + ' · ' + a.subjectId + ' · ' + a.type),
+                ]),
+                el('button', { class: 'sc-mini', onclick: (function (id) { return function () { taSave(taLoad().filter(function (x) { return x.id !== id; })); paint(); }; })(a.id) }, L({ gr: '✕ Διαγραφή', en: '✕ Delete' })),
+              ]));
+            });
+            pane.appendChild(lw);
+          }
+        })();
 
         // ── Ζωφόρος literature games (existing editor, kept additively) ────
         // edit episodes/quizzes via each game's own built-in editor
