@@ -1,7 +1,7 @@
 // ============================================================
 //  SymposiON — Synthesis manifest fragment: pvp-pack
 //  New / updated PvP & multiplayer-style Game-Panel engines from the
-//  "Crypto Hack / Gold Quest" pack:
+//  "Gold Quest" pack:
 //      krypteia, hegemonia, discus, toxotes, agora
 //  (+ FX layer for the already-present golden-fleece / halieia).
 //
@@ -10,7 +10,7 @@
 //     window.open<Name> / window.close<Name> and BUILDS ITS OWN overlay shell
 //     on demand (`_ensureOverlay` → <div id="xx-overlay" class="sym-overlay">).
 //     => manifest `overlay:null` (synLaunch must NOT gate on an overlay partial;
-//        the game injects its own, exactly like crypto-hack).
+//        the game injects its own overlay shell).
 //   - Each reads its live question global window.<XX>_Q, falling back to the
 //     shared library window.SYM_QUESTIONS (seeded eagerly by js/syn-questions.js
 //     in index.html) — so every game launches with real content, not an empty
@@ -87,7 +87,6 @@
   window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP || {}, {
     'Κρυπτεία':            'openKrypteia',
     'krypteia':            'openKrypteia',
-    'Crypto Hack (Spartan)': 'openKrypteia',
     'Ηγεμονία':            'openHegemonia',
     'hegemonia':           'openHegemonia',
     'Color Kingdom':       'openHegemonia',

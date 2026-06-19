@@ -197,7 +197,6 @@ function _buildFavRegistry() {
     'lat-nouns-kata-theory': function() { if (typeof openLatNounsKataTheory === 'function') openLatNounsKataTheory(); },
     'lat-epitheta-kata-theory': function() { if (typeof openLatEpithetaKataTheory === 'function') openLatEpithetaKataTheory(); },
     'trivia-iliada':    function() { if (typeof launchGame        === 'function') launchGame('gr'); },
-    'crypto-hack':      function() { if (typeof CryptoHack !== 'undefined' && CryptoHack.open) CryptoHack.open(); },
   };
 
   var reg = {};
@@ -255,15 +254,6 @@ function _buildFavRegistry() {
     desc:   _t('Trivia & Tug of War — πολλαπλής επιλογής ή αγώνας ομάδων.', 'Trivia & Tug of War — multiple choice or team battle.'),
     icon:   '🏆', bg: 'linear-gradient(135deg,#2A1008,#7A3010)', hc: '#c9a44a',
     opener: openers['trivia-iliada'],
-  };
-
-  // ── Crypto Hack (home carousel) ──
-  reg['crypto-hack'] = {
-    id:     'crypto-hack',
-    label:  'Crypto Hack',
-    desc:   _t('Αποκωδικοποίησε κρυφά μηνύματα χρησιμοποιώντας αρχαία κρυπτογραφία.', 'Decode secret messages using ancient cryptography.'),
-    icon:   '🔐', bg: 'linear-gradient(135deg,#0A1A2A,#1A4070)', hc: '#6ab4e8',
-    opener: openers['crypto-hack'],
   };
 
   return reg;

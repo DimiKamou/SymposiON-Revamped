@@ -900,16 +900,23 @@
         // template-launchers.js.
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Πρότυπα — Συνθέτες περιεχομένου', en: 'Templates — Content composers' })));
         pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Σχεδίασε πρότυπα Trivia & Ιστορίας μέσα από το UI με ζωντανή προεπισκόπηση — εξάγουν JSON config.', en: 'Design Trivia & History templates through the UI with a live preview — they export a JSON config.' })));
-        pane.appendChild(el('div', { class: 'sc-realm', style: 'margin:0 0 22px' }, [
-          el('button', {
-            class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'justify-content:flex-start',
-            onclick: function () { if (typeof window.openTriviaTemplate === 'function') window.openTriviaTemplate(); }
-          }, [el('span', { style: 'margin-right:6px' }, '◆'), L({ gr: 'Πρότυπο Trivia', en: 'Trivia Template' })]),
-          el('button', {
-            class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'justify-content:flex-start',
-            onclick: function () { if (typeof window.openHistoryTemplate === 'function') window.openHistoryTemplate(); }
-          }, [el('span', { style: 'margin-right:6px' }, '⛩'), L({ gr: 'Πρότυπο Ιστορίας', en: 'History Template' })]),
-        ]));
+        // Present the two templates as cards in the SAME style as the Ζωφόρος
+        // (Iliada/Eleni) rows below, so they read consistently ("like iliada").
+        var twrap = el('div', { class: 'sc-voyadmin', style: 'margin:0 0 22px' });
+        [
+          { ic: '◆', gr: 'Πρότυπο Trivia', en: 'Trivia Template', mgr: 'Σύνθεση Trivia — περιεχόμενο, πίνακας & ρυθμίσεις', men: 'Compose Trivia — content, board & setup', fn: 'openTriviaTemplate' },
+          { ic: '⛩', gr: 'Πρότυπο Ιστορίας', en: 'History Template', mgr: 'Σύνθεση Ιστορίας — θεματικές ενότητες & λειτουργίες μελέτης', men: 'Compose History — thematic units & study modes', fn: 'openHistoryTemplate' },
+        ].forEach(function (t) {
+          twrap.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+            el('span', { class: 'sc-voyadmin__ic', style: 'display:flex;align-items:center;justify-content:center;font-size:18px' }, t.ic),
+            el('div', { class: 'sc-voyadmin__b' }, [
+              el('div', { class: 'sc-voyadmin__nm' }, t.gr + ' · ' + t.en),
+              el('div', { class: 'sc-voyadmin__m' }, L({ gr: t.mgr, en: t.men })),
+            ]),
+            el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: (function (fn) { return function () { if (typeof window[fn] === 'function') window[fn](); }; })(t.fn) }, L({ gr: 'Άνοιγμα →', en: 'Open →' })),
+          ]));
+        });
+        pane.appendChild(twrap);
 
         // ── Ζωφόρος literature games (existing editor, kept additively) ────
         // edit episodes/quizzes via each game's own built-in editor
@@ -987,18 +994,22 @@
         }
       }
       else if (activeSec === 'games') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος περιεχομένου — πάτα για προεπισκόπηση & εντοπισμό λαθών', en: 'Content review — click to preview & spot mistakes' })));
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος περιεχομένου — όλα τα παιχνίδια του Πίνακα', en: 'Content review — every game in the Panel' })));
         // Clarify what this section IS — it is preview/spot-check ("έλεγχος"), NOT
         // a Q&A authoring tool. Point to where authoring & the registry actually live.
-        pane.appendChild(el('div', { class: 'sc-hint', style: 'margin:-4px 0 10px;opacity:.8' }, L({ gr: 'Μόνο προεπισκόπηση. Για δημιουργία ερωτήσεων → «Studio» · για ετικέτες & μητρώο παιχνιδιών → «Ετικέτες Παιχνιδιών».', en: 'Preview only. To author questions → "Studio" · for tags & the game registry → "Game Tags".' })));
+        pane.appendChild(el('div', { class: 'sc-hint', style: 'margin:-4px 0 10px;opacity:.8' }, L({ gr: 'Μόνο προεπισκόπηση. Για δημιουργία ερωτήσεων → «Studio» · για ετικέτες & μητρώο → «Ετικέτες Παιχνιδιών».', en: 'Preview only. To author questions → "Studio" · for tags & registry → "Game Tags".' })));
         pane.appendChild(el('div', { class: 'sc-refreshbar' }, [el('button', { class: 'sc-refresh', onclick: function () { if (window.SymTags) SymTags.refresh(); paint(); } }, [el('span', { class: 'sc-refresh__ic', html: '↻' }), L({ gr: 'Ανανέωση για νέα', en: 'Refresh for new' })])]));
+        // Show the FULL game catalogue (every game in the Game Panel), not just the
+        // 12 carousel engines — this is the admin's "see what exists in the panel".
+        var _cat = (window.SymTags && SymTags.catalogue) ? SymTags.catalogue() : (SYM().ENGINES || []);
         var g = el('div', { class: 'sc-admin__games' });
-        (SYM().ENGINES || []).forEach(function (e) {
+        _cat.forEach(function (e) {
           g.appendChild(el('button', {
-            class: 'sc-admin__game', onclick: function () { if (window.SymPreview) SymPreview.open(SymPreview.typeFor(e), { title: L(e), illu: e.illu, note: L({ gr: 'Έλεγξε ερωτήσεις & απαντήσεις για λάθη.', en: 'Check questions & answers for mistakes.' }) }); }
+            class: 'sc-admin__game', onclick: function () { if (window.SymPreview) SymPreview.open((SymPreview.typeFor && SymPreview.typeFor(e)) || 'mc', { title: L(e), illu: e.illu, note: L({ gr: 'Έλεγξε ερωτήσεις & απαντήσεις για λάθη.', en: 'Check questions & answers for mistakes.' }) }); }
           }, [glyph(e.illu, 'sc-admin__gicon'), el('span', {}, L(e)), el('span', { class: 'sc-admin__qa', title: L({ gr: 'προεπισκόπηση', en: 'preview' }) }, '⌕')]));
         });
         pane.appendChild(g);
+        pane.appendChild(el('div', { class: 'sc-hint', style: 'margin-top:10px;opacity:.7' }, L({ gr: _cat.length + ' παιχνίδια στο μητρώο', en: _cat.length + ' games in the registry' })));
       }
       else if (activeSec === 'tags') {
         // Re-expose the COMPLETE game-tags admin (Refresh + full catalogue + tag

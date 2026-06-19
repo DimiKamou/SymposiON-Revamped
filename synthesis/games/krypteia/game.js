@@ -1,5 +1,5 @@
 /* ══════════════════════ ΚΡΥΠΤΕΙΑ — Competitive Cipher Arena ══════════════════════
-   Crypto Hack reimagined: a timed contest among you + 5–9 bot agents.
+   A timed cipher contest among you + 5–9 bot agents.
    Answer → draw a cipher operation → steal / reduce / divide(dice) / multiply(dice)
    / bonus / curse / nothing. Crack the target's scytale by hand. Sometimes the
    cipher breaks clean and you choose your victim. Highest drachmas at the bell wins.

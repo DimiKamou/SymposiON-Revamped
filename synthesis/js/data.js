@@ -84,8 +84,7 @@ const SUBJECTS = {
       games:[ g('Κλίσις Ρημάτων','Verb Forms','εἶμι · φημί · οἶδα','column',{fn:'openKlisiRimaton'}),
               g('Κλίση εἰμί','Conjugation of εἰμί','«είμαι» · 3 χρόνοι','amphora',{fn:'openEimi'}),
               g('Συνηρημένα','Contract Verbs','τιμῶ · ποιῶ · δηλῶ','scroll',{fn:'openSynirimmena'}),
-              g('Ανώμαλα Ρήματα','Irregular Verbs','Match · κλίση','wreath',{fn:'openAnwmalaRimata'}),
-              g('Crypto Hack','Crypto Hack','Λεξιλόγιο · cipher','amphora') ] },
+              g('Ανώμαλα Ρήματα','Irregular Verbs','Match · κλίση','wreath',{fn:'openAnwmalaRimata'}) ] },
   ],
   'gym-b': [
     { id:'iliada', roman:'II', illu:'helmet', gr:'Ιλιάδα', en:'Iliad', sub:'Iliad',
@@ -103,7 +102,6 @@ const SUBJECTS = {
               g('Συνηρημένα','Contract Verbs','τιμῶ · ποιῶ · δηλῶ','scroll',{fn:'openSynirimmena'}),
               g('Αόριστος Β΄','2nd Aorist','ἔλαβον · εἶδον','wreath',{fn:'openAoristosB'}),
               g('Grammar Invaders','Grammar Invaders','Arcade · ουσιαστικά','helmet'),
-              g('Crypto Hack','Crypto Hack','Λεξιλόγιο · cipher','amphora'),
               g('Ανώμαλα Ρήματα','Irregular Verbs','Match · κλίση','wreath',{fn:'openAnwmalaRimata'}),
               g('Φάλαγγα','Phalanx','Strategy · turn-based','shield-round') ] },
     { id:'istoria', roman:'V', illu:'acropolis', gr:'Ιστορία', en:'History', sub:'History',
@@ -138,8 +136,7 @@ const SUBJECTS = {
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','200+ λέξεις','column',{fn:'openOusiastika'}),
               g('Επίθετα','Adjectives','Κλίση & συμφωνία','scroll',{fn:'openEpitheta'}),
               g('Παραθετικά','Adjective Degrees','10 επίπεδα','wreath',{fn:'openParatheta'}),
-              g('Ξίφος Γραμματικού','Grammarian\u2019s Blade','Slice · τύποι','shield-spear'),
-              g('Crypto Hack','Crypto Hack','Λεξιλόγιο','amphora') ] },
+              g('Ξίφος Γραμματικού','Grammarian\u2019s Blade','Slice · τύποι','shield-spear') ] },
   ],
   'lyk-a': [
     { id:'archaia-thx', roman:'III', illu:'column', gr:'Αρχαία Ελληνικά', en:'Ancient Greek', sub:'Thucydides & prose',
@@ -151,7 +148,6 @@ const SUBJECTS = {
     { id:'ekfrasi', roman:'IV', illu:'quill', gr:'Έκφραση · Έκθεση', en:'Composition', sub:'Modern Greek',
       summary:{ gr:'Κειμενικά είδη, επιχειρηματολογία και λεξιλόγιο.', en:'Text types, argumentation and vocabulary.' },
       games:[ gSoon('Λεξιλόγιο','Vocabulary','Κάρτες μνήμης · όροι','book'),
-              g('Crypto Hack','Crypto Hack','Cipher · λέξεις','cipher'),
               g('Rapid Fire','Rapid Fire','Speed quiz','lightning-bolt') ] },
   ],
   'lyk-b': [
@@ -164,8 +160,7 @@ const SUBJECTS = {
       summary:{ gr:'Κλίσεις, ρήματα και πρώτα κείμενα.', en:'Declensions, verbs and first texts.' },
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','5 κλίσεις','column',{fn:'openLatNouns'}),
               g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
-              g('Επίθετα','Adjectives','Κλίση & βαθμοί','wreath',{fn:'openLatEpitheta'}),
-              g('Crypto Hack','Crypto Hack','Vocabula','amphora') ] },
+              g('Επίθετα','Adjectives','Κλίση & βαθμοί','wreath',{fn:'openLatEpitheta'}) ] },
   ],
   'lyk-c': [
     { id:'istoria-kat', roman:'V', illu:'acropolis', gr:'Ιστορία Κατεύθυνσης', en:'History (Advanced)', sub:'History',
@@ -192,7 +187,6 @@ const ENGINES = [
   { gr:'Odyssey Journey 3D', en:'Odyssey Journey 3D', meta:{gr:'3D Adventure · Οδύσσεια',en:'3D Adventure · Odyssey'}, illu:'map' },
   { gr:'Χρονολόγιο', en:'Chronicle', meta:{gr:'Χρονική σειρά · γεγονότα',en:'Event ordering · timeline'}, illu:'timeline' },
   { gr:'Grammar Invaders', en:'Grammar Invaders', meta:{gr:'Action · Γραμματική',en:'Action · Grammar'}, illu:'invader' },
-  { gr:'Crypto Hack', en:'Crypto Hack', meta:{gr:'Cipher · όλες οι βαθμίδες',en:'Cipher · all grades'}, illu:'cipher' },
   { gr:'Φάλαγγα', en:'Phalanx', meta:{gr:'Strategy · turn-based',en:'Strategy · turn-based'}, illu:'shield-round' },
   { gr:'Ναυμαχία', en:'Naumachia', meta:{gr:'Naval · PvP',en:'Naval · PvP'}, illu:'trident' },
   { gr:'Λαβύρινθος', en:'Labyrinth', meta:{gr:'Maze · Μυθολογία',en:'Maze · Mythology'}, illu:'labyrinth' },

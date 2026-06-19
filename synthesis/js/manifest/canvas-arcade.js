@@ -65,16 +65,6 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     fb:      false
   },
 
-  // Crypto Hack — CryptoHack IIFE builds its own overlay at runtime →
-  // overlay:null. openCryptoHack shim (below) forwards to CryptoHack.open.
-  openCryptoHack: {
-    js:      ['games/crypto-hack/game.js'],
-    css:     ['games/crypto-hack/game.css'],
-    overlay: null,
-    eager:   false,
-    fb:      false
-  },
-
   // GP games — content comes from the GP_DATASETS bridge (gp-content.js eager);
   // each has a built-in fallback pool/lobby so a direct open() works.
   openDig: {
@@ -151,7 +141,6 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Odyssey 3D':               'initOdysseyJourney',
   "Grammarian's Blade":       'openBlade',
   'Ξίφος Γραμματικού':        'openBlade',
-  'Crypto Hack':              'openCryptoHack',
   'Ανασκαφή':                 'openDig',
   'Archaeological Dig':       'openDig',
   'Λαβύρινθος':               'openLabyrinth',
@@ -164,30 +153,6 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Καταιγισμός':              'openRapidFire',
   'Tug of War':               'openTow'
 });
-
-// ── crypto-hack shim: window.openCryptoHack → CryptoHack.open({...}) ────────
-// CryptoHack is an IIFE defined in games/crypto-hack/game.js (loaded lazily by
-// the manifest). This wrapper resolves CryptoHack at call-time and builds its
-// own overlay, so the manifest entry uses overlay:null.
-if (!window.openCryptoHack) {
-  window.openCryptoHack = async function (cfg) {
-    // CryptoHack.open() injects its UI into a pre-existing #ch-overlay/#ch-wrap
-    // shell (it reads ch-overlay.style first), so ensure that partial is in the
-    // DOM before opening. (manifest overlay is null because synLaunch shouldn't
-    // gate the lazy-load on it — we inject it here just-in-time.)
-    if (window.synEnsureOverlay) { try { await window.synEnsureOverlay('ch-overlay'); } catch (_) {} }
-    // CryptoHack is declared as a top-level `const` in game.js. Loaded via a
-    // <script> tag it becomes a lexical global (not a window property), so we
-    // resolve it via the global scope; fall back to window.CryptoHack if a
-    // future build attaches it there.
-    var CH = window.CryptoHack;
-    if (!CH) { try { CH = (0, eval)('typeof CryptoHack!=="undefined"?CryptoHack:null'); } catch (_) {} }
-    if (CH && typeof CH.open === 'function') {
-      return CH.open(cfg || {});
-    }
-    console.warn('[syn] CryptoHack not loaded');
-  };
-}
 
 // ── iliada-arcade eager-boot trap ──────────────────────────────────────────
 // IliadaControls.js registers its mobile-controls init on DOMContentLoaded,
