@@ -373,7 +373,7 @@
       ['discounts', '%', { gr: 'Εκπτωτικοί Κωδικοί', en: 'Discount Codes' }],
       ['subs', '◷', { gr: 'Συνδρομές', en: 'Subscriptions' }],
       ['studio', '✎', { gr: 'Studio (Περιεχόμενο)', en: 'Studio (Content)' }],
-      ['voyage', '⚱', { gr: 'Ζωφόρος (Λογοτεχνία)', en: 'Frieze (Literature)' }],
+      ['voyage', '⚱', { gr: 'Πρότυπα', en: 'Templates' }],
       ['realm', '⛩', { gr: 'Curator · Ναός', en: 'Curator · Realm' }],
       ['games', '▦', { gr: 'Παιχνίδια — Έλεγχος', en: 'Games — Review' }],
       ['tags', '#', { gr: 'Ετικέτες Παιχνιδιών', en: 'Game Tags' }],
@@ -894,9 +894,27 @@
         }
       }
       else if (activeSec === 'voyage') {
-        // Ζωφόρος literature games — edit episodes/quizzes via each game's own
-        // built-in editor (SymVoyage.openEditor unlocks it; content persists to
-        // the same zofatos:content override the student game reads).
+        // ── Authoring TEMPLATES (Trivia & History Synthesis) ──────────────
+        // Self-contained React/Babel composer + live-preview tools (export
+        // JSON). Each opens in a full-screen overlay iframe via
+        // template-launchers.js.
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Πρότυπα — Συνθέτες περιεχομένου', en: 'Templates — Content composers' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Σχεδίασε πρότυπα Trivia & Ιστορίας μέσα από το UI με ζωντανή προεπισκόπηση — εξάγουν JSON config.', en: 'Design Trivia & History templates through the UI with a live preview — they export a JSON config.' })));
+        pane.appendChild(el('div', { class: 'sc-realm', style: 'margin:0 0 22px' }, [
+          el('button', {
+            class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'justify-content:flex-start',
+            onclick: function () { if (typeof window.openTriviaTemplate === 'function') window.openTriviaTemplate(); }
+          }, [el('span', { style: 'margin-right:6px' }, '◆'), L({ gr: 'Πρότυπο Trivia', en: 'Trivia Template' })]),
+          el('button', {
+            class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'justify-content:flex-start',
+            onclick: function () { if (typeof window.openHistoryTemplate === 'function') window.openHistoryTemplate(); }
+          }, [el('span', { style: 'margin-right:6px' }, '⛩'), L({ gr: 'Πρότυπο Ιστορίας', en: 'History Template' })]),
+        ]));
+
+        // ── Ζωφόρος literature games (existing editor, kept additively) ────
+        // edit episodes/quizzes via each game's own built-in editor
+        // (SymVoyage.openEditor unlocks it; content persists to the same
+        // zofatos:content override the student game reads).
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ζωφόρος — Λογοτεχνικά παιχνίδια', en: 'Frieze — Literature games' })));
         pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Άνοιξε ένα έργο σε λειτουργία επεξεργασίας για να αλλάξεις επεισόδια, διαλόγους & ερωτήσεις. Οι αλλαγές αποθηκεύονται και εμφανίζονται στους μαθητές.', en: 'Open a work in edit mode to change episodes, dialogues & questions. Changes persist and show to students.' })));
         if (window.SymVoyage) {
