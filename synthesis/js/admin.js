@@ -712,7 +712,9 @@ async function adminLoadAllBanners() {
           endsAt:    d.endsAt?.toDate?.()?.toISOString?.().slice(0, 10) || null,
         });
       });
-      return out;
+      if (out.length) return out;   // else fall through to the SymStore mirror
+      // (empty Firestore collection — e.g. the sandbox/offline preview — so the
+      //  admin still shows locally-seeded / offline-created banners)
     } catch (err) {
       console.warn('[admin] adminLoadAllBanners firestore failed, using SymStore:', err);
     }
@@ -759,8 +761,8 @@ async function adminUpdateBanner(id, fields) {
       });
       await f.firestore().collection('banners').doc(id).update(patch);
     } catch (err) {
-      console.error('[admin] update banner error:', err);
-      return false;
+      // Firestore denied/offline — keep going so the local SymStore edit applies.
+      console.warn('[admin] update banner — firestore skipped, using SymStore:', err);
     }
   }
 
@@ -823,8 +825,9 @@ async function adminSetBannerActive(id, active) {
     try {
       await f.firestore().collection('banners').doc(id).update({ active: !!active });
     } catch (err) {
-      console.error('[admin] set banner active error:', err);
-      return false;
+      // Firestore write denied/offline (e.g. unauthed sandbox) — don't abort;
+      // still apply the local SymStore mirror so the toggle works.
+      console.warn('[admin] set banner active — firestore skipped, using SymStore:', err);
     }
   }
   _bannerStorePatch(id, { active: !!active });

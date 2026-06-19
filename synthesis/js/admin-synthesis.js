@@ -7,8 +7,8 @@
      • Studio  → window.AdminStudio (js/admin-studio.js) mounted in-pane.
      • Atlas   → window.ccOpenAtlas() (js/admin-atlas.js) overlay.
      • Realm   → window.synOpenAcroteria() (js/dir-synthesis.js) + custom-acro.
-     • A "Classic Command Center" button still opens the old #page-admin
-       (window._renderAdminPage / goTo('admin')) so nothing is lost.
+     • The legacy "Classic Command Center" overlay is REMOVED — its views are
+       integrated inline here (Access = Class Plan, Studio, Atlas, Realm).
 
    NEW — real Access Control (the "Έλεγχος Πρόσβασης" section): a class/bank ×
    game × level matrix. The admin sets the minimum TIER (Free / Pro / School)
@@ -326,7 +326,7 @@
       sub: L({ gr: 'Revamp-native — πραγματικές λειτουργίες.', en: 'Revamp-native — real functions.' }),
     });
 
-    // Top stat band + Classic Command Center link. REAL values only — games is
+    // Top stat band + Sync. REAL values only — games is
     // computed from authored data; users/subs/MRR start from honest local
     // counters and are patched live when Firestore answers (loadFirestoreStats).
     body.appendChild(el('div', { class: 'sc-stats sc-stats--4 sc-stagger' }, [
@@ -355,18 +355,9 @@
           setTimeout(function () { if (window.symRender) symRender(); }, 400);
         }
       }, [L({ gr: '↻ Συγχρονισμός', en: '↻ Sync' })]),
-      el('button', {
-        class: 'sc-cta sc-cta--ghost sc-cta--sm', onclick: function () {
-          // Open the legacy Ver1 Command Center overlay (admin-cc.js).
-          try {
-            if (typeof window._renderAdminPage === 'function') window._renderAdminPage();
-            if (typeof window.goTo === 'function') window.goTo('admin');
-            var h = document.getElementById('page-admin');
-            if (h) h.classList.add('syn-admin-on');
-            document.body.classList.add('syn-admin-open');
-          } catch (e) { console.error('[admin-synthesis] classic CC failed', e); }
-        }
-      }, [glyph('compass', 'sc-gl'), L({ gr: 'Κλασικό Command Center', en: 'Classic Command Center' })]),
+      // Classic Command Center button removed — the old admin-cc views are now
+      // integrated INLINE in this light admin (Access = Class Plan, Studio, etc.),
+      // so there is no separate legacy overlay to open.
     ]));
 
     var shell = el('div', { class: 'sc-admin2 sc-stagger has-accent', style: '--ca:' + accent });
@@ -896,7 +887,7 @@
           } catch (e) {
             console.error('[admin-synthesis] studio mount failed', e);
             panel.innerHTML = '';
-            panel.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Το Studio δεν φόρτωσε εδώ — άνοιξέ το από το Κλασικό Command Center.', en: 'Studio could not mount here — open it from the Classic Command Center.' })));
+            panel.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Το Studio δεν φόρτωσε εδώ — δοκίμασε «↻ Συγχρονισμός» ή ανανέωσε τη σελίδα.', en: 'Studio could not mount here — try “↻ Sync” or reload the page.' })));
           }
         } else {
           pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Το AdminStudio δεν είναι διαθέσιμο.', en: 'AdminStudio is not available.' })));
