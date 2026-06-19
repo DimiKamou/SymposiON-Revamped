@@ -375,7 +375,8 @@
       ['studio', '✎', { gr: 'Studio (Περιεχόμενο)', en: 'Studio (Content)' }],
       ['voyage', '⚱', { gr: 'Ζωφόρος (Λογοτεχνία)', en: 'Frieze (Literature)' }],
       ['realm', '⛩', { gr: 'Curator · Ναός', en: 'Curator · Realm' }],
-      ['games', '▦', { gr: 'Παιχνίδια (QA)', en: 'Games (QA)' }],
+      ['games', '▦', { gr: 'Παιχνίδια — Έλεγχος', en: 'Games — Review' }],
+      ['tags', '#', { gr: 'Ετικέτες Παιχνιδιών', en: 'Game Tags' }],
       ['tartarus', '❂', { gr: 'Tartarus', en: 'Tartarus' }],
       ['banners', '◰', { gr: 'Banners', en: 'Banners' }],
       ['messaging', '✉', { gr: 'Μηνύματα', en: 'Messages' }],
@@ -968,14 +969,25 @@
         }
       }
       else if (activeSec === 'games') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος περιεχομένου — πάτα για προεπισκόπηση & εντοπισμό λαθών', en: 'Content QA — click to preview & spot mistakes' })));
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος περιεχομένου — πάτα για προεπισκόπηση & εντοπισμό λαθών', en: 'Content review — click to preview & spot mistakes' })));
+        // Clarify what this section IS — it is preview/spot-check ("έλεγχος"), NOT
+        // a Q&A authoring tool. Point to where authoring & the registry actually live.
+        pane.appendChild(el('div', { class: 'sc-hint', style: 'margin:-4px 0 10px;opacity:.8' }, L({ gr: 'Μόνο προεπισκόπηση. Για δημιουργία ερωτήσεων → «Studio» · για ετικέτες & μητρώο παιχνιδιών → «Ετικέτες Παιχνιδιών».', en: 'Preview only. To author questions → "Studio" · for tags & the game registry → "Game Tags".' })));
+        pane.appendChild(el('div', { class: 'sc-refreshbar' }, [el('button', { class: 'sc-refresh', onclick: function () { if (window.SymTags) SymTags.refresh(); paint(); } }, [el('span', { class: 'sc-refresh__ic', html: '↻' }), L({ gr: 'Ανανέωση για νέα', en: 'Refresh for new' })])]));
         var g = el('div', { class: 'sc-admin__games' });
         (SYM().ENGINES || []).forEach(function (e) {
           g.appendChild(el('button', {
             class: 'sc-admin__game', onclick: function () { if (window.SymPreview) SymPreview.open(SymPreview.typeFor(e), { title: L(e), illu: e.illu, note: L({ gr: 'Έλεγξε ερωτήσεις & απαντήσεις για λάθη.', en: 'Check questions & answers for mistakes.' }) }); }
-          }, [glyph(e.illu, 'sc-admin__gicon'), el('span', {}, L(e)), el('span', { class: 'sc-admin__qa' }, 'QA')]));
+          }, [glyph(e.illu, 'sc-admin__gicon'), el('span', {}, L(e)), el('span', { class: 'sc-admin__qa', title: L({ gr: 'προεπισκόπηση', en: 'preview' }) }, '⌕')]));
         });
         pane.appendChild(g);
+      }
+      else if (activeSec === 'tags') {
+        // Re-expose the COMPLETE game-tags admin (Refresh + full catalogue + tag
+        // toggling) — it shipped in js/tags.js but was only wired in the dead
+        // screens-2.js admin, so it was unreachable from the active light admin.
+        if (window.SymTags && SymTags.renderAdmin) SymTags.renderAdmin(pane, { accent: accent });
+        else pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Η μονάδα ετικετών δεν φορτώθηκε.', en: 'Tags module not loaded.' })));
       }
       else if (activeSec === 'subs') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Συνδρομές & Πακέτα', en: 'Subscriptions & Bundles' })));

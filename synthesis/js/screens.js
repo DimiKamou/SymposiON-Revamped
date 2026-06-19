@@ -488,6 +488,13 @@
         el('div',{class:'sc-join2__form'},[ el('input',{class:'sc-join2__pin',maxlength:'6',placeholder:'A7K92M'}),
           el('button',{class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>go('live',{step:'lobby',cfg})}, L({gr:'Μπες',en:'Join'})) ]),
       ]));
+      // ── PvP · Ο Ἀγών — the standalone duel arena, surfaced here on Live
+      //    (previously only reachable from the Game Panel; user: "on live I cannot see pvp").
+      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>launchPvPArena()},[
+        el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
+        el('span',{class:'sc-host__t'}, L({gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'})),
+        el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — άνοιγμα Αρένας',en:'Student duels — open the Arena'})),
+      ]));
       body.appendChild(ch);
       return;
     }

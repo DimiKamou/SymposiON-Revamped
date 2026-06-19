@@ -64,6 +64,22 @@
     grp3.appendChild(toggleRow('music', {gr:'Μουσική υπόκρουση',en:'Background music'}, null, false));
     body.appendChild(grp3);
 
+    // ── AI Tutor discoverability — answers "where is the integrated AI agent".
+    //    The tutor is the contextual Μετάφραση/Συντακτικό grader inside Theory
+    //    text lessons (js/theory-text.js: gradeTranslation / translationHint),
+    //    so it has no single global screen — point the user to it.
+    body.appendChild(sec({gr:'AI Βοηθός',en:'AI Tutor'}));
+    const grpAI = el('div',{class:'set-grp sc-stagger'});
+    grpAI.appendChild(el('div',{class:'set-row'},[
+      el('div',{class:'set-row__b'},[
+        el('div',{class:'set-row__t'}, L({gr:'Πού είναι ο AI βοηθός;',en:'Where is the AI tutor?'})),
+        el('div',{class:'set-row__d'}, L({
+          gr:'Ο ενσωματωμένος AI βοηθός κρίνει τη Μετάφραση & το Συντακτικό σου. Βρίσκεται μέσα στα μαθήματα Θεωρίας: άνοιξε ένα κείμενο (Αρχαία/Λατινικά) και διάλεξε τις καρτέλες «Μετάφραση» ή «Συντακτικό».',
+          en:'The built-in AI tutor grades your Translation & Syntax. It lives inside Theory text lessons: open a text (Ancient Greek/Latin) and pick the «Μετάφραση» or «Συντακτικό» tabs.'})),
+      ]),
+    ]));
+    body.appendChild(grpAI);
+
     body.appendChild(sec({gr:'Λογαριασμός & δεδομένα',en:'Account & data'}));
     const grp4 = el('div',{class:'set-grp sc-stagger'});
     [['account',{gr:'Ο λογαριασμός μου',en:'My account'},'◷'],['subscribe',{gr:'Συνδρομή',en:'Subscription'},'€'],

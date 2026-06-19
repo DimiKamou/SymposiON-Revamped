@@ -157,7 +157,7 @@
     const box = el('div', { class:'acro-box' });
     const kleos = SymStore.get('kleos', 0);
     box.appendChild(el('div', { class:'acro-box__bar' }, [
-      el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}) ]),
+      el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}), el('span',{ class:'acro-box__count', style:'opacity:.62;font-weight:600;margin-left:8px;font-size:.82em' }, '· '+((window.SYM&&window.SYM.ACROTERIA)?window.SYM.ACROTERIA.length:0)) ]),
       el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleos.toLocaleString('en-US')), 'Kleos' ]),
       el('button', { class:'acro-box__x', onclick:()=>ov.remove(), html:'&times;' }),
     ]));
