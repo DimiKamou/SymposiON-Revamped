@@ -329,6 +329,23 @@
     // Kick off the guarded Firestore reads; they patch the DOM when they return.
     loadFirestoreStats();
     body.appendChild(el('div', { class: 'sc-adminx__bar sc-stagger' }, [
+      // Global Sync — bust caches + re-pull catalog/datasets/games, then re-render
+      // the admin so newly-added games/content appear without a page reload.
+      el('button', {
+        class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function (e) {
+          var btn = e.currentTarget;
+          try {
+            if (window.ContentSource) {
+              if (ContentSource.bustCache) ContentSource.bustCache();
+              if (ContentSource.loadCatalog) { try { ContentSource.loadCatalog(true); } catch (_) {} }
+            }
+            if (typeof window.ccRefreshCurriculum === 'function') { try { window.ccRefreshCurriculum(); } catch (_) {} }
+            if (window.RealmStore && RealmStore.getCatalog) { try { RealmStore.getCatalog(); } catch (_) {} }
+          } catch (_) {}
+          btn.textContent = '✓ ' + L({ gr: 'Συγχρονίστηκε', en: 'Synced' });
+          setTimeout(function () { if (window.symRender) symRender(); }, 400);
+        }
+      }, [L({ gr: '↻ Συγχρονισμός', en: '↻ Sync' })]),
       el('button', {
         class: 'sc-cta sc-cta--ghost sc-cta--sm', onclick: function () {
           // Open the legacy Ver1 Command Center overlay (admin-cc.js).
@@ -826,16 +843,43 @@
         pane.appendChild(tbl);
       }
       else if (activeSec === 'access') {
-        renderAccessControl();
+        // Έλεγχος Πρόσβασης → the REAL per-class Class Plan planner (Ver1
+        // functionality: class tabs · Practice/Theory · datasets+engines with
+        // level toggles + tier · Save). admin-cc.css scopes its styles to
+        // #page-admin, so mount inside a scoping host with the fullscreen/hidden
+        // layout neutralised inline so it renders inline + light in the pane.
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος Πρόσβασης — Σχέδιο Τάξης', en: 'Access Control — Class Plan' })));
+        if (window.AdminCC && typeof window.AdminCC.classPlanHTML === 'function') {
+          var cphost = el('div', { id: 'page-admin', class: 'syn-cc-embed',
+            style: 'position:static;display:block;inset:auto;z-index:auto;height:auto;min-height:0;background:transparent;color:inherit' });
+          var cpwork = el('div', { class: 'cc-work', style: 'padding:0' });
+          cphost.appendChild(cpwork);
+          pane.appendChild(cphost);
+          try {
+            cpwork.innerHTML = window.AdminCC.classPlanHTML();
+            window.AdminCC.classPlanInit();
+          } catch (e) {
+            console.error('[admin-synthesis] class plan mount failed', e);
+            cphost.remove();
+            if (typeof renderAccessControl === 'function') renderAccessControl();
+          }
+        } else if (typeof renderAccessControl === 'function') {
+          renderAccessControl();
+        }
       }
       else if (activeSec === 'studio') {
         // Real Site Studio (admin-studio.js) mounted in-pane.
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Studio — Τάξεις → Μαθήματα → Παιχνίδια → Ερωτήσεις', en: 'Studio — Grades → Subjects → Games → Questions' })));
         if (window.AdminStudio && typeof window.AdminStudio.view === 'function') {
-          var host = el('div', { class: 'cc-work sc-studio-host' });
+          // Scope under a neutralised #page-admin host so admin-studio.css /
+          // admin-cc.css light styles apply (same trick as the Access planner).
+          var shost = el('div', { id: 'page-admin', class: 'syn-cc-embed',
+            style: 'position:static;display:block;inset:auto;z-index:auto;height:auto;min-height:0;background:transparent;color:inherit' });
+          var host = el('div', { class: 'cc-work sc-studio-host', style: 'padding:0' });
           var panel = el('div', { class: 'cc-panel', id: 'cc-panel' });
           host.appendChild(panel);
-          pane.appendChild(host);
+          shost.appendChild(host);
+          pane.appendChild(shost);
           try {
             panel.innerHTML = window.AdminStudio.view();
             if (typeof window.AdminStudio.init === 'function') window.AdminStudio.init();
