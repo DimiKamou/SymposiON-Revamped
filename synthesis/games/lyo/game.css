@@ -280,4 +280,57 @@
 .gpx-segbtn:hover{color:#e8dcc8;border-color:rgba(201,164,74,.45);}
 .gpx-segbtn.on{color:#15110b;font-weight:600;border-color:transparent;background:#c9a44a;}
 @media(prefers-reduced-motion:reduce){.gpx-segbtn{transition:none;}}
+
+/* ════════════════════════════════════════════════════════════════════
+   LEVEL-SELECT — synthesis "alabaster" skin (theme-adaptive).
+   Re-skins ONLY the level-select screen (.lscreen-levels card + its
+   .gpx-* two-pane picker) from the dark "codex" palette above to the
+   site's --sym-* theme tokens, so it matches the rest of synthesis and
+   ADAPTS to the selected theme (cursors.js stamps the active theme class
+   on the game overlay; alabaster fallbacks keep it on-brand otherwise).
+   Scoped to .lscreen-levels — the play/end screens are untouched.
+   ════════════════════════════════════════════════════════════════════ */
+.lcard.lscreen-levels{
+  background:var(--sym-bg-card,#fff);
+  color:var(--sym-fg,#1E1810);                 /* was inheriting the dark-theme cream → invisible on light */
+  border-color:color-mix(in srgb, var(--sym-fg,#1E1810) 12%, transparent);
+  box-shadow:0 18px 54px rgba(28,22,14,.20);
+}
+/* buttons don't inherit font-family — pin the picker controls to Montserrat */
+.lscreen-levels .gpx-row,.lscreen-levels .gpx-railitem,.lscreen-levels .gpx-segbtn{font-family:'Montserrat',system-ui,sans-serif;}
+.lscreen-levels h1,.lscreen-levels h2{color:var(--sym-fg,#1E1810);font-family:'Alegreya','Cinzel',serif;}
+.lscreen-levels h3,.lscreen-levels .lmood-hd{color:var(--sym-terra,#C5572F);font-family:'Montserrat',system-ui,sans-serif;}
+.lscreen-levels .lmood-hd::before{background:var(--sym-terra,#C5572F);}
+.lscreen-levels .lmood-hd::after,.lscreen-levels .ldivider{background:color-mix(in srgb, var(--sym-fg,#1E1810) 12%, transparent);border-top-color:color-mix(in srgb, var(--sym-fg,#1E1810) 12%, transparent);}
+.lscreen-levels .lsubtitle,.lscreen-levels .lback-link{color:var(--sym-fg-muted,#8C7F6B);}
+.lscreen-levels .lback-link:hover{color:var(--sym-terra,#C5572F);}
+/* primary "start" CTA → terracotta gradient like the rest of the site */
+.lscreen-levels .lbtn-primary,.lscreen-levels .lfi-submit{background:linear-gradient(135deg,var(--sym-terra,#C5572F),var(--sym-terra-dk,#9C3F1F));color:#fff;}
+/* legacy chapter-row level cards (if a game uses them) */
+.lscreen-levels .lvl-card{background:var(--sym-bg-card,#fff);border-color:color-mix(in srgb, var(--sym-fg,#1E1810) 12%, transparent);}
+.lscreen-levels .lvl-card:hover{border-color:var(--sym-terra,#C5572F);box-shadow:0 4px 20px color-mix(in srgb, var(--sym-terra,#C5572F) 14%, transparent);}
+.lscreen-levels .lvl-card .lnum{color:var(--sym-terra,#C5572F);}
+.lscreen-levels .lvl-card .ldesc{color:var(--sym-fg-muted,#8C7F6B);}
+/* two-pane picker: remap its local palette vars to the site theme tokens */
+.lscreen-levels .gpx-pick{
+  --gpx-gold:var(--sym-terra,#C5572F);
+  --gpx-gold-lt:var(--sym-terra-dk,#9C3F1F);
+  --gpx-cream:var(--sym-fg,#1E1810);
+  --gpx-dim:var(--sym-fg-muted,#8C7F6B);
+  --gpx-line:color-mix(in srgb, var(--sym-fg,#1E1810) 13%, transparent);
+  --gpx-panel:var(--sym-bg-card,#fff);
+  --gpx-ink:#fff;
+}
+.lscreen-levels .gpx-detail-hd h3{color:var(--sym-terra-dk,#9C3F1F);font-family:'Alegreya','Cinzel',serif;}
+.lscreen-levels .gpx-subdiv,.lscreen-levels .gpx-rail-lbl{font-family:'Montserrat',system-ui,sans-serif;}
+/* hardcoded gold/cream rgba in the base .gpx-* rules → theme-tinted equivalents */
+.lscreen-levels .gpx-bar{background:color-mix(in srgb, var(--sym-terra,#C5572F) 16%, transparent);}
+.lscreen-levels .gpx-railitem:hover{background:color-mix(in srgb, var(--sym-terra,#C5572F) 8%, transparent);}
+.lscreen-levels .gpx-railitem.on{background:color-mix(in srgb, var(--sym-terra,#C5572F) 12%, transparent);border-color:color-mix(in srgb, var(--sym-terra,#C5572F) 34%, transparent);}
+.lscreen-levels .gpx-ring .trk{stroke:color-mix(in srgb, var(--sym-fg,#1E1810) 14%, transparent);}
+.lscreen-levels .gpx-row{background:color-mix(in srgb, var(--sym-fg,#1E1810) 3%, transparent);}
+.lscreen-levels .gpx-row:hover{border-color:color-mix(in srgb, var(--sym-terra,#C5572F) 50%, transparent);box-shadow:0 5px 18px color-mix(in srgb, var(--sym-terra,#C5572F) 14%, transparent);}
+.lscreen-levels .gpx-row.on{background:color-mix(in srgb, var(--sym-terra,#C5572F) 9%, transparent);}
+.lscreen-levels .gpx-segbtn{background:color-mix(in srgb, var(--sym-fg,#1E1810) 4%, transparent);}
+.lscreen-levels .gpx-segbtn.on{color:#fff;background:var(--sym-terra,#C5572F);border-color:transparent;}
 </style>
