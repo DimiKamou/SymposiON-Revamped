@@ -26,7 +26,7 @@
 <!-- Shared grammar-game screen styles (.lyo-screen/.lcard/.lopts-grid…) — used by ALL
      grammar games (Greek + Latin). Loaded eagerly because their manifest css:[] is empty;
      lyo/game.css is purely game-scoped (no global/body rules), so it never touches the home. -->
-<link rel="stylesheet" href="games/lyo/game.css"/>
+<link rel="stylesheet" href="games/lyo/game.css?v=2"/>
 <!-- ══════════ ADMIN (Command Center) — admin-only, lazy-visible ══════════
      Ver1 admin styles. Scoped to #page-admin so they never touch the shell.
      The overlay host (#page-admin) is added below; SYM_SCREENS.admin shows it. -->
@@ -38,7 +38,7 @@
      css/admin-synthesis.css styles the sc-admin2 light admin + the real
      Access-Control matrix rendered by js/admin-synthesis.js (loaded below,
      after syn-admin.js, so it wins SYM_SCREENS.admin). -->
-<link rel="stylesheet" href="css/admin-synthesis.css"/>
+<link rel="stylesheet" href="css/admin-synthesis.css?v=2"/>
 <!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
      anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
      The trivia-panel's own chrome (games/trivia-panel/panel.css) is
@@ -47,7 +47,7 @@
 <!-- ══════════ SITE BANNERS (announcement strip) ══════════
      Drop-in CSS from the design handoff. Styles the sticky #site-banners-wrap
      bar rendered by js/banner-bar.js + the live preview in js/banner-admin.js. -->
-<link rel="stylesheet" href="css/site-banners.css?v=1"/>
+<link rel="stylesheet" href="css/site-banners.css?v=2"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -187,7 +187,7 @@
 
 <script src="js/store.js"></script>
 <script src="js/seasons.js"></script>
-<script src="js/data.js"></script>
+<script src="js/data.js?v=2"></script>
 <script src="js/previews.js"></script>
 <script src="js/info-panels.js"></script>
 <script src="js/dir-stoa.js"></script>
@@ -196,10 +196,10 @@
 <script src="js/dir-synthesis.js"></script>
 <script src="js/screens.js"></script>
 <script src="js/screens-2.js"></script>
-<script src="js/screens-learn.js"></script>
+<script src="js/screens-learn.js?v=2"></script>
 <!-- Admin-assigned template tiles: window.synAssignedTiles(class,subject), merged
      into subject grids by screens-learn.js. Read-only consumer of SymStore. -->
-<script src="js/syn-assignments.js?v=1"></script>
+<script src="js/syn-assignments.js?v=2"></script>
 <!-- ══════════ TEACHER WIZARD (Ver1 anathesi port) ══════════
      Re-registers window.SYM_SCREENS.anathesi AFTER screens-2.js so the richer
      all-modes wizard (driven by window.GP_ENGINES) WINS over the simple one. -->
@@ -252,9 +252,9 @@
      Self-contained React/Babel composer + live-preview tools that export JSON
      configs, under games/{trivia,history}-synthesis/. template-launchers.js
      opens each in a full-screen overlay iframe (admin "Πρότυπα / Templates"). -->
-<script src="js/template-launchers.js?v=1"></script>
+<script src="js/template-launchers.js?v=2"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
-<script src="js/trivia-iframe-launchers.js"></script>
+<script src="js/trivia-iframe-launchers.js?v=2"></script>
 
 <!-- ══════════ ADMIN COMMAND CENTER (admin-only) ══════════
      Ver1 admin engine. admin.js = backend handlers; admin-cc.js = the
@@ -262,7 +262,7 @@
      optional tabs (guarded — they stub out when their backends are absent in
      synthesis). syn-admin.js registers SYM_SCREENS.admin to mount + show the
      #page-admin overlay. All gated on the global isAdmin (auth.js). -->
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=2"></script>
 <!-- Site Studio + Curator's Realm backends (synthesis-native; SymStore-backed,
      Firestore-mirrored when available). Provide window.ContentSource / RealmStore
      so admin-studio.js / admin-realm.js are functional. Must load BEFORE them. -->
@@ -282,8 +282,8 @@
      Firestore config/accessControl). Gated on the bare global isAdmin. -->
 <!-- Access-tier registry (Free/Student/Teacher/Pro + admin-created custom tiers).
      Single source the admin grant / access / pricing surfaces read from. -->
-<script src="js/syn-tiers.js?v=1"></script>
-<script src="js/admin-synthesis.js"></script>
+<script src="js/syn-tiers.js?v=2"></script>
+<script src="js/admin-synthesis.js?v=2"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
      Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
@@ -313,8 +313,8 @@
      banner-admin.js: self-contained window.BannerAdmin.render(pane) component
        (create form + live preview + edit/toggle list + seed). The lead mounts
        it from the admin 'banners' section. Backend lives in js/admin.js. -->
-<script src="js/banner-bar.js?v=1"></script>
-<script src="js/banner-admin.js?v=1"></script>
+<script src="js/banner-bar.js?v=2"></script>
+<script src="js/banner-admin.js?v=2"></script>
 
 <script src="js/app.js"></script>
 

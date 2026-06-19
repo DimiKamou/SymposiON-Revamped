@@ -831,6 +831,28 @@ exports.adminSaveConfig = functions.https.onCall(async (data, context) => {
     if (!isFinite(maxUses) || maxUses < 0) {
       throw new functions.https.HttpsError('invalid-argument', 'maxUses must be ≥ 0.');
     }
+    // Validity WINDOW (validFrom / validUntil) — admin can set a real
+    // date+time range. Each may be a Firestore Timestamp, an epoch-ms number,
+    // or an ISO string; normalise to ms and require until > from when both set.
+    const _ms = (v) => {
+      if (v == null) return null;
+      if (typeof v === 'number') return isFinite(v) ? v : NaN;
+      if (typeof v.toMillis === 'function') return v.toMillis();
+      if (typeof v._seconds === 'number') return v._seconds * 1000;
+      const n = Date.parse(v);
+      return isFinite(n) ? n : NaN;
+    };
+    const fromMs  = _ms(payload.validFrom);
+    const untilMs = _ms(payload.validUntil);
+    if (fromMs !== null && Number.isNaN(fromMs)) {
+      throw new functions.https.HttpsError('invalid-argument', 'validFrom is not a valid date/time.');
+    }
+    if (untilMs !== null && Number.isNaN(untilMs)) {
+      throw new functions.https.HttpsError('invalid-argument', 'validUntil is not a valid date/time.');
+    }
+    if (fromMs && untilMs && untilMs <= fromMs) {
+      throw new functions.https.HttpsError('invalid-argument', 'validUntil must be after validFrom.');
+    }
   }
 
   await admin.firestore().doc(`config/${docId}`).set({

@@ -93,7 +93,15 @@
       if (typeof endsAt.seconds === 'number')  return endsAt.seconds * 1000;
     } catch (_) {}
     if (typeof endsAt === 'number') return endsAt;
-    var ms = Date.parse(endsAt);
+    // A bare 'YYYY-MM-DD' (the SymStore/offline mirror format) is parsed by
+    // Date.parse() as 00:00 UTC of that day, so the banner would be treated as
+    // expired for the WHOLE end-date — hiding it a full day early vs the
+    // Firestore path (which stores end-of-day) and the admin list (which marks
+    // it expired only after endsAt+'T23:59:59'). Normalise a bare date to
+    // end-of-day so expiry semantics match everywhere.
+    var s = String(endsAt);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s += 'T23:59:59';
+    var ms = Date.parse(s);
     return isNaN(ms) ? null : ms;
   }
   function normalize(id, d) {

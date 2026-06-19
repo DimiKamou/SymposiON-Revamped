@@ -309,15 +309,23 @@
 .gram-qs-page .gram-qs-home b{color:var(--gg-acc);font-weight:700;}
 .gram-qs-page .gram-qs-home:hover{filter:brightness(1.12);}
 
-/* segmented controls (time / lives) used inside the picker & settings page */
+/* segmented controls (time / lives) used inside the picker & settings page.
+   Each color-mix() declaration is preceded by a plain rgba()/hex fallback so
+   browsers without color-mix() support degrade to a sane colour instead of
+   dropping the property (transparent). Defaults assume the alabaster tokens:
+   --gg-ink #1E1810, --gg-acc #C5572F, --sym-fg #1E1810. */
 .gpx-seg{display:flex;flex-wrap:wrap;gap:7px;}
 .gpx-segbtn{cursor:pointer;min-width:44px;text-align:center;padding:8px 13px;border-radius:9px;
+  background:rgba(30,24,16,.05);
   background:color-mix(in srgb,var(--gg-ink) 5%,transparent);border:1px solid var(--gg-line);color:var(--gg-dim);font-family:'Alegreya','Cinzel',serif;font-size:.85rem;transition:all .14s;}
-.gpx-segbtn:hover{color:var(--gg-ink);border-color:color-mix(in srgb,var(--gg-acc) 45%,transparent);}
+.gpx-segbtn:hover{color:var(--gg-ink);
+  border-color:rgba(197,87,47,.45);
+  border-color:color-mix(in srgb,var(--gg-acc) 45%,transparent);}
 .gpx-segbtn.on{color:#fff;font-weight:600;border-color:transparent;background:var(--gg-acc);}
 @media(prefers-reduced-motion:reduce){.gpx-segbtn{transition:none;}}
 
 /* picker controls are <button>s (no inherited font) — pin to the body font;
    soften the shared card shadow for the light theme. */
 .gpx-row,.gpx-railitem,.gpx-segbtn{font-family:'Montserrat',system-ui,sans-serif;}
-.lcard{box-shadow:0 18px 50px color-mix(in srgb,var(--sym-fg,#1E1810) 16%,transparent);}
+.lcard{box-shadow:0 18px 50px rgba(30,24,16,.16);
+  box-shadow:0 18px 50px color-mix(in srgb,var(--sym-fg,#1E1810) 16%,transparent);}

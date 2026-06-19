@@ -170,6 +170,11 @@ async function adminCreateCode() {
   const expiry   = document.getElementById('admin-code-expiry')?.value    || '';
   const maxUses  = parseInt(document.getElementById('admin-code-max-uses')?.value || '0', 10);
   const resultEl = document.getElementById('admin-code-result');
+  // Optional validity-WINDOW start. The form may carry a #admin-code-valid-from
+  // (date or datetime-local) input; when present, the code only becomes valid
+  // from that moment (validUntil = the existing expiry below). No field → the
+  // code is valid immediately (backwards-compatible with the old form).
+  const validFromRaw = document.getElementById('admin-code-valid-from')?.value || '';
 
   if (!code) {
     _adminResult(resultEl, t('Συμπλήρωσε τον κωδικό.', 'Enter a code.'), 'error');
@@ -199,11 +204,30 @@ async function adminCreateCode() {
       return;
     }
 
+    // End-of-day expiry (existing behaviour) — also exposed as validUntil so
+    // both admin surfaces read the same window field.
+    const untilTs = firebase.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59'));
+    // Optional start of the window. Accept a bare date (treated as start-of-day)
+    // or a datetime-local value; reject an inverted window.
+    let fromTs = null;
+    if (validFromRaw) {
+      const fromDate = new Date(validFromRaw.indexOf('T') >= 0 ? validFromRaw : (validFromRaw + 'T00:00:00'));
+      if (!isNaN(fromDate.getTime())) {
+        if (fromDate.getTime() >= untilTs.toDate().getTime()) {
+          _adminResult(resultEl, t('Το «από» πρέπει να είναι πριν τη λήξη.', '“Valid from” must be before expiry.'), 'error');
+          return;
+        }
+        fromTs = firebase.firestore.Timestamp.fromDate(fromDate);
+      }
+    }
+
     await couponRef.set({
       code,
       discount,
       type:      'percentage',
-      expiresAt: firebase.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59')),
+      expiresAt:  untilTs,
+      validUntil: untilTs,
+      ...(fromTs ? { validFrom: fromTs } : {}),
       maxUses:   maxUses || 0,
       usedCount: 0,
       active:    true,

@@ -297,6 +297,259 @@
     return out;
   }
 
+  /* ════════════════ PRICING (real — config/pricing) ═════════════════
+     Source of truth = Firestore config/pricing (the SAME doc the legacy CC
+     writes via admin.js adminSavePricing). Shape:
+       { <planKey>: {1:€,3:€,6:€,12:€}, free:{…0…},
+         _customPlans:[...], _labels:{key:{gr,en}},
+         _kinds:{key:'tier'|'bundle'|'family'},   // plan kind
+         _unlocks:{key:{tier,classId,levels}},    // what the plan grants
+         _bundles:[{id,gr,en,plans:[key…],price,save}],
+         _family:{enabled,addonPct,parentRead}     // family/multi-class options
+       }
+     Mirrored to SymStore('admin_pricing') so the sandbox/offline editor works.
+     Plans always declare a TIER from SymTiers — never hardcoded. */
+  var PRICING_KEY = 'admin_pricing';
+  var PRICE_MONTHS = [1, 3, 6, 12];
+  function pricingLoad() {
+    var st = SS() ? SS().get(PRICING_KEY, null) : null;
+    if (!st || typeof st !== 'object') st = {};
+    if (!Array.isArray(st._customPlans)) st._customPlans = [];
+    if (!st._labels || typeof st._labels !== 'object') st._labels = {};
+    if (!st._kinds || typeof st._kinds !== 'object') st._kinds = {};
+    if (!st._unlocks || typeof st._unlocks !== 'object') st._unlocks = {};
+    if (!Array.isArray(st._bundles)) st._bundles = [];
+    if (!st._family || typeof st._family !== 'object') st._family = { enabled: false, addonPct: 50, parentRead: false, parentEmail: '' };
+    return st;
+  }
+  function pricingSave(st) {
+    st.updatedAt = Date.now();
+    if (SS()) SS().set(PRICING_KEY, st);
+    // Guarded Firestore mirror to config/pricing — same doc as admin.js.
+    // Strip undefined; Firestore rejects them. Degrades silently offline.
+    try {
+      if (fsReady()) {
+        firebase.firestore().collection('config').doc('pricing')
+          .set(st, { merge: true })
+          .catch(function () { /* offline / rules — SymStore is the fallback */ });
+      }
+    } catch (_e) { /* no firebase — fine */ }
+  }
+  // Best-effort: pull config/pricing from Firestore once and merge into SymStore
+  // so the editor reflects what the legacy CC / prod saved (guarded, async).
+  function pricingHydrate(after) {
+    if (!fsReady()) { if (after) after(); return; }
+    try {
+      firebase.firestore().collection('config').doc('pricing').get()
+        .then(function (s) {
+          if (s.exists && SS()) {
+            var d = s.data() || {};
+            // Keep our editor-only meta keys if remote lacks them.
+            var cur = pricingLoad();
+            ['_kinds', '_unlocks', '_bundles', '_family'].forEach(function (k) {
+              if (d[k] == null && cur[k] != null) d[k] = cur[k];
+            });
+            SS().set(PRICING_KEY, d);
+          }
+          if (after) after();
+        })
+        .catch(function () { if (after) after(); });
+    } catch (_e) { if (after) after(); }
+  }
+  function planKeys(st) {
+    // Built-in plan keys (student/teacher) + any custom plans, de-duped.
+    var seen = {}, out = [];
+    ['student', 'teacher'].forEach(function (k) { seen[k] = 1; out.push(k); });
+    (st._customPlans || []).forEach(function (k) { if (k && !seen[k]) { seen[k] = 1; out.push(k); } });
+    return out;
+  }
+  function planLabel(st, key) {
+    var l = st._labels && st._labels[key];
+    if (l && typeof l === 'object') return l;
+    if (typeof l === 'string') return { gr: l, en: l };
+    var defs = { student: { gr: 'Μαθητής', en: 'Student' }, teacher: { gr: 'Καθηγητής', en: 'Teacher' } };
+    return defs[key] || { gr: key, en: key };
+  }
+
+  /* ════════════════ COUPONS (real — 'coupons' collection) ════════════
+     A code has a % discount, a maxUses cap, and a real validity WINDOW
+     (validFrom + validUntil, each with time-of-day). Source of truth =
+     Firestore 'coupons' collection (the SAME the legacy admin.js writes).
+     Mirrored to SymStore('discount_codes') so the editor works offline.
+     Public checkout redemption is unchanged (Stripe wired later). */
+  var COUPON_KEY = 'discount_codes';
+  function couponsLoad() {
+    var arr = SS() ? SS().get(COUPON_KEY, []) : [];
+    return Array.isArray(arr) ? arr : [];
+  }
+  function couponsSaveLocal(arr) { if (SS()) SS().set(COUPON_KEY, arr); }
+  // Mirror ONE coupon to Firestore (guarded). Stores discount + maxUses
+  // (rule-validated) plus the validFrom/validUntil window + active flag.
+  function couponMirror(c) {
+    try {
+      if (!fsReady()) return;
+      var fb = firebase.firestore;
+      var doc = {
+        code: c.code, discount: c.discount, type: 'percentage',
+        maxUses: c.maxUses || 0, usedCount: c.usedCount || 0,
+        active: c.active !== false,
+      };
+      // validFrom / validUntil are stored as Firestore Timestamps when possible,
+      // else as epoch-ms numbers (kept readable by both admin surfaces).
+      if (c.validFrom) doc.validFrom = _ts(c.validFrom);
+      if (c.validUntil) { doc.validUntil = _ts(c.validUntil); doc.expiresAt = _ts(c.validUntil); }
+      firebase.firestore().collection('coupons').doc(c.code).set(doc, { merge: true })
+        .catch(function () { /* offline / rules — SymStore is the fallback */ });
+    } catch (_e) { /* no firebase — fine */ }
+  }
+  function _ts(ms) {
+    try {
+      if (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.Timestamp) {
+        return firebase.firestore.Timestamp.fromMillis(Number(ms));
+      }
+    } catch (_e) {}
+    return Number(ms);
+  }
+  function couponDelete(code) {
+    try {
+      if (fsReady()) {
+        firebase.firestore().collection('coupons').doc(code).delete()
+          .catch(function () {});
+      }
+    } catch (_e) {}
+  }
+  function couponSetActive(code, active) {
+    try {
+      if (fsReady()) {
+        firebase.firestore().collection('coupons').doc(code).set({ active: !!active }, { merge: true })
+          .catch(function () {});
+      }
+    } catch (_e) {}
+  }
+  // Best-effort: pull existing coupons from Firestore once → merge into SymStore.
+  function couponsHydrate(after) {
+    if (!fsReady()) { if (after) after(); return; }
+    try {
+      firebase.firestore().collection('coupons').limit(50).get()
+        .then(function (snap) {
+          if (!snap.empty && SS()) {
+            var arr = [];
+            snap.forEach(function (d) {
+              var v = d.data() || {};
+              arr.push({
+                code: v.code || d.id,
+                discount: Number(v.discount) || 0,
+                maxUses: Number(v.maxUses) || 0,
+                usedCount: Number(v.usedCount) || 0,
+                active: v.active !== false,
+                validFrom: _msOf(v.validFrom),
+                validUntil: _msOf(v.validUntil != null ? v.validUntil : v.expiresAt),
+              });
+            });
+            SS().set(COUPON_KEY, arr);
+          }
+          if (after) after();
+        })
+        .catch(function () { if (after) after(); });
+    } catch (_e) { if (after) after(); }
+  }
+  function _msOf(v) {
+    if (v == null) return null;
+    if (typeof v === 'number') return v;
+    try { if (typeof v.toMillis === 'function') return v.toMillis(); } catch (_e) {}
+    try { if (typeof v.toDate === 'function') return v.toDate().getTime(); } catch (_e) {}
+    var n = Date.parse(v); return isFinite(n) ? n : null;
+  }
+  // <input type="datetime-local"> value (local, no TZ) ↔ epoch ms.
+  function dtToMs(s) { if (!s) return null; var n = new Date(s).getTime(); return isFinite(n) ? n : null; }
+  function msToDt(ms) {
+    if (ms == null) return '';
+    try {
+      var d = new Date(Number(ms)); if (isNaN(d.getTime())) return '';
+      var pad = function (x) { return String(x).padStart(2, '0'); };
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    } catch (_e) { return ''; }
+  }
+  function couponStatus(c, now) {
+    now = now || Date.now();
+    if (c.active === false) return { id: 'inactive', gr: 'Ανενεργός', en: 'Inactive' };
+    if (c.validFrom && now < c.validFrom) return { id: 'pending', gr: 'Προγραμματισμένος', en: 'Scheduled' };
+    if (c.validUntil && now > c.validUntil) return { id: 'expired', gr: 'Έληξε', en: 'Expired' };
+    if (c.maxUses && (c.usedCount || 0) >= c.maxUses) return { id: 'used', gr: 'Εξαντλήθηκε', en: 'Used up' };
+    return { id: 'active', gr: 'Ενεργός', en: 'Active' };
+  }
+
+  /* ════════════════ ADMIN FLAGS (persisted toggles) ══════════════════
+     Tartarus + platform Settings switches persist to SymStore('admin_flags')
+     and mirror to Firestore config/adminFlags (guarded). Consumers read the
+     live value via window.adminFlag(key, fallback). */
+  var FLAGS_KEY = 'admin_flags';
+  function adminFlagsAll() { var o = SS() ? SS().get(FLAGS_KEY, {}) : {}; return (o && typeof o === 'object') ? o : {}; }
+  function adminFlagGet(key, def) { var o = adminFlagsAll(); return (key in o) ? !!o[key] : !!def; }
+  function adminFlagSet(key, val) {
+    var o = adminFlagsAll(); o[key] = !!val;
+    if (SS()) SS().set(FLAGS_KEY, o);
+    try {
+      if (fsReady()) {
+        firebase.firestore().collection('config').doc('adminFlags')
+          .set(o, { merge: true }).catch(function () {});
+      }
+    } catch (_e) {}
+  }
+  // Public reader so runtime code (signups gate, maintenance mode, …) can honour
+  // these admin switches without re-reading SymStore everywhere.
+  window.adminFlag = function (key, def) { return adminFlagGet(key, def); };
+
+  /* ════════════════ ACTIVITY FEED (real, aggregated) ═════════════════
+     Overview «Πρόσφατη δραστηριότητα» aggregates timestamped events from the
+     stores we actually own — admin_messages, access_grants, user_feedback,
+     template_assignments + banner changes — newest first. No demo strings;
+     honest empty state when there is nothing yet. */
+  function activityFeed(limit) {
+    var out = [];
+    function push(ts, ic, t) { if (ts && isFinite(ts)) out.push({ ts: ts, ic: ic, t: t }); }
+    try {
+      (SS() ? SS().get('admin_messages', []) : []).forEach(function (m) {
+        push(m.ts, '✉', L({ gr: 'Μήνυμα: ', en: 'Message: ' }) + (m.title || m.body || ''));
+      });
+    } catch (_e) {}
+    try {
+      (SS() ? SS().get(GRANT_KEY, []) : []).forEach(function (g) {
+        push(g.ts, '✦', L({ gr: 'Χορήγηση πρόσβασης · ', en: 'Access granted · ' }) + (g.email || '') + (g.tier ? ' (' + g.tier + ')' : ''));
+      });
+    } catch (_e) {}
+    try {
+      (SS() ? SS().get('user_feedback', []) : []).forEach(function (f) {
+        push(f.ts, '☆', L({ gr: 'Σχόλιο · ', en: 'Feedback · ' }) + (f.n || L({ gr: 'Ανώνυμος', en: 'Anonymous' })));
+      });
+    } catch (_e) {}
+    try {
+      (SS() ? SS().get('template_assignments', []) : []).forEach(function (a) {
+        push(a.ts, '⚱', L({ gr: 'Ανάθεση προτύπου · ', en: 'Template assigned · ' }) + (a.label ? L(a.label) : a.type || ''));
+      });
+    } catch (_e) {}
+    try {
+      (SS() ? SS().get('site_banners', []) : []).forEach(function (b) {
+        var ts = b.updatedAt || b.createdAt || b.ts;
+        push(ts, '◰', L({ gr: 'Banner · ', en: 'Banner · ' }) + (b.title || b.text || ''));
+      });
+    } catch (_e) {}
+    try {
+      (SS() ? SS().get(COUPON_KEY, []) : []).forEach(function (c) {
+        push(c.ts, '%', L({ gr: 'Εκπτωτικός κωδικός · ', en: 'Coupon · ' }) + (c.code || '') + (c.discount ? ' −' + c.discount + '%' : ''));
+      });
+    } catch (_e) {}
+    out.sort(function (a, b) { return b.ts - a.ts; });
+    return out.slice(0, limit || 12);
+  }
+  function relTime(ts) {
+    var s = Math.max(0, Math.round((Date.now() - ts) / 1000));
+    if (s < 60) return L({ gr: 'τώρα', en: 'now' });
+    var m = Math.round(s / 60); if (m < 60) return m + '′';
+    var h = Math.round(m / 60); if (h < 24) return h + L({ gr: 'ω', en: 'h' });
+    var d = Math.round(h / 24); return d + L({ gr: 'μ', en: 'd' });
+  }
+
   /* ════════════════ MAIN SCREEN ════════════════════════════════════ */
   function adminScreen(home /*, ctx */) {
     // Admin-only — bounce non-admins home.
@@ -425,8 +678,17 @@
     body.appendChild(shell);
 
     /* ── small reusable bits (ported from screens-2.js S.admin) ── */
-    function toggleRow(label, on) {
-      var t = el('button', { class: 'sc-toggle' + (on ? ' on' : ''), onclick: function (e) { e.currentTarget.classList.toggle('on'); } }, [el('span', { class: 'sc-toggle__k' })]);
+    // toggleRow(label, on[, key]) — when `key` is given, the switch is BACKED by
+    // SymStore('admin_flags').<key>: it initialises from the stored value and
+    // persists (+ guarded Firestore mirror config/adminFlags) on every flip, so
+    // the state survives re-renders. Consuming code can read window.adminFlag(key).
+    function toggleRow(label, on, key) {
+      var stored = key ? adminFlagGet(key, !!on) : !!on;
+      var t = el('button', { class: 'sc-toggle' + (stored ? ' on' : ''), onclick: function (e) {
+        var nowOn = !e.currentTarget.classList.contains('on');
+        e.currentTarget.classList.toggle('on', nowOn);
+        if (key) adminFlagSet(key, nowOn);
+      } }, [el('span', { class: 'sc-toggle__k' })]);
       return el('div', { class: 'sc-adrow' }, [el('span', {}, L(label)), t]);
     }
     function field2(label, ph) { return el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, label), el('input', { class: 'sc-field__i', placeholder: ph })]); }
@@ -614,6 +876,15 @@
       // ── compose form ─────────────────────────────────────────────────
       var titleIn = el('input', { class: 'sc-field__i', id: 'msgTitle', placeholder: L({ gr: 'Τίτλος μηνύματος', en: 'Message title' }) });
       var bodyIn = el('textarea', { class: 'sc-textarea', id: 'msgBody', rows: '3', placeholder: L({ gr: 'Κείμενο μηνύματος…', en: 'Message body…' }) });
+      // Prefill when opened from a user row's «Μήνυμα» action (one-shot).
+      try {
+        if (window.__msgPrefill) {
+          var pf = window.__msgPrefill; window.__msgPrefill = null;
+          if (pf.title) titleIn.value = pf.title;
+          if (pf.body) bodyIn.value = pf.body;
+          if (pf.to) titleIn.value = (titleIn.value ? titleIn.value : L({ gr: 'Προς ', en: 'To ' }) + pf.to);
+        }
+      } catch (_e) {}
       var audSel = el('select', { class: 'sc-field__i sc-select', id: 'msgAud' }, AUDIENCES.map(function (a) { return el('option', { value: a[0] }, L(a[1])); }));
       var sendBtn = el('button', {
         class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function (e) {
@@ -825,23 +1096,346 @@
       }
     }
 
+    /* ════════════════ PRICING EDITOR (real) ════════════════════════ */
+    function renderPricing() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Τιμολόγηση — πακέτα, bundles & οικογενειακό', en: 'Pricing — plans, bundles & family' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+        gr: 'Όρισε τιμή ανά διάρκεια (1/3/6/12 μήνες) για κάθε πακέτο, τι ξεκλειδώνει (βαθμίδα + τάξη/levels), φτιάξε bundles και ενεργοποίησε το Οικογενειακό. Αποθηκεύεται τοπικά και — με σύνδεση — στο Firestore (config/pricing).',
+        en: 'Set price per duration (1/3/6/12 months) per plan, what it unlocks (tier + class/levels), build bundles and enable the Family plan. Persists locally and — when connected — to Firestore (config/pricing).'
+      })));
+
+      var fsOk = fsReady();
+      pane.appendChild(el('div', { class: 'sc-ac__status' }, [
+        el('span', { class: 'sc-ac__dot' + (fsOk ? ' on' : '') }),
+        L(fsOk ? { gr: 'Συγχρονισμός Firestore ενεργός', en: 'Firestore sync active' } : { gr: 'Τοπική αποθήκευση (χωρίς firebase εδώ)', en: 'Local-only (no firebase here)' }),
+      ]));
+
+      var st = pricingLoad();
+      var host = el('div', {});
+      pane.appendChild(host);
+
+      // Tier options from SymTiers (never hardcoded).
+      var tierOpts = tierVocab();                       // [[id,{gr,en}], …]
+      // Class options for "unlocks → class" (from authored data).
+      var classOpts = [['', { gr: 'Όλες οι τάξεις', en: 'All classes' }]].concat((SYM().CLASSES || []).map(function (c) { return [c.id, { gr: c.gr, en: c.en }]; }));
+      var PLAN_KINDS = [['tier', { gr: 'Βαθμίδα', en: 'Tier' }], ['bundle', { gr: 'Bundle', en: 'Bundle' }], ['family', { gr: 'Οικογενειακό', en: 'Family' }]];
+
+      function selOf(opts, cur, onCh) {
+        return el('select', { class: 'sc-field__i sc-select', onchange: function (e) { onCh(e.target.value); } },
+          opts.map(function (o) { return el('option', { value: o[0], selected: o[0] === cur ? 'selected' : null }, L(o[1])); }));
+      }
+
+      function paintPricing() {
+        host.innerHTML = '';
+        var keys = planKeys(st);
+
+        // ── plan rows ──
+        keys.forEach(function (k) {
+          var isBuiltin = (k === 'student' || k === 'teacher');
+          if (!st[k]) st[k] = {};
+          st._kinds[k] = st._kinds[k] || (isBuiltin ? 'tier' : 'tier');
+          st._unlocks[k] = st._unlocks[k] || { tier: (k === 'teacher' ? 'teacher' : (k === 'student' ? 'student' : 'pro')), classId: '', levels: '' };
+
+          var card = el('div', { class: 'sc-form', style: 'margin:0 0 12px' });
+          var lab = planLabel(st, k);
+          // header: editable label (custom) + kind + delete
+          var head = el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px' });
+          if (isBuiltin) {
+            head.appendChild(el('b', { style: 'flex:1;min-width:120px' }, L(lab)));
+          } else {
+            head.appendChild(el('input', { class: 'sc-field__i', style: 'flex:1;min-width:120px', value: L(lab),
+              onblur: (function (key) { return function (e) { var v = e.target.value.trim(); if (v) { st._labels[key] = { gr: v, en: v }; pricingSave(st); } }; })(k) }));
+          }
+          head.appendChild(el('label', { class: 'sc-field', style: 'flex:0 0 auto' }, [
+            el('span', { class: 'sc-field__l' }, L({ gr: 'Τύπος', en: 'Kind' })),
+            selOf(PLAN_KINDS, st._kinds[k], (function (key) { return function (v) { st._kinds[key] = v; pricingSave(st); paintPricing(); }; })(k)),
+          ]));
+          if (!isBuiltin) {
+            head.appendChild(el('button', { class: 'sc-mini', onclick: (function (key) { return function () {
+              st._customPlans = (st._customPlans || []).filter(function (x) { return x !== key; });
+              delete st[key]; delete st._labels[key]; delete st._kinds[key]; delete st._unlocks[key];
+              pricingSave(st); paintPricing();
+            }; })(k) }, L({ gr: '✕ Διαγραφή', en: '✕ Delete' })));
+          }
+          card.appendChild(head);
+
+          // price-per-duration inputs (1/3/6/12 months)
+          var prRow = el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' });
+          PRICE_MONTHS.forEach(function (m) {
+            prRow.appendChild(el('label', { class: 'sc-field', style: 'flex:1;min-width:78px' }, [
+              el('span', { class: 'sc-field__l' }, m + L({ gr: 'μ €', en: 'mo €' })),
+              el('input', { class: 'sc-field__i sc-price', type: 'number', min: '0', step: '0.01', value: (st[k][m] != null ? st[k][m] : ''),
+                'data-plan': k, 'data-month': m, placeholder: '0.00' }),
+            ]));
+          });
+          card.appendChild(prRow);
+
+          // unlocks: tier (from SymTiers) + class + levels (comma list)
+          var u = st._unlocks[k];
+          card.appendChild(el('div', { class: 'sc-cfg__l', style: 'margin:10px 0 4px' }, L({ gr: 'Ξεκλειδώνει', en: 'Unlocks' })));
+          card.appendChild(el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+            el('label', { class: 'sc-field', style: 'flex:1;min-width:120px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Βαθμίδα', en: 'Tier' })), selOf(tierOpts, u.tier || '', (function (key) { return function (v) { st._unlocks[key].tier = v; pricingSave(st); }; })(k))]),
+            el('label', { class: 'sc-field', style: 'flex:1;min-width:120px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τάξη', en: 'Class' })), selOf(classOpts, u.classId || '', (function (key) { return function (v) { st._unlocks[key].classId = v; pricingSave(st); }; })(k))]),
+            el('label', { class: 'sc-field', style: 'flex:1;min-width:120px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Levels (προαιρ.)', en: 'Levels (opt.)' })), el('input', { class: 'sc-field__i', value: u.levels || '', placeholder: '1,2,3', onblur: (function (key) { return function (e) { st._unlocks[key].levels = e.target.value.trim(); pricingSave(st); }; })(k) })]),
+          ]));
+          host.appendChild(card);
+        });
+
+        // ── add a new plan ──
+        host.appendChild(el('div', { class: 'sc-form', style: 'margin:0 0 16px' }, [
+          el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέο πακέτο', en: 'New plan' })),
+          el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+            el('input', { class: 'sc-field__i', id: 'pxNewNm', placeholder: L({ gr: 'Όνομα (π.χ. Σχολείο)', en: 'Name (e.g. School)' }), style: 'flex:2;min-width:160px' }),
+            el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+              var nm = (document.getElementById('pxNewNm') || {}).value || ''; nm = nm.trim(); if (!nm) return;
+              var key = 'plan_' + Date.now().toString(36);
+              st._customPlans.push(key);
+              st._labels[key] = { gr: nm, en: nm };
+              st._kinds[key] = 'tier';
+              st._unlocks[key] = { tier: 'pro', classId: '', levels: '' };
+              st[key] = {};
+              pricingSave(st); paintPricing();
+            } }, L({ gr: '＋ Πρόσθεσε πακέτο', en: '＋ Add plan' })),
+          ]),
+        ]));
+
+        // ── BUNDLES ──
+        host.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:6px 0 8px' }, L({ gr: 'Bundles', en: 'Bundles' })));
+        host.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 8px' }, L({ gr: 'Συνδυασμός πακέτων με ενιαία τιμή.', en: 'Combine plans at one price.' })));
+        (st._bundles || []).forEach(function (b, bi) {
+          host.appendChild(el('div', { class: 'sc-tr' }, [
+            el('span', { class: 'sc-tr__task' }, L(b) + ' · ' + (Array.isArray(b.plans) ? b.plans.join(' + ') : '')),
+            el('span', {}, b.price != null ? '€' + b.price : '—'),
+            el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () { st._bundles.splice(bi, 1); pricingSave(st); paintPricing(); } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
+          ]));
+        });
+        host.appendChild(el('div', { class: 'sc-form', style: 'margin:8px 0 16px' }, [
+          el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+            el('input', { class: 'sc-field__i', id: 'pxBunNm', placeholder: L({ gr: 'Όνομα bundle', en: 'Bundle name' }), style: 'flex:2;min-width:140px' }),
+            el('input', { class: 'sc-field__i', id: 'pxBunPlans', placeholder: L({ gr: 'πακέτα (π.χ. student,teacher)', en: 'plans (e.g. student,teacher)' }), style: 'flex:2;min-width:160px' }),
+            el('input', { class: 'sc-field__i sc-price', id: 'pxBunPr', type: 'number', min: '0', step: '0.01', placeholder: '€', style: 'flex:1;min-width:80px' }),
+            el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+              var nm = (document.getElementById('pxBunNm') || {}).value || ''; nm = nm.trim();
+              var plans = ((document.getElementById('pxBunPlans') || {}).value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+              var pr = parseFloat((document.getElementById('pxBunPr') || {}).value || '0');
+              if (!nm || !plans.length) return;
+              st._bundles.push({ id: 'bun_' + Date.now().toString(36), gr: nm, en: nm, plans: plans, price: isFinite(pr) ? pr : 0 });
+              pricingSave(st); paintPricing();
+            } }, L({ gr: '＋ Bundle', en: '＋ Bundle' })),
+          ]),
+        ]));
+
+        // ── FAMILY / multi-class plan options (no multi-account auth) ──
+        host.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:6px 0 8px' }, L({ gr: 'Οικογενειακό / πολλαπλές τάξεις', en: 'Family / multi-class' })));
+        host.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 8px' }, L({ gr: 'Έκπτωση −X% στη 2η τάξη + read-only πρόσβαση γονέα με 2ο email (μοντελοποίηση επιλογών — όχι ξεχωριστός λογαριασμός).', en: 'A −X% discount on a 2nd class + read-only parent access by a 2nd email (modelled as options — no separate account).' })));
+        var fam = st._family;
+        host.appendChild(el('div', { class: 'sc-form', style: 'margin:0 0 16px' }, [
+          (function () { var r = el('div', { class: 'sc-adrow' }, [el('span', {}, L({ gr: 'Ενεργό Οικογενειακό', en: 'Family enabled' })), el('button', { class: 'sc-toggle' + (fam.enabled ? ' on' : ''), onclick: function (e) { fam.enabled = !fam.enabled; e.currentTarget.classList.toggle('on', fam.enabled); pricingSave(st); } }, [el('span', { class: 'sc-toggle__k' })])]); return r; })(),
+          el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Έκπτωση 2ης τάξης (%)', en: '2nd-class discount (%)' })), el('input', { class: 'sc-field__i', type: 'number', min: '0', max: '100', value: (fam.addonPct != null ? fam.addonPct : 50), onblur: function (e) { var v = parseInt(e.target.value, 10); fam.addonPct = isFinite(v) ? Math.max(0, Math.min(100, v)) : 50; pricingSave(st); } })]),
+          (function () { var r = el('div', { class: 'sc-adrow' }, [el('span', {}, L({ gr: 'Read-only πρόσβαση γονέα (2ο email)', en: 'Read-only parent access (2nd email)' })), el('button', { class: 'sc-toggle' + (fam.parentRead ? ' on' : ''), onclick: function (e) { fam.parentRead = !fam.parentRead; e.currentTarget.classList.toggle('on', fam.parentRead); pricingSave(st); } }, [el('span', { class: 'sc-toggle__k' })])]); return r; })(),
+        ]));
+
+        // ── save ──
+        host.appendChild(el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+          el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function (e) {
+            // Pull every price input's live value into st before persisting.
+            try {
+              host.querySelectorAll('input[data-plan][data-month]').forEach(function (inp) {
+                var pk = inp.getAttribute('data-plan'), mo = inp.getAttribute('data-month');
+                var v = parseFloat(inp.value); if (!st[pk]) st[pk] = {};
+                st[pk][mo] = isFinite(v) ? Math.max(0, v) : 0;
+              });
+            } catch (_e) {}
+            pricingSave(st);
+            e.currentTarget.textContent = '✓ ' + L({ gr: 'Αποθηκεύτηκε', en: 'Saved' });
+            setTimeout(function () { try { e.currentTarget.textContent = L({ gr: 'Αποθήκευση τιμών', en: 'Save pricing' }); } catch (_e2) {} }, 1400);
+          } }, L({ gr: 'Αποθήκευση τιμών', en: 'Save pricing' })),
+        ]));
+      }
+      // Hydrate from Firestore once (guarded), then paint.
+      pricingHydrate(function () { st = pricingLoad(); paintPricing(); });
+      paintPricing();
+    }
+
+    /* ════════════════ COUPONS EDITOR (real) ════════════════════════ */
+    function renderCoupons() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Εκπτωτικοί κωδικοί', en: 'Discount codes' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+        gr: 'Κωδικός με % έκπτωση, όριο χρήσεων και πραγματικό παράθυρο ισχύος (από / έως, με ώρα). Αποθηκεύεται τοπικά + στη συλλογή coupons του Firestore. (Η εξαργύρωση στο checkout συνδέεται αργότερα με Stripe.)',
+        en: 'A code with a % discount, a usage cap and a real validity window (from / until, with time). Persists locally + to the Firestore coupons collection. (Checkout redemption is wired with Stripe later.)'
+      })));
+
+      var fsOk = fsReady();
+      pane.appendChild(el('div', { class: 'sc-ac__status' }, [
+        el('span', { class: 'sc-ac__dot' + (fsOk ? ' on' : '') }),
+        L(fsOk ? { gr: 'Συγχρονισμός Firestore ενεργός', en: 'Firestore sync active' } : { gr: 'Τοπική αποθήκευση (χωρίς firebase εδώ)', en: 'Local-only (no firebase here)' }),
+      ]));
+
+      // ── create form ──
+      var codeIn = el('input', { class: 'sc-field__i', placeholder: 'WELCOME10', style: 'text-transform:uppercase' });
+      var discIn = el('input', { class: 'sc-field__i', type: 'number', min: '1', max: '100', value: '10' });
+      var maxIn = el('input', { class: 'sc-field__i', type: 'number', min: '0', value: '0', placeholder: '0 = ∞' });
+      var fromIn = el('input', { class: 'sc-field__i', type: 'datetime-local' });
+      var untilIn = el('input', { class: 'sc-field__i', type: 'datetime-local' });
+      var errEl = el('p', { class: 'sc-hint', style: 'color:#b3261e;margin:6px 0 0;display:none' });
+
+      pane.appendChild(el('div', { class: 'sc-form' }, [
+        el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+          el('label', { class: 'sc-field', style: 'flex:2;min-width:140px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Κωδικός', en: 'Code' })), codeIn]),
+          el('label', { class: 'sc-field', style: 'flex:1;min-width:90px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Έκπτωση %', en: 'Discount %' })), discIn]),
+          el('label', { class: 'sc-field', style: 'flex:1;min-width:90px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μέγιστες χρήσεις', en: 'Max uses' })), maxIn]),
+        ]),
+        el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px' }, [
+          el('label', { class: 'sc-field', style: 'flex:1;min-width:170px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Ισχύει από', en: 'Valid from' })), fromIn]),
+          el('label', { class: 'sc-field', style: 'flex:1;min-width:170px' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Ισχύει έως', en: 'Valid until' })), untilIn]),
+        ]),
+        errEl,
+        el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:8px', onclick: function (e) {
+          errEl.style.display = 'none';
+          var code = (codeIn.value || '').trim().toUpperCase();
+          var disc = parseInt(discIn.value, 10);
+          var maxU = parseInt(maxIn.value, 10); if (!isFinite(maxU) || maxU < 0) maxU = 0;
+          var fromMs = dtToMs(fromIn.value);
+          var untilMs = dtToMs(untilIn.value);
+          function fail(msg) { errEl.textContent = L(msg); errEl.style.display = ''; }
+          if (!/^[A-Z0-9_-]{3,}$/.test(code)) { fail({ gr: 'Μη έγκυρος κωδικός (≥3 χαρακτήρες, A–Z/0–9).', en: 'Invalid code (≥3 chars, A–Z/0–9).' }); return; }
+          if (!isFinite(disc) || disc < 1 || disc > 100) { fail({ gr: 'Η έκπτωση πρέπει 1–100%.', en: 'Discount must be 1–100%.' }); return; }
+          if (fromMs && untilMs && untilMs <= fromMs) { fail({ gr: 'Το «έως» πρέπει να είναι μετά το «από».', en: '“Until” must be after “from”.' }); return; }
+          var arr = couponsLoad();
+          if (arr.some(function (c) { return c.code === code; })) { fail({ gr: 'Ο κωδικός υπάρχει ήδη.', en: 'Code already exists.' }); return; }
+          var c = { code: code, discount: disc, maxUses: maxU, usedCount: 0, active: true, validFrom: fromMs, validUntil: untilMs, ts: Date.now() };
+          arr.unshift(c); couponsSaveLocal(arr); couponMirror(c);
+          codeIn.value = ''; maxIn.value = '0'; fromIn.value = ''; untilIn.value = '';
+          e.currentTarget.textContent = '✓ ' + L({ gr: 'Δημιουργήθηκε', en: 'Created' });
+          setTimeout(function () { paint(); }, 600);
+        } }, L({ gr: 'Δημιουργία κωδικού', en: 'Create code' })),
+      ]));
+
+      // ── existing codes ──
+      pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:18px 0 8px' }, L({ gr: 'Κωδικοί', en: 'Codes' })));
+      var listHost = el('div', {});
+      pane.appendChild(listHost);
+      function paintCodes() {
+        listHost.innerHTML = '';
+        var arr = couponsLoad();
+        if (!arr.length) { listHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Κανένας κωδικός ακόμη — φτιάξε τον πρώτο σου παραπάνω.', en: 'No codes yet — create your first one above.' }))); return; }
+        var tbl = el('div', { class: 'sc-table' });
+        tbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, 'Code'), el('span', {}, L({ gr: 'Έκπτ.', en: 'Off' })), el('span', {}, L({ gr: 'Χρήσεις', en: 'Uses' })), el('span', {}, L({ gr: 'Κατάσταση / Παράθυρο', en: 'Status / Window' })), el('span', {}, '')]));
+        arr.forEach(function (c) {
+          var stt = couponStatus(c);
+          var win = '';
+          if (c.validFrom || c.validUntil) {
+            var f = c.validFrom ? new Date(c.validFrom).toLocaleString() : '—';
+            var u2 = c.validUntil ? new Date(c.validUntil).toLocaleString() : '—';
+            win = f + ' → ' + u2;
+          }
+          var badgeMod = (stt.id === 'active') ? 'done' : (stt.id === 'pending' ? 'open' : 'open');
+          tbl.appendChild(el('div', { class: 'sc-tr' }, [
+            el('span', { class: 'sc-tr__task' }, c.code),
+            el('span', {}, '−' + c.discount + '%'),
+            el('span', {}, (c.usedCount || 0) + ' / ' + (c.maxUses ? c.maxUses : '∞')),
+            el('span', {}, [el('em', { class: 'sc-badge2 sc-badge2--' + badgeMod }, L(stt)), win ? el('small', { style: 'display:block;opacity:.7;margin-top:2px' }, win) : null]),
+            el('span', { class: 'sc-tr__acts' }, [
+              el('button', { class: 'sc-mini', onclick: (function (code, active) { return function () {
+                var a = couponsLoad(); a.forEach(function (x) { if (x.code === code) x.active = !active; }); couponsSaveLocal(a); couponSetActive(code, !active); paintCodes();
+              }; })(c.code, c.active !== false) }, c.active === false ? L({ gr: 'Ενεργ.', en: 'Enable' }) : L({ gr: 'Απενεργ.', en: 'Disable' })),
+              el('button', { class: 'sc-mini', onclick: (function (code) { return function () {
+                if (!confirm(L({ gr: 'Διαγραφή κωδικού ' + code + ';', en: 'Delete code ' + code + '?' }))) return;
+                var a = couponsLoad().filter(function (x) { return x.code !== code; }); couponsSaveLocal(a); couponDelete(code); paintCodes();
+              }; })(c.code) }, L({ gr: 'Διαγραφή', en: 'Delete' })),
+            ]),
+          ]));
+        });
+        listHost.appendChild(tbl);
+      }
+      couponsHydrate(function () { paintCodes(); });
+      paintCodes();
+    }
+
     /* ════════════════ PAINT ════════════════════════════════════════ */
     function paint() {
       pane.innerHTML = '';
       if (activeSec === 'overview') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Πρόσφατη δραστηριότητα', en: 'Recent activity' })));
-        [['＋', 'Νέα εγγραφή · Μαρία Κ.', '2′'], ['⚡', 'Live Arena ξεκίνησε · Β1', '11′'], ['◆', 'Αναβάθμιση σε Pro · Νίκος Π.', '24′'], ['❂', 'Ανασκόπηση Tartarus · 38 κάρτες', '1ω'], ['❖', 'Νέα ανάθεση · Γ Λυκείου', '2ω']].forEach(function (a) {
-          pane.appendChild(el('div', { class: 'sc-act' }, [el('span', { class: 'sc-act__ic' }, a[0]), el('span', { class: 'sc-act__t' }, a[1]), el('span', { class: 'sc-act__tm' }, a[2])]));
-        });
+        // REAL feed aggregated from the stores we own (messages / grants /
+        // feedback / template assignments / banners / coupons). Honest empty
+        // state when nothing has happened yet — no demo strings.
+        var feed = activityFeed(12);
+        if (!feed.length) {
+          pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Καμία πρόσφατη δραστηριότητα ακόμη. Οι ενέργειες (μηνύματα, χορηγήσεις, σχόλια, αναθέσεις, banners) θα εμφανίζονται εδώ.', en: 'No recent activity yet. Actions (messages, grants, feedback, assignments, banners) will appear here.' })));
+        } else {
+          feed.forEach(function (a) {
+            pane.appendChild(el('div', { class: 'sc-act' }, [
+              el('span', { class: 'sc-act__ic' }, a.ic),
+              el('span', { class: 'sc-act__t' }, a.t),
+              el('span', { class: 'sc-act__tm' }, relTime(a.ts)),
+            ]));
+          });
+        }
       }
       else if (activeSec === 'users') {
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Χρήστες', en: 'Users' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+          gr: 'Από τις χορηγήσεις πρόσβασης (τοπικά) + τη συλλογή users του Firestore όταν υπάρχει σύνδεση.',
+          en: 'From access grants (local) + the Firestore users collection when connected.'
+        })));
         pane.appendChild(el('input', { class: 'sc-search', placeholder: L({ gr: 'Αναζήτηση χρήστη…', en: 'Search user…' }), oninput: function (e) { var q = e.target.value.toLowerCase(); pane.querySelectorAll('.sc-tr:not(.sc-tr--h)').forEach(function (r) { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; }); } }));
-        var tbl = el('div', { class: 'sc-table' });
-        tbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, L({ gr: 'Όνομα', en: 'Name' })), el('span', {}, 'Email'), el('span', {}, L({ gr: 'Πλάνο', en: 'Plan' })), el('span', {}, L({ gr: 'Ενέργειες', en: 'Actions' }))]));
-        [['Μαρία Κ.', 'maria@…', 'Pro'], ['Νίκος Π.', 'nikos@…', 'Free'], ['Ελένη Σ.', 'eleni@…', 'Pro'], ['Γιώργος Μ.', 'giorgos@…', 'Free'], ['Σοφία Ρ.', 'sofia@…', 'Pro']].forEach(function (u) {
-          tbl.appendChild(el('div', { class: 'sc-tr' }, [el('span', { class: 'sc-tr__task' }, u[0]), el('span', {}, u[1]), el('span', {}, el('em', { class: 'sc-badge2 sc-badge2--' + (u[2] === 'Pro' ? 'done' : 'open') }, u[2])), el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini' }, L({ gr: 'Προβολή', en: 'View' })), el('button', { class: 'sc-mini sc-mini--accent' }, L({ gr: 'Επεξεργασία', en: 'Edit' }))])]));
+
+        // Seed from real grants (email + role + tier). De-dupe by email.
+        var byEmail = {};
+        grantsLoad().forEach(function (g) {
+          var e = String(g.email || '').toLowerCase(); if (!e) return;
+          if (!byEmail[e]) byEmail[e] = { email: e, name: '', role: g.role || '', tier: g.tier || '' };
         });
-        pane.appendChild(tbl);
+        var users = Object.keys(byEmail).map(function (k) { return byEmail[k]; });
+
+        var tblHost = el('div', {});
+        pane.appendChild(tblHost);
+        function paintUsers() {
+          tblHost.innerHTML = '';
+          if (!users.length) {
+            tblHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Κανένας χρήστης ακόμη. Χορήγησε πρόσβαση από «Χορήγηση Πρόσβασης» ή συνδέσου στο Firestore.', en: 'No users yet. Grant access from “Grant Access”, or connect Firestore.' })));
+            return;
+          }
+          var tbl = el('div', { class: 'sc-table' });
+          tbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, L({ gr: 'Όνομα / Email', en: 'Name / Email' })), el('span', {}, L({ gr: 'Ρόλος', en: 'Role' })), el('span', {}, L({ gr: 'Πακέτο', en: 'Tier' })), el('span', {}, L({ gr: 'Ενέργειες', en: 'Actions' }))]));
+          users.forEach(function (u) {
+            var tierLabel = (window.SymTiers ? SymTiers.label(u.tier) : null);
+            tbl.appendChild(el('div', { class: 'sc-tr' }, [
+              el('span', { class: 'sc-tr__task' }, u.name ? (u.name + ' · ' + u.email) : u.email),
+              el('span', {}, u.role || '—'),
+              el('span', {}, u.tier ? el('em', { class: 'sc-badge2 sc-badge2--' + (u.tier === 'free' ? 'open' : 'done') }, tierLabel ? L(tierLabel) : u.tier) : '—'),
+              el('span', { class: 'sc-tr__acts' }, [
+                // View → message composer pre-targeted (real action, not a stub).
+                el('button', { class: 'sc-mini', onclick: (function (em) { return function () { window.__adminSec = 'messaging'; window.__msgPrefill = { title: '', body: '', to: em }; activeSec = 'messaging'; paint(); }; })(u.email) }, L({ gr: 'Μήνυμα', en: 'Message' })),
+                // Edit → jump to Grant Access (the real place to change a user's tier).
+                el('button', { class: 'sc-mini sc-mini--accent', onclick: function () { window.__adminSec = 'grant'; activeSec = 'grant'; rail.querySelectorAll('.sc-admin2__nav').forEach(function (b) { b.classList.toggle('active', b.dataset.s === 'grant'); }); paint(); } }, L({ gr: 'Χορήγηση', en: 'Grant' })),
+              ]),
+            ]));
+          });
+          tblHost.appendChild(tbl);
+        }
+        paintUsers();
+
+        // Guarded Firestore patch: pull real users → merge by email, re-render.
+        try {
+          if (fsReady()) {
+            firebase.firestore().collection('users').limit(200).get().then(function (snap) {
+              if (snap.empty) return;
+              snap.forEach(function (d) {
+                var v = d.data() || {};
+                var e = String(v.email || d.id || '').toLowerCase(); if (!e) return;
+                if (!byEmail[e]) { byEmail[e] = { email: e, name: '', role: '', tier: '' }; users.push(byEmail[e]); }
+                var rec = byEmail[e];
+                if (v.displayName || v.name) rec.name = v.displayName || v.name;
+                if (v.role && !rec.role) rec.role = v.role;
+                if ((v.tier || v.userType) && !rec.tier) rec.tier = v.tier || v.userType;
+              });
+              // Only repaint if the users section is still showing.
+              if (activeSec === 'users') paintUsers();
+            }).catch(function () { /* rules/offline — keep grants-only list */ });
+          }
+        } catch (_e) { /* no firebase — fine */ }
       }
       else if (activeSec === 'access') {
         // Έλεγχος Πρόσβασης → the REAL per-class Class Plan planner (Ver1
@@ -1076,26 +1670,39 @@
           stat(String(localStat('stat_churn')) + '%', L({ gr: 'Churn', en: 'Churn' }), accent, 'churn'),
         ]));
         loadFirestoreStats();
-        var defPlans = [{ id: 'student', nm: 'Μαθητής', price: '4.99', n: '892' }, { id: 'teacher', nm: 'Καθηγητής', price: '7.99', n: '160' }, { id: 'school', nm: 'School', price: '49', n: '17' }];
-        var customPlans = SymStore ? SymStore.get('admin_plans', []) : [];
+        // Plans come from the pricing config (the single source of truth).
+        // Per-plan subscriber counts are REAL (from active subscription docs) or
+        // '—' — never the old invented 892/160/17.
+        var pst = pricingLoad();
+        var keys = planKeys(pst);
         pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:14px 0 8px' }, L({ gr: 'Πακέτα', en: 'Plans' })));
         var ptbl = el('div', { class: 'sc-table' });
         ptbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, L({ gr: 'Πακέτο', en: 'Plan' })), el('span', {}, '€/' + L({ gr: 'μήνα', en: 'mo' })), el('span', {}, L({ gr: 'Συνδρομές', en: 'Subs' })), el('span', {}, '')]));
-        defPlans.concat(customPlans).forEach(function (p, i) {
+        keys.forEach(function (k) {
+          var mPrice = (pst[k] && pst[k][1] != null) ? pst[k][1] : '—';
           ptbl.appendChild(el('div', { class: 'sc-tr' }, [
-            el('span', { class: 'sc-tr__task' }, p.nm), el('span', {}, el('input', { class: 'sc-price', value: p.price })), el('span', {}, p.n || '—'),
-            el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini' + (i < 3 ? ' off' : ''), onclick: function () { if (i >= 3 && SymStore) { var c = customPlans.filter(function (_x, j) { return j !== i - 3; }); SymStore.set('admin_plans', c); symRender(); } } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
+            el('span', { class: 'sc-tr__task' }, L(planLabel(pst, k))),
+            el('span', {}, mPrice === '—' ? '—' : '€' + mPrice),
+            el('span', { class: 'sc-plan-n', 'data-plan-n': k }, '—'),
+            el('span', {}, ''),
           ]));
         });
         pane.appendChild(ptbl);
-        pane.appendChild(el('div', { class: 'sc-form', style: 'margin-top:12px' }, [
-          el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέο πακέτο', en: 'New plan' })),
-          el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
-            el('input', { class: 'sc-field__i', id: 'newPlanNm', placeholder: L({ gr: 'Όνομα (π.χ. Οικογενειακό)', en: 'Name (e.g. Family)' }), style: 'flex:2;min-width:160px' }),
-            el('input', { class: 'sc-field__i', id: 'newPlanPr', placeholder: '€ / ' + L({ gr: 'μήνα', en: 'mo' }), style: 'flex:1;min-width:90px' }),
-            el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () { if (!SymStore) return; var nm = document.getElementById('newPlanNm').value.trim(), pr = document.getElementById('newPlanPr').value.trim(); if (nm) { var c = SymStore.get('admin_plans', []); c.push({ id: 'pl' + Date.now(), nm: nm, price: pr || '0' }); SymStore.set('admin_plans', c); symRender(); } } }, L({ gr: 'Πρόσθεσε', en: 'Add' })),
-          ]),
-        ]));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin-top:10px' }, L({ gr: 'Διαχείριση τιμών, bundles & οικογενειακού πακέτου → ενότητα «Τιμολόγηση».', en: 'Manage prices, bundles & the family plan → the “Pricing” section.' })));
+        // Guarded per-plan active-subscriber counts from real subscription docs.
+        try {
+          if (fsReady()) {
+            firebase.firestore().collection('subscriptions').where('status', '==', 'active').get().then(function (snap) {
+              var tally = {};
+              snap.forEach(function (d) { var v = d.data() || {}; var pk = v.userType || v.plan || v.tier; if (pk) tally[pk] = (tally[pk] || 0) + 1; });
+              try {
+                document.querySelectorAll('.sc-plan-n[data-plan-n]').forEach(function (n) {
+                  var pk = n.getAttribute('data-plan-n'); n.textContent = tally[pk] != null ? String(tally[pk]) : '—';
+                });
+              } catch (_e) {}
+            }).catch(function () {});
+          }
+        } catch (_e) {}
       }
       else if (activeSec === 'messaging') {
         renderMessaging();
@@ -1209,7 +1816,12 @@
       }
       else if (activeSec === 'tartarus') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Διαχείριση Tartarus', en: 'Manage Tartarus' })));
-        [['Ενεργό spaced-repetition', 1], ['Κοινοποίηση σε καθηγητές', 1], ['Auto-clear 90 ημερών', 0]].forEach(function (r) { pane.appendChild(toggleRow({ gr: r[0], en: r[0] }, r[1])); });
+        // Persisted toggles (SymStore admin_flags + guarded mirror); read live
+        // anywhere via window.adminFlag('tartarus_spaced', true) etc.
+        [['tartarus_spaced', { gr: 'Ενεργό spaced-repetition', en: 'Spaced-repetition enabled' }, 1],
+         ['tartarus_share', { gr: 'Κοινοποίηση σε καθηγητές', en: 'Share with teachers' }, 1],
+         ['tartarus_autoclear', { gr: 'Auto-clear 90 ημερών', en: 'Auto-clear after 90 days' }, 0]
+        ].forEach(function (r) { pane.appendChild(toggleRow(r[1], r[2], r[0])); });
       }
       else if (activeSec === 'grant') {
         // ── Access-tier registry: built-ins + admin-created custom tiers ──
@@ -1232,19 +1844,10 @@
         renderGrant();
       }
       else if (activeSec === 'pricing') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Τιμολόγηση', en: 'Pricing' })));
-        [['Free', '€0', '—'], ['Pro (μήνας)', '€4.99', '892'], ['Pro (έτος)', '€39.99', '310'], ['School', '€49', '17']].forEach(function (p) {
-          pane.appendChild(el('div', { class: 'sc-adrow' }, [el('span', {}, p[0]), el('div', { style: 'display:flex;gap:12px;align-items:center' }, [el('input', { class: 'sc-price', value: p[1] }), el('small', { style: 'color:var(--muted)' }, p[2])])]));
-        });
-        pane.appendChild(el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:10px' }, L({ gr: 'Αποθήκευση τιμών', en: 'Save pricing' })));
+        renderPricing();
       }
       else if (activeSec === 'discounts') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Εκπτωτικοί κωδικοί', en: 'Discount codes' })));
-        pane.appendChild(el('div', { class: 'sc-form' }, [field2(L({ gr: 'Κωδικός', en: 'Code' }), 'PAIDEIA20'), rowSel(L({ gr: 'Έκπτωση', en: 'Discount' }), ['10%', '20%', '50%', '3 μήνες δωρεάν']), el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm' }, L({ gr: 'Δημιουργία', en: 'Create' }))]));
-        var dtbl = el('div', { class: 'sc-table', style: 'margin-top:14px' });
-        dtbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, 'Code'), el('span', {}, L({ gr: 'Έκπτωση', en: 'Off' })), el('span', {}, L({ gr: 'Χρήσεις', en: 'Uses' })), el('span', {}, '')]));
-        [['WELCOME10', '10%', '124'], ['SCHOOL50', '50%', '8'], ['SUMMER', '3μ', '41']].forEach(function (d) { dtbl.appendChild(el('div', { class: 'sc-tr' }, [el('span', { class: 'sc-tr__task' }, d[0]), el('span', {}, d[1]), el('span', {}, d[2]), el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini' }, L({ gr: 'Απενεργ.', en: 'Disable' }))])])); });
-        pane.appendChild(dtbl);
+        renderCoupons();
       }
       else if (activeSec === 'banners') {
         // Real banner admin — create + edit + activate/deactivate + LIVE PREVIEW +
@@ -1258,7 +1861,14 @@
       }
       else if (activeSec === 'settings') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ρυθμίσεις πλατφόρμας', en: 'Platform settings' })));
-        [['Εγγραφές ανοιχτές', 1], ['Λειτουργία συντήρησης', 0], ['Email ειδοποιήσεις', 1], ['Auto-detect εποχής', 1]].forEach(function (s) { pane.appendChild(toggleRow({ gr: s[0], en: s[0] }, s[1])); });
+        // Persisted switches (SymStore admin_flags + guarded mirror). Read live
+        // anywhere via window.adminFlag('signups_open', true) etc.
+        [['signups_open', { gr: 'Εγγραφές ανοιχτές', en: 'Signups open' }, 1],
+         ['maintenance', { gr: 'Λειτουργία συντήρησης', en: 'Maintenance mode' }, 0],
+         ['email_notify', { gr: 'Email ειδοποιήσεις', en: 'Email notifications' }, 1],
+         ['season_auto', { gr: 'Auto-detect εποχής', en: 'Auto-detect season' }, 1]
+        ].forEach(function (s) { pane.appendChild(toggleRow(s[1], s[2], s[0])); });
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin-top:10px' }, L({ gr: 'Οι διακόπτες αποθηκεύονται και διαβάζονται από τον κώδικα μέσω adminFlag(…).', en: 'Switches persist and are read by runtime code via adminFlag(…).' })));
       }
       else {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Νέα ενότητα', en: 'New section' })));

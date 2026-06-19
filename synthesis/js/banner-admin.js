@@ -171,33 +171,41 @@
   }
 
   /* ── small DOM builders (label + input/textarea/select) ──────────── */
+  /* Inputs sit on white cards inside the light admin. Pin an EXPLICIT dark ink
+     (#241c14) + readable placeholder instead of `color:inherit`, which risked a
+     light-on-white wash if an ancestor set a pale text colour. */
+  var INK = '#241c14';
+  var INP_STYLE = 'padding:9px 11px;border-radius:9px;border:1px solid rgba(0,0,0,.28);'
+                + 'font:inherit;font-size:14px;background:#fff;color:' + INK + ';width:100%;';
+
   function field(labelObj, inputNode) {
     return mk('label', { class:'ba-field', style:'display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;' }, [
-      mk('span', { class:'ba-field-lbl', style:'font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.72;' }, L(labelObj)),
+      // label: explicit dark ink + full opacity so it never reads light-on-light.
+      mk('span', { class:'ba-field-lbl', style:'font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:' + INK + ';opacity:.92;' }, L(labelObj)),
       inputNode,
     ]);
   }
   function input(id, placeholder) {
     var n = mk('input', { id:id, type:'text', class:'sc-inp ba-inp', placeholder:placeholder || '',
-      style:'padding:9px 11px;border-radius:9px;border:1px solid rgba(0,0,0,.16);font:inherit;background:#fff;color:inherit;width:100%;' });
+      style:INP_STYLE });
     n.addEventListener('input', updatePreview);
     return n;
   }
   function textarea(id, placeholder) {
     var n = mk('textarea', { id:id, rows:'2', class:'sc-inp ba-inp', placeholder:placeholder || '',
-      style:'padding:9px 11px;border-radius:9px;border:1px solid rgba(0,0,0,.16);font:inherit;background:#fff;color:inherit;width:100%;resize:vertical;' });
+      style:INP_STYLE + 'resize:vertical;' });
     n.addEventListener('input', updatePreview);
     return n;
   }
   function dateInput(id) {
     var n = mk('input', { id:id, type:'date', class:'sc-inp ba-inp',
-      style:'padding:9px 11px;border-radius:9px;border:1px solid rgba(0,0,0,.16);font:inherit;background:#fff;color:inherit;width:100%;' });
+      style:INP_STYLE });
     n.addEventListener('input', updatePreview);
     return n;
   }
   function typeSelect(id) {
     var sel = mk('select', { id:id, class:'sc-inp ba-inp',
-      style:'padding:9px 11px;border-radius:9px;border:1px solid rgba(0,0,0,.16);font:inherit;background:#fff;color:inherit;width:100%;' },
+      style:INP_STYLE },
       TYPES.map(function (tp) { return mk('option', { value:tp[0] }, L(tp[1])); }));
     sel.addEventListener('change', updatePreview);
     return sel;
@@ -266,14 +274,14 @@
   async function refreshList() {
     var host = $('ba-list');
     if (!host) return;
-    host.innerHTML = '<div class="ba-empty" style="opacity:.6;font-size:13px;padding:8px 0;">' +
+    host.innerHTML = '<div class="ba-empty" style="color:' + INK + ';opacity:.7;font-size:13px;padding:8px 0;">' +
       esc(L({ gr:'Φόρτωση…', en:'Loading…' })) + '</div>';
 
     var banners = [];
     try { banners = await window.adminLoadAllBanners(); } catch (_) { banners = []; }
 
     if (!banners.length) {
-      host.innerHTML = '<div class="ba-empty" style="opacity:.6;font-size:13px;padding:8px 0;">' +
+      host.innerHTML = '<div class="ba-empty" style="color:' + INK + ';opacity:.7;font-size:13px;padding:8px 0;">' +
         esc(L({ gr:'Δεν υπάρχουν banners ακόμη.', en:'No banners yet.' })) + '</div>';
       return;
     }
@@ -290,10 +298,10 @@
         style:'display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(0,0,0,.1);border-radius:10px;margin-bottom:8px;' + (b.active ? '' : 'opacity:.62;') });
 
       var meta = mk('div', { style:'flex:1;min-width:0;' }, [
-        mk('div', { style:'font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' },
+        mk('div', { style:'font-weight:700;font-size:13.5px;color:' + INK + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' },
           (typeTag[b.type] || 'ℹ️') + ' ' + (b.titleGr || b.titleEn || '—')),
-        mk('div', { style:'font-size:11px;opacity:.7;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;' }, [
-          mk('span', { style:'color:' + statusColor + ';font-weight:600;' }, L({ gr:statusGr, en:statusEn })),
+        mk('div', { style:'font-size:11.5px;color:' + INK + ';opacity:.78;margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;' }, [
+          mk('span', { style:'color:' + statusColor + ';font-weight:700;opacity:1;' }, L({ gr:statusGr, en:statusEn })),
           mk('span', {}, L({ gr:'Λήξη', en:'Exp' }) + ': ' + ((typeof b.endsAt === 'string') ? b.endsAt : '∞')),
           b.ctaGr ? mk('span', {}, 'CTA: ' + b.ctaGr) : null,
         ]),
@@ -301,10 +309,10 @@
 
       var actions = mk('div', { style:'display:flex;gap:6px;flex-shrink:0;' }, [
         mk('button', { class:'sc-mini ba-act', type:'button',
-          style:'padding:6px 11px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:#fff;cursor:pointer;font:inherit;font-size:12px;',
+          style:'padding:6px 11px;border-radius:8px;border:1px solid rgba(0,0,0,.28);background:#fff;color:' + INK + ';cursor:pointer;font:inherit;font-size:12px;font-weight:600;',
           onclick: function () { startEdit(b); } }, '✎ ' + L({ gr:'Επεξεργασία', en:'Edit' })),
         mk('button', { class:'sc-mini ba-act', type:'button',
-          style:'padding:6px 11px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:#fff;cursor:pointer;font:inherit;font-size:12px;',
+          style:'padding:6px 11px;border-radius:8px;border:1px solid rgba(0,0,0,.28);background:#fff;color:' + INK + ';cursor:pointer;font:inherit;font-size:12px;font-weight:600;',
           onclick: function () { onToggleActive(b); } },
           b.active ? L({ gr:'Απενεργοποίηση', en:'Deactivate' }) : L({ gr:'Ενεργοποίηση', en:'Activate' })),
       ]);
@@ -321,11 +329,11 @@
     _editingId = null;
     _pane.innerHTML = '';
 
-    // Heading
+    // Heading — explicit dark ink so it never inherits a pale shell colour.
     _pane.appendChild(mk('div', { class:'sc-panel__h',
-      style:'font-size:20px;font-weight:800;margin-bottom:4px;' },
+      style:'font-size:20px;font-weight:800;color:' + INK + ';margin-bottom:4px;' },
       L({ gr:'Banners & ανακοινώσεις', en:'Banners & announcements' })));
-    _pane.appendChild(mk('p', { style:'font-size:13px;opacity:.7;margin:0 0 16px;max-width:60ch;' },
+    _pane.appendChild(mk('p', { style:'font-size:13.5px;color:' + INK + ';opacity:.82;margin:0 0 16px;max-width:60ch;' },
       L({ gr:'Δημιούργησε, επεξεργάσου και ενεργοποίησε τη γραμμή ανακοινώσεων στην κορυφή του site. Η προεπισκόπηση δείχνει ακριβώς πώς θα εμφανιστεί.',
           en:'Create, edit and toggle the announcement strip at the top of the site. The preview shows exactly how it will appear.' })));
 
@@ -357,14 +365,14 @@
       style:'padding:10px 18px;border-radius:10px;border:none;background:#C8512E;color:#fff;font-weight:700;cursor:pointer;font:inherit;',
       onclick: onSubmit }, L({ gr:'＋ Δημοσίευση', en:'＋ Publish' }));
     var cancelEdit = mk('button', { id:'ba-cancel-edit', type:'button',
-      style:'display:none;padding:10px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.18);background:#fff;cursor:pointer;font:inherit;margin-left:8px;',
+      style:'display:none;padding:10px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.28);background:#fff;color:' + INK + ';font-weight:600;cursor:pointer;font:inherit;margin-left:8px;',
       onclick: clearForm }, L({ gr:'Άκυρο', en:'Cancel' }));
     form.appendChild(mk('div', { style:'display:flex;align-items:center;' }, [submit, cancelEdit]));
 
     _pane.appendChild(form);
 
     /* ── LIVE PREVIEW ── */
-    _pane.appendChild(mk('div', { style:'font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.6;margin:0 0 8px;' },
+    _pane.appendChild(mk('div', { style:'font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:' + INK + ';opacity:.78;margin:0 0 8px;' },
       L({ gr:'Προεπισκόπηση', en:'Live preview' })));
     // Dark frame so the dark banner reads correctly against the light admin.
     _pane.appendChild(mk('div', { id:'ba-preview',
@@ -372,10 +380,10 @@
 
     /* ── EXISTING LIST + SEED ── */
     _pane.appendChild(mk('div', { style:'display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;' }, [
-      mk('div', { style:'font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.6;' },
+      mk('div', { style:'font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:' + INK + ';opacity:.78;' },
         L({ gr:'Υπάρχοντα banners', en:'Existing banners' })),
       mk('button', { id:'ba-seed', type:'button',
-        style:'padding:7px 13px;border-radius:8px;border:1px solid rgba(0,0,0,.18);background:#fff;cursor:pointer;font:inherit;font-size:12px;font-weight:600;',
+        style:'padding:7px 13px;border-radius:8px;border:1px solid rgba(0,0,0,.28);background:#fff;color:' + INK + ';cursor:pointer;font:inherit;font-size:12px;font-weight:600;',
         onclick: onSeed }, L({ gr:'⤓ Φόρτωση παραδειγμάτων', en:'⤓ Seed example banners' })),
     ]));
     _pane.appendChild(mk('div', { id:'ba-list' }));
