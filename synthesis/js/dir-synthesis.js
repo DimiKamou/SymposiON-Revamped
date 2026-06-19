@@ -52,7 +52,8 @@
       soon ? soonBadge() : null,
       el('span', { class:'syn-tile__ban' }, [ el('span', { class:'syn-tile__illu', 'data-illu':gm.illu }) ]),
       el('span', { class:'syn-tile__body' }, [
-        el('span', { class:'syn-tile__nm' }, L(gm)),
+        // admin Game-Tags rename: show the overridden display name (launch key unchanged)
+        el('span', { class:'syn-tile__nm' }, L((window.SymTags && SymTags.displayName) ? SymTags.displayName(gm) : gm)),
         el('span', { class:'syn-tile__mt' }, gm.meta),
       ]),
       el('span', { class:'syn-tile__play', html: soon ? '&#9679;' : '&#9654;' }),
