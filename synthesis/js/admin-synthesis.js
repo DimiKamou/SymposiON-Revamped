@@ -871,10 +871,15 @@
         // Real Site Studio (admin-studio.js) mounted in-pane.
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Studio — Τάξεις → Μαθήματα → Παιχνίδια → Ερωτήσεις', en: 'Studio — Grades → Subjects → Games → Questions' })));
         if (window.AdminStudio && typeof window.AdminStudio.view === 'function') {
-          var host = el('div', { class: 'cc-work sc-studio-host' });
+          // Scope under a neutralised #page-admin host so admin-studio.css /
+          // admin-cc.css light styles apply (same trick as the Access planner).
+          var shost = el('div', { id: 'page-admin', class: 'syn-cc-embed',
+            style: 'position:static;display:block;inset:auto;z-index:auto;height:auto;min-height:0;background:transparent;color:inherit' });
+          var host = el('div', { class: 'cc-work sc-studio-host', style: 'padding:0' });
           var panel = el('div', { class: 'cc-panel', id: 'cc-panel' });
           host.appendChild(panel);
-          pane.appendChild(host);
+          shost.appendChild(host);
+          pane.appendChild(shost);
           try {
             panel.innerHTML = window.AdminStudio.view();
             if (typeof window.AdminStudio.init === 'function') window.AdminStudio.init();
