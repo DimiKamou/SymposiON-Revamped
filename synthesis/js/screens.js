@@ -10,6 +10,9 @@
   const SY = window.SYM;
   const ST = () => window.STATE;
   const isAdmin = () => !!(window.STATE && window.STATE.adminEdit);
+  // Resolve a game's admin-overridden display name (Game-Tags rename); falls
+  // back to the game's own {gr,en} when there is no override.
+  const gName = (g) => (window.SymTags && SymTags.displayName) ? SymTags.displayName(g) : g;
 
   /* ── shared bits ───────────────────────────────────────────────── */
   function glyph(name, cls){ return el('span', { class:(cls||'sc-gl'), 'data-illu':name }); }
@@ -243,9 +246,9 @@
   /* ══ 2 · MODE SELECT ══ */
   S.mode = function(home, ctx){
     const { cls, subject, game, accent } = defaults(ctx);
-    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(game),
+    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
       title:L({gr:'Επίλεξε Λειτουργία',en:'Choose a mode'}), sub:L({gr:'Πώς θες να παίξεις απόψε;',en:'How do you want to play tonight?'}),
-      actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(game),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
+      actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(gName(game)),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
     const modes = [
       // Solo / Practice → real-launch dispatch: content-bank games open the
       // level selector, self-contained games launch straight into the game.
@@ -274,8 +277,8 @@
     const showType = SymPreview.typeFor(game);
     const bank = gameNeedsLevelPicker(game);
 
-    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(game),
-      title:L(game),
+    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
+      title:L(gName(game)),
       actions:[ el('button',{class:'lv-share', onclick:()=>go('live')},[ glyph('grid-blocks','lv-share__gl'), L({gr:'Μοιράσου στην τάξη',en:'Share to class'}) ]) ] });
 
     // ── No real level bank (reached only via launchTile's safe fallback for a
@@ -286,7 +289,7 @@
       card.appendChild(el('button',{class:'lv-cat lv-cat--custom', style:'width:100%', onclick:()=>{
         if (game && game.soon) return comingSoon(game);
         if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
-        return SymPreview.open(showType,{title:L(game), illu:game.illu});
+        return SymPreview.open(showType,{title:L(gName(game)), illu:game.illu});
       }},[ el('div',{class:'lv-cat__b'},[
         el('span',{class:'lv-cat__t'}, L({gr:'Ξεκίνα το παιχνίδι',en:'Start the game'})),
         el('span',{class:'lv-cat__m'}, L({gr:'Χωρίς επίπεδα — άμεση έναρξη',en:'No levels — launches directly'})) ]),
@@ -336,7 +339,7 @@
     function launchLevel(lv, group){
       if (game && game.soon) return comingSoon(game);
       if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn, lv.id, group);
-      return SymPreview.open(showType,{title:L(game), illu:game.illu});
+      return SymPreview.open(showType,{title:L(gName(game)), illu:game.illu});
     }
 
     function paintList(){

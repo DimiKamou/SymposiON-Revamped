@@ -52,7 +52,8 @@
       soon ? soonBadge() : null,
       el('span', { class:'syn-tile__ban' }, [ el('span', { class:'syn-tile__illu', 'data-illu':gm.illu }) ]),
       el('span', { class:'syn-tile__body' }, [
-        el('span', { class:'syn-tile__nm' }, L(gm)),
+        // admin Game-Tags rename: show the overridden display name (launch key unchanged)
+        el('span', { class:'syn-tile__nm' }, L((window.SymTags && SymTags.displayName) ? SymTags.displayName(gm) : gm)),
         el('span', { class:'syn-tile__mt' }, gm.meta),
       ]),
       el('span', { class:'syn-tile__play', html: soon ? '&#9679;' : '&#9654;' }),
@@ -337,10 +338,13 @@
       class:'syn-screens__item'+((s.id&&s.id===screen)?' active':''),
       onclick:()=>{ menu.classList.remove('open'); if(s.cls){ window.STATE.classId=s.cls; symGo('home'); } else { symGo(s.id); } }
     }, [ el('span',{class:'syn-screens__ico'}, s.ico), L(s) ]);
+    // «Διαχείριση»/Admin is admin-only — hide it from non-admins (the admin
+    // screen itself also gates on isAdmin; this keeps it out of the nav too).
+    var _isAdm = (typeof isAdmin !== 'undefined' && isAdmin) || (window.STATE && window.STATE.role === 'admin');
     NAV_GROUPS.forEach(g => {
       const col = el('div', { class:'syn-screens__col' });
       col.appendChild(el('div', { class:'syn-screens__lbl' }, L(g.lbl)));
-      g.items.forEach(s => col.appendChild(navItem(s)));
+      g.items.forEach(s => { if (s.id === 'admin' && !_isAdm) return; col.appendChild(navItem(s)); });
       menu.appendChild(col);
     });
     // tag pages — the "extra pages" we added (each its own destination)

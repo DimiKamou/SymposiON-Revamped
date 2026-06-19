@@ -5,7 +5,7 @@
   Host entry:    LiveArena.launchHost({ questions, gameName })
   Student entry: LiveArena.launchStudent()
 
-  Dataset shape (same as CryptoHack):
+  Dataset shape:
     { q: 'Question text', opts: ['A','B','C','D'], ans: 0 }
 
   Firestore layout:

@@ -193,6 +193,9 @@
 <script src="js/screens.js"></script>
 <script src="js/screens-2.js"></script>
 <script src="js/screens-learn.js"></script>
+<!-- Admin-assigned template tiles: window.synAssignedTiles(class,subject), merged
+     into subject grids by screens-learn.js. Read-only consumer of SymStore. -->
+<script src="js/syn-assignments.js?v=1"></script>
 <!-- ══════════ TEACHER WIZARD (Ver1 anathesi port) ══════════
      Re-registers window.SYM_SCREENS.anathesi AFTER screens-2.js so the richer
      all-modes wizard (driven by window.GP_ENGINES) WINS over the simple one. -->
@@ -241,6 +244,11 @@
 <script src="js/voyage-launchers.js"></script>
 <script src="js/voyage-progress.js"></script>
 <script src="js/manifest/voyage.js"></script>
+<!-- ══════════ ADMIN AUTHORING TEMPLATES (Trivia & History Synthesis) ══════════
+     Self-contained React/Babel composer + live-preview tools that export JSON
+     configs, under games/{trivia,history}-synthesis/. template-launchers.js
+     opens each in a full-screen overlay iframe (admin "Πρότυπα / Templates"). -->
+<script src="js/template-launchers.js?v=1"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
 <script src="js/trivia-iframe-launchers.js"></script>
 

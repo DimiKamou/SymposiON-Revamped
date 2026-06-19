@@ -135,10 +135,14 @@
   }
 
   // ── ISTORIA Γ΄ ΛΥΚΕΙΟΥ (iframe → games/istoria/index.html?course=g3) ──
-  function openIstoria() {
+  function openIstoria(course) {
+    course = course || 'g3';   // default preserves the old no-arg behavior
     const wrap = document.getElementById('istoria-wrap');
-    if (wrap && !wrap.querySelector('iframe')) {
-      wrap.innerHTML = '<iframe src="' + _appBase() + 'games/istoria/index.html?course=g3" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+    if (wrap) {
+      const want = _appBase() + 'games/istoria/index.html?course=' + encodeURIComponent(course);
+      const ifr = wrap.querySelector('iframe');
+      if (!ifr) wrap.innerHTML = '<iframe src="' + want + '" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+      else if (ifr.getAttribute('src') !== want) ifr.setAttribute('src', want);   // re-scope to the requested course
     }
     const ov = document.getElementById('istoria-overlay');
     if (ov) { ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
