@@ -12,6 +12,40 @@ let adminRole       = null;       // 'super' | 'content' | 'support' | 'finance'
 
 const _ADMIN_EMAIL  = 'dimikamou@gmail.com';
 
+// ── RUNTIME ACCESS GATE ──────────────────────────────────────
+// The single source of truth for "may this signed-in user open
+// content requiring `requiredTier`?". Referenced as a bare global
+// by theory-lesson.js, trivia-iframe-launchers.js and live-arena.js
+// (each does `typeof _gpCanAccessTier === 'function'`). Until this
+// existed those guards were skipped entirely (fail-OPEN); defining
+// it here — in scope of the live `currentUserRole`/`isAdmin` lets —
+// activates real subscription gating site-wide.
+//
+// Policy:
+//   • admins and teachers preview/assign everything → always pass
+//   • free content (no tier, or 'free') → always pass
+//   • otherwise rank-compare via SymTiers.meets (Free<Student<Teacher<Pro
+//     plus any admin-created custom tiers)
+//   • if the tier registry hasn't loaded, fail OPEN — never lock the
+//     whole site on a transient load error.
+function symCurrentTier() {
+  if (isAdmin || currentUserRole === 'teacher') return 'teacher';
+  return currentUserRole || 'free';
+}
+function _gpCanAccessTier(requiredTier) {
+  if (!requiredTier || requiredTier === 'free') return true;
+  if (isAdmin || currentUserRole === 'teacher') return true;
+  try {
+    if (window.SymTiers && typeof window.SymTiers.meets === 'function') {
+      return window.SymTiers.meets(symCurrentTier(), requiredTier);
+    }
+  } catch (_) { /* fall through to fail-open */ }
+  return true; // registry unavailable → don't hard-block
+}
+// Expose for non-closure callers (admin preview, debugging).
+window.symCurrentTier  = symCurrentTier;
+window._gpCanAccessTier = _gpCanAccessTier;
+
 // ── FIREBASE INIT ─────────────────────────────────────────────
 // IMPORTANT — keep initializeApp() SYNCHRONOUS.
 // Scripts that load after auth.js (favorites.js, scores.js, etc.)
