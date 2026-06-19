@@ -44,6 +44,10 @@
      The trivia-panel's own chrome (games/trivia-panel/panel.css) is
      lazy-loaded by its manifest fragment, so it is NOT linked here. -->
 <link rel="stylesheet" href="css/anathesi.css"/>
+<!-- ══════════ SITE BANNERS (announcement strip) ══════════
+     Drop-in CSS from the design handoff. Styles the sticky #site-banners-wrap
+     bar rendered by js/banner-bar.js + the live preview in js/banner-admin.js. -->
+<link rel="stylesheet" href="css/site-banners.css?v=1"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -276,6 +280,9 @@
      and keeps a "Classic Command Center" button that opens the old #page-admin.
      Adds the real Access-Control matrix (SymStore 'access_control' + guarded
      Firestore config/accessControl). Gated on the bare global isAdmin. -->
+<!-- Access-tier registry (Free/Student/Teacher/Pro + admin-created custom tiers).
+     Single source the admin grant / access / pricing surfaces read from. -->
+<script src="js/syn-tiers.js?v=1"></script>
 <script src="js/admin-synthesis.js"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
@@ -297,6 +304,17 @@
 <script src="js/theory-text.js"></script>
 <script src="js/theory-parallel.js"></script>
 <script src="js/theory-qa.js"></script>
+
+<!-- ══════════ SITE BANNERS (announcement strip) ══════════
+     banner-bar.js: live sticky bar at the top of the page (reads Firestore
+       `banners` where active==true, guarded; degrades to SymStore 'site_banners'
+       then the bundled seed; filters dismissed + expired). Self-inits on DOM
+       ready and exposes window.BannerBar. Loaded BEFORE js/app.js.
+     banner-admin.js: self-contained window.BannerAdmin.render(pane) component
+       (create form + live preview + edit/toggle list + seed). The lead mounts
+       it from the admin 'banners' section. Backend lives in js/admin.js. -->
+<script src="js/banner-bar.js?v=1"></script>
+<script src="js/banner-admin.js?v=1"></script>
 
 <script src="js/app.js"></script>
 

@@ -638,6 +638,238 @@ async function _adminLoadBanners() {
 }
 
 // ============================================================
+//  BANNERS — synthesis additions
+//  ──────────────────────────────────────────────────────────
+//  The self-contained window.BannerAdmin component (js/banner-admin.js)
+//  calls these. They write Firestore `banners` (guarded) AND mirror to
+//  SymStore('site_banners') so the live bar + admin work without firebase.
+//  NEW feature from the design handoff: adminUpdateBanner(id, fields) —
+//  edit an existing banner's text in place (no duplicate doc).
+// ============================================================
+
+// firebase availability guard (admin.js elsewhere assumes firebase exists;
+// these helpers must degrade gracefully in the sandbox).
+function _bannerFb() {
+  try {
+    return (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length)
+      ? firebase : null;
+  } catch (_) { return null; }
+}
+
+// SymStore mirror of the `banners` collection (array of plain objects with
+// endsAt stored as ISO date | null). Keeps the live bar working offline and
+// lets BannerBar.render() read a single source.
+function _bannerStoreAll() {
+  try {
+    var arr = (window.SymStore && SymStore.get) ? SymStore.get('site_banners', []) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) { return []; }
+}
+function _bannerStoreWrite(arr) {
+  try { if (window.SymStore && SymStore.set) SymStore.set('site_banners', arr || []); } catch (_) {}
+}
+// Upsert one banner into the SymStore mirror by id.
+function _bannerStoreUpsert(banner) {
+  var arr = _bannerStoreAll();
+  var i = arr.findIndex(function (b) { return b && b.id === banner.id; });
+  if (i === -1) arr.unshift(banner); else arr[i] = Object.assign({}, arr[i], banner);
+  _bannerStoreWrite(arr);
+}
+function _bannerStorePatch(id, patch) {
+  var arr = _bannerStoreAll();
+  var i = arr.findIndex(function (b) { return b && b.id === id; });
+  if (i !== -1) { arr[i] = Object.assign({}, arr[i], patch); _bannerStoreWrite(arr); }
+}
+
+// Convert an admin "YYYY-MM-DD" expiry into a Firestore Timestamp (or null).
+function _bannerExpiryTs(expiry) {
+  if (!expiry) return null;
+  var f = _bannerFb();
+  if (!f) return null;
+  return f.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59'));
+}
+
+// Load ALL banners (active + inactive) for the admin list. Returns an array of
+// { id, ...fields, endsAt:isoString|null, active }. Firestore first (guarded),
+// SymStore fallback. Never throws.
+async function adminLoadAllBanners() {
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var snap = await f.firestore().collection('banners')
+        .orderBy('createdAt', 'desc').limit(50).get();
+      var out = [];
+      snap.forEach(function (doc) {
+        var d = doc.data() || {};
+        out.push({
+          id:        doc.id,
+          type:      d.type || 'info',
+          active:    d.active !== false,
+          titleGr:   d.titleGr || '', titleEn: d.titleEn || '',
+          bodyGr:    d.bodyGr  || '', bodyEn:  d.bodyEn  || '',
+          ctaGr:     d.ctaGr   || '', ctaEn:   d.ctaEn   || '',
+          ctaAction: d.ctaAction || '',
+          endsAt:    d.endsAt?.toDate?.()?.toISOString?.().slice(0, 10) || null,
+        });
+      });
+      return out;
+    } catch (err) {
+      console.warn('[admin] adminLoadAllBanners firestore failed, using SymStore:', err);
+    }
+  }
+  // Offline / no firebase — read the SymStore mirror.
+  return _bannerStoreAll().map(function (b) {
+    return Object.assign({ active: true }, b,
+      { endsAt: (typeof b.endsAt === 'string') ? b.endsAt : (b.endsAt || null) });
+  });
+}
+
+// NEW — edit an existing banner's text/fields in place. `fields` is a plain
+// object using the admin field names (titleGr, titleEn, bodyGr, bodyEn, type,
+// ctaGr, ctaEn, ctaAction, expiry:'YYYY-MM-DD'|''). Writes .update() (no
+// duplicate doc) + mirrors to SymStore. Returns true on success.
+async function adminUpdateBanner(id, fields) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return false;
+  if (!id) return false;
+  fields = fields || {};
+
+  var titleGr = (fields.titleGr || '').trim();
+  if (!titleGr) return false;
+
+  // SymStore-shaped patch (endsAt as ISO date string | null).
+  var storePatch = {
+    type:      fields.type || 'info',
+    titleGr:   titleGr,
+    titleEn:   (fields.titleEn || '').trim() || titleGr,
+    bodyGr:    (fields.bodyGr  || '').trim(),
+    bodyEn:    (fields.bodyEn  || '').trim() || (fields.bodyGr || '').trim(),
+    ctaGr:     (fields.ctaGr   || '').trim(),
+    ctaEn:     (fields.ctaEn   || '').trim() || (fields.ctaGr || '').trim(),
+    ctaAction: (fields.ctaAction || '').trim(),
+    endsAt:    fields.expiry ? fields.expiry : null,
+  };
+
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var patch = Object.assign({}, storePatch, {
+        endsAt:    _bannerExpiryTs(fields.expiry),
+        updatedAt: f.firestore.FieldValue.serverTimestamp(),
+        updatedBy: (typeof currentUser !== 'undefined' && currentUser?.email) || 'admin',
+      });
+      await f.firestore().collection('banners').doc(id).update(patch);
+    } catch (err) {
+      console.error('[admin] update banner error:', err);
+      return false;
+    }
+  }
+
+  _bannerStorePatch(id, storePatch);
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return true;
+}
+
+// Guarded wrappers that ALSO mirror to SymStore, so the self-contained
+// component (and the live bar) work with or without firebase. These layer on
+// top of the existing Firestore-only adminCreateBanner/adminDeactivateBanner.
+
+// Create from a fields object (used by BannerAdmin). Returns the new id|null.
+async function adminCreateBannerFromFields(fields) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return null;
+  fields = fields || {};
+  var titleGr = (fields.titleGr || '').trim();
+  if (!titleGr) return null;
+
+  var base = {
+    type:      fields.type || 'info',
+    active:    true,
+    titleGr:   titleGr,
+    titleEn:   (fields.titleEn || '').trim() || titleGr,
+    bodyGr:    (fields.bodyGr  || '').trim(),
+    bodyEn:    (fields.bodyEn  || '').trim() || (fields.bodyGr || '').trim(),
+    ctaGr:     (fields.ctaGr   || '').trim(),
+    ctaEn:     (fields.ctaEn   || '').trim() || (fields.ctaGr || '').trim(),
+    ctaAction: (fields.ctaAction || '').trim(),
+  };
+
+  var id = null;
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var ref = await f.firestore().collection('banners').add(Object.assign({}, base, {
+        endsAt:    _bannerExpiryTs(fields.expiry),
+        createdAt: f.firestore.FieldValue.serverTimestamp(),
+        createdBy: (typeof currentUser !== 'undefined' && currentUser?.email) || 'admin',
+      }));
+      id = ref.id;
+    } catch (err) {
+      console.error('[admin] create banner error:', err);
+      return null;
+    }
+  }
+  if (!id) id = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+
+  _bannerStoreUpsert(Object.assign({ id: id }, base, { endsAt: fields.expiry || null }));
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return id;
+}
+
+// Toggle active state (deactivate OR reactivate). Mirrors to SymStore.
+async function adminSetBannerActive(id, active) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return false;
+  if (!id) return false;
+  var f = _bannerFb();
+  if (f) {
+    try {
+      await f.firestore().collection('banners').doc(id).update({ active: !!active });
+    } catch (err) {
+      console.error('[admin] set banner active error:', err);
+      return false;
+    }
+  }
+  _bannerStorePatch(id, { active: !!active });
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return true;
+}
+
+// Seed the six handoff example banners into the store (SymStore always;
+// Firestore too when available). One-click from BannerAdmin — never auto-runs.
+async function adminSeedBanners(seedArr) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return 0;
+  if (!Array.isArray(seedArr) || !seedArr.length) return 0;
+
+  var f = _bannerFb();
+  var count = 0;
+  for (var i = 0; i < seedArr.length; i++) {
+    var b = seedArr[i] || {};
+    var base = {
+      type:      b.type || 'info',
+      active:    true,
+      titleGr:   b.titleGr || '', titleEn: b.titleEn || b.titleGr || '',
+      bodyGr:    b.bodyGr  || '', bodyEn:  b.bodyEn  || b.bodyGr  || '',
+      ctaGr:     b.ctaGr   || '', ctaEn:   b.ctaEn   || b.ctaGr   || '',
+      ctaAction: b.ctaAction || '',
+    };
+    var id = null;
+    if (f) {
+      try {
+        var ref = await f.firestore().collection('banners').add(Object.assign({}, base, {
+          endsAt:    _bannerExpiryTs(b.endsAt),
+          createdAt: f.firestore.FieldValue.serverTimestamp(),
+          createdBy: 'seed',
+        }));
+        id = ref.id;
+      } catch (err) { console.warn('[admin] seed banner failed:', err); }
+    }
+    if (!id) id = 'seed-' + i + '-' + Math.random().toString(36).slice(2, 6);
+    _bannerStoreUpsert(Object.assign({ id: id }, base, { endsAt: b.endsAt || null }));
+    count++;
+  }
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return count;
+}
+
+// ============================================================
 //  STATS
 // ============================================================
 async function _adminLoadStats() {

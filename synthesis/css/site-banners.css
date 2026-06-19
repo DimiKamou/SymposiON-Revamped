@@ -1,0 +1,107 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · SITE BANNERS — drop-in (synthesis port)
+   ────────────────────────────────────────────────────────────────────
+   Production CSS from the design handoff, used as-is. Targets the markup
+   emitted by js/banner-bar.js:
+     #site-banners-wrap
+       > .site-banner.site-banner--{info|promo|warning}
+           > .site-banner-body > strong.site-banner-title
+                               + span.site-banner-text
+                               + button.site-banner-cta
+           + button.site-banner-close
+
+   Each --bn token drives the accent colour, left bar, glyph, CTA and the
+   right-edge glow. Per-type backgrounds stay dark so text is legible.
+
+   NOTE (synthesis adaptation): the original CSS reads --sym-font-mono from
+   the theme, but synthesis does not define that token (nor load JetBrains
+   Mono). The :root fallback below makes the CTA font resolve to a sane
+   monospace stack without touching the rest of the design.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --sym-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo',
+                   'Consolas', monospace;
+}
+
+#site-banners-wrap { position: sticky; top: 0; z-index: 1100; }
+
+.site-banner {
+  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+  padding: .82rem 1.15rem .82rem 1.4rem;
+  font-size: 13.5px;
+  border-bottom: 1px solid color-mix(in srgb, var(--bn) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--bn) 18%, transparent);
+  transition: opacity .28s ease;
+}
+
+/* left accent bar */
+.site-banner::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--bn); opacity: .85;
+}
+/* soft glow on the right edge */
+.site-banner::after {
+  content: ""; position: absolute; right: 0; top: 0; bottom: 0;
+  width: 42%; pointer-events: none;
+  background: radial-gradient(ellipse 70% 130% at 100% 50%,
+    color-mix(in srgb, var(--bn) 13%, transparent), transparent 72%);
+}
+
+/* per-type accent + gradient ground (kept dark so text stays legible) */
+.site-banner--info    { --bn:#7FC0CE; background:linear-gradient(100deg,#0f2530,#143341 58%,#163b4d); color:#CFEAF1; }
+.site-banner--promo   { --bn:#E8B94E; background:linear-gradient(100deg,#241a04,#2f2307 52%,#3b2c08); color:#F6E7C4; }
+.site-banner--warning { --bn:#EBA88E; background:linear-gradient(100deg,#2a0f0a,#3a1510 58%,#43170e); color:#F4C9B9; }
+
+.site-banner-body {
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  flex: 1; position: relative; z-index: 1;
+}
+
+/* leading geometric glyph — shape varies by type, brand-safe primitives */
+.site-banner-body::before {
+  content: ""; flex: 0 0 auto; width: 9px; height: 9px;
+  background: var(--bn);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--bn) 55%, transparent);
+}
+.site-banner--promo   .site-banner-body::before { width: 8px; height: 8px; transform: rotate(45deg); }   /* diamond */
+.site-banner--info    .site-banner-body::before { border-radius: 50%; }                                   /* circle  */
+.site-banner--warning .site-banner-body::before {                                                         /* triangle */
+  width: 0; height: 0; background: transparent; box-shadow: none;
+  border-left: 6px solid transparent; border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--bn);
+}
+
+.site-banner-title { font-weight: 600; color: color-mix(in srgb, var(--bn) 32%, #fff); letter-spacing: .1px; }
+.site-banner-text  { opacity: .82; }
+
+.site-banner-cta {
+  font-family: var(--sym-font-mono);
+  font-size: 10.5px; letter-spacing: 1.3px; text-transform: uppercase; font-weight: 500;
+  padding: 8px 15px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+  position: relative; z-index: 1;
+  background: color-mix(in srgb, var(--bn) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--bn) 45%, transparent);
+  color: var(--bn);
+  transition: background .16s, color .16s, box-shadow .16s;
+}
+.site-banner-cta:hover {
+  background: color-mix(in srgb, var(--bn) 26%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bn) 30%, transparent);
+}
+/* promo = the primary growth action → solid fill for maximum visibility */
+.site-banner--promo .site-banner-cta { background: var(--bn); border-color: var(--bn); color:#1F1503; font-weight:600; }
+.site-banner--promo .site-banner-cta:hover {
+  background: color-mix(in srgb, var(--bn) 88%, #fff);
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--bn) 40%, transparent);
+}
+
+.site-banner-close {
+  background: transparent; border: none; color: inherit; opacity: .55;
+  font-size: 14px; cursor: pointer; padding: 3px 7px; border-radius: 6px;
+  flex-shrink: 0; position: relative; z-index: 1;
+  transition: opacity .15s, background .15s;
+}
+.site-banner-close:hover { opacity: 1; background: color-mix(in srgb, #fff 8%, transparent); }

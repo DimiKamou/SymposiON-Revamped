@@ -51,12 +51,12 @@
   var el = function () { return window.el.apply(null, arguments); };
   var SYM = function () { return window.SYM || {}; };
 
-  /* ── tier vocabulary ──────────────────────────────────────────────── */
-  var TIERS = [
-    ['free',   { gr: 'Δωρεάν',  en: 'Free' }],
-    ['pro',    { gr: 'Pro',     en: 'Pro' }],
-    ['school', { gr: 'School',  en: 'School' }],
-  ];
+  /* ── tier vocabulary — from the SymTiers registry (Free/Student/Teacher/Pro
+     + admin-created custom tiers); fallback list if the module isn't loaded. ── */
+  function tierVocab() {
+    if (window.SymTiers) return SymTiers.all().map(function (t) { return [t.id, { gr: t.gr, en: t.en }]; });
+    return [['free', { gr: 'Δωρεάν', en: 'Free' }], ['student', { gr: 'Μαθητής', en: 'Student' }], ['teacher', { gr: 'Καθηγητής', en: 'Teacher' }], ['pro', { gr: 'Pro', en: 'Pro' }]];
+  }
 
   /* ── Access-Control persistence ───────────────────────────────────── */
   var AC_KEY = 'access_control';
@@ -213,7 +213,7 @@
      fields (ported approach from admin-studio.js's ccQImport*). */
   var GRANT_KEY = 'access_grants';
   var GRANT_ROLES = ['student', 'teacher', 'admin'];
-  var GRANT_TIERS = ['free', 'pro', 'school'];
+  function grantTiers() { return window.SymTiers ? SymTiers.ids() : ['free', 'student', 'teacher', 'pro']; }
   function grantsLoad() {
     var arr = SS() ? SS().get(GRANT_KEY, []) : [];
     return Array.isArray(arr) ? arr : [];
@@ -287,7 +287,7 @@
       var errs = [];
       if (!validEmail(email)) errs.push('email');
       if (role && GRANT_ROLES.indexOf(role) < 0) errs.push('role');
-      if (tier && GRANT_TIERS.indexOf(tier) < 0) errs.push('tier');
+      if (tier && grantTiers().indexOf(tier) < 0) errs.push('tier');
       out.push({
         email: email, role: role || 'student', 'class': klass,
         tier: tier || 'pro', duration: dur,
@@ -484,7 +484,7 @@
         if (allowInherit) {
           row.appendChild(el('button', { class: 'sc-pill2 sc-pill2--inherit' + (curTier === '' ? ' on' : ''), onclick: function () { onPick(''); } }, L({ gr: 'Κληρ.', en: 'Inherit' })));
         }
-        TIERS.forEach(function (t) {
+        tierVocab().forEach(function (t) {
           row.appendChild(el('button', {
             class: 'sc-pill2 sc-pill2--' + t[0] + (curTier === t[0] ? ' on' : ''),
             onclick: function () { onPick(t[0]); }
@@ -1226,6 +1226,23 @@
         [['Ενεργό spaced-repetition', 1], ['Κοινοποίηση σε καθηγητές', 1], ['Auto-clear 90 ημερών', 0]].forEach(function (r) { pane.appendChild(toggleRow({ gr: r[0], en: r[0] }, r[1])); });
       }
       else if (activeSec === 'grant') {
+        // ── Access-tier registry: built-ins + admin-created custom tiers ──
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Βαθμίδες Πρόσβασης', en: 'Access Tiers' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 10px' }, L({ gr: 'Ενσωματωμένες (Δωρεάν · Μαθητής · Καθηγητής · Pro) + όσες προσθέσεις. Χρησιμοποιούνται παντού: χορήγηση, έλεγχος πρόσβασης, τιμολόγηση.', en: 'Built-ins (Free · Student · Teacher · Pro) + any you add. Used everywhere: grant, access control, pricing.' })));
+        var tlist = el('div', { class: 'sc-tagmgr', style: 'margin-bottom:6px' });
+        (window.SymTiers ? SymTiers.all() : []).forEach(function (t) {
+          tlist.appendChild(el('span', { class: 'sc-tagchip' + (t.builtin ? '' : ' sc-tagchip--custom') }, [
+            L(t),
+            t.builtin ? null : el('button', { class: 'sc-tagchip__x', title: L({ gr: 'Διαγραφή', en: 'Delete' }), onclick: (function (id) { return function () { if (window.SymTiers) SymTiers.remove(id); paint(); }; })(t.id), html: '&times;' }),
+          ]));
+        });
+        tlist.appendChild(el('button', { class: 'sc-tagchip sc-tagchip--add', onclick: function () {
+          var gr = prompt(L({ gr: 'Όνομα νέας βαθμίδας (Ελληνικά):', en: 'New tier name (Greek):' }), ''); if (!gr) return;
+          var en = prompt(L({ gr: 'Όνομα (Αγγλικά):', en: 'Name (English):' }), gr) || gr;
+          if (window.SymTiers) { SymTiers.add(gr, en); paint(); }
+        } }, [el('span', { html: '&#43; ' }), L({ gr: 'Νέα βαθμίδα', en: 'New tier' })]));
+        pane.appendChild(tlist);
+        pane.appendChild(el('div', { style: 'height:1px;background:color-mix(in srgb,var(--sym-fg,#1E1810) 9%,transparent);margin:16px 0' }));
         renderGrant();
       }
       else if (activeSec === 'pricing') {
@@ -1244,8 +1261,14 @@
         pane.appendChild(dtbl);
       }
       else if (activeSec === 'banners') {
-        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Banners & ανακοινώσεις', en: 'Banners & announcements' })));
-        [['Καλοκαιρινό event', 1], ['Νέο παιχνίδι: Φάλαγγα', 1], ['Black Friday Pro', 0]].forEach(function (b) { pane.appendChild(toggleRow({ gr: b[0], en: b[0] }, b[1])); });
+        // Real banner admin — create + edit + activate/deactivate + LIVE PREVIEW +
+        // seed (js/banner-admin.js). The sticky site bar (js/banner-bar.js)
+        // self-inits and re-renders after any banner change.
+        if (window.BannerAdmin && BannerAdmin.render) BannerAdmin.render(pane);
+        else {
+          pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Banners & ανακοινώσεις', en: 'Banners & announcements' })));
+          pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Η μονάδα banners δεν φορτώθηκε.', en: 'Banner module not loaded.' })));
+        }
       }
       else if (activeSec === 'settings') {
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ρυθμίσεις πλατφόρμας', en: 'Platform settings' })));
