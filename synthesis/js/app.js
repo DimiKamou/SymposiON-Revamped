@@ -150,7 +150,7 @@ function render() {
 window.symRender = render;
 
 // Screens that take no params and are safe to deep-link / restore from the URL hash
-const DEEPLINK = ['home','assignments','gamepanel','live','profile','levelup','temple','anodos','tartarus','anathesi','parent','settings','checkout','admin','login','subscribe','account'];
+const DEEPLINK = ['home','assignments','gamepanel','live','profile','levelup','temple','anodos','tartarus','anathesi','parent','settings','checkout','admin','login','subscribe','account','tutor'];
 function symGo(screen, param){
   STATE.screen = screen || 'home';
   STATE.screenParam = param || null;

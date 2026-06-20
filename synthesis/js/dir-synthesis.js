@@ -236,6 +236,7 @@
     { id:'mode',      gr:'Επιλογή Λειτουργίας',en:'Mode select',  ico:'◎' },
     { id:'level',     gr:'Επιλογή Επιπέδου',   en:'Levels',       ico:'≣' },
     { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel',   ico:'▦' },
+    { id:'tutor',     gr:'AI Βοηθός',          en:'AI Tutor',     ico:'✸' },
     { id:'live',      gr:'Live Arena',         en:'Live Arena',   ico:'⚡' },
     { id:'profile',   gr:'Προφίλ Ήρωα',        en:'Hero Profile', ico:'◆' },
     { id:'levelup',   gr:'Level Up',           en:'Level Up',     ico:'✦' },
@@ -312,6 +313,7 @@
         { id:'lyk', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
         { id:'gramhub', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
         { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel', ico:'▦' },
+        { id:'tutor', gr:'AI Βοηθός', en:'AI Tutor', ico:'✸' },
       ]},
       { lbl:{gr:'Παιχνίδι',en:'Play'}, items:[
         { id:'live', gr:'Live Arena', en:'Live Arena', ico:'⚡' },
