@@ -521,6 +521,13 @@ function boot(){
       if (q.get('chrome') === '0') document.documentElement.classList.add('preview-nochrome');
     }
   } catch(_){}
+  // Live Arena invite deeplink (?join=PIN): the engine is lazy, so nothing reads
+  // the PIN at boot. Lazy-load it (synLaunch injects la-overlay + the engine);
+  // live-arena.js's own _checkUrlJoin then reads ?join= and opens the join screen.
+  try {
+    var _jpin = (new URLSearchParams(location.search)).get('join');
+    if (_jpin && /^\d{4,8}$/.test(_jpin) && window.synLaunch) setTimeout(function () { try { window.synLaunch('openLiveArena'); } catch (_) {} }, 0);
+  } catch (_) {}
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').replace(/^#/, '');
     if (h.indexOf('tag-') === 0) { const id = h.slice(4); if (STATE.screen !== 'tag' || !STATE.screenParam || STATE.screenParam.tag !== id) { STATE.screen = 'tag'; STATE.screenParam = { tag: id }; render(); window.scrollTo(0, 0); } return; }

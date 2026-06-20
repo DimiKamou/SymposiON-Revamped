@@ -51,6 +51,12 @@
 .sc-gcard__f { display:flex; align-items:center; justify-content:space-between; }
 .sc-gcard__play { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; background:var(--ca); color:#fff; font-size:12px; padding-left:2px; box-shadow:0 6px 14px var(--ca-mid); }
 
+/* ── subscription-gated (locked) cards ── */
+.sc-gcard--locked .sc-gcard__ban { filter:grayscale(.4); }
+.sc-tag--lock { left:12px; right:auto; background:linear-gradient(135deg,#b8862b,#8a5a18); display:inline-flex; align-items:center; gap:4px; }
+.sc-pill--lock { color:#fff !important; background:linear-gradient(135deg,#b8862b,#8a5a18) !important; border:0 !important; display:inline-flex; align-items:center; gap:4px; }
+.sc-gcard__play--locked { background:#9a8a73; box-shadow:none; }
+
 /* ── MODE select ── */
 .sc-modes { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
 .sc-mode { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:8px; text-align:left; background:var(--card); border:1.5px solid var(--line); border-radius:22px; padding:24px; cursor:pointer; color:var(--fg); transition:transform .16s, box-shadow .16s, border-color .16s; }

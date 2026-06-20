@@ -10,15 +10,30 @@
    ════════════════════════════════════════════════════════════════════ */
 (function(){
 
+  // The grader Function now requires a Firebase ID token (denial-of-wallet
+  // guard). This kit runs in the same-origin istoria iframe, so it can read
+  // the signed-in user's token from the parent window's Firebase. Signed-out
+  // users send no token → the Function returns 401 → we fall back to local().
+  async function _idToken(){
+    try{
+      const fb = (window.parent && window.parent.firebase) || window.firebase;
+      if (fb && fb.auth && fb.auth().currentUser) return await fb.auth().currentUser.getIdToken();
+    }catch(_){/* cross-frame / not signed in */}
+    return null;
+  }
+
   // ── AI grader ──────────────────────────────────────────────────────
   async function grade(p){
     // p: { question, model, points[], answer, rubric?, subject? }
     // subject sets the grader persona server-side (defaults to Ιστορία) —
     // pass it when reusing SK for other subjects (αρχαία, λογοτεχνία, …).
     try{
+      const tok = await _idToken();
+      const headers = {'Content-Type':'application/json'};
+      if (tok) headers['Authorization'] = 'Bearer ' + tok;
       const resp = await fetch(SK.endpoint, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:headers,
         body:JSON.stringify({
           question:p.question||'', model:p.model||'',
           points:p.points||[], answer:p.answer||'', rubric:p.rubric||'',

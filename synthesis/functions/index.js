@@ -575,7 +575,12 @@ function requireRole(context, domains) {
   if (!r) throw new functions.https.HttpsError('permission-denied', 'Authentication required.');
   if (r === 'super') return r;               // super can always proceed
   const allowed = ROLE_DOMAINS[r];
-  if (!allowed || allowed === '*') return r; // (shouldn't happen for non-super, but safe)
+  // Default-DENY any role that isn't a known non-super domain set. The old
+  // `if (!allowed || allowed === '*') return r` fell OPEN — a legacy/unknown
+  // claim was treated as fully authorized.
+  if (!Array.isArray(allowed)) {
+    throw new functions.https.HttpsError('permission-denied', `Role "${r}" is not authorized.`);
+  }
   const ok = Array.isArray(domains)
     ? domains.some(d => allowed.includes(d))
     : false;
@@ -831,6 +836,28 @@ exports.adminSaveConfig = functions.https.onCall(async (data, context) => {
     if (!isFinite(maxUses) || maxUses < 0) {
       throw new functions.https.HttpsError('invalid-argument', 'maxUses must be ≥ 0.');
     }
+    // Validity WINDOW (validFrom / validUntil) — admin can set a real
+    // date+time range. Each may be a Firestore Timestamp, an epoch-ms number,
+    // or an ISO string; normalise to ms and require until > from when both set.
+    const _ms = (v) => {
+      if (v == null) return null;
+      if (typeof v === 'number') return isFinite(v) ? v : NaN;
+      if (typeof v.toMillis === 'function') return v.toMillis();
+      if (typeof v._seconds === 'number') return v._seconds * 1000;
+      const n = Date.parse(v);
+      return isFinite(n) ? n : NaN;
+    };
+    const fromMs  = _ms(payload.validFrom);
+    const untilMs = _ms(payload.validUntil);
+    if (fromMs !== null && Number.isNaN(fromMs)) {
+      throw new functions.https.HttpsError('invalid-argument', 'validFrom is not a valid date/time.');
+    }
+    if (untilMs !== null && Number.isNaN(untilMs)) {
+      throw new functions.https.HttpsError('invalid-argument', 'validUntil is not a valid date/time.');
+    }
+    if (fromMs && untilMs && untilMs <= fromMs) {
+      throw new functions.https.HttpsError('invalid-argument', 'validUntil must be after validFrom.');
+    }
   }
 
   await admin.firestore().doc(`config/${docId}`).set({
@@ -947,6 +974,63 @@ exports.adminSaveGameContent = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+// ── ΙΣΤΟΡΙΑ (HISTORY) · adminSaveHistoryContent ──────────────
+// Validated server-side write for one history course's content pack.
+// Mirrors adminSaveGameContent: requireRole(['content']) + structural
+// validation + whole-doc set (merge:false) + writeAudit.
+// The istoria pack shape (see games/istoria/js/data-layer.js getPack):
+//   { meta:{…}, units:[{id,…}], data:{ [unitId]:{ mc,fc,match,tl,tf,fib,vid } }, methods:{…} }
+// The admin may persist either the full pack or just the editable slice
+// { data, methods } — we accept both and validate defensively without
+// over-constraining the per-mode arrays.
+// Rules deny direct client writes to historyContent/* — this is the only path.
+exports.adminSaveHistoryContent = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+  const { course, content } = data || {};
+
+  // course: short identifier, e.g. 'g3', 'gym-a'. Keep it doc-id safe.
+  if (!course || typeof course !== 'string' || course.length > 64 || /[\/\s]/.test(course)) {
+    throw new functions.https.HttpsError('invalid-argument', 'course must be a short id string (no slashes/spaces).');
+  }
+  if (!content || typeof content !== 'object' || Array.isArray(content)) {
+    throw new functions.https.HttpsError('invalid-argument', 'content object required.');
+  }
+
+  // `units`, when present, must be a list of objects each with an id.
+  if (content.units !== undefined) {
+    if (!Array.isArray(content.units)) {
+      throw new functions.https.HttpsError('invalid-argument', 'content.units must be a list.');
+    }
+    for (const u of content.units) {
+      if (!u || typeof u !== 'object' || Array.isArray(u) || !u.id) {
+        throw new functions.https.HttpsError('invalid-argument', 'each unit needs an id.');
+      }
+    }
+  }
+  // `data` (per-unit exercise banks) and `methods`, when present, are objects.
+  if (content.data !== undefined && (typeof content.data !== 'object' || content.data === null || Array.isArray(content.data))) {
+    throw new functions.https.HttpsError('invalid-argument', 'content.data must be an object.');
+  }
+  if (content.methods !== undefined && (typeof content.methods !== 'object' || content.methods === null || Array.isArray(content.methods))) {
+    throw new functions.https.HttpsError('invalid-argument', 'content.methods must be an object.');
+  }
+  // Require at least one recognisable slice so we never store junk.
+  if (content.data === undefined && content.units === undefined && content.methods === undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'content must include data, units, or methods.');
+  }
+
+  await admin.firestore().doc(`historyContent/${course}`).set({
+    ...content,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedBy: context.auth.token.email,
+  }, { merge: false });
+  await writeAudit(context, 'istoria.content.save', course, {
+    units:   Array.isArray(content.units) ? content.units.length : null,
+    dataKeys: content.data ? Object.keys(content.data).length : null,
+  });
+  return { ok: true };
+});
+
 // ============================================================
 //  AI GRADING — subject-agnostic free-response grader
 //
@@ -1013,13 +1097,54 @@ function graderEnv(envName, legacyPath, fallback) {
   return fallback;
 }
 
+// Per-user rolling-window rate limit for the AI grader (best-effort, via a
+// Firestore counter the Admin SDK owns). Returns true if the call is allowed.
+async function _graderRateOk(uid, limit = 80, windowMs = 3600000) {
+  const ref = admin.firestore().doc(`grader_usage/${uid}`);
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now = Date.now();
+    let windowStart = now, count = 0;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      windowStart = d.windowStart || now;
+      count = d.count || 0;
+      if (now - windowStart >= windowMs) { windowStart = now; count = 0; }
+    }
+    if (count >= limit) return false;
+    tx.set(ref, {
+      windowStart,
+      count: count + 1,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return true;
+  });
+}
+
 exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
-  // Same-origin in production (Hosting rewrite); permissive CORS for safety.
+  // Normally same-origin via a Hosting rewrite. CORS does not stop non-browser
+  // callers, so the real guard is the verified Firebase ID token below.
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Vary', 'Origin');
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
   if (req.method !== 'POST')    { res.status(405).json({ error: 'POST only' }); return; }
+
+  // ── AUTH: require a valid Firebase ID token (denial-of-wallet guard) ──
+  // Previously unauthenticated — anyone could POST and spend the owner's
+  // Anthropic credits. The istoria iframe attaches the parent user's token;
+  // signed-out users get the client's offline heuristic instead.
+  const m = (req.get('Authorization') || '').match(/^Bearer (.+)$/);
+  if (!m) { res.status(401).json({ error: 'auth-required' }); return; }
+  let caller;
+  try { caller = await admin.auth().verifyIdToken(m[1]); }
+  catch (_) { res.status(401).json({ error: 'auth-invalid' }); return; }
+
+  // ── RATE LIMIT: best-effort per-user cap ──
+  try {
+    if (!(await _graderRateOk(caller.uid))) { res.status(429).json({ error: 'rate-limited' }); return; }
+  } catch (_) { /* limiter unavailable → auth still enforced, proceed */ }
 
   const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
   if (!key) { res.status(503).json({ error: 'grader-unconfigured' }); return; } // → client offline fallback

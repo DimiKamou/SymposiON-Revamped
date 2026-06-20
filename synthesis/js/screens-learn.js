@@ -94,13 +94,33 @@
     else if (typeof window.showToast === 'function') showToast(note, note);
   }
 
+  // Resolve a dataset's required tier (for the visible subscription lock).
+  function _datasetTier(id) {
+    try {
+      const ds = (window.GP_CONTENT && window.GP_CONTENT.find && window.GP_CONTENT.find(id)) ||
+                 (typeof GP_DATASETS !== 'undefined' && GP_DATASETS.find(d => d.id === id)) || null;
+      return ds ? ds.tier : null;
+    } catch (_) { return null; }
+  }
+  // Locked = content has a paid tier the current user can't yet meet.
+  function _tierLocked(tier) {
+    return !!(tier && tier !== 'free' &&
+      typeof _gpCanAccessTier === 'function' && !_gpCanAccessTier(tier));
+  }
+
   function theoryCard(lesson) {
+    const tier   = _datasetTier(lesson.id);
+    const locked = _tierLocked(tier);
+    const tierLbl = (window.SymTiers && SymTiers.label) ? L(SymTiers.label(tier))
+                  : (tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Pro');
     const card = el('a', {
-      class: 'sc-gcard sc-gcard--theory', href: 'javascript:void 0', style: 'position:relative',
-      onclick: () => openTheory(lesson),
+      class: 'sc-gcard sc-gcard--theory' + (locked ? ' sc-gcard--locked' : ''),
+      href: 'javascript:void 0', style: 'position:relative',
+      onclick: () => openTheory(lesson),   // launch path shows the upgrade toast + redirect
     }, [
       el('div', { class: 'sc-gcard__ban' }, [
         el('span', { class: 'sc-theory-tag' }, L({ gr: 'Θεωρία', en: 'Theory' })),
+        locked ? el('span', { class: 'sc-tag sc-tag--lock', title: L({ gr: 'Απαιτείται συνδρομή', en: 'Subscription required' }) }, '🔒 ' + tierLbl) : null,
         glyph(lesson.illu, 'sc-gcard__illu'),
       ]),
       el('div', { class: 'sc-gcard__b' }, [
@@ -108,8 +128,10 @@
         el('p', { class: 'sc-gcard__m' }, L(lesson.meta)),
         el('div', { class: 'sc-gcard__f' }, [
           el('span', { class: 'sc-gcard__tags' }, [
-            el('span', { class: 'sc-pill has-accent' }, L({ gr: 'Μάθημα', en: 'Lesson' })) ]),
-          el('span', { class: 'sc-gcard__play', html: '&#9656;' }),
+            locked
+              ? el('span', { class: 'sc-pill sc-pill--lock' }, '🔒 ' + tierLbl)
+              : el('span', { class: 'sc-pill has-accent' }, L({ gr: 'Μάθημα', en: 'Lesson' })) ]),
+          el('span', { class: 'sc-gcard__play' + (locked ? ' sc-gcard__play--locked' : ''), html: locked ? '&#128274;' : '&#9656;' }),
         ]),
       ]),
     ]);

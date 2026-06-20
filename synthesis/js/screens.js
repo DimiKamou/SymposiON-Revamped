@@ -70,7 +70,7 @@
     if (game && game.soon) return comingSoon(game);
     if (gameNeedsLevelPicker(game)) return go('level', ctx);
     const fn = window.synResolveLaunch && synResolveLaunch(game);
-    if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
+    if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn, ...((game.launch && game.launch.args) || []));
     return go('level', ctx);   // fallback — keeps every tile launchable
   }
   function pill(t, accent){ return el('span',{class:'sc-pill has-accent', style:`--ca:${accent||SITE}`}, t); }
@@ -170,10 +170,14 @@
 
     function gamesPane(){
       const wrap = el('div',{});
+      // include admin-assigned template tiles for this class+subject (mirrors the
+      // subject-page renderer) so they appear here too and the count is correct.
+      const _assigned = (window.synAssignedTiles && window.synAssignedTiles(cls.id, subject.id)) || [];
+      const _all = subject.games.concat(_assigned);
       wrap.appendChild(viewBar({ admin:true,
-        left: el('span',{class:'sc-count'}, subject.games.length+' '+L({gr:'παιχνίδια',en:'games'})) }));
+        left: el('span',{class:'sc-count'}, _all.length+' '+L({gr:'παιχνίδια',en:'games'})) }));
       const listId = 'subj_'+subject.id;
-      let games = subject.games.map((g,i)=>({ g, rid:subject.id+'_'+i }));
+      let games = _all.map((g,i)=>({ g, rid:subject.id+'_'+i }));
       // favorites first
       games.sort((a,b)=> (SymStore.isFav(a.rid)?-1:0) - (SymStore.isFav(b.rid)?-1:0));
       const grid = el('div', { class:'sc-cards has-accent'+(ST().display!=='grid'?' sc-cards--'+ST().display:''), style:`--ca:${accent}` });

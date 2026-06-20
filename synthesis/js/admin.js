@@ -170,6 +170,11 @@ async function adminCreateCode() {
   const expiry   = document.getElementById('admin-code-expiry')?.value    || '';
   const maxUses  = parseInt(document.getElementById('admin-code-max-uses')?.value || '0', 10);
   const resultEl = document.getElementById('admin-code-result');
+  // Optional validity-WINDOW start. The form may carry a #admin-code-valid-from
+  // (date or datetime-local) input; when present, the code only becomes valid
+  // from that moment (validUntil = the existing expiry below). No field → the
+  // code is valid immediately (backwards-compatible with the old form).
+  const validFromRaw = document.getElementById('admin-code-valid-from')?.value || '';
 
   if (!code) {
     _adminResult(resultEl, t('Συμπλήρωσε τον κωδικό.', 'Enter a code.'), 'error');
@@ -199,11 +204,30 @@ async function adminCreateCode() {
       return;
     }
 
+    // End-of-day expiry (existing behaviour) — also exposed as validUntil so
+    // both admin surfaces read the same window field.
+    const untilTs = firebase.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59'));
+    // Optional start of the window. Accept a bare date (treated as start-of-day)
+    // or a datetime-local value; reject an inverted window.
+    let fromTs = null;
+    if (validFromRaw) {
+      const fromDate = new Date(validFromRaw.indexOf('T') >= 0 ? validFromRaw : (validFromRaw + 'T00:00:00'));
+      if (!isNaN(fromDate.getTime())) {
+        if (fromDate.getTime() >= untilTs.toDate().getTime()) {
+          _adminResult(resultEl, t('Το «από» πρέπει να είναι πριν τη λήξη.', '“Valid from” must be before expiry.'), 'error');
+          return;
+        }
+        fromTs = firebase.firestore.Timestamp.fromDate(fromDate);
+      }
+    }
+
     await couponRef.set({
       code,
       discount,
       type:      'percentage',
-      expiresAt: firebase.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59')),
+      expiresAt:  untilTs,
+      validUntil: untilTs,
+      ...(fromTs ? { validFrom: fromTs } : {}),
       maxUses:   maxUses || 0,
       usedCount: 0,
       active:    true,
@@ -589,6 +613,8 @@ async function adminDeactivateBanner(id) {
   }
 }
 
+function _esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 async function _adminLoadBanners() {
   const wrap = document.getElementById('admin-banners-items');
   if (!wrap) return;
@@ -616,13 +642,13 @@ async function _adminLoadBanners() {
       const expired = d.endsAt?.toDate?.() < new Date();
       return `
         <div class="admin-code-row${active ? '' : ' inactive'}">
-          <div class="admin-code-name" style="font-size:13px;">${typeIcon[d.type] || 'ℹ️'} ${d.titleGr}</div>
+          <div class="admin-code-name" style="font-size:13px;">${typeIcon[d.type] || 'ℹ️'} ${_esc(d.titleGr)}</div>
           <div class="admin-code-meta">
             <span class="admin-code-expiry ${expired ? 'expired' : ''}">${t('Λήξη','Exp')}: ${endsAt}</span>
             <span class="admin-code-status ${active ? 'active' : 'inactive'}">
               ${active ? (expired ? t('Έληξε','Expired') : t('Ενεργό','Active')) : t('Ανενεργό','Inactive')}
             </span>
-            ${d.ctaGr ? `<span style="font-size:11px;color:var(--stone);">CTA: ${d.ctaGr}</span>` : ''}
+            ${d.ctaGr ? `<span style="font-size:11px;color:var(--stone);">CTA: ${_esc(d.ctaGr)}</span>` : ''}
           </div>
           ${active && !expired
             ? `<button class="admin-deact-btn" onclick="adminDeactivateBanner('${doc.id}')"
@@ -635,6 +661,241 @@ async function _adminLoadBanners() {
     console.error('[admin] load banners error:', err);
     wrap.innerHTML = `<div class="admin-codes-empty">${t('Σφάλμα φόρτωσης.', 'Load error.')}</div>`;
   }
+}
+
+// ============================================================
+//  BANNERS — synthesis additions
+//  ──────────────────────────────────────────────────────────
+//  The self-contained window.BannerAdmin component (js/banner-admin.js)
+//  calls these. They write Firestore `banners` (guarded) AND mirror to
+//  SymStore('site_banners') so the live bar + admin work without firebase.
+//  NEW feature from the design handoff: adminUpdateBanner(id, fields) —
+//  edit an existing banner's text in place (no duplicate doc).
+// ============================================================
+
+// firebase availability guard (admin.js elsewhere assumes firebase exists;
+// these helpers must degrade gracefully in the sandbox).
+function _bannerFb() {
+  try {
+    return (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length)
+      ? firebase : null;
+  } catch (_) { return null; }
+}
+
+// SymStore mirror of the `banners` collection (array of plain objects with
+// endsAt stored as ISO date | null). Keeps the live bar working offline and
+// lets BannerBar.render() read a single source.
+function _bannerStoreAll() {
+  try {
+    var arr = (window.SymStore && SymStore.get) ? SymStore.get('site_banners', []) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (_) { return []; }
+}
+function _bannerStoreWrite(arr) {
+  try { if (window.SymStore && SymStore.set) SymStore.set('site_banners', arr || []); } catch (_) {}
+}
+// Upsert one banner into the SymStore mirror by id.
+function _bannerStoreUpsert(banner) {
+  var arr = _bannerStoreAll();
+  var i = arr.findIndex(function (b) { return b && b.id === banner.id; });
+  if (i === -1) arr.unshift(banner); else arr[i] = Object.assign({}, arr[i], banner);
+  _bannerStoreWrite(arr);
+}
+function _bannerStorePatch(id, patch) {
+  var arr = _bannerStoreAll();
+  var i = arr.findIndex(function (b) { return b && b.id === id; });
+  if (i !== -1) { arr[i] = Object.assign({}, arr[i], patch); _bannerStoreWrite(arr); }
+}
+
+// Convert an admin "YYYY-MM-DD" expiry into a Firestore Timestamp (or null).
+function _bannerExpiryTs(expiry) {
+  if (!expiry) return null;
+  var f = _bannerFb();
+  if (!f) return null;
+  return f.firestore.Timestamp.fromDate(new Date(expiry + 'T23:59:59'));
+}
+
+// Load ALL banners (active + inactive) for the admin list. Returns an array of
+// { id, ...fields, endsAt:isoString|null, active }. Firestore first (guarded),
+// SymStore fallback. Never throws.
+async function adminLoadAllBanners() {
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var snap = await f.firestore().collection('banners')
+        .orderBy('createdAt', 'desc').limit(50).get();
+      var out = [];
+      snap.forEach(function (doc) {
+        var d = doc.data() || {};
+        out.push({
+          id:        doc.id,
+          type:      d.type || 'info',
+          active:    d.active !== false,
+          titleGr:   d.titleGr || '', titleEn: d.titleEn || '',
+          bodyGr:    d.bodyGr  || '', bodyEn:  d.bodyEn  || '',
+          ctaGr:     d.ctaGr   || '', ctaEn:   d.ctaEn   || '',
+          ctaAction: d.ctaAction || '',
+          endsAt:    d.endsAt?.toDate?.()?.toISOString?.().slice(0, 10) || null,
+        });
+      });
+      if (out.length) return out;   // else fall through to the SymStore mirror
+      // (empty Firestore collection — e.g. the sandbox/offline preview — so the
+      //  admin still shows locally-seeded / offline-created banners)
+    } catch (err) {
+      console.warn('[admin] adminLoadAllBanners firestore failed, using SymStore:', err);
+    }
+  }
+  // Offline / no firebase — read the SymStore mirror.
+  return _bannerStoreAll().map(function (b) {
+    return Object.assign({ active: true }, b,
+      { endsAt: (typeof b.endsAt === 'string') ? b.endsAt : (b.endsAt || null) });
+  });
+}
+
+// NEW — edit an existing banner's text/fields in place. `fields` is a plain
+// object using the admin field names (titleGr, titleEn, bodyGr, bodyEn, type,
+// ctaGr, ctaEn, ctaAction, expiry:'YYYY-MM-DD'|''). Writes .update() (no
+// duplicate doc) + mirrors to SymStore. Returns true on success.
+async function adminUpdateBanner(id, fields) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return false;
+  if (!id) return false;
+  fields = fields || {};
+
+  var titleGr = (fields.titleGr || '').trim();
+  if (!titleGr) return false;
+
+  // SymStore-shaped patch (endsAt as ISO date string | null).
+  var storePatch = {
+    type:      fields.type || 'info',
+    titleGr:   titleGr,
+    titleEn:   (fields.titleEn || '').trim() || titleGr,
+    bodyGr:    (fields.bodyGr  || '').trim(),
+    bodyEn:    (fields.bodyEn  || '').trim() || (fields.bodyGr || '').trim(),
+    ctaGr:     (fields.ctaGr   || '').trim(),
+    ctaEn:     (fields.ctaEn   || '').trim() || (fields.ctaGr || '').trim(),
+    ctaAction: (fields.ctaAction || '').trim(),
+    endsAt:    fields.expiry ? fields.expiry : null,
+  };
+
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var patch = Object.assign({}, storePatch, {
+        endsAt:    _bannerExpiryTs(fields.expiry),
+        updatedAt: f.firestore.FieldValue.serverTimestamp(),
+        updatedBy: (typeof currentUser !== 'undefined' && currentUser?.email) || 'admin',
+      });
+      await f.firestore().collection('banners').doc(id).update(patch);
+    } catch (err) {
+      // Firestore denied/offline — keep going so the local SymStore edit applies.
+      console.warn('[admin] update banner — firestore skipped, using SymStore:', err);
+    }
+  }
+
+  _bannerStorePatch(id, storePatch);
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return true;
+}
+
+// Guarded wrappers that ALSO mirror to SymStore, so the self-contained
+// component (and the live bar) work with or without firebase. These layer on
+// top of the existing Firestore-only adminCreateBanner/adminDeactivateBanner.
+
+// Create from a fields object (used by BannerAdmin). Returns the new id|null.
+async function adminCreateBannerFromFields(fields) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return null;
+  fields = fields || {};
+  var titleGr = (fields.titleGr || '').trim();
+  if (!titleGr) return null;
+
+  var base = {
+    type:      fields.type || 'info',
+    active:    true,
+    titleGr:   titleGr,
+    titleEn:   (fields.titleEn || '').trim() || titleGr,
+    bodyGr:    (fields.bodyGr  || '').trim(),
+    bodyEn:    (fields.bodyEn  || '').trim() || (fields.bodyGr || '').trim(),
+    ctaGr:     (fields.ctaGr   || '').trim(),
+    ctaEn:     (fields.ctaEn   || '').trim() || (fields.ctaGr || '').trim(),
+    ctaAction: (fields.ctaAction || '').trim(),
+  };
+
+  var id = null;
+  var f = _bannerFb();
+  if (f) {
+    try {
+      var ref = await f.firestore().collection('banners').add(Object.assign({}, base, {
+        endsAt:    _bannerExpiryTs(fields.expiry),
+        createdAt: f.firestore.FieldValue.serverTimestamp(),
+        createdBy: (typeof currentUser !== 'undefined' && currentUser?.email) || 'admin',
+      }));
+      id = ref.id;
+    } catch (err) {
+      console.error('[admin] create banner error:', err);
+      return null;
+    }
+  }
+  if (!id) id = 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+
+  _bannerStoreUpsert(Object.assign({ id: id }, base, { endsAt: fields.expiry || null }));
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return id;
+}
+
+// Toggle active state (deactivate OR reactivate). Mirrors to SymStore.
+async function adminSetBannerActive(id, active) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return false;
+  if (!id) return false;
+  var f = _bannerFb();
+  if (f) {
+    try {
+      await f.firestore().collection('banners').doc(id).update({ active: !!active });
+    } catch (err) {
+      // Firestore write denied/offline (e.g. unauthed sandbox) — don't abort;
+      // still apply the local SymStore mirror so the toggle works.
+      console.warn('[admin] set banner active — firestore skipped, using SymStore:', err);
+    }
+  }
+  _bannerStorePatch(id, { active: !!active });
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return true;
+}
+
+// Seed the six handoff example banners into the store (SymStore always;
+// Firestore too when available). One-click from BannerAdmin — never auto-runs.
+async function adminSeedBanners(seedArr) {
+  if (typeof isAdmin !== 'undefined' && !isAdmin) return 0;
+  if (!Array.isArray(seedArr) || !seedArr.length) return 0;
+
+  var f = _bannerFb();
+  var count = 0;
+  for (var i = 0; i < seedArr.length; i++) {
+    var b = seedArr[i] || {};
+    var base = {
+      type:      b.type || 'info',
+      active:    true,
+      titleGr:   b.titleGr || '', titleEn: b.titleEn || b.titleGr || '',
+      bodyGr:    b.bodyGr  || '', bodyEn:  b.bodyEn  || b.bodyGr  || '',
+      ctaGr:     b.ctaGr   || '', ctaEn:   b.ctaEn   || b.ctaGr   || '',
+      ctaAction: b.ctaAction || '',
+    };
+    var id = null;
+    if (f) {
+      try {
+        var ref = await f.firestore().collection('banners').add(Object.assign({}, base, {
+          endsAt:    _bannerExpiryTs(b.endsAt),
+          createdAt: f.firestore.FieldValue.serverTimestamp(),
+          createdBy: 'seed',
+        }));
+        id = ref.id;
+      } catch (err) { console.warn('[admin] seed banner failed:', err); }
+    }
+    if (!id) id = 'seed-' + i + '-' + Math.random().toString(36).slice(2, 6);
+    _bannerStoreUpsert(Object.assign({ id: id }, base, { endsAt: b.endsAt || null }));
+    count++;
+  }
+  if (window.BannerBar && BannerBar.render) BannerBar.render();
+  return count;
 }
 
 // ============================================================

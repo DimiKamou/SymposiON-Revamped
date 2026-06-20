@@ -95,19 +95,52 @@
     if(!obj[first.k] || (typeof obj[first.k]==='string' && !obj[first.k].trim())){ toast('Συμπλήρωσε τουλάχιστον το «'+first.l+'»'); return; }
     if(t.single){ ISTORIA.setItems(curCourse,curUnit,'vid',obj); toast('Αποθηκεύτηκε ✓'); }
     else { const a=listOf(curType).slice(); if(editIdx!=null) a[editIdx]=obj; else a.push(obj); ISTORIA.setItems(curCourse,curUnit,curType,a); toast(editIdx!=null?'Αποθηκεύτηκε':'Προστέθηκε ✓'); }
-    editIdx=null; renderAll();
+    editIdx=null; renderAll(); pushRemote();
   }
   function edit(i){ editIdx=i; renderAll(); $('#adm-editor').scrollIntoView({behavior:'smooth',block:'center'}); }
   function cancel(){ editIdx=null; renderAll(); }
-  function del(i){ if(!confirm('Διαγραφή εγγραφής;'))return; const a=listOf(curType).slice(); a.splice(i,1); ISTORIA.setItems(curCourse,curUnit,curType,a); if(editIdx===i)editIdx=null; renderAll(); toast('Διαγράφηκε'); }
+  function del(i){ if(!confirm('Διαγραφή εγγραφής;'))return; const a=listOf(curType).slice(); a.splice(i,1); ISTORIA.setItems(curCourse,curUnit,curType,a); if(editIdx===i)editIdx=null; renderAll(); toast('Διαγράφηκε'); pushRemote(); }
 
-  function selCourse(c){ curCourse=c; curUnit=(units()[0]||{}).id; editIdx=null; renderAll(); }
+  function selCourse(c){ curCourse=c; curUnit=(units()[0]||{}).id; editIdx=null; renderAll(); if(ISTORIA.useRemote){ ISTORIA.hydrate(curCourse); } }
   function selUnit(id){ curUnit=id; editIdx=null; renderAll(); }
   function selType(id){ curType=id; editIdx=null; renderAll(); }
 
+  /* ── cloud save status ────────────────────────────────────────────────
+     setItems()/importJSON() already mirror to Firestore via the data layer
+     (persist → ISTORIA.remote.save when useRemote). Here we re-fire the same
+     save explicitly so the owner sees an unambiguous success/failure toast
+     instead of the silent fire-and-forget in persist(). */
+  function pushRemote(){
+    if(!ISTORIA.useRemote){ return; }              // offline / no Firebase → local only
+    let slice; try{ slice=JSON.parse(ISTORIA.exportJSON(curCourse)).content; }catch(_){ slice=null; }
+    if(!slice){ return; }
+    toast('Αποθήκευση στο cloud…');
+    ISTORIA.remote.save(curCourse, slice)
+      .then(()=> toast('Αποθηκεύτηκε στο cloud ✓'))
+      .catch(()=> toast('⚠ Το cloud απέτυχε — αποθηκεύτηκε τοπικά'));
+  }
+
   /* ── import / export / reset ──────────────────────────────────────── */
   function exportJSON(){ const blob=new Blob([ISTORIA.exportJSON(curCourse)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='istoria-'+curCourse+'.json'; a.click(); toast('Εξήχθη istoria-'+curCourse+'.json'); }
-  function importJSON(file){ if(!file)return; const r=new FileReader(); r.onload=()=>{ try{ ISTORIA.importJSON(curCourse, r.result); editIdx=null; renderAll(); toast('Εισήχθη ✓'); }catch(e){ toast('Μη έγκυρο JSON'); } }; r.readAsText(file); }
+  function importJSON(file){
+    if(!file)return;
+    const r=new FileReader();
+    r.onload=()=>{
+      let parsed;
+      try{ parsed=JSON.parse(r.result); }
+      catch(e){ toast('⚠ Μη έγκυρο JSON'); return; }
+      if(!parsed || typeof parsed!=='object'){ toast('⚠ Μη έγκυρο πακέτο'); return; }
+      try{
+        // ISTORIA.importJSON accepts either { course, content } or a raw pack;
+        // it writes the editable slice into the overlay AND mirrors to Firestore.
+        ISTORIA.importJSON(curCourse, r.result);
+        editIdx=null; renderAll();
+        toast('Εισήχθη ✓');
+        pushRemote('import');                       // surface cloud status
+      }catch(e){ toast('⚠ Μη έγκυρη μορφή πακέτου'); }
+    };
+    r.readAsText(file);
+  }
   function resetAll(){ if(!confirm('Επαναφορά στο αρχικό περιεχόμενο; (χάνονται οι αλλαγές σου για αυτή την τάξη)'))return; ISTORIA.reset(curCourse); editIdx=null; renderAll(); toast('Έγινε επαναφορά'); }
 
   let tt; function toast(m){ const t=$('#adm-toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),1900); }
@@ -121,6 +154,10 @@
     curCourse = ISTORIA.resolveCourse();
     curUnit = (units()[0]||{}).id;
     renderAll();
+    // When the cloud pack arrives, refresh the UI in place.
+    ISTORIA.onHydrate = (c)=>{ if(c===curCourse){ editIdx=null; renderAll(); } };
+    // Pull the latest cloud content for this course on entry.
+    if(ISTORIA.useRemote){ ISTORIA.hydrate(curCourse); }
   }
 
   window.ADM = { boot, login, selCourse, selUnit, selType, edit, cancel, del, submitForm, exportJSON, importJSON, resetAll };

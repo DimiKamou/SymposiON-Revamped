@@ -271,7 +271,7 @@ function _rhRenderGrid(docs) {
           ${count} <span class="rh-badge-label">${t('αποτυχίες', 'failures')}</span>
         </span>
       </div>
-      <div class="rh-card-question">${doc.questionText || '—'}</div>
+      <div class="rh-card-question">${_rhEsc(doc.questionText || '—')}</div>
       <div class="rh-card-footer">
         <div class="rh-card-answer">
           <span class="rh-answer-label">${t('Σωστό', 'Correct')}:</span>
@@ -562,7 +562,7 @@ function _rhShowQ(idx) {
   const counterEl = document.getElementById('rh-counter-el');
 
   if (progress)  progress.style.width = `${(idx / total) * 100}%`;
-  if (qText)     qText.innerHTML      = q.questionText || '—';
+  if (qText)     qText.innerHTML      = _rhEsc(q.questionText || '—');
   if (qMeta) {
     qMeta.innerHTML = `
       <span class="ge-tag">${_rhEsc(_rhSubjectLabel(q.subjectId))}</span>

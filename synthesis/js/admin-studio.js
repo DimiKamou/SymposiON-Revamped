@@ -211,7 +211,7 @@ function gradesView() {
     <div class="cc-note"><b>Site Studio.</b> The whole catalog as a live tree — exactly what students see. Drill in to <b>reorder</b>, <b>rename</b>, <b>add</b> or <b>remove</b> games on any subject, then open a game to edit its <b>rhapsodies, questions and texts</b> (or its <b>paradigm tables</b>). No code, no redeploy — every change is validated &amp; audited server-side.</div>
     <div class="st-bulkbar"><button class="st-add" onclick="ccSAddGrammarAll()"><span class="ai">＋</span> Γραμματική σε όλες τις τάξεις (Α΄ Γυμν. → Γ΄ Λυκ.)</button>
       <button class="st-add ts-entry" onclick="ccTSEnter()"><span class="ai">🏆</span> Trivia Subjects — μετονομασία &amp; ρυθμίσεις</button></div>
-    <div class="st-grid">${cards || '<div class="st-empty">No grades.</div>'}</div>`;
+    <div class="st-grid">${cards || '<div class="st-empty"><div class="st-empty-t">Καμία τάξη ακόμη / No grades yet</div><div class="st-empty-s">Δεν βρέθηκαν τάξεις στον κατάλογο. / No grades found in the catalog.</div></div>'}</div>`;
 }
 
 // DEPTH 1 — subjects in a grade
@@ -233,7 +233,7 @@ function subjectsView() {
   </div>`).join('');
   return `${crumb()}${trackNote}
     <div class="cc-note">Drag to reorder how subjects appear for <b>${esc(g.label)}</b>. Rename inline (Greek + English). Open a subject to manage its games.</div>
-    <div class="st-list">${rows || '<div class="st-empty">No subjects.</div>'}</div>
+    <div class="st-list">${rows || '<div class="st-empty"><div class="st-empty-t">Κανένα μάθημα ακόμη / No subjects yet</div><div class="st-empty-s">Πρόσθεσε το πρώτο μάθημα παρακάτω. / Add the first subject below.</div></div>'}</div>
     <button class="st-add" onclick="ccSSubjAdd()"><span class="ai">＋</span> Add subject</button>`;
 }
 
@@ -349,7 +349,7 @@ function gameContentView() {
       <button class="st-edit" onclick="ccSOpenUnit('${u.key}')">✎ Ερωτήσεις →</button>
       <button class="st-del" title="delete rhapsody" onclick="ccSUnitDel('${u.key}')">✕</button>
     </div>`).join('');
-    body = `<div class="st-list">${rows || '<div class="st-empty">No units.</div>'}</div>
+    body = `<div class="st-list">${rows || `<div class="st-empty"><div class="st-empty-t">Καμία ${esc(data.unitWord.toLowerCase())} ακόμη / No ${esc(data.unitWord.toLowerCase())} yet</div><div class="st-empty-s">Πρόσθεσε την πρώτη παρακάτω. / Add the first one below.</div></div>`}</div>
       <button class="st-add" onclick="ccSUnitAdd()"><span class="ai">＋</span> Νέα ${esc(data.unitWord)}</button>`;
   } else {
     const all = []; data.units.forEach(u => (u.texts || []).forEach((t, ti) => all.push({ u: u.key, ti, t })));
@@ -360,7 +360,7 @@ function gameContentView() {
       <textarea class="st-text-body" rows="4" onchange="ccSTextField('${x.u}',${x.ti},'body',this.value)" placeholder="Κείμενο…">${esc(x.t.body)}</textarea>
     </div>`).join('');
     body = `<div class="cc-note">Reading passages (κείμενα) attached to a ${esc(data.unitWord.toLowerCase())}. Add the source text students study alongside the questions.</div>
-      ${all.length ? rows : '<div class="st-empty"><div class="st-empty-t">No texts yet</div><div class="st-empty-s">Add a passage to a rhapsody.</div></div>'}
+      ${all.length ? rows : '<div class="st-empty"><div class="st-empty-t">Κανένα κείμενο ακόμη / No texts yet</div><div class="st-empty-s">Πρόσθεσε ένα κείμενο σε μια ραψωδία παρακάτω. / Add a passage to a rhapsody below.</div></div>'}
       <button class="st-add" onclick="ccSTextAdd()"><span class="ai">＋</span> Add text</button>`;
   }
   const canPreview = (typeof launchStudioTrivia === 'function') && totalQ > 0;
@@ -469,7 +469,7 @@ function questionsView() {
   const imp = (_imp && _imp.unit === S.unit) ? _qImportPanel(u) : '';
   return `${crumb()}
     <div class="cc-note">Editing <b>${esc(data.unitWord)} ${esc(u.label)}</b>. Pick a <b>type</b> per question. <span class="st-typebadge plays">Παίζει</span> = παίζει αυτούσιο · <span class="st-typebadge stored">Αποθ.</span> = αποθηκεύεται &amp; παίζεται ως πολλαπλή. Σήμανε το σωστό με την κουκκίδα. Drag ⠿ to reorder. Saved &amp; audited.</div>
-    <div class="st-qlist">${rows || '<div class="st-empty">No questions yet.</div>'}</div>
+    <div class="st-qlist">${rows || '<div class="st-empty"><div class="st-empty-t">Καμία ερώτηση ακόμη — πρόσθεσε την πρώτη / No questions yet — add the first</div><div class="st-empty-s">Διάλεξε τύπο από το «Πρόσθεσε ερώτηση…» παρακάτω. / Pick a type from “Add question…” below.</div></div>'}</div>
     <div class="st-qactions">
       <select class="st-addsel" aria-label="Πρόσθεσε ερώτηση — διάλεξε τύπο" onchange="if(this.value){ccSQAdd(this.value);this.selectedIndex=0;}">
         <option value="">＋ Πρόσθεσε ερώτηση…</option>
@@ -778,7 +778,12 @@ window.ccSQAdd = (t) => {
   curUnit().questions.push(q);
   audit('studio.question.add'); paint(); toast('Προστέθηκε ερώτηση');
 };
-window.ccSQDel = i => { curUnit().questions.splice(i, 1); audit('studio.question.delete'); paint(); toast('Question deleted'); };
+window.ccSQDel = i => {
+  const go = () => { curUnit().questions.splice(i, 1); audit('studio.question.delete'); paint(); toast('Question deleted'); };
+  _confirm({ title: 'Διαγραφή ερώτησης; / Delete question?', danger: true,
+    intro: 'Αφαιρεί οριστικά αυτή την ερώτηση. / Permanently removes this question.',
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 // ── reimagined per-type authoring ──
 window.ccSQType = (i, t) => { const q = curUnit().questions[i]; _convertType(q, t); _syncShadow(q); audit('studio.question.type'); paint(); };
 window.ccSQDup = i => { const u = curUnit(); u.questions.splice(i + 1, 0, clone(u.questions[i])); audit('studio.question.add'); paint(); toast('Διπλασιάστηκε'); };
@@ -936,7 +941,15 @@ function _qImportPanel(u) {
 window.ccSTextField = (ukey, ti, f, v) => { const u = gameData(gmContent()).units.find(x => x.key === ukey); u.texts[ti][f] = v; audit('studio.text.edit'); };
 window.ccSTextAdd = () => { const d = gameData(gmContent()); const u = (S.unit && d.units.find(x => x.key === S.unit)) || d.units[0]; (u.texts = u.texts || []).push({ title: 'Νέο κείμενο', body: '' });
   audit('studio.text.add'); paint(); toast(`Text added to ${d.unitWord} ${u.key}`); };
-window.ccSTextDel = (ukey, ti) => { const u = gameData(gmContent()).units.find(x => x.key === ukey); u.texts.splice(ti, 1); audit('studio.text.delete'); paint(); toast('Text deleted'); };
+window.ccSTextDel = (ukey, ti) => {
+  const u = gameData(gmContent()).units.find(x => x.key === ukey);
+  const ttl = (u.texts[ti] && u.texts[ti].title) || '';
+  const go = () => { u.texts.splice(ti, 1); audit('studio.text.delete'); paint(); toast('Text deleted'); };
+  _confirm({ title: 'Διαγραφή κειμένου; / Delete text?', danger: true,
+    intro: ttl ? `Αφαιρεί το κείμενο «${esc(ttl)}». / Removes the passage «${esc(ttl)}».`
+               : 'Αφαιρεί αυτό το κείμενο. / Removes this passage.',
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 
 // ════════ paradigm interactions ═════════════════════════════════
 function curP() { return gameData(gmContent()).units.find(u => u.key === S.unit); }
@@ -956,11 +969,28 @@ window.ccPMeta = (ei, v) => { curP().entries[ei].meta = v; audit('studio.paradig
 window.ccPRowLabel = (ri, v) => { curP().rowAxis[ri] = v; audit('studio.paradigm.row.label'); };
 window.ccPColLabel = (ci, v) => { curP().colAxis[ci] = v; audit('studio.paradigm.col.label'); };
 window.ccPAddRow = () => { const u = curP(); u.rowAxis.push('Γραμμή ' + (u.rowAxis.length + 1)); u.entries.forEach(e => e.cells.push(u.colAxis.map(() => ''))); audit('studio.paradigm.row.add'); paint(); };
-window.ccPDelRow = ri => { const u = curP(); if (u.rowAxis.length <= 1) return; u.rowAxis.splice(ri, 1); u.entries.forEach(e => e.cells.splice(ri, 1)); audit('studio.paradigm.row.del'); paint(); toast('Row removed'); };
+window.ccPDelRow = ri => { const u = curP(); if (u.rowAxis.length <= 1) return;
+  const go = () => { u.rowAxis.splice(ri, 1); u.entries.forEach(e => e.cells.splice(ri, 1)); audit('studio.paradigm.row.del'); paint(); toast('Row removed'); };
+  _confirm({ title: 'Διαγραφή γραμμής; / Delete row?', danger: true,
+    intro: `Αφαιρεί τη γραμμή «${esc(u.rowAxis[ri] || '')}» και τα κελιά της σε όλα τα λήμματα. / Removes the row «${esc(u.rowAxis[ri] || '')}» and its cells across every entry.`,
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 window.ccPAddCol = () => { const u = curP(); u.colAxis.push('Στήλη ' + (u.colAxis.length + 1)); u.entries.forEach(e => e.cells.forEach(r => r.push(''))); audit('studio.paradigm.col.add'); paint(); };
-window.ccPDelCol = ci => { const u = curP(); if (u.colAxis.length <= 1) return; u.colAxis.splice(ci, 1); u.entries.forEach(e => e.cells.forEach(r => r.splice(ci, 1))); audit('studio.paradigm.col.del'); paint(); toast('Column removed'); };
+window.ccPDelCol = ci => { const u = curP(); if (u.colAxis.length <= 1) return;
+  const go = () => { u.colAxis.splice(ci, 1); u.entries.forEach(e => e.cells.forEach(r => r.splice(ci, 1))); audit('studio.paradigm.col.del'); paint(); toast('Column removed'); };
+  _confirm({ title: 'Διαγραφή στήλης; / Delete column?', danger: true,
+    intro: `Αφαιρεί τη στήλη «${esc(u.colAxis[ci] || '')}» και τα κελιά της σε όλα τα λήμματα. / Removes the column «${esc(u.colAxis[ci] || '')}» and its cells across every entry.`,
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 window.ccPAddEntry = () => { const u = curP(); u.entries.push({ lemma: 'νέο λήμμα', meta: '', cells: u.rowAxis.map(() => u.colAxis.map(() => '')) }); audit('studio.paradigm.word.add'); paint(); toast('Word added'); };
-window.ccPDelEntry = ei => { const u = curP(); u.entries.splice(ei, 1); audit('studio.paradigm.word.del'); paint(); toast('Word removed'); };
+window.ccPDelEntry = ei => { const u = curP();
+  const lemma = (u.entries[ei] && u.entries[ei].lemma) || '';
+  const go = () => { u.entries.splice(ei, 1); audit('studio.paradigm.word.del'); paint(); toast('Word removed'); };
+  _confirm({ title: 'Διαγραφή λήμματος; / Delete word?', danger: true,
+    intro: lemma ? `Αφαιρεί το λήμμα «${esc(lemma)}» και όλα τα κελιά του. / Removes the entry «${esc(lemma)}» and all its cells.`
+                 : 'Αφαιρεί αυτό το λήμμα και όλα τα κελιά του. / Removes this entry and all its cells.',
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 
 // ════════ LEVELS & ACCESS (per-class curriculum) ════════════════
 // Inline surface for the SAME store the Class Plan writes:
@@ -1180,7 +1210,14 @@ window.ccTSField = (key, field, v) => { const s = _tsSubj(key); if (!s) return; 
 window.ccTSBil = (key, field, lang, v) => { const s = _tsSubj(key); if (!s || !s[field]) return; s[field][lang] = v; tsSave(); };
 window.ccTSSecEdit = (key, i, v) => { const s = _tsSubj(key); if (!s) return; v = String(v).trim(); if (!v) { paint(); return; } const old = s.sections[i]; s.sections[i] = v; const j = s.initial.indexOf(old); if (j >= 0) s.initial[j] = v; tsSave(); paint(); };
 window.ccTSSecAdd = key => { const s = _tsSubj(key); if (!s) return; let n = s.sections.length + 1; while (s.sections.includes(String(n))) n++; s.sections.push(String(n)); tsSave(); paint(); };
-window.ccTSSecDel = (key, i) => { const s = _tsSubj(key); if (!s) return; const tok = s.sections.splice(i, 1)[0]; s.initial = s.initial.filter(x => x !== tok); tsSave(); paint(); };
+window.ccTSSecDel = (key, i) => { const s = _tsSubj(key); if (!s) return;
+  const sec = s.sections[i];
+  const go = () => { const tok = s.sections.splice(i, 1)[0]; s.initial = s.initial.filter(x => x !== tok); tsSave(); paint(); };
+  _confirm({ title: 'Διαγραφή ενότητας; / Delete section?', danger: true,
+    intro: sec != null ? `Αφαιρεί την ενότητα «${esc(String(sec))}» από αυτό το trivia subject. / Removes the section «${esc(String(sec))}» from this trivia subject.`
+                       : 'Αφαιρεί αυτή την ενότητα από το trivia subject. / Removes this section from the trivia subject.',
+    confirmLabel: 'Διαγραφή / Delete', onConfirm: go });
+};
 window.ccTSInitial = (key, i) => { const s = _tsSubj(key); if (!s) return; const tok = s.sections[i]; if (tok == null) return; const j = s.initial.indexOf(tok); if (j >= 0) s.initial.splice(j, 1); else s.initial.push(tok); tsSave(); paint(); };
 
 window.ccTSAdd = () => {
