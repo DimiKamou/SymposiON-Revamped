@@ -132,7 +132,12 @@ window.ContentSource = (function () {
       labelEn: tile.en || tile.gr || '',
       ic,
       tier: 'free',
-      content: ct ? ct.content : null,
+      // Only quiz (trivia) content is editable AND deliverable in the Studio.
+      // Paradigm games read bespoke per-game data.js banks that the Studio's
+      // paradigm doc doesn't match, so they're surfaced as non-editable rather
+      // than opening a toy editor whose saves never reach the game. (Delivering
+      // paradigm edits is a model-reconciliation project — see applyLiveGameOverride.)
+      content: (ct && ct.schema === 'quiz') ? ct.content : null,
       // keep the original launch hint so an overlay can preserve it
       _launch: tile.launch || null,
       _illu: tile.illu || null,
