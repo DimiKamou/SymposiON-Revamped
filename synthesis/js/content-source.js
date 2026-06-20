@@ -19,10 +19,10 @@
                               synthesis trivia banks / paradigm tables.
 
    Persistence (write):
-     saveCatalog(tree)      → SymStore['studio_catalog'] (+ guarded Firestore
-                              config/catalog) — survives reload.
-     saveContent(cid, doc)  → SymStore['gameContent/<cid>'] (+ guarded
-                              Firestore gameContent/<cid>).
+     saveCatalog(tree)      → SymStore['studio_catalog'] (+ validated callable
+                              adminSaveCatalog → siteCatalog/tree) — survives reload.
+     saveContent(cid, doc)  → SymStore['gameContent/<cid>'] (+ validated callable
+                              adminSaveGameContent → gameContent/<cid>).
 
    All Firestore access is GUARDED by
        typeof firebase !== 'undefined' && firebase.firestore
@@ -286,7 +286,10 @@ window.ContentSource = (function () {
 
   async function loadCatalog(force) {
     if (_cache.catalog && !force) return _cache.catalog;
-    const ov = await _readOverride(CATALOG_KEY, 'config/catalog');
+    // Read from the same doc the validated callable writes (siteCatalog/tree),
+    // NOT config/catalog — otherwise Studio catalog edits are write-only and
+    // loadCatalog always falls through to the static SYM seed.
+    const ov = await _readOverride(CATALOG_KEY, 'siteCatalog/tree');
     if (ov && Array.isArray(ov.grades)) return (_cache.catalog = ov);
     return (_cache.catalog = buildCatalogFromSYM());
   }
@@ -308,12 +311,33 @@ window.ContentSource = (function () {
       : (tree && tree.tree && Array.isArray(tree.tree.grades)) ? { grades: clone(tree.tree.grades) }
         : null;
     if (!doc) return false;
-    _ssSet(CATALOG_KEY, doc);
+    _ssSet(CATALOG_KEY, doc);                     // offline mirror — always
     _cache.catalog = doc;
-    const db = _db();
-    if (db) {
-      try { await db.doc('config/catalog').set(doc, { merge: false }); } catch (_) { /* SymStore-only */ }
+
+    // Authoritative Firestore write goes through the validated callable
+    // (adminSaveCatalog → siteCatalog/tree). Security rules block raw client
+    // writes to siteCatalog/* (Admin SDK only), and the callable re-checks the
+    // catalog invariants (grade.key, unique game ids, valid tiers) server-side —
+    // exactly mirroring saveContent's adminSaveGameContent path.
+    if (typeof firebase !== 'undefined' && firebase.functions) {
+      try {
+        await firebase.functions().httpsCallable('adminSaveCatalog')({ tree: doc });
+        return true;
+      } catch (e) {
+        const code = (e && e.code) || '';
+        // A validation rejection must surface, not silently degrade to a raw
+        // write that bypasses the very check that failed.
+        if (code === 'invalid-argument' || code === 'functions/invalid-argument') {
+          try { console.warn('[content-source] server rejected catalog:', e && e.message); } catch (_) {}
+          return false;
+        }
+        // Unauthenticated/unavailable/internal → SymStore mirror is the fallback.
+        try { console.warn('[content-source] adminSaveCatalog unavailable:', e && e.message); } catch (_) {}
+      }
     }
+    // Offline / no functions: the SymStore mirror already holds it. No raw
+    // Firestore fallback — siteCatalog/* is rules-locked (Admin SDK only), so a
+    // direct client write would only ever fail or strand a divergent doc.
     return true;
   }
 
@@ -452,6 +476,22 @@ window.ContentSource = (function () {
     return true;
   }
 
+  // Apply a persisted content override (gameContent/<id>) onto the live game
+  // globals, reading the override SYNCHRONOUSLY from SymStore → cache (warmed by
+  // boot's Firestore hydration). The trivia launcher calls this right after it
+  // assigns the lazy-loaded banks to window.QUESTIONS and before the engine reads
+  // them, so an admin's saved questions reach players on any device. Returns true
+  // when an override was applied. No-op (false) when none exists ⇒ bundled banks.
+  function applyLiveGameOverride(contentId) {
+    if (!contentId) return false;
+    let ov = _ssGet(contentKey(contentId), null);
+    if (!ov || !Array.isArray(ov.units)) ov = _cache[contentId];
+    if (ov && Array.isArray(ov.units)) {
+      try { return applyContentToGlobals(contentId, ov); } catch (_) { return false; }
+    }
+    return false;
+  }
+
   /* ════════════════ CACHE + RE-RENDER HOOKS ════════════════════ */
   function bustCache(contentId) {
     if (contentId) delete _cache[contentId]; else delete _cache.catalog;
@@ -477,19 +517,66 @@ window.ContentSource = (function () {
   let _booted = false;
   function boot() {
     if (_booted) return; _booted = true;
-    // Apply a persisted catalog override onto SYM so the student pages reflect
-    // prior Studio edits immediately on load.
+    // 1) Instant — apply this device's SymStore-persisted overrides (a prior
+    //    session in this browser). Synchronous, so there's no flash when present.
     try {
       const cat = _ssGet(CATALOG_KEY, null);
       if (cat && Array.isArray(cat.grades)) { _cache.catalog = cat; applyCatalogToGRADES(cat); }
     } catch (_) {}
-    // Apply persisted trivia content overrides onto any live globals.
     try {
       for (const id of ['iliada-trivia', 'odyssey-trivia']) {
         const c = _ssGet(contentKey(id), null);
         if (c && Array.isArray(c.units)) { _cache[id] = c; applyContentToGlobals(id, c); }
       }
     } catch (_) {}
+    // 2) Authoritative — hydrate from Firestore for EVERY visitor, so Studio
+    //    edits saved on one device reach students on any other:
+    //      • catalog (siteCatalog/tree) → overlaid onto SYM.SUBJECTS, which the
+    //        home page renders straight from; fetch + apply + re-render.
+    //      • trivia content (gameContent/<id>) → persisted + cached so the trivia
+    //        launcher can apply it onto the lazy-loaded banks at game open.
+    //    (PARADIGM content is intentionally NOT delivered here: those games read
+    //    bespoke per-game data.js shapes that don't match the Studio's paradigm
+    //    doc — a model reconciliation, tracked separately.)
+    _pollHydrate(25);
+  }
+
+  // Hydrate the catalog + trivia content from Firestore. firebase may finish init
+  // after this file loads, so poll briefly — like syn-hydrate.js — then give up.
+  // Fail-open throughout: offline / missing doc / not-yet-ready ⇒ the static SYM
+  // seed (and bundled banks) simply stand.
+  const TRIVIA_CONTENT_IDS = ['iliada-trivia', 'odyssey-trivia'];
+  let _fsHydrated = false;
+  function _pollHydrate(tries) {
+    if (_fsHydrated) return;
+    const db = _db();
+    if (!db) { if (tries > 0) setTimeout(function () { _pollHydrate(tries - 1); }, 400); return; }
+    _fsHydrated = true;
+    // Catalog → overlay onto SYM + re-render.
+    try {
+      db.doc('siteCatalog/tree').get().then(function (snap) {
+        if (!snap || !snap.exists) return;                 // nothing published — keep the seed
+        const data = snap.data();
+        if (!data || !Array.isArray(data.grades)) return;
+        _ssSet(CATALOG_KEY, data);                         // warm this device for an instant next load
+        _cache.catalog = data;
+        if (applyCatalogToGRADES(data)) _refreshCatalogView();
+      }).catch(function () { /* offline / perms — fail open */ });
+    } catch (_) { /* SDK shape mismatch — fail open */ }
+    // Trivia content → persist + cache for the launcher (banks are lazy-loaded,
+    // so usually absent now; applyContentToGlobals applies live if a game is open).
+    TRIVIA_CONTENT_IDS.forEach(function (id) {
+      try {
+        db.doc(contentKey(id)).get().then(function (snap) {
+          if (!snap || !snap.exists) return;
+          const data = snap.data();
+          if (!data || !Array.isArray(data.units)) return;
+          _ssSet(contentKey(id), data);
+          _cache[id] = data;
+          try { applyContentToGlobals(id, data); } catch (_) {}
+        }).catch(function () { /* offline / perms — fail open */ });
+      } catch (_) { /* SDK shape mismatch — fail open */ }
+    });
   }
   function _start() {
     if (typeof document === 'undefined') { boot(); return; }
@@ -504,7 +591,7 @@ window.ContentSource = (function () {
     // savers
     saveCatalog, saveContent,
     // apply / live
-    applyCatalogToGRADES, applyContentToGlobals,
+    applyCatalogToGRADES, applyContentToGlobals, applyLiveGameOverride,
     // cache + render
     bustCache, _refreshCatalogView,
     // builders (handy for tests / future migration)
