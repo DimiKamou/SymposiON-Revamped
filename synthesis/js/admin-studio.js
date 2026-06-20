@@ -39,8 +39,9 @@ const GAME_TYPES = [
   { type:'dig',           ic:'⛏️', label:'Ανασκαφή (dig)',            kind:'trivia'  },
   { type:'history-game',  ic:'🗺️', label:'Εξάσκηση — 7 Modes',        kind:'trivia'  },
   { type:'flashcards',    ic:'📇', label:'Μνημοσύνη (study)',         kind:'study'   },
-  { type:'conjugation',   ic:'⚡', label:'Κλίση Ρημάτων (paradigm)',  kind:'paradigm'},
-  { type:'declension',    ic:'📐', label:'Κλίση Ονομάτων (paradigm)', kind:'paradigm'},
+  // Paradigm (conjugation/declension) blank-game templates removed: their edits
+  // don't reach the real grammar games (bespoke data.js banks), so offering them
+  // here was a no-op. Real grammar games are still addable via the «Existing» tab.
 ];
 const gameType = t => GAME_TYPES.find(x => x.type === t) || { type:t, ic:'🎮', label:t, kind:'arcade' };
 
@@ -687,13 +688,13 @@ function _openPicker() {
         `<button class="st-pick" onclick="ccSAddExisting('${g.type}')"><span class="st-pick-ic">${g.ic}</span><span class="st-pick-nm">${esc(g.label)}</span><span class="st-pick-k">${g.content ? '✎ levels + content' : 'engine'}</span></button>`).join('')}</div>`).join('');
   } else {
     grid = `<div class="st-pickgrid">${GAME_TYPES.map(t =>
-      `<button class="st-pick" onclick="ccSGamePick('${t.type}')"><span class="st-pick-ic">${t.ic}</span><span class="st-pick-nm">${esc(t.label)}</span><span class="st-pick-k">${t.kind === 'trivia' ? '✎ editable questions' : t.kind === 'paradigm' ? '⊞ editable table' : t.kind}</span></button>`).join('')}</div>`;
+      `<button class="st-pick" onclick="ccSGamePick('${t.type}')"><span class="st-pick-ic">${t.ic}</span><span class="st-pick-nm">${esc(t.label)}</span><span class="st-pick-k">${t.kind === 'trivia' ? '✎ editable questions' : t.kind}</span></button>`).join('')}</div>`;
   }
   m.innerHTML = `<h2><span class="x">＋</span> Add a game to «${esc(sub.label)}»</h2>
     <div class="st-pick-tabs">
       <button class="st-pick-tab${_pickerTab === 'existing' ? ' on' : ''}" onclick="ccSPickerTab('existing')">📚 Υπάρχον παιχνίδι</button>
       <button class="st-pick-tab${_pickerTab === 'new' ? ' on' : ''}" onclick="ccSPickerTab('new')">✦ Νέο κενό</button></div>
-    <p>${_pickerTab === 'existing' ? 'Add a <b>real</b> game (Λύω, Ουσιαστικά, Latin…) — it keeps its levels and content.' : 'Create a <b>blank</b> game — Trivia gets an editable question set, conjugation/declension an editable table.'}</p>
+    <p>${_pickerTab === 'existing' ? 'Add a <b>real</b> game (Λύω, Ουσιαστικά, Latin…) — it keeps its levels and content.' : 'Create a <b>blank</b> game — Trivia gets an editable question set; other types use their built-in engine.'}</p>
     <div class="st-pickwrap">${grid}</div>
     <div class="cc-mbtns"><button class="cc-mbtn" onclick="ccConfirmNo()">Cancel</button></div>`;
   const scrim = document.getElementById('cc-confirm-scrim'); if (scrim) scrim.classList.add('on');
@@ -731,11 +732,6 @@ window.ccSGamePick = type => {
     content = 'c' + Date.now();
     M.content[content] = { schema: 'quiz', unitWord: 'Ενότητα', unitWordEn: 'Unit',
       units: [{ key: '1', label: 'Ενότητα 1', questions: [{ q: 'Νέα ερώτηση;', opts: ['Σωστό', 'Λάθος', '—', '—'], ans: 0 }], texts: [] }] };
-    scheduleContentSave(content);
-  } else if (t.kind === 'paradigm') {
-    content = 'c' + Date.now();
-    M.content[content] = { schema: 'paradigm', unitWord: 'Ενότητα', unitWordEn: 'Unit',
-      units: [{ key: '1', label: 'Νέα ενότητα', rowAxis: ['Γραμμή 1', 'Γραμμή 2', 'Γραμμή 3'], colAxis: ['Στήλη 1', 'Στήλη 2'], entries: [{ lemma: 'λήμμα', meta: '', cells: [['', ''], ['', ''], ['', '']] }] }] };
     scheduleContentSave(content);
   }
   sub.games.push({ id: newId, type, label: t.label, labelEn: t.label, ic: t.ic, tier: 'free', content });
