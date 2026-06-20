@@ -120,6 +120,6 @@
 
 /* Classic-CC views (Class Plan / Site Studio) embedded in the light admin pane
    via a neutralised #page-admin scoping host — make them flow inline + light. */
-.sc-admin2__pane #page-admin.syn-cc-embed { position:static !important; display:block !important; inset:auto !important; height:auto !important; min-height:0 !important; width:100%; background:transparent !important; box-shadow:none !important; }
+.sc-admin2__pane .syn-cc-embed { position:static !important; display:block !important; inset:auto !important; height:auto !important; min-height:0 !important; width:100%; background:transparent !important; box-shadow:none !important; }
 .sc-admin2__pane .syn-cc-embed .cc-work { padding:0 !important; height:auto !important; max-height:none !important; overflow:visible !important; }
 .sc-admin2__pane .syn-cc-embed .cc-panel { height:auto !important; max-height:none !important; overflow:visible !important; }

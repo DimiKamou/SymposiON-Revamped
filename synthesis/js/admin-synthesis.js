@@ -1445,7 +1445,7 @@
         // layout neutralised inline so it renders inline + light in the pane.
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Έλεγχος Πρόσβασης — Σχέδιο Τάξης', en: 'Access Control — Class Plan' })));
         if (window.AdminCC && typeof window.AdminCC.classPlanHTML === 'function') {
-          var cphost = el('div', { id: 'page-admin', class: 'syn-cc-embed',
+          var cphost = el('div', { id: 'page-admin-embed', class: 'syn-cc-embed',
             style: 'position:static;display:block;inset:auto;z-index:auto;height:auto;min-height:0;background:transparent;color:inherit' });
           var cpwork = el('div', { class: 'cc-work', style: 'padding:0' });
           cphost.appendChild(cpwork);
@@ -1468,7 +1468,7 @@
         if (window.AdminStudio && typeof window.AdminStudio.view === 'function') {
           // Scope under a neutralised #page-admin host so admin-studio.css /
           // admin-cc.css light styles apply (same trick as the Access planner).
-          var shost = el('div', { id: 'page-admin', class: 'syn-cc-embed',
+          var shost = el('div', { id: 'page-admin-embed', class: 'syn-cc-embed',
             style: 'position:static;display:block;inset:auto;z-index:auto;height:auto;min-height:0;background:transparent;color:inherit' });
           var host = el('div', { class: 'cc-work sc-studio-host', style: 'padding:0' });
           var panel = el('div', { class: 'cc-panel', id: 'cc-panel' });
