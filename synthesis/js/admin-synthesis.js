@@ -1416,11 +1416,136 @@
         });
       });
     }
+    /* ── lazy CDN loaders for the extra extractors (mirrors _loadPdfJs) ──
+       Each caches the resolved global on window., resolves it, rejects on
+       <script> error. No CSP on the site, so external CDN loads are fine. */
+    function _loadMammoth() {
+      if (window.mammoth) return Promise.resolve(window.mammoth);
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+        s.onload = function () { window.mammoth ? res(window.mammoth) : rej(new Error('mammoth load failed')); };
+        s.onerror = function () { rej(new Error('mammoth load failed')); };
+        document.head.appendChild(s);
+      });
+    }
+    function _loadJSZip() {
+      if (window.JSZip) return Promise.resolve(window.JSZip);
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        s.onload = function () { window.JSZip ? res(window.JSZip) : rej(new Error('JSZip load failed')); };
+        s.onerror = function () { rej(new Error('JSZip load failed')); };
+        document.head.appendChild(s);
+      });
+    }
+    function _loadTesseract() {
+      if (window.Tesseract) return Promise.resolve(window.Tesseract);
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = function () { window.Tesseract ? res(window.Tesseract) : rej(new Error('tesseract load failed')); };
+        s.onerror = function () { rej(new Error('tesseract load failed')); };
+        document.head.appendChild(s);
+      });
+    }
+    // .docx → raw text via mammoth.
+    function _extractDocx(file) {
+      return _loadMammoth().then(function (mammoth) {
+        return file.arrayBuffer().then(function (arrayBuffer) {
+          return mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function (r) { return (r && r.value) || ''; });
+        });
+      });
+    }
+    // .epub → unzip, concatenate the text of every (x)html chapter in name order.
+    function _extractEpub(file) {
+      return _loadJSZip().then(function (JSZip) {
+        return file.arrayBuffer().then(function (buf) {
+          return JSZip.loadAsync(buf).then(function (zip) {
+            var names = [];
+            zip.forEach(function (path, entry) {
+              if (entry.dir) return;
+              if (/\.x?html?$/i.test(path)) names.push(path);
+            });
+            names.sort(); // spine order ≈ alphabetical (acceptable approximation)
+            var chain = Promise.resolve('');
+            names.forEach(function (path) {
+              chain = chain.then(function (acc) {
+                return zip.file(path).async('string').then(function (html) {
+                  var txt = '';
+                  try {
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    txt = (doc.body && doc.body.textContent) || doc.documentElement.textContent || '';
+                  } catch (_e) {
+                    txt = String(html).replace(/<[^>]*>/g, ' ');
+                  }
+                  return acc + txt.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim() + '\n\n';
+                });
+              });
+            });
+            return chain;
+          });
+        });
+      });
+    }
+    /* ── PDF extraction with OCR fallback for scanned PDFs ──
+       Extract via pdf.js first. If the text is suspiciously empty for the page
+       count (total trimmed < 40 chars, OR < 15 chars/page → likely a scan),
+       OCR each rendered page with Tesseract ('ell+eng'). Capped at 30 pages to
+       bound time. onStatus(msg) drives the live status line; OCR is slow — that
+       is expected. Best-effort: any OCR failure falls back to the pdf.js text. */
+    var OCR_PAGE_CAP = 30;
+    function _extractPdfSmart(file, onStatus) {
+      var note = function (m) { if (onStatus) onStatus(m); };
+      return _extractPdf(file).then(function (pdfText) {
+        return _loadPdfJs().then(function (lib) {
+          return file.arrayBuffer().then(function (buf) {
+            return lib.getDocument({ data: buf }).promise.then(function (pdf) {
+              var pages = pdf.numPages;
+              var trimmed = (pdfText || '').trim();
+              var looksScanned = trimmed.length < 40 || (pages > 0 && trimmed.length < pages * 15);
+              if (!looksScanned) return pdfText;
+              // → OCR fallback.
+              return _loadTesseract().then(function (Tesseract) {
+                var cap = Math.min(pages, OCR_PAGE_CAP);
+                if (pages > OCR_PAGE_CAP) {
+                  note(L({ gr: 'Σαρωμένο PDF — OCR στις πρώτες ' + OCR_PAGE_CAP + ' σελίδες (από ' + pages + ')…',
+                           en: 'Scanned PDF — OCR on first ' + OCR_PAGE_CAP + ' pages (of ' + pages + ')…' }));
+                }
+                var chain = Promise.resolve('');
+                for (var i = 1; i <= cap; i++) {
+                  (function (n) {
+                    chain = chain.then(function (acc) {
+                      note(L({ gr: 'OCR σελίδα ' + n + '/' + cap + '…', en: 'OCR page ' + n + '/' + cap + '…' }));
+                      return pdf.getPage(n).then(function (pg) {
+                        var viewport = pg.getViewport({ scale: 2 });
+                        var canvas = document.createElement('canvas');
+                        canvas.width = viewport.width; canvas.height = viewport.height;
+                        var ctx = canvas.getContext('2d');
+                        return pg.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+                          return Tesseract.recognize(canvas, 'ell+eng').then(function (r) {
+                            return acc + ((r && r.data && r.data.text) || '') + '\n\n';
+                          });
+                        });
+                      });
+                    });
+                  })(i);
+                }
+                return chain.then(function (ocrText) {
+                  // If OCR yielded more than pdf.js, use it; else keep what we had.
+                  return (ocrText.trim().length > trimmed.length) ? ocrText : pdfText;
+                });
+              }).catch(function () { return pdfText; }); // OCR unavailable → pdf.js text
+            });
+          });
+        });
+      });
+    }
     function renderAiSources() {
       pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'AI Πηγές · Βιβλία αναφοράς', en: 'AI Sources · Reference books' })));
       pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 14px' }, L({
-        gr: 'Ανέβασε βιβλία/αρχεία (PDF, .txt, .md). Ο AI βοηθός που βαθμολογεί Μετάφραση / Συντακτικό / Ανάπτυξη στηρίζεται ΚΥΡΙΩΣ σε αυτό το υλικό (και συμπληρωματικά στη γενική του γνώση). Αποθηκεύεται στο Firestore — επιβιώνει redeploy.',
-        en: 'Upload books/files (PDF, .txt, .md). The AI tutor that grades Translation / Syntax / Development grounds its answers MAINLY in this material (falling back to general knowledge). Stored in Firestore — survives redeploy.'
+        gr: 'Ανέβασε βιβλία/αρχεία (PDF, .txt, .md, .docx, .epub). Σαρωμένα PDF αναγνωρίζονται αυτόματα με OCR. Ο AI βοηθός που βαθμολογεί Μετάφραση / Συντακτικό / Ανάπτυξη στηρίζεται ΚΥΡΙΩΣ σε αυτό το υλικό (και συμπληρωματικά στη γενική του γνώση). Αποθηκεύεται στο Firestore — επιβιώνει redeploy.',
+        en: 'Upload books/files (PDF, .txt, .md, .docx, .epub). Scanned PDFs are auto-detected and OCR’d. The AI tutor that grades Translation / Syntax / Development grounds its answers MAINLY in this material (falling back to general knowledge). Stored in Firestore — survives redeploy.'
       })));
 
       // ── AI status pill ──
@@ -1445,7 +1570,7 @@
       // ── upload form ──
       var titleInp = el('input', { class: 'sc-field__i', placeholder: L({ gr: 'Τίτλος (π.χ. Ιστορία Γ΄ — Κεφ. 1)', en: 'Title (e.g. History 12th — Ch. 1)' }) });
       var subjSel = el('select', { class: 'sc-field__i sc-select' }, AI_SUBJ.map(function (s) { return el('option', { value: s[0] }, s[1]); }));
-      var fileInp = el('input', { type: 'file', accept: '.txt,.md,.pdf', class: 'sc-field__i' });
+      var fileInp = el('input', { type: 'file', accept: '.txt,.md,.pdf,.docx,.epub', class: 'sc-field__i' });
       var statusLine = el('div', { class: 'sc-hint', style: 'margin:6px 0' }, '');
       var extracted = { text: '', name: '' };
       var upBtn = el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: doUpload }, L({ gr: 'Ανέβασμα', en: 'Upload' }));
@@ -1457,10 +1582,17 @@
           statusLine.textContent = (extracted.text.length).toLocaleString('en-US') + ' ' + L({ gr: 'χαρακτήρες', en: 'chars' }) + ' · ' + f.name;
           if (!titleInp.value) titleInp.value = f.name.replace(/\.[^.]+$/, '');
         };
+        var setStatus = function (m) { statusLine.textContent = m; };
         var ext = (f.name.split('.').pop() || '').toLowerCase();
         if (ext === 'pdf') {
           statusLine.textContent = L({ gr: 'Εξαγωγή κειμένου από PDF…', en: 'Extracting PDF text…' });
-          _extractPdf(f).then(done).catch(function (e) { statusLine.textContent = L({ gr: 'Σφάλμα PDF: ', en: 'PDF error: ' }) + (e && e.message || e); });
+          _extractPdfSmart(f, setStatus).then(done).catch(function (e) { statusLine.textContent = L({ gr: 'Σφάλμα PDF: ', en: 'PDF error: ' }) + (e && e.message || e); });
+        } else if (ext === 'docx') {
+          statusLine.textContent = L({ gr: 'Εξαγωγή από .docx…', en: 'Extracting .docx…' });
+          _extractDocx(f).then(done).catch(function (e) { statusLine.textContent = L({ gr: 'Σφάλμα .docx: ', en: '.docx error: ' }) + (e && e.message || e); });
+        } else if (ext === 'epub') {
+          statusLine.textContent = L({ gr: 'Εξαγωγή από .epub…', en: 'Extracting .epub…' });
+          _extractEpub(f).then(done).catch(function (e) { statusLine.textContent = L({ gr: 'Σφάλμα .epub: ', en: '.epub error: ' }) + (e && e.message || e); });
         } else {
           statusLine.textContent = L({ gr: 'Ανάγνωση…', en: 'Reading…' });
           var rd = new FileReader();
@@ -1473,7 +1605,7 @@
         el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέα πηγή', en: 'New source' })),
         el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τίτλος', en: 'Title' })), titleInp]),
         el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα', en: 'Subject' })), subjSel]),
-        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Αρχείο (PDF/.txt/.md)', en: 'File (PDF/.txt/.md)' })), fileInp]),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Αρχείο (PDF/.txt/.md/.docx/.epub)', en: 'File (PDF/.txt/.md/.docx/.epub)' })), fileInp]),
         statusLine, upBtn,
       ]));
       function doUpload() {
@@ -1499,6 +1631,43 @@
       // ── existing sources ──
       pane.appendChild(el('div', { class: 'sc-cfg__l', style: 'margin:4px 0 8px' }, L({ gr: 'Ανεβασμένες πηγές', en: 'Uploaded sources' })));
       var listHost = el('div', {}); pane.appendChild(listHost); loadList();
+
+      // ── admin test-chat: ask the live tutor (askTutor callable) ──
+      var tcSubj = el('select', { class: 'sc-field__i sc-select' }, AI_SUBJ.map(function (s) { return el('option', { value: s[0] }, s[1]); }));
+      var tcQ = el('textarea', { class: 'sc-field__i', rows: 3, placeholder: L({ gr: 'Γράψε μια ερώτηση για τον βοηθό…', en: 'Type a question for the tutor…' }), style: 'resize:vertical;min-height:64px' });
+      var tcAns = el('div', { class: 'sc-hint', style: 'margin:8px 0 0;padding:12px 14px;border-radius:12px;border:1px solid var(--line,#e6ddcf);background:var(--card,#fff);white-space:pre-wrap;min-height:20px' }, L({ gr: 'Η απάντηση θα εμφανιστεί εδώ.', en: 'The answer will appear here.' }));
+      var tcBtn = el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: tcAsk }, L({ gr: 'Ρώτησε', en: 'Ask' }));
+      function tcAsk() {
+        var q = (tcQ.value || '').trim();
+        if (!q) { tcQ.focus(); return; }
+        if (!fsReady() || !firebase.functions) { tcAns.textContent = L({ gr: 'Χρειάζεται σύνδεση Firebase.', en: 'Firebase connection required.' }); return; }
+        var subjOpt = AI_SUBJ.filter(function (s) { return s[0] === tcSubj.value; })[0];
+        var subject = (subjOpt && tcSubj.value !== 'all') ? subjOpt[1] : 'all';
+        tcBtn.disabled = true; tcBtn.textContent = '…';
+        tcAns.textContent = L({ gr: 'Σκέφτεται…', en: 'Thinking…' });
+        firebase.functions().httpsCallable('askTutor')({ question: q, subject: subject }).then(function (r) {
+          var d = (r && r.data) || {};
+          tcBtn.disabled = false; tcBtn.textContent = L({ gr: 'Ρώτησε', en: 'Ask' });
+          tcAns.textContent = (d.answer || L({ gr: '(κενή απάντηση)', en: '(empty answer)' }))
+            + (d.grounded ? '' : '\n\n— ' + L({ gr: 'χωρίς τεκμηρίωση από τις πηγές', en: 'not grounded in sources' }));
+        }).catch(function (e) {
+          tcBtn.disabled = false; tcBtn.textContent = L({ gr: 'Ρώτησε', en: 'Ask' });
+          var code = (e && e.code) || '';
+          var msg;
+          if (code === 'failed-precondition') msg = L({ gr: 'Ο AI δεν είναι ενεργός — όρισε ANTHROPIC_KEY', en: 'AI not active — set ANTHROPIC_KEY' });
+          else if (code === 'unauthenticated') msg = L({ gr: 'Συνδέσου', en: 'Sign in' });
+          else if (code === 'resource-exhausted') msg = L({ gr: 'Πάρα πολλές ερωτήσεις', en: 'Too many questions' });
+          else msg = L({ gr: 'Σφάλμα: ', en: 'Error: ' }) + ((e && e.message) || e);
+          tcAns.textContent = msg;
+        });
+      }
+      pane.appendChild(el('div', { class: 'sc-cfg__l', style: 'margin:18px 0 8px' }, L({ gr: 'Δοκίμασε τον βοηθό', en: 'Test the tutor' })));
+      pane.appendChild(el('div', { class: 'sc-card', style: 'padding:14px;border:1px solid var(--line,#e6ddcf);border-radius:12px;margin:0 0 18px' }, [
+        el('p', { class: 'sc-hint', style: 'margin:0 0 10px' }, L({ gr: 'Στείλε μια ερώτηση στον ζωντανό AI βοηθό (askTutor) για να ελέγξεις την κατάστασή του. Ο βοηθός απαντά μόνο σε εκπαιδευτικά θέματα.', en: 'Send a question to the live AI tutor (askTutor) to check its state. The tutor only answers educational questions.' })),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα', en: 'Subject' })), tcSubj]),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Ερώτηση', en: 'Question' })), tcQ]),
+        tcBtn, tcAns,
+      ]));
       function loadList() {
         listHost.innerHTML = '';
         if (!fsReady() || !firebase.firestore) { listHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Σύνδεσε Firebase για τις πηγές.', en: 'Connect Firebase to list sources.' }))); return; }

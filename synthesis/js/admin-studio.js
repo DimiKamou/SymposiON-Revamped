@@ -327,7 +327,7 @@ function gameContentView() {
   if (cid && M.loadingCid === cid) return `${crumb()}<div class="cc-note">Loading content for <b>${esc(gm.label)}</b>…</div>`;
   const data = gameData(cid);
   if (!data) {
-    return `${crumb()}<div class="cc-note">This game (<code>${esc(gm.type)}</code>) has no editable question/paradigm content yet. Trivia &amp; conjugation/declension games are editable; others store their content as levels or decks.</div>`;
+    return `${crumb()}<div class="cc-note">This game (<code>${esc(gm.type)}</code>) has no editable content here. <b>Trivia</b> games are editable in the Studio and reach players live; grammar (conjugation/declension) games store their tables in code, and other games store their content as levels or decks.</div>`;
   }
   if (data.schema === 'paradigm') return paradigmContentView(gm, data);
 

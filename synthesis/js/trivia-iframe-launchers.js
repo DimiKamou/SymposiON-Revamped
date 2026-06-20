@@ -89,6 +89,13 @@
     const olEn = document.getElementById('ol-en');
     if (olGr) olGr.classList.toggle('active', lang === 'gr');
     if (olEn) olEn.classList.toggle('active', lang === 'en');
+    // Deliver any admin content edit (gameContent/<id>, hydrated by content-
+    // source.js) onto the freshly-assigned banks before the engine reads them.
+    // Keyed by the active game id (odyssey reuses this engine via launchGame).
+    try {
+      var _gid = (window._triviaGameId === 'odyssey-trivia') ? 'odyssey-trivia' : 'iliada-trivia';
+      if (window.ContentSource && ContentSource.applyLiveGameOverride) ContentSource.applyLiveGameOverride(_gid);
+    } catch (_) {}
     if (typeof initGame === 'function') initGame(lang);
   }
 
