@@ -25,7 +25,7 @@
   // Admin-authored, PUBLIC, site-wide content keys.
   var KEYS = [
     'access_control', 'template_assignments', 'admin_pricing', 'admin_flags',
-    'messages', 'hero_slides', 'guides', 'custom_acroteria', 'admin_custom_secs',
+    'admin_messages', 'hero_slides', 'guides', 'custom_acroteria', 'admin_custom_secs',
     'msg_signup', 'msg_sub', 'about_title', 'about_mission',
     'contact_email', 'contact_address', 'contact_hours'
   ];
@@ -80,7 +80,7 @@
     { key: 'template_assignments', doc: 'templateAssignments', pick: function (d) { return d.items; } },
     { key: 'admin_pricing',        doc: 'pricing',             pick: function (d) { return d; } },
     { key: 'admin_flags',          doc: 'adminFlags',          pick: function (d) { return d; } },
-    { key: 'messages',             doc: 'messages',            pick: function (d) { return d.items; } }
+    { key: 'admin_messages',       doc: 'messages',            pick: function (d) { return d.items; } }
   ];
 
   function _setQuiet(key, val) {

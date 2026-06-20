@@ -51,6 +51,15 @@
   var el = function () { return window.el.apply(null, arguments); };
   var SYM = function () { return window.SYM || {}; };
 
+  /* ── confirm guard for destructive admin actions ──────────────────────
+     Native confirm() is used deliberately: the styled cc-confirm scrim only
+     exists while the Command Center is mounted, so it's unreliable from the
+     synthesis admin panel. This matches the existing confirm() guards in this
+     file. Pass a bilingual message; onYes runs only on confirmation. */
+  function adminConfirm(msg, onYes) {
+    try { if (window.confirm(typeof msg === 'string' ? msg : L(msg))) onYes(); } catch (_) {}
+  }
+
   /* ── tier vocabulary — from the SymTiers registry (Free/Student/Teacher/Pro
      + admin-created custom tiers); fallback list if the module isn't loaded. ── */
   function tierVocab() {
@@ -617,6 +626,21 @@
     var rail = el('div', { class: 'sc-admin2__rail' });
     var pane = el('div', { class: 'sc-admin2__pane' });
 
+    // Rail search — live-filter the 21+ section buttons (paint() rebuilds only
+    // the pane, so this input + its query persist across section navigation).
+    var railSearch = el('input', {
+      class: 'sc-field__i', type: 'search',
+      style: 'margin:0 0 10px;width:100%;box-sizing:border-box',
+      placeholder: L({ gr: 'Αναζήτηση ενότητας…', en: 'Search sections…' }),
+      oninput: function (e) {
+        var q = (e.target.value || '').trim().toLowerCase();
+        rail.querySelectorAll('.sc-admin2__nav').forEach(function (b) {
+          b.style.display = (!q || (b.textContent || '').toLowerCase().indexOf(q) >= 0) ? '' : 'none';
+        });
+      }
+    });
+    rail.appendChild(railSearch);
+
     var sections = [
       ['overview', '◷', { gr: 'Επισκόπηση', en: 'Overview' }],
       ['grant', '✦', { gr: 'Χορήγηση Πρόσβασης', en: 'Grant Access' }],
@@ -1087,8 +1111,10 @@
             el('span', {}, g.role || '—'),
             el('span', {}, el('em', { class: 'sc-badge2 sc-badge2--' + (g.tier === 'free' ? 'open' : 'done') }, g.tier || '—')),
             el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () {
-              var cur = grantsLoad().filter(function (x) { return x.email !== g.email || x.ts !== g.ts; });
-              grantsSave(cur); paint();
+              adminConfirm(L({ gr: 'Διαγραφή πρόσβασης για ' + g.email + ';', en: 'Remove access for ' + g.email + '?' }), function () {
+                var cur = grantsLoad().filter(function (x) { return x.email !== g.email || x.ts !== g.ts; });
+                grantsSave(cur); paint();
+              });
             } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
           ]));
         });
@@ -1554,7 +1580,7 @@
                   el('div', { class: 'sc-voyadmin__nm' }, L(a.label)),
                   el('div', { class: 'sc-voyadmin__m' }, (c ? L(c) : a.classId) + ' · ' + a.subjectId + ' · ' + a.type),
                 ]),
-                el('button', { class: 'sc-mini', onclick: (function (id) { return function () { taSave(taLoad().filter(function (x) { return x.id !== id; })); paint(); }; })(a.id) }, L({ gr: '✕ Διαγραφή', en: '✕ Delete' })),
+                el('button', { class: 'sc-mini', onclick: (function (id, lbl) { return function () { adminConfirm(L({ gr: 'Αφαίρεση ανάθεσης «' + lbl + '»;', en: 'Remove assignment “' + lbl + '”?' }), function () { taSave(taLoad().filter(function (x) { return x.id !== id; })); paint(); }); }; })(a.id, L(a.label)) }, L({ gr: '✕ Διαγραφή', en: '✕ Delete' })),
               ]));
             });
             pane.appendChild(lw);
@@ -1632,7 +1658,7 @@
         if (customAcro.length) {
           var tbl2 = el('div', { class: 'sc-table', style: 'margin-top:12px' });
           tbl2.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [el('span', {}, L({ gr: 'Ακρωτήριο', en: 'Acroterion' })), el('span', {}, 'Kleos'), el('span', {}, '')]));
-          customAcro.forEach(function (a, i) { tbl2.appendChild(el('div', { class: 'sc-tr' }, [el('span', { class: 'sc-tr__task' }, L(a)), el('span', {}, (a.cost || 0).toLocaleString('en-US')), el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () { var c = SymStore.get('custom_acroteria', []).filter(function (_x, j) { return j !== i; }); SymStore.set('custom_acroteria', c); paint(); } }, L({ gr: 'Διαγραφή', en: 'Delete' }))])])); });
+          customAcro.forEach(function (a, i) { tbl2.appendChild(el('div', { class: 'sc-tr' }, [el('span', { class: 'sc-tr__task' }, L(a)), el('span', {}, (a.cost || 0).toLocaleString('en-US')), el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () { adminConfirm(L({ gr: 'Διαγραφή «' + L(a) + '»;', en: 'Delete “' + L(a) + '”?' }), function () { var c = SymStore.get('custom_acroteria', []).filter(function (_x, j) { return j !== i; }); SymStore.set('custom_acroteria', c); paint(); }); } }, L({ gr: 'Διαγραφή', en: 'Delete' }))])])); });
           pane.appendChild(tbl2);
         }
       }

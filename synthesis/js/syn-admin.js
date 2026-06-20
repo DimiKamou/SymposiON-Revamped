@@ -34,6 +34,31 @@
   }
   window.synHideAdmin = hideAdmin;
 
+  // ── ESC closes the admin overlay ─────────────────────────────
+  // The Command Center is otherwise only dismissable via the on-screen ✕.
+  // Install a single, idempotent document-level keydown listener that hides
+  // the overlay on Escape — but only while it is actually open, and not while
+  // the user is mid-edit in a field that needs Escape itself.
+  function _adminEscClose() {
+    if (window.__synAdminEscBound) return;
+    window.__synAdminEscBound = true;
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' && e.keyCode !== 27) return;
+      var h = _host();
+      // Only act when the overlay is open/visible.
+      if (!h || !h.classList.contains('syn-admin-on')) return;
+      // Don't steal Escape from an active text field (e.g. clearing/blurring
+      // an input or textarea inside a sub-modal handles its own Escape).
+      var ae = document.activeElement;
+      if (ae) {
+        var tag = (ae.tagName || '').toUpperCase();
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || ae.isContentEditable) return;
+      }
+      (window.synHideAdmin || hideAdmin)();
+    });
+  }
+  _adminEscClose();
+
   // ── Minimal goTo shim ────────────────────────────────────────
   // admin-cc.js calls goTo('admin') from navToAdmin/_renderAdminPage. We only
   // care about that case; anything else is left alone (no Ver1 .page system).
