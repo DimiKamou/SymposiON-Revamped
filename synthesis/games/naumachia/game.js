@@ -304,6 +304,21 @@ function _nauMode(mode) {
 // ── Matchmaking (PvP / Firestore) ─────────────────────────────
 async function _nauMatchmake() {
   if (!NAU) return;
+
+  // Firestore rules require request.auth != null for naumachia_matches
+  // (read + create + update). A signed-out client would silently fail with a
+  // permission error, so prompt sign-in instead and bail back to the menu.
+  const _authed = (typeof currentUser !== 'undefined' && currentUser)
+    || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+  if (!_authed) {
+    const msgEl = document.getElementById('nau-mm-msg');
+    if (msgEl) msgEl.textContent = 'Απαιτείται σύνδεση για PvP.';
+    if (typeof openAuthModal === 'function') openAuthModal('login');
+    // Return to the menu so the spinner doesn't hang forever.
+    setTimeout(() => { if (NAU && NAU.phase === 'mm') _nauPhase('menu'); }, 1200);
+    return;
+  }
+
   const db   = firebase.firestore();
   const col  = db.collection('naumachia_matches');
   const myId = 'nau_' + Math.random().toString(36).slice(2, 10);
