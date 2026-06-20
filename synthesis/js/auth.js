@@ -333,6 +333,31 @@ function signInWithEmail() {
   }
 }
 
+// ── PASSWORD RESET (forgot password) ──
+// Sends a Firebase reset email to the address typed in the login form. Reuses
+// the same #auth-email field and the error/notice surface as sign-in, so the
+// flow stays in the open modal. Wired to the "Ξέχασες τον κωδικό;" link.
+function sendPasswordReset() {
+  const email = document.getElementById('auth-email')?.value?.trim() ?? '';
+  if (!email) { _showAuthError('Συμπλήρωσε το email σου για να λάβεις σύνδεσμο επαναφοράς.'); return; }
+  if (!_firebaseReady) { _showNotConfigured(); return; }
+  _setAuthLoading(true);
+  try {
+    _auth.sendPasswordResetEmail(email)
+      .then(() => _showAuthNotice('Σου στείλαμε σύνδεσμο επαναφοράς στο ' + email + '. Έλεγξε και τα ανεπιθύμητα (spam).'))
+      .catch(err => {
+        console.error('[symposion auth] Password reset error:', err);
+        _showAuthError(_friendlyError(err));
+      })
+      .finally(() => _setAuthLoading(false));
+  } catch (err) {
+    console.error('[symposion auth] Password reset sync error:', err);
+    _showAuthError(_friendlyError(err));
+    _setAuthLoading(false);
+  }
+}
+window.sendPasswordReset = sendPasswordReset;
+
 // ── ANTI-BOT: install a honeypot on the sign-up form (idempotent) ──
 // Guarded — the anti-bot module (window.SymAntiBot) may be absent in tests.
 let _signupHoneypot = null;
@@ -611,11 +636,16 @@ function _renderUserChip(container, user) {
 // ── UI HELPERS ──
 function _showAuthError(msg) {
   const el = document.getElementById('auth-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  if (el) { el.textContent = msg; el.style.display = 'block'; el.style.color = ''; }
+}
+// Positive variant on the same surface (e.g. "reset link sent") — green ink.
+function _showAuthNotice(msg) {
+  const el = document.getElementById('auth-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; el.style.color = '#2e7d32'; }
 }
 function _clearAuthError() {
   const el = document.getElementById('auth-error');
-  if (el) { el.textContent = ''; el.style.display = 'none'; }
+  if (el) { el.textContent = ''; el.style.display = 'none'; el.style.color = ''; }
 }
 let _popupRecover = null;
 function _setAuthLoading(on) {
