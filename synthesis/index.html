@@ -315,6 +315,10 @@
        (create form + live preview + edit/toggle list + seed). The lead mounts
        it from the admin 'banners' section. Backend lives in js/admin.js. -->
 <script src="js/banner-bar.js?v=2"></script>
+<!-- Admin content persistence: mirror admin SymStore content to Firestore
+     (config/adminMirror) + hydrate it back at boot, so owner-created content
+     reaches students on any device and survives a Hosting redeploy. -->
+<script src="js/syn-hydrate.js?v=1"></script>
 <script src="js/banner-admin.js?v=2"></script>
 
 <script src="js/app.js"></script>
