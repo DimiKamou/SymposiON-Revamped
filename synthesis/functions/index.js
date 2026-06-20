@@ -1314,3 +1314,8 @@ exports.askTutor = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('internal', 'tutor-failed');
   }
 });
+
+// ── Neural Greek/English TTS (Iris read-aloud, Narration Studio) ──
+// HTTPS function defined in ./tts.js, served at /api/tts via firebase.json rewrite.
+// Requires the Cloud Text-to-Speech API enabled + the @google-cloud/text-to-speech dep.
+exports.tts = require('./tts').tts;

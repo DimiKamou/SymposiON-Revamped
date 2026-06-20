@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Σελίδες Σφάλματος</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cardo:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F4EFE4; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810; --sym-cream:#FBF8F1;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden;}
+
+  .err{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    padding:40px 28px 120px;
+    background:radial-gradient(125% 90% at 50% -25%,var(--ac-soft,var(--gold-soft)),transparent 58%),var(--bg);
+    overflow:hidden;}
+  .frame{position:absolute;inset:26px;border:1px solid var(--line-soft);border-radius:18px;pointer-events:none;}
+  .frame::before,.frame::after{content:"";position:absolute;left:50%;transform:translateX(-50%);width:120px;height:14px;
+    background:repeating-linear-gradient(90deg,var(--line-bold) 0 2px,transparent 2px 6px);opacity:.5;}
+  .frame::before{top:-7px;}
+  .frame::after{bottom:-7px;}
+
+  .sigil{display:flex;align-items:center;gap:11px;margin-bottom:30px;position:relative;z-index:2;}
+  .sigil svg{width:30px;height:30px;color:var(--terra);}
+  .sigil .nm{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.3px;}
+  .sigil .nm b{color:var(--terra);}
+
+  .art{position:relative;z-index:2;width:148px;height:148px;margin-bottom:2px;}
+  .art svg{width:100%;height:100%;overflow:visible;}
+  .art .stroke{fill:none;stroke:var(--ac,var(--terra));stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+  .art .soft{fill:none;stroke:var(--line-bold);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .art .fillac{fill:var(--ac-soft,var(--terra-soft));stroke:none;}
+  @media (prefers-reduced-motion: no-preference){
+    .art{animation:floaty 5.5s ease-in-out infinite;}
+    @keyframes floaty{0%,100%{transform:translateY(0) rotate(0);}50%{transform:translateY(-9px) rotate(-1deg);}}
+    .spark{animation:spark 2.6s ease-in-out infinite;}
+    @keyframes spark{0%,100%{opacity:.3;}50%{opacity:1;}}
+  }
+
+  .eyebrow{position:relative;z-index:2;font-family:var(--disp);font-size:12px;letter-spacing:3.5px;text-transform:uppercase;
+    color:var(--ac,var(--terra));margin-bottom:0;}
+  .code{position:relative;z-index:2;font-family:var(--serif);font-weight:700;font-size:104px;line-height:.95;letter-spacing:-1px;
+    color:var(--fg);margin:4px 0 0;}
+  .code .ac{color:var(--ac,var(--terra));}
+
+  h1{position:relative;z-index:2;font-family:var(--serif);font-size:29px;font-weight:700;margin:14px 0 0;}
+  .gk{position:relative;z-index:2;font-family:var(--greek);font-style:italic;font-size:17px;color:var(--muted);margin-top:9px;}
+  .sub{position:relative;z-index:2;font-size:14.5px;color:var(--fg-70);line-height:1.6;max-width:440px;margin:15px auto 0;}
+
+  .actions{position:relative;z-index:2;display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;justify-content:center;}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-size:13px;letter-spacing:.7px;text-transform:uppercase;font-weight:600;
+    border-radius:12px;padding:14px 22px;cursor:pointer;text-decoration:none;transition:.16s;border:1px solid transparent;}
+  .btn svg{width:16px;height:16px;}
+  .btn-prim{background:var(--terra);color:#fff;box-shadow:0 12px 28px -12px var(--terra);}
+  .btn-prim:hover{background:var(--terra-dk);transform:translateY(-2px);}
+  .btn-ghost{background:var(--card);color:var(--fg-70);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--line-bold);transform:translateY(-2px);}
+
+  .helpline{position:relative;z-index:2;margin-top:24px;font-size:12.5px;color:var(--muted);}
+  .helpline a{color:var(--terra);text-decoration:none;border-bottom:1px solid var(--terra-soft);}
+  .errref{position:relative;z-index:2;margin-top:16px;font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--stone);opacity:.7;}
+
+  .switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:3px;
+    background:color-mix(in srgb,var(--sym-ink) 90%,transparent);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:6px;
+    box-shadow:0 18px 40px -16px rgba(0,0,0,.5);}
+  .switcher .sl{font-family:var(--disp);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);padding:0 9px 0 7px;}
+  .switcher button{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.5px;color:rgba(255,255,255,.7);
+    background:none;border:none;border-radius:9px;padding:9px 12px;cursor:pointer;transition:.14s;}
+  .switcher button:hover{color:#fff;background:rgba(255,255,255,.08);}
+  .switcher button.on{color:#1A140C;background:var(--gold);}
+
+  @media(max-width:560px){.code{font-size:74px;}h1{font-size:23px;}.frame{inset:14px;}.switcher .sl{display:none;}}
+</style>
+</head>
+<body class="theme-alabaster">
+  <div class="err" id="stage">
+    <div class="frame"></div>
+    <div class="sigil">
+      <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="square">
+        <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+      <span class="nm">Symposi<b>ON</b></span>
+    </div>
+    <div class="art" id="art"></div>
+    <div class="eyebrow" id="eyebrow"></div>
+    <div class="code" id="code"></div>
+    <h1 id="title"></h1>
+    <div class="gk" id="greek"></div>
+    <div class="sub" id="sub"></div>
+    <div class="actions" id="actions"></div>
+    <div class="helpline" id="help"></div>
+    <div class="errref" id="errref"></div>
+  </div>
+
+
+<script>
+const ART={
+  col:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="34" ry="6"/>
+    <path class="stroke" d="M44 30c0-5 4-9 9-9h14c5 0 9 4 9 9"/><path class="stroke" d="M44 30h32"/>
+    <path class="stroke" d="M48 30v22M72 30v22"/>
+    <path class="stroke" d="M48 52l8 8-4 6 6 6"/><path class="stroke" d="M72 52l-8 9 4 6-5 5"/>
+    <path class="stroke" d="M44 96h32c0-5-4-9-9-9H53c-5 0-9 4-9 9z"/>
+    <path class="stroke" d="M50 87l3-12M70 87l-3-12"/>
+    <circle class="fillac spark" cx="88" cy="38" r="3.2"/><circle class="fillac" cx="33" cy="62" r="2.4"/></svg>`,
+  gate:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="32" ry="6"/>
+    <rect class="stroke" x="40" y="50" width="40" height="44" rx="6"/>
+    <path class="stroke" d="M48 50v-7a12 12 0 0 1 24 0v7"/>
+    <circle class="fillac" cx="60" cy="69" r="6"/><path class="stroke" d="M60 73v9"/>
+    <circle class="fillac spark" cx="90" cy="44" r="2.8"/></svg>`,
+  key:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="30" ry="6"/>
+    <circle class="stroke" cx="48" cy="50" r="16"/><circle class="fillac" cx="48" cy="50" r="6"/>
+    <path class="stroke" d="M61 60l28 28M76 75l8-8M84 83l8-8"/></svg>`,
+  urn:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="62" cy="106" rx="36" ry="6"/>
+    <path class="stroke" d="M40 58c-6 4-9 11-9 19 0 12 10 21 23 21s23-9 23-21c0-8-3-15-9-19"/>
+    <path class="stroke" d="M40 58c0-6 5-10 14-10s14 4 14 10"/>
+    <path class="stroke" d="M44 50c-5-2-7-5-7-9M64 50c5-2 7-5 7-9"/>
+    <path class="stroke" d="M46 70l10 8-6 8 10 8"/>
+    <path class="fillac spark" d="M88 26l-10 16h8l-11 18 22-22h-9l9-12z"/></svg>`,
+  tools:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="32" ry="6"/>
+    <path class="stroke" d="M40 84l24-24"/>
+    <path class="stroke" d="M36 80l-6 6a5 5 0 0 0 7 7l6-6z"/>
+    <path class="fillac" d="M70 38a14 14 0 0 0-18 17l-8 8 9 9 8-8a14 14 0 0 0 17-18l-9 9-7-2-2-7z"/>
+    <circle class="fillac spark" cx="84" cy="40" r="2.6"/></svg>`,
+  plug:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="30" ry="6"/>
+    <path class="stroke" d="M42 42l16 16"/>
+    <path class="stroke" d="M36 36l-4 4a10 10 0 0 0 0 14l6 6 14-14-6-6a10 10 0 0 0-14 0z"/>
+    <path class="stroke" d="M78 78l-16-16"/>
+    <path class="stroke" d="M84 84l4-4a10 10 0 0 0 0-14l-6-6-14 14 6 6a10 10 0 0 0 14 0z"/>
+    <path class="fillac spark" d="M60 20v9M75 28l-6 6M45 28l6 6"/></svg>`,
+  hourglass:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="28" ry="6"/>
+    <path class="stroke" d="M42 30h36M42 94h36"/>
+    <path class="stroke" d="M44 30c0 16 16 22 16 30 0-8 16-14 16-30"/>
+    <path class="stroke" d="M44 94c0-16 16-22 16-30 0 8 16 14 16 30"/>
+    <path class="fillac" d="M50 36c0 9 10 13 10 18 0-5 10-9 10-18z"/>
+    <circle class="fillac spark" cx="60" cy="74" r="2.6"/></svg>`,
+  scroll:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="30" ry="6"/>
+    <path class="stroke" d="M38 36h44v48H38z"/>
+    <path class="stroke" d="M38 36a6 6 0 0 0 0 12h44M38 84a6 6 0 0 1 0-12"/>
+    <path class="fillac spark" d="M52 54l16 16M68 54l-16 16"/></svg>`,
+  browser:`<svg viewBox="0 0 120 120">
+    <ellipse class="soft" cx="60" cy="108" rx="32" ry="6"/>
+    <rect class="stroke" x="32" y="36" width="56" height="44" rx="6"/>
+    <path class="stroke" d="M32 48h56"/>
+    <circle class="soft" cx="40" cy="42" r="1.6"/><circle class="soft" cx="46" cy="42" r="1.6"/>
+    <path class="fillac spark" d="M54 58l12 12M66 58l-12 12"/>
+    <path class="stroke" d="M50 88h20"/></svg>`,
+};
+
+const PAGES={
+  '404':{ac:'var(--terra)',acSoft:'var(--terra-soft)',art:'col',eyebrow:'Σφάλμα 404',
+    code:'<span class="ac">4</span>0<span class="ac">4</span>',title:'Χαμένος στον Λαβύρινθο',
+    greek:'«οὐκ ἔστιν ἐνταῦθα» — δεν βρίσκεται εδώ.',
+    sub:'Η σελίδα που ζητάς δεν υπάρχει ή μετακινήθηκε. Ίσως άλλαξε ο σύνδεσμος ή πάτησες κάτι παλιό.',
+    actions:[['home','Στην Αρχή',1],['back','Πίσω',0]],
+    help:'Ψάχνεις κάποιο παιχνίδι ή μάθημα; Δοκίμασε την <a href="#">αναζήτηση</a>.',ref:'ERR · 404 NOT FOUND'},
+  '403':{ac:'var(--terra-dk)',acSoft:'var(--terra-soft)',art:'gate',eyebrow:'Σφάλμα 403',
+    code:'<span class="ac">4</span>0<span class="ac">3</span>',title:'Ἄβατον — Απαγορευμένη Περιοχή',
+    greek:'«οὐ θέμις εἰσιέναι» — δεν επιτρέπεται η είσοδος.',
+    sub:'Δεν έχεις δικαίωμα πρόσβασης σε αυτή τη σελίδα. Ίσως χρειάζεσαι ρόλο καθηγητή ή διαχειριστή.',
+    actions:[['home','Στην Αρχή',1],['login','Σύνδεση με άλλον λογαριασμό',0]],
+    help:'Πιστεύεις πως είναι λάθος; <a href="#">Επικοινώνησε μαζί μας</a>.',ref:'ERR · 403 FORBIDDEN'},
+  '401':{ac:'var(--gold)',acSoft:'var(--gold-soft)',art:'key',eyebrow:'Σφάλμα 401',
+    code:'<span class="ac">4</span>0<span class="ac">1</span>',title:'Χρειάζεται Σύνδεση',
+    greek:'«τίς εἶ;» — ποιος είσαι;',
+    sub:'Για να συνεχίσεις πρέπει να συνδεθείς. Η συνεδρία σου μπορεί να έληξε από αδράνεια.',
+    actions:[['login','Σύνδεση',1],['home','Αρχική',0]],
+    help:'Ξέχασες τον κωδικό σου; <a href="#">Επαναφορά κωδικού</a>.',ref:'ERR · 401 UNAUTHORIZED'},
+  '500':{ac:'var(--terra)',acSoft:'var(--terra-soft)',art:'urn',eyebrow:'Σφάλμα 500',
+    code:'<span class="ac">5</span>0<span class="ac">0</span>',title:'Κάτι έσπασε στον Όλυμπο',
+    greek:'«σφάλμα τι γέγονεν» — κάποιο σφάλμα συνέβη.',
+    sub:'Παρουσιάστηκε εσωτερικό σφάλμα στους διακομιστές μας. Δεν φταις εσύ — το ψάχνουμε ήδη.',
+    actions:[['reload','Δοκίμασε ξανά',1],['home','Αρχική',0]],
+    help:'Αν επιμένει, <a href="#">ανέφερέ το</a> και θα το διορθώσουμε.',ref:'ERR · 500 INTERNAL SERVER ERROR'},
+  '503':{ac:'var(--sage)',acSoft:'var(--sage-soft)',art:'tools',eyebrow:'Σφάλμα 503',
+    code:'<span class="ac">5</span>0<span class="ac">3</span>',title:'Συντήρηση εν εξελίξει',
+    greek:'«μικρὸν ἐπίσχες» — περίμενε λίγο.',
+    sub:'Αναβαθμίζουμε το SymposiON για να γίνει καλύτερο. Επιστρέφουμε σε λίγο — ευχαριστούμε για την υπομονή.',
+    actions:[['reload','Ανανέωση',1],['status','Κατάσταση συστήματος',0]],
+    help:'Συνήθως διαρκεί λίγα λεπτά.',ref:'ERR · 503 SERVICE UNAVAILABLE'},
+  'offline':{ac:'var(--stone)',acSoft:'color-mix(in srgb,var(--stone) 16%,transparent)',art:'plug',eyebrow:'Χωρίς σύνδεση',
+    code:'<span class="ac">⌁</span>',title:'Χάθηκε η σύνδεση',
+    greek:'«σιγὴ τῶν νημάτων» — σιωπή στα δίκτυα.',
+    sub:'Δεν εντοπίζουμε σύνδεση στο διαδίκτυο. Έλεγξε το Wi-Fi ή τα δεδομένα σου και προσπάθησε ξανά.',
+    actions:[['reload','Προσπάθησε ξανά',1]],
+    help:'Η πρόοδός σου αποθηκεύεται τοπικά και συγχρονίζεται όταν επανέλθεις.',ref:'NET · OFFLINE'},
+  '429':{ac:'var(--gold)',acSoft:'var(--gold-soft)',art:'hourglass',eyebrow:'Σφάλμα 429',
+    code:'<span class="ac">4</span>2<span class="ac">9</span>',title:'Πάρε μια ανάσα',
+    greek:'«μέτρον ἄριστον» — το μέτρο είναι άριστο.',
+    sub:'Έκανες πάρα πολλές ενέργειες σε μικρό χρόνο. Περίμενε λίγα δευτερόλεπτα και δοκίμασε ξανά.',
+    actions:[['reload','Δοκίμασε ξανά',1],['home','Αρχική',0]],
+    help:'Το όριο μηδενίζεται αυτόματα σε λίγο.',ref:'ERR · 429 TOO MANY REQUESTS'},
+  '400':{ac:'var(--terra)',acSoft:'var(--terra-soft)',art:'scroll',eyebrow:'Σφάλμα 400',
+    code:'<span class="ac">4</span>0<span class="ac">0</span>',title:'Δυσανάγνωστο αίτημα',
+    greek:'«οὐ συνίημι» — δεν καταλαβαίνω.',
+    sub:'Το αίτημα είχε λάθος μορφή και δεν μπορέσαμε να το διαβάσουμε. Ίσως ο σύνδεσμος είναι αλλοιωμένος.',
+    actions:[['home','Στην Αρχή',1],['back','Πίσω',0]],
+    help:'Αν ήρθες από σύνδεσμο, ζήτησέ τον ξανά από τον αποστολέα.',ref:'ERR · 400 BAD REQUEST'},
+  'unsupported':{ac:'var(--terra-dk)',acSoft:'var(--terra-soft)',art:'browser',eyebrow:'Μη υποστηριζόμενος φυλλομετρητής',
+    code:'<span class="ac">!</span>',title:'Παλιός φυλλομετρητής',
+    greek:'«καινῶν δεῖ» — χρειάζεται κάτι νεότερο.',
+    sub:'Ο φυλλομετρητής σου είναι πολύ παλιός για το SymposiON. Αναβάθμισέ τον για να παίζεις σωστά τα παιχνίδια.',
+    actions:[['chrome','Λήψη Chrome',1],['reload','Δοκίμασα — Ανανέωση',0]],
+    help:'Προτείνουμε πρόσφατη έκδοση Chrome, Edge, Firefox ή Safari.',ref:'CLIENT · UNSUPPORTED BROWSER'},
+};
+
+const ICONS={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>',
+  reload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8 8 0 1 0-1 5"/><path d="M20 4v6h-6"/></svg>',
+  login:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>',
+  status:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>',
+  chrome:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/><path d="M21.5 8H12M5 5.5l5 8M9 21l4-9"/></svg>',
+};
+/* real SymposiON SPA routes (intercepted by Router.interceptLinks) */
+const ROUTES={home:'/',login:'/',profile:'/profile',subscribe:'/subscribe',status:'/about',chrome:'https://www.google.com/chrome/'};
+const EXTERNAL=new Set(['chrome']);
+
+function render(key){
+  const p=PAGES[key];if(!p)return;
+  const s=document.getElementById('stage');
+  s.style.setProperty('--ac',p.ac);s.style.setProperty('--ac-soft',p.acSoft);
+  document.getElementById('art').innerHTML=ART[p.art];
+  document.getElementById('eyebrow').textContent=p.eyebrow;
+  document.getElementById('code').innerHTML=p.code;
+  document.getElementById('title').textContent=p.title;
+  document.getElementById('greek').textContent=p.greek;
+  document.getElementById('sub').textContent=p.sub;
+  document.getElementById('actions').innerHTML=p.actions.map(a=>{
+    const icon=ICONS[a[0]]||'';
+    const route=ROUTES[a[0]];
+    const href=route||'#';
+    const ext=EXTERNAL.has(a[0])?' target="_blank" rel="noopener"':'';
+    return `<a class="btn ${a[2]?'btn-prim':'btn-ghost'}" data-act="${a[0]}" href="${href}"${ext}>${icon}${a[1]}</a>`;
+  }).join('');
+  document.getElementById('help').innerHTML=p.help;
+  document.getElementById('errref').textContent=p.ref;
+  document.title='SymposiON · '+p.eyebrow;
+}
+
+document.getElementById('actions').addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');if(!a)return;
+  const act=a.dataset.act;
+  if(act==='reload'){e.preventDefault();location.reload();return;}
+  if(act==='back'){e.preventDefault();history.back();return;}
+  if(EXTERNAL.has(act))return; // let the new-tab link open
+  /* home/login/profile/subscribe/status → real <a href> routes;
+     Router.interceptLinks() in the live app handles them without reload.
+     In this standalone preview we let the browser follow the href. */
+});
+
+render('404');
+</script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Iris — Προσβασιμότητα</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Atkinson+Hyperlegible:wght@400;700&family=Cardo:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  /* ════ SymposiON · Synthesis — ALABASTER (marble) ════ */
+  .theme-alabaster{
+    --sym-bg-dark:#F4EFE4; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810; --sym-cream:#FBF8F1;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544; --sym-aegean:#3E6A88;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone); --aegean:var(--sym-aegean);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --aegean-soft:color-mix(in srgb,var(--sym-aegean) 14%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+    --a11y-scale:1;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:calc(16px * var(--a11y-scale));}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(120% 70% at 50% -10%,var(--gold-soft),transparent 55%);}
+
+  .skip-link{position:absolute;left:12px;top:-60px;z-index:200;background:var(--terra);color:#fff;font-family:var(--disp);
+    font-weight:600;letter-spacing:.5px;padding:11px 17px;border-radius:9px;transition:top .15s;text-decoration:none;}
+  .skip-link:focus{top:12px;outline:3px solid var(--gold);}
+
+  /* nav */
+  .nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:18px;padding:14px 30px;
+    background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:21px;font-weight:700;color:var(--fg);text-decoration:none;}
+  .logo .mark{width:32px;height:32px;border-radius:9px;background:var(--terra-soft);color:var(--terra);display:grid;place-items:center;font-size:18px;border:1px solid var(--line);}
+  .logo span{color:var(--terra);}
+  .nav-spacer{flex:1;}
+  .nav-links{display:flex;gap:4px;}
+  .nav-btn{font-family:var(--disp);font-size:13px;font-weight:500;letter-spacing:.5px;color:var(--fg-70);background:none;border:none;
+    padding:9px 14px;border-radius:9px;cursor:pointer;transition:.14s;}
+  .nav-btn:hover{color:var(--fg);background:var(--sink);}
+  .nav-btn.on{color:var(--terra);background:var(--terra-soft);}
+  .nav-av{width:34px;height:34px;border-radius:9px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:16px;border:1px solid var(--line);}
+
+  main{max-width:920px;margin:0 auto;padding:14px 30px 110px;}
+
+  /* lesson hero */
+  .crumb{font-family:var(--disp);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);margin-top:24px;}
+  .lesson-h{font-family:var(--serif);font-weight:700;font-size:clamp(32px,5vw,46px);line-height:1.04;margin:10px 0 0;}
+  .lesson-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .chip{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:500;color:var(--fg-70);
+    background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 13px;}
+  .chip.live{color:var(--sage);background:var(--sage-soft);border-color:transparent;}
+
+  /* reading passage */
+  .passage{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 32px;margin-top:26px;}
+  .passage h2{font-family:var(--serif);font-size:25px;font-weight:700;margin-bottom:14px;}
+  .passage p{font-family:var(--serif);font-size:18px;line-height:1.75;color:var(--fg);margin-bottom:14px;}
+  .passage p:last-child{margin-bottom:0;}
+  .term{color:var(--terra-dk);font-weight:600;}
+  .anc{font-family:var(--greek);font-style:italic;color:var(--gold);}
+
+  /* exercises */
+  .ex-band{display:flex;align-items:baseline;gap:14px;margin:38px 0 8px;}
+  .ex-band h2{font-family:var(--serif);font-size:27px;font-weight:700;}
+  .ex-band .e{font-family:var(--disp);font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);}
+  .ex-band .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+  .ex-hint{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--fg-70);background:var(--aegean-soft);
+    border:1px solid color-mix(in srgb,var(--aegean) 26%,transparent);border-radius:11px;padding:11px 14px;margin-bottom:18px;}
+  .ex-hint svg{width:18px;height:18px;color:var(--aegean);flex-shrink:0;}
+
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:16px;}
+  .ex-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+  .ex-no{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--terra-dk);flex-shrink:0;}
+  .ex-kind{font-family:var(--disp);font-size:10px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
+    padding:4px 9px;border-radius:7px;background:var(--gold-soft);color:var(--gold);flex-shrink:0;margin-left:auto;}
+  .ex-q{font-size:15px;font-weight:600;line-height:1.45;}
+  .ex-q .anc{font-weight:600;}
+
+  /* dictation answer field */
+  .dictate{position:relative;margin-top:14px;}
+  .dictate textarea{width:100%;min-height:96px;resize:vertical;font-family:var(--sans);font-size:14.5px;line-height:1.6;color:var(--fg);
+    background:var(--sink);border:1px solid var(--line);border-radius:13px;padding:14px 56px 14px 15px;outline:none;transition:.15s;}
+  .dictate textarea:focus{border-color:var(--terra);background:var(--card);}
+  .dictate textarea::placeholder{color:var(--muted);}
+  .dictate.big textarea{min-height:150px;}
+  .dic-mic{position:absolute;right:11px;top:11px;width:40px;height:40px;border-radius:11px;border:1px solid var(--line);
+    background:var(--card);color:var(--fg-70);cursor:pointer;display:grid;place-items:center;transition:.15s;}
+  .dic-mic:hover{border-color:var(--terra);color:var(--terra);}
+  .dic-mic.live{background:var(--terra);color:#fff;border-color:transparent;animation:pulse 1.1s ease-in-out infinite;}
+  .dic-mic svg{width:20px;height:20px;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--terra-soft);}50%{box-shadow:0 0 0 8px transparent;}}
+  .dic-bar{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;}
+  .dic-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-size:11.5px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    border-radius:9px;padding:9px 13px;cursor:pointer;transition:.14s;border:1px solid var(--line);background:var(--sink);color:var(--fg-70);}
+  .dic-btn:hover{border-color:var(--line-bold);color:var(--fg);}
+  .dic-btn.rec{background:var(--terra);color:#fff;border-color:transparent;}
+  .dic-btn svg{width:14px;height:14px;}
+  .dic-status{font-size:12px;color:var(--muted);font-style:italic;}
+  .dic-status . rec{color:var(--terra);}
+  .dic-interim{color:var(--aegean);font-style:italic;}
+  .dic-count{margin-left:auto;font-family:var(--disp);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);}
+
+  footer{border-top:1px solid var(--line-soft);margin-top:48px;padding:26px 30px;text-align:center;color:var(--muted);font-family:var(--disp);font-size:11px;letter-spacing:.8px;}
+  footer b{font-family:var(--serif);font-size:15px;color:var(--fg-70);font-weight:700;letter-spacing:0;}
+  footer b span{color:var(--terra);}
+
+  /* ════════ ACCESSIBILITY STATES (on <html>) ════════ */
+  html.a11y-dyslexia body{font-family:'Atkinson Hyperlegible',sans-serif;letter-spacing:.02em;word-spacing:.07em;}
+  html.a11y-dyslexia .passage p,html.a11y-dyslexia .ex-q{line-height:1.9;}
+  html.a11y-contrast.theme-alabaster{--sym-bg:#fff;--sym-bg-card:#fff;--sym-ink:#000;--sym-fg-muted:#222;
+    --sym-terra:#9a3500;--sym-terra-dk:#7a2900;--sym-gold:#6a5300;--sym-sage:#264a00;
+    --line:rgba(0,0,0,.55);--line-soft:rgba(0,0,0,.32);--line-bold:rgba(0,0,0,.7);}
+  html.a11y-contrast body{background-image:none;}
+  html.a11y-contrast .passage,html.a11y-contrast .ex,html.a11y-contrast .nav,html.a11y-contrast .chip{border-width:2px;}
+  html.a11y-links a,html.a11y-links .nav-btn,html.a11y-links .play-btn{text-decoration:underline;text-underline-offset:3px;}
+  html.a11y-cursor,html.a11y-cursor *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cpath d='M6 4l28 14-12 3-3 12z' fill='%23fff' stroke='%23000' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") 6 4, auto;}
+  html.a11y-reduce-motion *{animation-duration:.001ms !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}
+  html.a11y-focus .passage,html.a11y-focus footer,html.a11y-focus .lesson-meta{opacity:.45;filter:saturate(.7);}
+  html.a11y-focus .ex:focus-within{box-shadow:0 0 0 3px var(--gold-soft);}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+
+  .sym-reading{background:var(--gold-soft) !important;outline:2px solid var(--gold);outline-offset:2px;border-radius:6px;}
+
+  /* ════════════════ IRIS A11Y BAR ════════════════ */
+  .iris{position:fixed;right:20px;bottom:20px;z-index:120;font-family:var(--sans);}
+  .iris-fab{display:flex;align-items:center;gap:10px;background:var(--terra);color:#fff;border:none;
+    border-radius:999px;padding:13px 20px 13px 13px;cursor:pointer;box-shadow:0 14px 34px -12px var(--terra);
+    font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.5px;transition:.16s;}
+  .iris-fab:hover{background:var(--terra-dk);transform:translateY(-2px);}
+  .iris-fab:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
+  .iris-fab .sig{width:30px;height:30px;border-radius:50%;background:#fff;color:var(--terra);display:grid;place-items:center;font-family:var(--greek);font-size:18px;flex-shrink:0;}
+  .iris.open .iris-fab{display:none;}
+
+  .iris-panel{position:fixed;right:20px;bottom:20px;width:362px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);
+    background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px -24px rgba(40,25,10,.4);
+    display:none;flex-direction:column;overflow:hidden;}
+  .iris.open .iris-panel{display:flex;}
+  .iris-head{display:flex;align-items:center;gap:12px;padding:17px 20px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,var(--sink),var(--card));}
+  .iris-head .orb{width:40px;height:40px;border-radius:50%;background:var(--terra-soft);color:var(--terra);display:grid;place-items:center;font-family:var(--greek);font-size:22px;border:1px solid var(--line);}
+  .iris-head .id{flex:1;}
+  .iris-head .id .nm{font-family:var(--serif);font-size:20px;font-weight:700;line-height:1;}
+  .iris-head .id .role{font-family:var(--disp);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+  .iris-head .hbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line-soft);background:var(--sink);color:var(--fg-70);
+    cursor:pointer;font-family:var(--disp);font-size:12px;font-weight:600;transition:.14s;}
+  .iris-head .hbtn:hover{border-color:var(--line);color:var(--fg);}
+
+  .iris-body{overflow-y:auto;padding:16px 18px 20px;scrollbar-width:thin;}
+  .iris-body::-webkit-scrollbar{width:8px;} .iris-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;}
+
+  .read-row{display:flex;gap:10px;margin-bottom:18px;}
+  .read-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--disp);font-size:14px;letter-spacing:.5px;font-weight:600;color:#fff;
+    background:var(--terra);border:none;border-radius:13px;padding:15px;cursor:pointer;transition:.15s;}
+  .read-btn:hover{background:var(--terra-dk);}
+  .read-btn.reading{background:var(--gold);color:#1E1810;}
+  .read-btn svg{width:18px;height:18px;}
+  .mic-btn{width:52px;flex-shrink:0;border-radius:13px;border:1px solid var(--line);background:var(--sink);color:var(--fg-70);cursor:pointer;display:grid;place-items:center;transition:.15s;}
+  .mic-btn:hover{border-color:var(--line-bold);color:var(--fg);}
+  .mic-btn.live{background:var(--terra);color:#fff;border-color:transparent;animation:pulse 1.1s ease-in-out infinite;}
+  .mic-btn svg{width:19px;height:19px;}
+
+  .grp-lbl{font-family:var(--disp);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600;margin:6px 2px 10px;}
+  .profiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px;}
+  .profile{display:flex;align-items:center;gap:10px;text-align:left;background:var(--sink);border:1px solid var(--line-soft);
+    border-radius:12px;padding:12px;cursor:pointer;transition:.14s;}
+  .profile:hover{border-color:var(--line);}
+  .profile.on{border-color:var(--terra);background:var(--terra-soft);}
+  .profile .pic{width:32px;height:32px;border-radius:9px;background:var(--card);display:grid;place-items:center;font-size:16px;flex-shrink:0;border:1px solid var(--line-soft);}
+  .profile.on .pic{background:var(--terra);color:#fff;border-color:transparent;}
+  .profile .pt{font-size:12.5px;font-weight:600;line-height:1.2;}
+
+  .tools{display:flex;flex-direction:column;gap:7px;}
+  .tool{display:flex;align-items:center;gap:13px;background:var(--sink);border:1px solid var(--line-soft);border-radius:12px;
+    padding:11px 14px;cursor:pointer;transition:.14s;width:100%;text-align:left;color:var(--fg);}
+  .tool:hover{border-color:var(--line);}
+  .tool .ic{width:28px;height:28px;border-radius:8px;background:var(--card);display:grid;place-items:center;font-size:15px;flex-shrink:0;color:var(--fg-70);border:1px solid var(--line-soft);}
+  .tool .tt{flex:1;}
+  .tool .tt .nm{font-size:13.5px;font-weight:600;}
+  .tool .tt .dz{font-size:11px;color:var(--muted);margin-top:1px;}
+  .sw{width:42px;height:24px;border-radius:99px;background:var(--card);border:1px solid var(--line);position:relative;flex-shrink:0;transition:.16s;}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.16s;}
+  .tool.on .sw{background:var(--sage);border-color:transparent;}
+  .tool.on .sw::after{transform:translateX(18px);background:#fff;}
+  .tool.on .ic{background:var(--sage-soft);color:var(--sage);border-color:transparent;}
+  .stepper{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-family:var(--disp);font-size:14px;font-weight:700;cursor:pointer;transition:.14s;}
+  .stepper button:hover{border-color:var(--terra);color:var(--terra);}
+  .stepper .val{min-width:44px;text-align:center;font-family:var(--disp);font-size:12px;font-weight:600;color:var(--fg-70);}
+
+  .iris-foot{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:15px;border-top:1px solid var(--line-soft);}
+  .ask-sok{flex:1;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;color:var(--terra-dk);background:var(--terra-soft);
+    border:1px solid var(--line);border-radius:11px;padding:11px 13px;cursor:pointer;text-decoration:none;transition:.14s;}
+  .ask-sok:hover{background:color-mix(in srgb,var(--terra) 20%,transparent);}
+  .ask-sok .so{width:24px;height:24px;border-radius:7px;background:var(--card);color:var(--terra);display:grid;place-items:center;font-family:var(--greek);font-size:14px;flex-shrink:0;border:1px solid var(--line-soft);}
+  .reset-btn{font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;color:var(--muted);background:none;border:1px solid var(--line-soft);border-radius:10px;padding:11px 13px;cursor:pointer;transition:.14s;white-space:nowrap;}
+  .reset-btn:hover{color:var(--terra);border-color:var(--terra);}
+
+  .listen{display:none;align-items:center;gap:10px;background:var(--terra-soft);border:1px solid var(--terra);border-radius:12px;padding:11px 14px;margin-bottom:16px;font-size:13px;}
+  .listen.show{display:flex;}
+  .listen .dot{width:9px;height:9px;border-radius:50%;background:var(--terra);animation:pulse 1s infinite;}
+  .listen em{color:var(--fg-70);font-style:italic;}
+
+  .iris-toast{position:fixed;right:20px;bottom:90px;z-index:130;background:var(--fg);color:var(--card);
+    border-radius:12px;padding:12px 16px;font-size:13px;font-weight:500;box-shadow:0 14px 34px -14px rgba(40,25,10,.5);
+    opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;max-width:300px;}
+  .iris-toast.show{opacity:1;transform:none;}
+
+  @media(max-width:560px){.nav-links{display:none;}.iris-panel{right:8px;bottom:8px;}}
+</style>
+</head>
+<body class="theme-alabaster">
+<a class="skip-link" href="#ex">Μετάβαση στις ασκήσεις</a>
+
+<nav class="nav" aria-label="Κύρια πλοήγηση">
+  <a class="logo" href="#top"><span class="mark" aria-hidden="true">Σ</span>Symposi<span>ON</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-links">
+    <button class="nav-btn" data-nav="top">Αρχική</button>
+    <button class="nav-btn" data-nav="top">Παιχνίδια</button>
+    <button class="nav-btn on" data-nav="top">Μαθήματα</button>
+    <button class="nav-btn" data-nav="top">Πρόοδος</button>
+  </div>
+  <div class="nav-av" role="img" aria-label="Το προφίλ σου">Ε</div>
+</nav>
+
+<main id="top">
+  <p class="crumb">Ιστορία · Γ΄ Γυμνασίου · Ενότητα 4</p>
+  <h1 class="lesson-h">Ο Χρυσοῦς Αἰών τῆς Ἀθήνας</h1>
+  <div class="lesson-meta">
+    <span class="chip live">Μάθημα</span>
+    <span class="chip">Κείμενο &amp; ασκήσεις</span>
+    <span class="chip">≈ 12 λεπτά</span>
+  </div>
+
+  <!-- READING PASSAGE (Greek — test the read-aloud) -->
+  <article class="passage" aria-label="Κείμενο μαθήματος">
+    <h2>Η Αθήνα του Περικλή</h2>
+    <p>Τον 5ο αιώνα π.Χ., μετά τους <span class="term">Περσικούς Πολέμους</span>, η Αθήνα γνώρισε τη μεγαλύτερη ακμή της. Υπό την ηγεσία του <span class="term">Περικλή</span>, η πόλη έγινε το πνευματικό και καλλιτεχνικό κέντρο του ελληνικού κόσμου.</p>
+    <p>Το πολίτευμα της <span class="term">δημοκρατίας</span> — <span class="anc">δῆμος</span> και <span class="anc">κράτος</span>, η δύναμη του λαού — έδινε σε κάθε πολίτη το δικαίωμα να μιλά και να ψηφίζει στην <span class="term">Ἐκκλησία τοῦ Δήμου</span>. Ταυτόχρονα, χτίστηκε ο <span class="term">Παρθενώνας</span> στην Ἀκρόπολη, έργο των αρχιτεκτόνων Ικτίνου και Καλλικράτη.</p>
+    <p>Όπως είπε ο Περικλής στον <span class="anc">Ἐπιτάφιον</span> λόγο του: η Αθήνα είναι «<span class="anc">παίδευσις τῆς Ἑλλάδος</span>» — το σχολείο όλης της Ελλάδας.</p>
+  </article>
+
+  <!-- EXERCISES with speech-to-text dictation -->
+  <div class="ex-band" id="ex">
+    <h2>Ασκήσεις</h2><span class="e">Ορισμοί &amp; ανάπτυξη</span><span class="rule"></span>
+  </div>
+  <div class="ex-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+    Δεν χρειάζεται να γράψεις — πάτησε το <b>μικρόφωνο</b> και <b>υπαγόρευσε</b> την απάντησή σου. Μιλά καθαρά· μπορείς να διορθώσεις και με το πληκτρολόγιο.
+  </div>
+
+  <!-- ΟΡΙΣΜΟΣ -->
+  <section class="ex">
+    <div class="ex-head"><span class="ex-no">1.</span><span class="ex-q">Να δώσετε τον ορισμό της <span class="anc">δημοκρατίας</span>, όπως εφαρμόστηκε στην αρχαία Αθήνα.</span><span class="ex-kind">Ορισμός</span></div>
+    <div class="dictate" data-dic>
+      <textarea aria-label="Η απάντησή σου — ορισμός δημοκρατίας" placeholder="Γράψε ή υπαγόρευσε τον ορισμό σου…"></textarea>
+      <button class="dic-mic" aria-label="Υπαγόρευση απάντησης" title="Υπαγόρευση">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+      </button>
+      <div class="dic-bar">
+        <button class="dic-btn" data-dic-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg><span data-dic-lbl>Υπαγόρευση</span></button>
+        <span class="dic-status" data-dic-status></span>
+        <span class="dic-count" data-dic-count>0 λέξεις</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ΑΝΑΠΤΥΞΗ -->
+  <section class="ex">
+    <div class="ex-head"><span class="ex-no">2.</span><span class="ex-q">Να αναπτύξετε <b>δύο λόγους</b> για τους οποίους η εποχή του Περικλή ονομάστηκε «Χρυσοῦς Αἰών». Να αναφερθείτε στο πολίτευμα και στον πολιτισμό.</span><span class="ex-kind">Ανάπτυξη</span></div>
+    <div class="dictate big" data-dic>
+      <textarea aria-label="Η απάντησή σου — ανάπτυξη" placeholder="Γράψε ή υπαγόρευσε την απάντηση ανάπτυξης…"></textarea>
+      <button class="dic-mic" aria-label="Υπαγόρευση απάντησης" title="Υπαγόρευση">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+      </button>
+      <div class="dic-bar">
+        <button class="dic-btn" data-dic-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg><span data-dic-lbl>Υπαγόρευση</span></button>
+        <span class="dic-status" data-dic-status></span>
+        <span class="dic-count" data-dic-count>0 λέξεις</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><b>Symposi<span>ON</span></b> · Συμπεριληπτική πλατφόρμα κλασικών σπουδών · Επίπεδο προσβασιμότητας Ίρις</footer>
+
+<!-- ════════════ IRIS A11Y BAR ════════════ -->
+<div class="iris" id="iris">
+  <button class="iris-fab" id="fab" aria-label="Άνοιξε την Ίριδα — εργαλεία προσβασιμότητας" aria-expanded="false">
+    <span class="sig" aria-hidden="true">Ἶ</span><span class="x" id="fabLbl">Προσβασιμότητα</span>
+  </button>
+
+  <div class="iris-panel" id="panel" role="dialog" aria-label="Ίρις — εργαλεία προσβασιμότητας" aria-modal="false">
+    <div class="iris-head">
+      <div class="orb" aria-hidden="true">Ἶ</div>
+      <div class="id"><div class="nm" id="hName">Ίρις</div><div class="role" id="hRole">εργαλεία προσβασιμότητας</div></div>
+      <button class="hbtn lang" id="langBtn" aria-label="Αλλαγή γλώσσας">EL</button>
+      <button class="hbtn" id="closeBtn" aria-label="Κλείσιμο">✕</button>
+    </div>
+
+    <div class="iris-body">
+      <div class="listen" id="listen"><span class="dot" aria-hidden="true"></span><span class="txt"><em></em></span></div>
+
+      <div class="read-row">
+        <button class="read-btn" id="readBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="readIcon"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M16 9a3 3 0 0 1 0 6M19 6a7 7 0 0 1 0 12"/></svg>
+          <span id="readLbl">Διάβασε τη σελίδα</span>
+        </button>
+        <button class="mic-btn" id="micBtn" aria-label="Πες μια εντολή">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4"/></svg>
+        </button>
+      </div>
+
+      <div class="grp-lbl" id="lblProfiles">Προφίλ με ένα άγγιγμα</div>
+      <div class="profiles" id="profiles"></div>
+
+      <div class="grp-lbl" id="lblTools">Ρύθμισε ξεχωριστά</div>
+      <div class="tools" id="tools"></div>
+
+      <div class="iris-foot">
+        <a class="ask-sok" id="askSok" href="#" target="_blank" rel="noopener">
+          <span class="so" aria-hidden="true">Σ</span><span id="askLbl">Ρώτησε τον Σωκράτη</span>
+        </a>
+        <button class="reset-btn" id="resetBtn">Επαναφορά</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="iris-toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   Iris — single-mode, deterministic accessibility bar.
+   + Greek-first demo (read-aloud switches EL/EN voices per run).
+   + Speech-to-text DICTATION on the exercise answer fields.
+   No "choose a style" quiz. No AI on the control path.
+   ════════════════════════════════════════════════════════════════ */
+(function(){
+  const KEY='symposion.a11y.v2';
+  const root=document.documentElement;
+  const DEFAULTS={lang:'el',scale:1,contrast:false,dyslexia:false,guide:false,motion:false,cursor:false,links:false,focus:false};
+  let S=load();
+  function load(){try{return Object.assign({},DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){return {...DEFAULTS};}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+  const STR={
+    el:{role:'εργαλεία προσβασιμότητας',read:'Διάβασε τη σελίδα',stop:'Σταμάτα',profiles:'Προφίλ με ένα άγγιγμα',tools:'Ρύθμισε ξεχωριστά',
+      ask:'Ρώτησε τον Σωκράτη',reset:'Επαναφορά',fab:'Προσβασιμότητα',listen:'Ακούω… π.χ. «μεγαλύτερο κείμενο», «διάβασε τη σελίδα»',
+      p_low:'Χαμηλή όραση',p_dys:'Εύκολη ανάγνωση',p_calm:'Ηρεμία & εστίαση',p_motor:'Με τη φωνή',
+      t_text:'Μέγεθος κειμένου',t_text_d:'Μεγαλύτερα ή μικρότερα όλα',
+      t_contrast:'Υψηλή αντίθεση',t_contrast_d:'Μέγιστη ευκρίνεια',
+      t_dys:'Γραμματοσειρά ανάγνωσης',t_dys_d:'Φιλική στη δυσλεξία',
+      t_guide:'Οδηγός ανάγνωσης',t_guide_d:'Γραμμή που ακολουθεί τον δείκτη',
+      t_cursor:'Μεγάλος δείκτης',t_cursor_d:'Πιο ευδιάκριτος',
+      t_links:'Τόνισε συνδέσμους',t_links_d:'Υπογράμμιση σε links & κουμπιά',
+      t_motion:'Λιγότερη κίνηση',t_motion_d:'Ήρεμα εφέ',
+      t_focus:'Εστίαση',t_focus_d:'Λιγότεροι περισπασμοί',
+      on:'ναι',off:'όχι',reset_done:'Όλα επαναφέρθηκαν.',profile_done:'Εφαρμόστηκε — άλλαξε ό,τι θες πιο κάτω.',
+      no_voice:'Η φωνή δεν υποστηρίζεται εδώ — χρησιμοποίησε τα κουμπιά.',reading:'Διαβάζω δυνατά…',
+      dic_idle:'',dic_live:'Ακούω… μίλα τώρα',dic_stop:'Υπαγόρευση',dic_recording:'Σταμάτα',words:'λέξεις',word:'λέξη'},
+    en:{role:'accessibility tools',read:'Read this page',stop:'Stop reading',profiles:'One-tap profiles',tools:'Adjust individually',
+      ask:'Ask Sokrates',reset:'Reset',fab:'Accessibility',listen:'Listening… e.g. “bigger text”, “read this page”',
+      p_low:'Low vision',p_dys:'Easy reading',p_calm:'Calm & focus',p_motor:'Voice control',
+      t_text:'Text size',t_text_d:'Make everything bigger or smaller',
+      t_contrast:'High contrast',t_contrast_d:'Maximum legibility',
+      t_dys:'Reading font',t_dys_d:'Dyslexia-friendly spacing',
+      t_guide:'Reading guide',t_guide_d:'A line that follows your pointer',
+      t_cursor:'Big cursor',t_cursor_d:'Easier to see and aim',
+      t_links:'Highlight links',t_links_d:'Underline links & buttons',
+      t_motion:'Reduce motion',t_motion_d:'Calm animations',
+      t_focus:'Focus mode',t_focus_d:'Fewer distractions',
+      on:'on',off:'off',reset_done:'All settings reset.',profile_done:'Profile applied — tweak anything below.',
+      no_voice:'Voice isn’t available in this browser — use the buttons.',reading:'Reading aloud…',
+      dic_idle:'',dic_live:'Listening… speak now',dic_stop:'Dictate',dic_recording:'Stop',words:'words',word:'word'}
+  };
+  const t=k=>(STR[S.lang]&&STR[S.lang][k])||STR.en[k]||k;
+
+  const TOOLS=[{key:'_text',ic:'🅰',type:'stepper'},{key:'contrast',ic:'◐',type:'toggle'},{key:'dyslexia',ic:'𝐀',type:'toggle'},
+    {key:'guide',ic:'☰',type:'toggle'},{key:'cursor',ic:'➤',type:'toggle'},{key:'links',ic:'⎯',type:'toggle'},{key:'motion',ic:'❄',type:'toggle'},{key:'focus',ic:'◎',type:'toggle'}];
+  const TKEY={contrast:'t_contrast',dyslexia:'t_dys',guide:'t_guide',cursor:'t_cursor',links:'t_links',motion:'t_motion',focus:'t_focus'};
+  const PROFILES=[{id:'low',ic:'◉',set:{contrast:true,cursor:true,links:true,scale:1.4}},{id:'dys',ic:'𝐀',set:{dyslexia:true,guide:true,scale:1.15}},
+    {id:'calm',ic:'◎',set:{focus:true,motion:true}},{id:'motor',ic:'⊕',set:{cursor:true,links:true,scale:1.15}}];
+  const PKEY={low:'p_low',dys:'p_dys',calm:'p_calm',motor:'p_motor'};
+
+  function apply(){
+    root.style.setProperty('--a11y-scale',S.scale);
+    ['contrast','dyslexia','guide','cursor','links','focus'].forEach(k=>root.classList.toggle('a11y-'+k,S[k]));
+    root.classList.toggle('a11y-reduce-motion',S.motion);
+    if(S.guide)ensureGuide();
+  }
+  let guideEl=null;
+  function ensureGuide(){if(guideEl)return;guideEl=document.createElement('div');guideEl.setAttribute('aria-hidden','true');
+    guideEl.style.cssText='position:fixed;left:0;right:0;height:38px;pointer-events:none;z-index:90;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--gold) 22%,transparent),transparent);border-top:1px solid var(--gold);border-bottom:1px solid var(--gold);display:none;';
+    document.body.appendChild(guideEl);}
+  document.addEventListener('pointermove',e=>{if(!S.guide||!guideEl)return;guideEl.style.display='block';guideEl.style.top=(e.clientY-19)+'px';},{passive:true});
+
+  /* ════ SCRIPT-AWARE READ-ALOUD ════ */
+  const synth=window.speechSynthesis||null;
+  const GREEK=/[\u0370-\u03FF\u1F00-\u1FFF]/;
+  let queue=[],qi=0,reading=false,curEl=null,curAudio=null;
+
+  /* ── Neural TTS via Firebase function ──────────────────────────────
+     POST {text, lang, voice, rate} → expects { audioContent: <base64 mp3> }
+     (Google Cloud TTS / Azure both return base64 audio). Falls back to the
+     browser voice automatically if the endpoint is unreachable.
+     Wire `endpoint` to your deployed function and pick voices below.        */
+  const TTS={
+    enabled:true,
+    endpoint:'/api/tts',
+    voiceEL:'el-GR-Wavenet-A',   // Google Neural Greek (or Azure 'el-GR-AthinaNeural')
+    voiceEN:'en-US-Neural2-C',   // Google Neural English (or Azure 'en-US-AriaNeural')
+    timeoutMs:6000,
+  };
+  let cloudOK=null; // null=untried, true=reachable, false=fell back this session
+  const _ttsCache=new Map();
+  async function cloudSpeak(text,greek){
+    const key=(greek?'el:':'en:')+text;
+    if(_ttsCache.has(key)) return new Audio(_ttsCache.get(key));
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),TTS.timeoutMs);
+    let res;
+    try{
+      res=await fetch(TTS.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+        body:JSON.stringify({text,lang:greek?'el-GR':'en-US',voice:greek?TTS.voiceEL:TTS.voiceEN,rate:greek?0.92:0.97})});
+    }finally{clearTimeout(to);}
+    if(!res.ok) throw new Error('tts '+res.status);
+    const data=await res.json();
+    const src=data.audioContent?('data:audio/mp3;base64,'+data.audioContent):(data.url||'');
+    if(!src) throw new Error('no audio');
+    _ttsCache.set(key,src);
+    return new Audio(src);
+  }
+  function splitScript(text){const segs=[];let cur='',g=null;
+    for(const ch of text){const letter=/[A-Za-z\u0370-\u03FF\u1F00-\u1FFF]/.test(ch);const greek=GREEK.test(ch);
+      if(letter){if(g===null)g=greek;else if(greek!==g){segs.push({text:cur,greek:g});cur='';g=greek;}}cur+=ch;}
+    if(cur.trim())segs.push({text:cur,greek:g===null?(S.lang==='el'):g});return segs.filter(s=>s.text.trim());}
+  function voiceFor(greek){if(!synth)return null;const v=synth.getVoices()||[];
+    if(greek)return v.find(x=>x.lang&&/^el|gr/i.test(x.lang))||v.find(x=>/greek|ελλ/i.test(x.name||''))||v.find(x=>x.lang&&/^en/i.test(x.lang))||v[0]||null;
+    return v.find(x=>x.lang&&/^en/i.test(x.lang))||v[0]||null;}
+  /* Pre-rendered / recorded narration manifest (Admin · Narration Studio).
+     If a passage has a saved clip, Iris plays THAT (perfect, offline, $0)
+     before falling back to live neural / browser TTS. */
+  function narrationItems(){try{const v=JSON.parse(localStorage.getItem('symposion.narration.v1'));return (v&&v.items)||[];}catch(e){return [];}}
+  const _normKey=s=>(s||'').replace(/\s+/g,' ').trim().normalize('NFC');
+  function findNarration(text){const k=_normKey(text);return narrationItems().find(i=>i.audio&&i.audio.src&&_normKey(i.text)===k);}
+  function collect(){const out=[],seen=new Set();
+    document.querySelectorAll('main h1,main h2,main h3,main p,main .crumb,main .ex-q,main .chip').forEach(n=>{
+      if(n.closest('#iris'))return;const txt=(n.innerText||'').trim().replace(/\s+/g,' ');if(!txt||txt.length<2)return;
+      for(const s of seen){if(s.contains(n)||n.contains(s))return;}seen.add(n);
+      const pre=findNarration(txt);
+      if(pre){out.push({el:n,pre:pre.audio.src,text:txt,greek:GREEK.test(txt)});return;}
+      splitScript(txt).forEach(seg=>out.push({el:n,text:seg.text,greek:seg.greek}));});
+    return out;}
+  /* Polytonic → speakable: modern el-GR voices choke on breathings, iota
+     subscript & circumflex. Strip them, fold grave/circumflex into one acute,
+     so the voice pronounces the word cleanly (modern-Greek phonology). */
+  function speakableGreek(text){
+    return text.normalize('NFD')
+      .replace(/[\u0313\u0314\u0343\u0345]/g,'')   /* psili, dasia, koronis, ypogegrammeni */
+      .replace(/[\u0300\u0342]/g,'\u0301')          /* varia, perispomeni → oxia */
+      .normalize('NFC');
+  }
+  function speakNext(){if(qi>=queue.length){stopRead();return;}const j=queue[qi];
+    if(j.el!==curEl){if(curEl)curEl.classList.remove('sym-reading');curEl=j.el;curEl.classList.add('sym-reading');
+      const r=curEl.getBoundingClientRect();if(r.top<60||r.bottom>innerHeight)window.scrollBy({top:r.top-140,behavior:S.motion?'auto':'smooth'});}
+    const speakText=j.greek?speakableGreek(j.text):j.text;
+    /* 0) pre-rendered / recorded narration for this exact passage */
+    if(j.pre){curAudio=new Audio(j.pre);
+      curAudio.onended=()=>{qi++;speakNext();};
+      curAudio.onerror=()=>browserSpeak(speakText,j.greek);
+      if(reading)curAudio.play().catch(()=>browserSpeak(speakText,j.greek));
+      return;}
+    /* 1) cloud neural TTS via Firebase function (better Greek) */
+    if(TTS.enabled&&cloudOK!==false){
+      cloudSpeak(speakText,j.greek).then(audio=>{cloudOK=true;curAudio=audio;
+        audio.onended=()=>{qi++;speakNext();};audio.onerror=()=>{qi++;speakNext();};
+        if(reading)audio.play().catch(()=>{qi++;speakNext();});
+      }).catch(()=>{cloudOK=false;browserSpeak(speakText,j.greek);});
+      return;
+    }
+    /* 2) browser speechSynthesis fallback (offline) */
+    browserSpeak(speakText,j.greek);}
+  function browserSpeak(text,greek){if(!synth){qi++;speakNext();return;}
+    const u=new SpeechSynthesisUtterance(text);const v=voiceFor(greek);if(v)u.voice=v;
+    u.lang=greek?'el-GR':'en-US';u.rate=greek?0.92:0.97;
+    u.onend=()=>{qi++;speakNext();};u.onerror=()=>{qi++;speakNext();};synth.speak(u);}
+  function startRead(){if(!synth&&!TTS.enabled){toast(t('no_voice'));return;}stopDictation();stopRead();queue=collect();qi=0;reading=true;syncRead();toast(t('reading'));speakNext();}
+  function stopRead(){if(synth){try{synth.cancel();}catch(e){}}if(curAudio){try{curAudio.pause();}catch(e){}curAudio=null;}if(curEl){curEl.classList.remove('sym-reading');curEl=null;}queue=[];qi=0;reading=false;syncRead();}
+  function syncRead(){const b=document.getElementById('readBtn');b.classList.toggle('reading',reading);
+    document.getElementById('readLbl').textContent=reading?t('stop'):t('read');
+    document.getElementById('readIcon').innerHTML=reading?'<rect x="6" y="6" width="12" height="12" rx="2"/>':'<path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M16 9a3 3 0 0 1 0 6M19 6a7 7 0 0 1 0 12"/>';}
+
+  /* ════ SPEECH RECOGNITION (shared) ════ */
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+
+  /* — command mic (Iris panel) — */
+  let cmdRec=null;
+  function parseCmd(raw){const x=(raw||'').toLowerCase().trim();const has=a=>a.some(w=>x.includes(w));
+    if(has(['stop','σταμάτ','παύσ'])&&has(['read','διάβ','φωνή'])||/^(stop|σταμάτα)$/.test(x)){stopRead();return;}
+    if(has(['read','διάβασε','διαβασ','φωνή','δυνατά'])){startRead();return;}
+    if(has(['bigger','larger','μεγαλ','αύξησ'])){step(1);return;}
+    if(has(['smaller','μικρ','μείωσε'])){step(-1);return;}
+    if(has(['contrast','αντίθεσ'])){setT('contrast',!has(['off','κλείσ','όχι']));return;}
+    if(has(['dyslexia','δυσλεξ','γραμματοσειρ'])){setT('dyslexia',!has(['off','κλείσ']));return;}
+    if(has(['guide','οδηγ','χάρακ'])){setT('guide',!has(['off','κλείσ']));return;}
+    if(has(['cursor','δείκτ','κέρσορ'])){setT('cursor',!has(['off','κλείσ']));return;}
+    if(has(['motion','κίνησ'])){setT('motion',!has(['off','κλείσ']));return;}
+    if(has(['focus','εστίασ','ησυχ'])){setT('focus',!has(['off','κλείσ','βγες']));return;}
+    if(has(['link','σύνδεσμ'])){setT('links',!has(['off','κλείσ']));return;}
+    if(has(['reset','default','επαναφορ'])){doReset();return;}
+    toast(S.lang==='el'?'Δεν το κατάλαβα — δοκίμασε τα κουμπιά.':'Didn’t catch that — try the buttons.');}
+  function startMic(){if(!SR){toast(t('no_voice'));return;}stopDictation();
+    if(cmdRec){try{cmdRec.stop();}catch(e){}cmdRec=null;return;}
+    cmdRec=new SR();cmdRec.lang=S.lang==='el'?'el-GR':'en-US';cmdRec.interimResults=true;cmdRec.maxAlternatives=1;
+    const L=document.getElementById('listen'),em=L.querySelector('em');
+    cmdRec.onstart=()=>{document.getElementById('micBtn').classList.add('live');L.classList.add('show');em.textContent=t('listen');};
+    cmdRec.onresult=e=>{let f='',i='';for(let k=e.resultIndex;k<e.results.length;k++){const r=e.results[k];if(r.isFinal)f+=r[0].transcript;else i+=r[0].transcript;}if(i)em.textContent=i;if(f)parseCmd(f.trim());};
+    cmdRec.onerror=()=>{};cmdRec.onend=()=>{document.getElementById('micBtn').classList.remove('live');L.classList.remove('show');cmdRec=null;};
+    try{cmdRec.start();}catch(e){}}
+
+  /* ════ DICTATION (speech-to-text into exercise fields) ════ */
+  let dicRec=null,dicField=null;
+  function wordCount(s){const w=(s||'').trim();return w?w.split(/\s+/).length:0;}
+  function updateCount(field){const c=field.querySelector('[data-dic-count]');const n=wordCount(field.querySelector('textarea').value);
+    c.textContent=n+' '+(n===1?t('word'):t('words'));}
+  function stopDictation(){if(dicRec){try{dicRec.stop();}catch(e){}dicRec=null;}
+    if(dicField){dicField.querySelector('.dic-mic').classList.remove('live');dicField.querySelector('[data-dic-toggle]').classList.remove('rec');
+      dicField.querySelector('[data-dic-lbl]').textContent=t('dic_stop');dicField.querySelector('[data-dic-status]').textContent='';dicField=null;}}
+  function startDictation(field){
+    if(!SR){field.querySelector('[data-dic-status]').textContent=t('no_voice');return;}
+    if(dicField===field){stopDictation();return;}
+    stopDictation();if(reading)stopRead();if(cmdRec){try{cmdRec.stop();}catch(e){}}
+    dicField=field;const ta=field.querySelector('textarea');
+    field.querySelector('.dic-mic').classList.add('live');
+    field.querySelector('[data-dic-toggle]').classList.add('rec');
+    field.querySelector('[data-dic-lbl]').textContent=t('dic_recording');
+    const status=field.querySelector('[data-dic-status]');
+    let base=ta.value;if(base&&!/\s$/.test(base))base+=' ';
+    dicRec=new SR();dicRec.lang=S.lang==='el'?'el-GR':'en-US';dicRec.interimResults=true;dicRec.continuous=true;dicRec.maxAlternatives=1;
+    dicRec.onstart=()=>{status.innerHTML='<span style="color:var(--terra)">●</span> '+t('dic_live');};
+    dicRec.onresult=e=>{let fin='',inter='';
+      for(let k=0;k<e.results.length;k++){const r=e.results[k];if(r.isFinal)fin+=r[0].transcript+' ';else inter+=r[0].transcript;}
+      ta.value=base+fin+(inter?inter:'');updateCount(field);
+      if(fin){base=base+fin;}
+      status.innerHTML=inter?('<span class="dic-interim">'+inter+'</span>'):('<span style="color:var(--terra)">●</span> '+t('dic_live'));
+      ta.scrollTop=ta.scrollHeight;};
+    dicRec.onerror=ev=>{status.textContent=ev.error==='not-allowed'?(S.lang==='el'?'Δώσε άδεια στο μικρόφωνο.':'Allow microphone access.'):'';};
+    dicRec.onend=()=>{const wasField=dicField;dicRec=null;
+      if(wasField){wasField.querySelector('.dic-mic').classList.remove('live');wasField.querySelector('[data-dic-toggle]').classList.remove('rec');
+        wasField.querySelector('[data-dic-lbl]').textContent=t('dic_stop');wasField.querySelector('[data-dic-status]').textContent='';dicField=null;}};
+    try{dicRec.start();}catch(e){}}
+  function wireDictation(){
+    document.querySelectorAll('[data-dic]').forEach(field=>{
+      const ta=field.querySelector('textarea');
+      field.querySelector('.dic-mic').addEventListener('click',()=>startDictation(field));
+      field.querySelector('[data-dic-toggle]').addEventListener('click',()=>startDictation(field));
+      ta.addEventListener('input',()=>updateCount(field));
+      updateCount(field);
+    });
+  }
+
+  /* ── mutations ── */
+  function step(d){S.scale=Math.max(0.9,Math.min(1.6,+(S.scale+d*0.1).toFixed(2)));apply();save();sync();}
+  function setT(k,v){S[k]=!!v;apply();save();sync();toast(t(TKEY[k]||k)+' — '+(v?t('on'):t('off')));}
+  function toggle(k){setT(k,!S[k]);}
+  function applyProfile(p){Object.assign(S,{...DEFAULTS,lang:S.lang},p.set);apply();save();sync();toast(t('profile_done'));}
+  function doReset(){const lang=S.lang;S=Object.assign({},DEFAULTS,{lang});stopRead();stopDictation();apply();save();sync();toast(t('reset_done'));}
+
+  let toastTimer=null;
+  function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600);}
+
+  function renderProfiles(){document.getElementById('profiles').innerHTML=PROFILES.map(p=>{
+    const active=Object.entries(p.set).every(([k,v])=>S[k]===v);
+    return `<button class="profile ${active?'on':''}" data-p="${p.id}"><span class="pic" aria-hidden="true">${p.ic}</span><span class="pt">${t(PKEY[p.id])}</span></button>`;}).join('');}
+  function renderTools(){document.getElementById('tools').innerHTML=TOOLS.map(tool=>{
+    if(tool.type==='stepper')return `<div class="tool" data-static="1"><span class="ic" aria-hidden="true">${tool.ic}</span>
+      <span class="tt"><span class="nm">${t('t_text')}</span><span class="dz">${t('t_text_d')}</span></span>
+      <span class="stepper"><button data-step="-1" aria-label="Μικρότερο">A−</button><span class="val">${Math.round(S.scale*100)}%</span><button data-step="1" aria-label="Μεγαλύτερο">A+</button></span></div>`;
+    const on=S[tool.key];
+    return `<button class="tool ${on?'on':''}" data-tool="${tool.key}" role="switch" aria-checked="${on}"><span class="ic" aria-hidden="true">${tool.ic}</span>
+      <span class="tt"><span class="nm">${t(TKEY[tool.key])}</span><span class="dz">${t(TKEY[tool.key]+'_d')}</span></span><span class="sw" aria-hidden="true"></span></button>`;}).join('');}
+  function sync(){renderProfiles();renderTools();
+    document.getElementById('hRole').textContent=t('role');
+    document.getElementById('lblProfiles').textContent=t('profiles');
+    document.getElementById('lblTools').textContent=t('tools');
+    document.getElementById('askLbl').textContent=t('ask');
+    document.getElementById('resetBtn').textContent=t('reset');
+    document.getElementById('fabLbl').textContent=t('fab');
+    document.getElementById('hName').textContent=S.lang==='el'?'Ίρις':'Iris';
+    document.getElementById('langBtn').textContent=S.lang==='el'?'EL':'EN';
+    // dictation labels follow language
+    document.querySelectorAll('[data-dic]').forEach(f=>{if(f!==dicField)f.querySelector('[data-dic-lbl]').textContent=t('dic_stop');updateCount(f);});
+    syncRead();}
+
+  /* ── events ── */
+  const iris=document.getElementById('iris'),fab=document.getElementById('fab');
+  let open=false;
+  function openP(){open=true;iris.classList.add('open');fab.setAttribute('aria-expanded','true');setTimeout(()=>document.getElementById('closeBtn').focus(),60);}
+  function closeP(){open=false;iris.classList.remove('open');fab.setAttribute('aria-expanded','false');fab.focus();}
+  fab.addEventListener('click',openP);
+  document.getElementById('closeBtn').addEventListener('click',closeP);
+  document.getElementById('readBtn').addEventListener('click',()=>reading?stopRead():startRead());
+  document.getElementById('micBtn').addEventListener('click',startMic);
+  document.getElementById('resetBtn').addEventListener('click',doReset);
+  document.getElementById('langBtn').addEventListener('click',()=>{S.lang=S.lang==='el'?'en':'el';save();sync();});
+  document.getElementById('profiles').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b)applyProfile(PROFILES.find(p=>p.id===b.dataset.p));});
+  document.getElementById('tools').addEventListener('click',e=>{const st=e.target.closest('[data-step]');if(st){step(+st.dataset.step);return;}const tg=e.target.closest('[data-tool]');if(tg)toggle(tg.dataset.tool);});
+  document.getElementById('askSok').addEventListener('click',e=>{e.preventDefault();toast(S.lang==='el'?'Άνοιγμα Σωκράτη… (σύνδεση με τον AI Tutor)':'Opening Sokrates… (links to your AI Tutor)');});
+  document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+  document.addEventListener('keydown',e=>{if(e.altKey&&(e.key==='a'||e.key==='A')){e.preventDefault();open?closeP():openP();}if(e.key==='Escape'&&open)closeP();});
+  if(synth)synth.onvoiceschanged=()=>{};
+
+  wireDictation();apply();sync();
+})();
+</script>
+</body>
+</html>

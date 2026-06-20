@@ -1,0 +1,67 @@
+{
+  "_comment": "Composite indexes to MERGE into paideia/firestore.indexes.json -> indexes[]",
+  "indexes": [
+    {
+      "_for": "Mastery weak-spots query (score < threshold), per user subcollection",
+      "collectionGroup": "mastery",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "score", "order": "ASCENDING" },
+        { "fieldPath": "lastSeen", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_for": "Spaced-repetition due cards",
+      "collectionGroup": "srs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "due", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_for": "Notifications, newest first, optional unread filter",
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "read", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_for": "Corpus browse by author then difficulty (Exam picker / Studio)",
+      "collectionGroup": "corpus",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "author", "order": "ASCENDING" },
+        { "fieldPath": "diff", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_for": "Exam history per student",
+      "collectionGroup": "exams",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "_for": "kleos_events aggregation per grade+track per period",
+      "collectionGroup": "kleos_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "grade", "order": "ASCENDING" },
+        { "fieldPath": "track", "order": "ASCENDING" },
+        { "fieldPath": "at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "_for": "Narration lookup by normalized text hash (Iris read-aloud)",
+      "collectionGroup": "narration",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "textHash", "order": "ASCENDING" }
+      ]
+    }
+  ]
+}

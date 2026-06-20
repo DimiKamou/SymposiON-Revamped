@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Ειδοποιήσεις</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --aegean:#2F6F8E; --aegean-soft:color-mix(in srgb,#2F6F8E 13%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(120% 75% at 50% -15%,var(--gold-soft),transparent 55%);}
+
+  .bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;padding:15px 34px;
+    background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .sig{width:28px;height:28px;color:var(--terra);}
+  .brand{font-family:var(--serif);font-size:18px;font-weight:600;}.brand b{color:var(--terra);}
+  .nav-links{display:flex;gap:2px;margin-left:18px;}
+  .nav-links button{font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;padding:8px 13px;border-radius:8px;cursor:pointer;}
+  .nav-links button:hover{color:var(--fg);background:var(--sink);}
+  .spacer{flex:1;}
+  /* bell */
+  .bell{position:relative;width:42px;height:42px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--fg-70);
+    cursor:pointer;display:grid;place-items:center;transition:.14s;}
+  .bell:hover{border-color:var(--line-bold);color:var(--fg);}
+  .bell svg{width:20px;height:20px;}
+  .bell .count{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:99px;background:var(--terra);color:#fff;
+    font-family:var(--disp);font-size:11px;font-weight:600;display:grid;place-items:center;padding:0 5px;border:2px solid var(--bg);}
+  .av{width:38px;height:38px;border-radius:10px;background:var(--terra);color:#fff;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:17px;}
+
+  /* dropdown */
+  .dropdown{position:absolute;top:64px;right:34px;width:380px;max-width:calc(100vw - 24px);z-index:50;
+    background:var(--card);border:1px solid var(--line-bold);border-radius:18px;box-shadow:0 28px 64px -24px rgba(40,20,0,.45);
+    display:none;flex-direction:column;overflow:hidden;max-height:calc(100vh - 90px);}
+  .dropdown.open{display:flex;animation:pop .18s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:none;}}
+  .dd-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line-soft);}
+  .dd-head h3{font-family:var(--serif);font-size:18px;font-weight:700;}
+  .dd-head .markall{font-family:var(--disp);font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;color:var(--terra);background:none;border:none;cursor:pointer;}
+  .dd-head .markall:hover{text-decoration:underline;}
+  .dd-body{overflow-y:auto;padding:6px;}
+  .dd-foot{padding:11px;border-top:1px solid var(--line-soft);text-align:center;}
+  .dd-foot a{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--fg-70);text-decoration:none;cursor:pointer;}
+  .dd-foot a:hover{color:var(--terra);}
+
+  .wrap{max-width:760px;margin:0 auto;padding:28px 34px 70px;}
+  .head{margin-bottom:20px;}
+  .head .eyebrow{font-family:var(--disp);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--terra);}
+  .head h1{font-family:var(--serif);font-size:32px;font-weight:700;margin:7px 0 0;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line-soft);}
+  .tab{font-family:var(--disp);font-size:12px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--muted);
+    background:none;border:none;padding:12px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.14s;}
+  .tab:hover{color:var(--fg);}
+  .tab.on{color:var(--terra);border-bottom-color:var(--terra);}
+
+  /* notification item */
+  .group-lbl{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:18px 4px 9px;font-weight:600;}
+  .group-lbl:first-child{margin-top:0;}
+  .notif{display:grid;grid-template-columns:auto 1fr auto;gap:13px;align-items:start;padding:13px 14px;border-radius:13px;cursor:pointer;transition:.14s;position:relative;}
+  .notif:hover{background:var(--sink);}
+  .notif.unread{background:var(--terra-soft);}
+  .notif.unread:hover{background:color-mix(in srgb,var(--terra) 18%,transparent);}
+  .notif .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex-shrink:0;}
+  .ic.streak{background:var(--terra-soft);} .ic.hw{background:var(--aegean-soft);} .ic.text{background:var(--gold-soft);}
+  .ic.social{background:var(--sage-soft);} .ic.reward{background:var(--gold-soft);}
+  .notif .body{min-width:0;}
+  .notif .body .t{font-size:13.5px;line-height:1.4;}
+  .notif .body .t b{font-weight:700;}
+  .notif .body .t .gk{font-style:italic;color:var(--terra-dk);}
+  .notif .body .cta{display:inline-block;margin-top:8px;font-family:var(--disp);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    color:#fff;background:var(--terra);border-radius:8px;padding:7px 13px;cursor:pointer;transition:.14s;text-decoration:none;}
+  .notif .body .cta:hover{background:var(--terra-dk);}
+  .notif .body .cta.ghost{color:var(--fg-70);background:var(--card);border:1px solid var(--line);}
+  .notif .body .cta.ghost:hover{border-color:var(--line-bold);color:var(--fg);}
+  .notif .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;}
+  .notif .time{font-family:var(--disp);font-size:10px;letter-spacing:.3px;color:var(--muted);white-space:nowrap;}
+  .notif .dot{width:8px;height:8px;border-radius:50%;background:var(--terra);}
+  .notif:not(.unread) .dot{visibility:hidden;}
+
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty .ei{font-size:38px;opacity:.5;}
+  .empty .et{font-family:var(--serif);font-size:22px;color:var(--fg);margin-top:10px;}
+  .empty .es{font-size:12.5px;margin-top:5px;}
+
+  /* settings */
+  .settings{display:none;}
+  .settings.on{display:block;}
+  .notifs-view.off{display:none;}
+  .set-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 20px;margin-bottom:18px;}
+  .set-row{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line-soft);}
+  .set-row:last-child{border-bottom:none;}
+  .set-row .si{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:17px;flex-shrink:0;background:var(--sink);}
+  .set-row .st{flex:1;}
+  .set-row .st .n{font-size:13.5px;font-weight:600;}
+  .set-row .st .d{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4;}
+  .sw{width:46px;height:26px;border-radius:99px;background:var(--sink);border:1px solid var(--line-bold);position:relative;flex-shrink:0;cursor:pointer;transition:.16s;}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--stone);transition:.16s;}
+  .sw.on{background:var(--sage);border-color:transparent;}
+  .sw.on::after{transform:translateX(20px);background:#fff;}
+  .set-title{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 4px 10px;}
+  .chan{display:flex;gap:8px;flex-shrink:0;}
+  .chan button{font-family:var(--disp);font-size:10px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;color:var(--muted);
+    background:var(--sink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer;transition:.14s;display:flex;align-items:center;gap:5px;}
+  .chan button.on{background:var(--sage-soft);border-color:var(--sage);color:var(--sage);}
+  .chan button svg{width:12px;height:12px;}
+  /* quiet hours */
+  .quiet{display:flex;align-items:center;gap:12px;padding:16px 0;}
+  .quiet .time-in{font-family:var(--disp);font-size:14px;font-weight:600;background:var(--sink);border:1px solid var(--line);border-radius:9px;padding:9px 13px;color:var(--fg);width:80px;text-align:center;}
+
+  /* toast (push preview) */
+  .toast{position:fixed;right:24px;bottom:24px;z-index:60;width:340px;max-width:calc(100vw - 32px);
+    background:var(--card);border:1px solid var(--line-bold);border-radius:15px;box-shadow:0 22px 54px -20px rgba(40,20,0,.45);
+    padding:15px 16px;display:flex;gap:12px;align-items:flex-start;transform:translateX(400px);transition:.32s cubic-bezier(.2,.9,.3,1);}
+  .toast.show{transform:none;}
+  .toast .ti{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:19px;flex-shrink:0;background:var(--terra-soft);}
+  .toast .tb{flex:1;}
+  .toast .tb .tt{font-family:var(--disp);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--terra);font-weight:600;}
+  .toast .tb .tx{font-size:13px;line-height:1.4;margin-top:3px;}
+  .toast .tx-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;}
+  .demo-btn{position:fixed;left:24px;bottom:24px;z-index:55;font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    background:var(--fg);color:var(--bg);border:none;border-radius:10px;padding:11px 16px;cursor:pointer;opacity:.85;}
+  .demo-btn:hover{opacity:1;}
+
+  @media(max-width:560px){.dropdown{right:8px;}.nav-links{display:none;}}
+</style>
+</head>
+<body class="theme-alabaster">
+
+  <header class="bar">
+    <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+      <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+    <span class="brand">Symposi<b>ON</b></span>
+    <div class="nav-links"><button>Παιχνίδια</button><button>Μαθήματα</button><button>Κατάταξη</button></div>
+    <span class="spacer"></span>
+    <button class="bell" id="bell" aria-label="Ειδοποιήσεις">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="count" id="bellCount">4</span>
+    </button>
+    <div class="av">Ε</div>
+  </header>
+
+  <!-- bell dropdown -->
+  <div class="dropdown" id="dropdown">
+    <div class="dd-head"><h3>Ειδοποιήσεις</h3><button class="markall" id="markAll">Σήμανση όλων ως αναγνωσμένων</button></div>
+    <div class="dd-body" id="ddBody"></div>
+    <div class="dd-foot"><a id="seeAll">Δες όλες τις ειδοποιήσεις →</a></div>
+  </div>
+
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow">Κέντρο Ειδοποιήσεων</div>
+      <h1>Ειδοποιήσεις &amp; Υπενθυμίσεις</h1>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="all">Όλες</button>
+      <button class="tab" data-tab="unread">Μη αναγνωσμένες</button>
+      <button class="tab" data-tab="settings">Ρυθμίσεις</button>
+    </div>
+
+    <!-- notifications view -->
+    <div class="notifs-view" id="notifsView"></div>
+
+    <!-- settings view -->
+    <div class="settings" id="settingsView">
+      <div class="set-title">Τι θέλεις να μαθαίνεις</div>
+      <div class="set-card" id="prefList"></div>
+      <div class="set-title">Πώς θέλεις να ειδοποιείσαι</div>
+      <div class="set-card">
+        <div class="set-row">
+          <div class="si">🔔</div>
+          <div class="st"><div class="n">Κανάλια</div><div class="d">Πού φτάνουν οι υπενθυμίσεις σου.</div></div>
+          <div class="chan" id="chan">
+            <button class="on" data-c="push"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>Push</button>
+            <button class="on" data-c="email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Email</button>
+          </div>
+        </div>
+        <div class="quiet">
+          <div class="si">🌙</div>
+          <div class="st"><div class="n">Ώρες ησυχίας</div><div class="d">Καμία ειδοποίηση μέσα σε αυτό το διάστημα.</div></div>
+          <input class="time-in" value="22:00" aria-label="Από"/>
+          <span style="color:var(--muted)">—</span>
+          <input class="time-in" value="08:00" aria-label="Έως"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="demo-btn" id="demoBtn">▶ Demo: εισερχόμενη ειδοποίηση</button>
+  <div class="toast" id="toast"></div>
+
+<script>
+const NOW=new Date('2026-06-20T17:30:00');
+/* type → icon + class */
+const TYPE={
+  streak:{ic:'🔥',cls:'streak',tag:'Σερί'},
+  hw:{ic:'📝',cls:'hw',tag:'Άσκηση'},
+  text:{ic:'📜',cls:'text',tag:'Αδίδακτο'},
+  social:{ic:'⚔',cls:'social',tag:'Κατάταξη'},
+  reward:{ic:'🏆',cls:'reward',tag:'Έπαθλο'},
+};
+let NOTIFS=[
+  {id:1,type:'streak',unread:true,mins:35,t:'Το <b>σερί των 12 ημερών</b> σου λήγει σε λίγες ώρες! Παίξε ένα γρήγορο παιχνίδι για να το κρατήσεις.',cta:'Παίξε τώρα',cta2:'Χρησιμοποίησε ασπίδα'},
+  {id:2,type:'hw',unread:true,mins:120,t:'Νέα άσκηση από τον <b>καθ. Δ. Καμπού</b>: «Κλίση Ουσιαστικών — Γ΄ κλίση». <b>Λήγει αύριο</b>.',cta:'Ξεκίνα την άσκηση'},
+  {id:3,type:'text',unread:true,mins:180,t:'Ανατέθηκε νέο <b>αδίδακτο</b>: <span class="gk">Λυσίας, Ὑπὲρ Μαντιθέου</span>. Ετοιμάσου για το επόμενο διαγώνισμα.',cta:'Άνοιξε το αδίδακτο'},
+  {id:4,type:'social',unread:true,mins:300,t:'Ο <b>Νίκος Δ.</b> σε προσπέρασε στην κατάταξη! Είσαι τώρα <b>8ος</b> — 40 κλέος πίσω.',cta:'Δες την κατάταξη',cta2:null},
+  {id:5,type:'reward',unread:false,hrs:26,t:'Ξεκλείδωσες τον τίτλο <b>«Φιλόλογος»</b> και κέρδισες <b>500 Δραχμές</b>! 🎉',cta:null},
+  {id:6,type:'hw',unread:false,hrs:30,t:'Ολοκλήρωσες την άσκηση «Rapid Fire — Συντακτικό» με <b>92%</b>. Μπράβο!',cta:null},
+  {id:7,type:'streak',unread:false,hrs:50,t:'Έφτασες τις <b>10 ημέρες σερί</b> — ξεκλείδωσες το ορόσημο <span class="gk">Ἑβδομάς</span>.',cta:null},
+  {id:8,type:'social',unread:false,days:4,t:'Η εβδομαδιαία κατάταξη μηδενίστηκε. Ξεκίνα δυνατά — οι 50 πρώτοι ανεβαίνουν λίγκα!',cta:'Δες την κατάταξη'},
+];
+
+function ago(n){
+  if(n.mins!=null)return n.mins<60?'πριν '+n.mins+'λ':'πριν '+Math.round(n.mins/60)+'ω';
+  if(n.hrs!=null)return n.hrs<24?'πριν '+n.hrs+'ω':'πριν '+Math.round(n.hrs/24)+'μέρες';
+  if(n.days!=null)return 'πριν '+n.days+' μέρες';
+  return '';
+}
+function bucket(n){
+  const m=n.mins!=null?n.mins:(n.hrs!=null?n.hrs*60:(n.days||0)*1440);
+  if(m<720)return 'Σήμερα';
+  if(m<2880)return 'Χθες';
+  return 'Παλαιότερα';
+}
+
+let tab='all';
+function visible(){return NOTIFS.filter(n=>tab!=='unread'||n.unread);}
+
+function notifHTML(n){
+  const ty=TYPE[n.type];
+  const ctas=[n.cta?`<a class="cta">${n.cta}</a>`:'',n.cta2?`<a class="cta ghost">${n.cta2}</a>`:''].join(' ');
+  return `<div class="notif ${n.unread?'unread':''}" data-id="${n.id}">
+    <div class="ic ${ty.cls}">${ty.ic}</div>
+    <div class="body"><div class="t">${n.t}</div>${ctas?`<div style="display:flex;gap:8px;flex-wrap:wrap">${ctas}</div>`:''}</div>
+    <div class="right"><span class="time">${ago(n)}</span><span class="dot"></span></div>
+  </div>`;
+}
+
+function renderCenter(){
+  const view=document.getElementById('notifsView');
+  const list=visible();
+  if(!list.length){view.innerHTML=`<div class="empty"><div class="ei">📭</div><div class="et">Καμία ειδοποίηση</div><div class="es">Όλα διαβασμένα — ωραία δουλειά!</div></div>`;return;}
+  const buckets=['Σήμερα','Χθες','Παλαιότερα'];
+  view.innerHTML=buckets.map(b=>{
+    const rows=list.filter(n=>bucket(n)===b);
+    if(!rows.length)return '';
+    return `<div class="group-lbl">${b}</div>`+rows.map(notifHTML).join('');
+  }).join('');
+}
+function renderDropdown(){
+  const body=document.getElementById('ddBody');
+  const list=NOTIFS.slice(0,5);
+  body.innerHTML=list.length?list.map(notifHTML).join(''):`<div class="empty" style="padding:40px"><div class="ei">📭</div><div class="et">Καθαρά!</div></div>`;
+  const unread=NOTIFS.filter(n=>n.unread).length;
+  const c=document.getElementById('bellCount');
+  if(unread){c.style.display='grid';c.textContent=unread;}else c.style.display='none';
+}
+function rerender(){renderCenter();renderDropdown();}
+
+/* interactions */
+document.getElementById('bell').addEventListener('click',e=>{e.stopPropagation();document.getElementById('dropdown').classList.toggle('open');});
+document.addEventListener('click',e=>{if(!e.target.closest('#dropdown')&&!e.target.closest('#bell'))document.getElementById('dropdown').classList.remove('open');});
+document.getElementById('markAll').addEventListener('click',()=>{NOTIFS.forEach(n=>n.unread=false);rerender();});
+document.getElementById('seeAll').addEventListener('click',()=>{document.getElementById('dropdown').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});});
+function markRead(id){const n=NOTIFS.find(x=>x.id==id);if(n&&n.unread){n.unread=false;rerender();}}
+document.body.addEventListener('click',e=>{const it=e.target.closest('.notif');if(it)markRead(it.dataset.id);});
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  const which=t.dataset.tab;
+  document.getElementById('settingsView').classList.toggle('on',which==='settings');
+  document.getElementById('notifsView').classList.toggle('off',which==='settings');
+  if(which!=='settings'){tab=which;renderCenter();}
+}));
+
+/* settings prefs */
+const PREFS=[
+  {ic:'🔥',n:'Υπενθύμιση σερί',d:'Όταν το σερί σου κινδυνεύει να σπάσει.',on:true},
+  {ic:'📝',n:'Ασκήσεις & προθεσμίες',d:'Νέες αναθέσεις και υπενθυμίσεις λήξης.',on:true},
+  {ic:'📜',n:'Νέα αδίδακτα',d:'Όταν ανατίθεται νέο κείμενο για εξάσκηση.',on:true},
+  {ic:'⚔',n:'Κατάταξη & ανταγωνισμός',d:'Όταν σε προσπερνούν ή αλλάζει η λίγκα σου.',on:true},
+  {ic:'🏆',n:'Έπαθλα & ορόσημα',d:'Τίτλοι, δραχμές και επιτεύγματα.',on:false},
+  {ic:'📅',n:'Εβδομαδιαία σύνοψη',d:'Κάθε Κυριακή — η πρόοδός σου της εβδομάδας.',on:true},
+];
+document.getElementById('prefList').innerHTML=PREFS.map((p,i)=>`
+  <div class="set-row"><div class="si">${p.ic}</div>
+    <div class="st"><div class="n">${p.n}</div><div class="d">${p.d}</div></div>
+    <div class="sw ${p.on?'on':''}" data-pref="${i}" role="switch" aria-checked="${p.on}"></div></div>`).join('');
+document.getElementById('prefList').addEventListener('click',e=>{const s=e.target.closest('.sw');if(s){s.classList.toggle('on');s.setAttribute('aria-checked',s.classList.contains('on'));}});
+document.getElementById('chan').addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.classList.toggle('on');});
+
+/* push preview demo */
+const DEMO={type:'streak',tag:'Σερί',t:'⏰ Σου μένουν <b>2 ώρες</b> για να κρατήσεις το σερί των 12 ημερών!'};
+document.getElementById('demoBtn').addEventListener('click',()=>{
+  const ty=TYPE[DEMO.type];const el=document.getElementById('toast');
+  el.innerHTML=`<div class="ti">${ty.ic}</div><div class="tb"><div class="tt">SymposiON · ${ty.tag}</div><div class="tx">${DEMO.t}</div></div><button class="tx-close">✕</button>`;
+  el.classList.add('show');
+  el.querySelector('.tx-close').onclick=()=>el.classList.remove('show');
+  // also push into the live list
+  NOTIFS.unshift({id:Date.now(),type:'streak',unread:true,mins:0,t:DEMO.t.replace('⏰ ',''),cta:'Παίξε τώρα'});
+  rerender();
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),6000);
+});
+
+rerender();
+</script>
+</body>
+</html>
