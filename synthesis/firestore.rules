@@ -222,6 +222,14 @@ service cloud.firestore {
       allow read:  if true;
       allow write: if false;
     }
+    // Ιστορία (History) per-course content packs. World-readable so the
+    // istoria game renders the admin's latest pack from Firestore on any
+    // device; static JS (window.ISTORIA_CONTENT) is the offline fallback.
+    // Writes go ONLY through the Admin SDK (adminSaveHistoryContent).
+    match /historyContent/{course} {
+      allow read:  if true;
+      allow write: if false;
+    }
 
     match /subscriptions/{docId} {
       allow read:  if true;

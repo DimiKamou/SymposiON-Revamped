@@ -974,6 +974,63 @@ exports.adminSaveGameContent = functions.https.onCall(async (data, context) => {
   return { ok: true };
 });
 
+// ── ΙΣΤΟΡΙΑ (HISTORY) · adminSaveHistoryContent ──────────────
+// Validated server-side write for one history course's content pack.
+// Mirrors adminSaveGameContent: requireRole(['content']) + structural
+// validation + whole-doc set (merge:false) + writeAudit.
+// The istoria pack shape (see games/istoria/js/data-layer.js getPack):
+//   { meta:{…}, units:[{id,…}], data:{ [unitId]:{ mc,fc,match,tl,tf,fib,vid } }, methods:{…} }
+// The admin may persist either the full pack or just the editable slice
+// { data, methods } — we accept both and validate defensively without
+// over-constraining the per-mode arrays.
+// Rules deny direct client writes to historyContent/* — this is the only path.
+exports.adminSaveHistoryContent = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+  const { course, content } = data || {};
+
+  // course: short identifier, e.g. 'g3', 'gym-a'. Keep it doc-id safe.
+  if (!course || typeof course !== 'string' || course.length > 64 || /[\/\s]/.test(course)) {
+    throw new functions.https.HttpsError('invalid-argument', 'course must be a short id string (no slashes/spaces).');
+  }
+  if (!content || typeof content !== 'object' || Array.isArray(content)) {
+    throw new functions.https.HttpsError('invalid-argument', 'content object required.');
+  }
+
+  // `units`, when present, must be a list of objects each with an id.
+  if (content.units !== undefined) {
+    if (!Array.isArray(content.units)) {
+      throw new functions.https.HttpsError('invalid-argument', 'content.units must be a list.');
+    }
+    for (const u of content.units) {
+      if (!u || typeof u !== 'object' || Array.isArray(u) || !u.id) {
+        throw new functions.https.HttpsError('invalid-argument', 'each unit needs an id.');
+      }
+    }
+  }
+  // `data` (per-unit exercise banks) and `methods`, when present, are objects.
+  if (content.data !== undefined && (typeof content.data !== 'object' || content.data === null || Array.isArray(content.data))) {
+    throw new functions.https.HttpsError('invalid-argument', 'content.data must be an object.');
+  }
+  if (content.methods !== undefined && (typeof content.methods !== 'object' || content.methods === null || Array.isArray(content.methods))) {
+    throw new functions.https.HttpsError('invalid-argument', 'content.methods must be an object.');
+  }
+  // Require at least one recognisable slice so we never store junk.
+  if (content.data === undefined && content.units === undefined && content.methods === undefined) {
+    throw new functions.https.HttpsError('invalid-argument', 'content must include data, units, or methods.');
+  }
+
+  await admin.firestore().doc(`historyContent/${course}`).set({
+    ...content,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedBy: context.auth.token.email,
+  }, { merge: false });
+  await writeAudit(context, 'istoria.content.save', course, {
+    units:   Array.isArray(content.units) ? content.units.length : null,
+    dataKeys: content.data ? Object.keys(content.data).length : null,
+  });
+  return { ok: true };
+});
+
 // ============================================================
 //  AI GRADING — subject-agnostic free-response grader
 //
