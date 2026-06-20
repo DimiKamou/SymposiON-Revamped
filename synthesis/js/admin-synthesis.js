@@ -650,6 +650,7 @@
       ['discounts', '%', { gr: 'Εκπτωτικοί Κωδικοί', en: 'Discount Codes' }],
       ['subs', '◷', { gr: 'Συνδρομές', en: 'Subscriptions' }],
       ['studio', '✎', { gr: 'Studio (Περιεχόμενο)', en: 'Studio (Content)' }],
+      ['aisources', '✸', { gr: 'AI Πηγές · Βιβλία', en: 'AI Sources · Books' }],
       ['voyage', '⚱', { gr: 'Πρότυπα', en: 'Templates' }],
       ['realm', '⛩', { gr: 'Curator · Ναός', en: 'Curator · Realm' }],
       ['games', '▦', { gr: 'Παιχνίδια — Έλεγχος', en: 'Games — Review' }],
@@ -1378,6 +1379,152 @@
       paintCodes();
     }
 
+    /* ════════════════ AI SOURCES (knowledge base) ══════════════════
+       Upload books/files (PDF/.txt/.md) → extracted text stored in Firestore
+       (ai_corpus, chunked ≤700KB/doc). The gradeAnswer Cloud Function grounds
+       the AI tutor's grading in this material (keyword retrieval, server-side).
+       Persists across redeploys (Firestore) and reaches the grader on any
+       device. Enabling the AI itself needs ANTHROPIC_KEY on the Functions. */
+    var AI_SUBJ = [['istoria', 'Ιστορία'], ['archaia', 'Αρχαία Ελληνικά'], ['latinika', 'Λατινικά'],
+                   ['logotexnia', 'Λογοτεχνία'], ['ekthesi', 'Έκθεση'], ['all', 'Όλα τα μαθήματα (global)']];
+    function _aiSubjLabel(k) { var f = AI_SUBJ.filter(function (s) { return s[0] === k; })[0]; return f ? f[1] : k; }
+    function _loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      return new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = function () { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; } catch (_) {} res(window.pdfjsLib); };
+        s.onerror = function () { rej(new Error('pdf.js load failed')); };
+        document.head.appendChild(s);
+      });
+    }
+    function _extractPdf(file) {
+      return _loadPdfJs().then(function (lib) {
+        return file.arrayBuffer().then(function (buf) {
+          return lib.getDocument({ data: buf }).promise.then(function (pdf) {
+            var chain = Promise.resolve('');
+            for (var i = 1; i <= pdf.numPages; i++) {
+              (function (n) {
+                chain = chain.then(function (acc) {
+                  return pdf.getPage(n).then(function (pg) { return pg.getTextContent(); })
+                    .then(function (tc) { return acc + tc.items.map(function (it) { return it.str; }).join(' ') + '\n\n'; });
+                });
+              })(i);
+            }
+            return chain;
+          });
+        });
+      });
+    }
+    function renderAiSources() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'AI Πηγές · Βιβλία αναφοράς', en: 'AI Sources · Reference books' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 14px' }, L({
+        gr: 'Ανέβασε βιβλία/αρχεία (PDF, .txt, .md). Ο AI βοηθός που βαθμολογεί Μετάφραση / Συντακτικό / Ανάπτυξη στηρίζεται ΚΥΡΙΩΣ σε αυτό το υλικό (και συμπληρωματικά στη γενική του γνώση). Αποθηκεύεται στο Firestore — επιβιώνει redeploy.',
+        en: 'Upload books/files (PDF, .txt, .md). The AI tutor that grades Translation / Syntax / Development grounds its answers MAINLY in this material (falling back to general knowledge). Stored in Firestore — survives redeploy.'
+      })));
+
+      // ── AI status pill ──
+      var statusBox = el('div', { style: 'margin:0 0 16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line,#e6ddcf);background:var(--card,#fff)' }, L({ gr: 'Έλεγχος κατάστασης AI…', en: 'Checking AI status…' }));
+      pane.appendChild(statusBox);
+      try {
+        if (fsReady() && firebase.functions) {
+          firebase.functions().httpsCallable('aiGraderStatus')({}).then(function (r) {
+            var d = (r && r.data) || {}; statusBox.innerHTML = '';
+            if (d.configured) {
+              statusBox.appendChild(el('div', { style: 'font-weight:700;color:#2e7d32' }, '✓ ' + L({ gr: 'AI ενεργός', en: 'AI active' }) + (d.model ? ' · ' + d.model : '')));
+              statusBox.appendChild(el('div', { class: 'sc-hint', style: 'margin-top:4px' }, L({ gr: 'Ενεργές πηγές: ', en: 'Active sources: ' }) + (d.sources || 0)));
+            } else {
+              statusBox.appendChild(el('div', { style: 'font-weight:700;color:#b8862b' }, '● ' + L({ gr: 'AI ανενεργός — δεν έχει οριστεί κλειδί', en: 'AI inactive — key not set' })));
+              statusBox.appendChild(el('div', { class: 'sc-hint', style: 'margin-top:6px' }, L({ gr: 'Ενεργοποίησέ τον ορίζοντας το ANTHROPIC_KEY και κάνε deploy:', en: 'Enable it by setting ANTHROPIC_KEY, then deploy:' })));
+              statusBox.appendChild(el('pre', { style: 'margin:6px 0 0;padding:8px;border-radius:8px;background:#1d1a14;color:#e9e2d2;font-size:11px;overflow:auto' }, 'firebase functions:secrets:set ANTHROPIC_KEY\nfirebase deploy --only functions'));
+            }
+          }).catch(function () { statusBox.textContent = L({ gr: 'Δεν ήταν δυνατός ο έλεγχος (σύνδεση/δικαιώματα).', en: 'Status check unavailable (connection/permissions).' }); });
+        } else { statusBox.textContent = L({ gr: 'Σύνδεσε Firebase για κατάσταση AI.', en: 'Connect Firebase for AI status.' }); }
+      } catch (_) { statusBox.textContent = '—'; }
+
+      // ── upload form ──
+      var titleInp = el('input', { class: 'sc-field__i', placeholder: L({ gr: 'Τίτλος (π.χ. Ιστορία Γ΄ — Κεφ. 1)', en: 'Title (e.g. History 12th — Ch. 1)' }) });
+      var subjSel = el('select', { class: 'sc-field__i sc-select' }, AI_SUBJ.map(function (s) { return el('option', { value: s[0] }, s[1]); }));
+      var fileInp = el('input', { type: 'file', accept: '.txt,.md,.pdf', class: 'sc-field__i' });
+      var statusLine = el('div', { class: 'sc-hint', style: 'margin:6px 0' }, '');
+      var extracted = { text: '', name: '' };
+      var upBtn = el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: doUpload }, L({ gr: 'Ανέβασμα', en: 'Upload' }));
+      fileInp.addEventListener('change', function () {
+        var f = fileInp.files && fileInp.files[0]; if (!f) return;
+        extracted = { text: '', name: f.name };
+        var done = function (txt) {
+          extracted.text = txt || '';
+          statusLine.textContent = (extracted.text.length).toLocaleString('en-US') + ' ' + L({ gr: 'χαρακτήρες', en: 'chars' }) + ' · ' + f.name;
+          if (!titleInp.value) titleInp.value = f.name.replace(/\.[^.]+$/, '');
+        };
+        var ext = (f.name.split('.').pop() || '').toLowerCase();
+        if (ext === 'pdf') {
+          statusLine.textContent = L({ gr: 'Εξαγωγή κειμένου από PDF…', en: 'Extracting PDF text…' });
+          _extractPdf(f).then(done).catch(function (e) { statusLine.textContent = L({ gr: 'Σφάλμα PDF: ', en: 'PDF error: ' }) + (e && e.message || e); });
+        } else {
+          statusLine.textContent = L({ gr: 'Ανάγνωση…', en: 'Reading…' });
+          var rd = new FileReader();
+          rd.onload = function () { done(String(rd.result || '')); };
+          rd.onerror = function () { statusLine.textContent = L({ gr: 'Σφάλμα ανάγνωσης', en: 'Read error' }); };
+          rd.readAsText(f);
+        }
+      });
+      pane.appendChild(el('div', { class: 'sc-card', style: 'padding:14px;border:1px solid var(--line,#e6ddcf);border-radius:12px;margin:0 0 18px' }, [
+        el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέα πηγή', en: 'New source' })),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τίτλος', en: 'Title' })), titleInp]),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα', en: 'Subject' })), subjSel]),
+        el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Αρχείο (PDF/.txt/.md)', en: 'File (PDF/.txt/.md)' })), fileInp]),
+        statusLine, upBtn,
+      ]));
+      function doUpload() {
+        var txt = (extracted.text || '').trim();
+        if (!txt) { statusLine.textContent = L({ gr: 'Διάλεξε αρχείο πρώτα.', en: 'Pick a file first.' }); return; }
+        if (!titleInp.value.trim()) { titleInp.focus(); return; }
+        if (!fsReady() || !firebase.firestore) { statusLine.textContent = L({ gr: 'Χρειάζεται σύνδεση Firebase.', en: 'Firebase connection required.' }); return; }
+        upBtn.disabled = true; upBtn.textContent = '…';
+        var db = firebase.firestore(); var sid = 'src_' + Date.now();
+        var SIZE = 700000, chunks = [];
+        for (var i = 0; i < txt.length; i += SIZE) chunks.push(txt.slice(i, i + SIZE));
+        var batch = db.batch();
+        chunks.forEach(function (ch, idx) {
+          batch.set(db.collection('ai_corpus').doc(), { sourceId: sid, title: titleInp.value.trim(), subject: subjSel.value, part: idx, parts: chunks.length, text: ch, chars: ch.length, filename: extracted.name || '', enabled: true, uploadedAt: Date.now() });
+        });
+        batch.commit().then(function () {
+          upBtn.disabled = false; upBtn.textContent = L({ gr: 'Ανέβασμα', en: 'Upload' });
+          statusLine.textContent = '✓ ' + L({ gr: 'Αποθηκεύτηκε', en: 'Saved' }) + ' (' + chunks.length + ' ' + L({ gr: 'τμήματα', en: 'chunks' }) + ')';
+          titleInp.value = ''; fileInp.value = ''; extracted = { text: '', name: '' }; loadList();
+        }).catch(function (e) { upBtn.disabled = false; upBtn.textContent = L({ gr: 'Ανέβασμα', en: 'Upload' }); statusLine.textContent = L({ gr: 'Σφάλμα: ', en: 'Error: ' }) + (e && e.message || e); });
+      }
+
+      // ── existing sources ──
+      pane.appendChild(el('div', { class: 'sc-cfg__l', style: 'margin:4px 0 8px' }, L({ gr: 'Ανεβασμένες πηγές', en: 'Uploaded sources' })));
+      var listHost = el('div', {}); pane.appendChild(listHost); loadList();
+      function loadList() {
+        listHost.innerHTML = '';
+        if (!fsReady() || !firebase.firestore) { listHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Σύνδεσε Firebase για τις πηγές.', en: 'Connect Firebase to list sources.' }))); return; }
+        firebase.firestore().collection('ai_corpus').limit(500).get().then(function (snap) {
+          var groups = {};
+          snap.forEach(function (d) { var x = d.data() || {}; var sid = x.sourceId || d.id; var g = groups[sid] || (groups[sid] = { title: x.title || '—', subject: x.subject || 'all', chars: 0, enabled: true, ids: [] }); g.chars += (x.chars || 0); g.ids.push(d.id); if (x.enabled === false) g.enabled = false; });
+          var keys = Object.keys(groups);
+          if (!keys.length) { listHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Καμία πηγή ακόμη — ανέβασε το πρώτο βιβλίο/αρχείο.', en: 'No sources yet — upload your first book/file.' }))); return; }
+          keys.forEach(function (sid) {
+            var g = groups[sid]; var kb = Math.max(1, Math.round(g.chars / 1024));
+            listHost.appendChild(el('div', { class: 'sc-tr' }, [
+              el('span', { class: 'sc-tr__task' }, g.title),
+              el('span', {}, _aiSubjLabel(g.subject)),
+              el('span', {}, kb + ' KB'),
+              el('span', { class: 'sc-tr__acts' }, [
+                el('button', { class: 'sc-toggle' + (g.enabled ? ' on' : ''), title: L({ gr: 'Ενεργό', en: 'Enabled' }), onclick: function () { _aiSetEnabled(g.ids, !g.enabled, loadList); } }, [el('span', { class: 'sc-toggle__k' })]),
+                el('button', { class: 'sc-mini', onclick: function () { adminConfirm(L({ gr: 'Διαγραφή πηγής «' + g.title + '»;', en: 'Delete source “' + g.title + '”?' }), function () { _aiDelGroup(g.ids, loadList); }); } }, L({ gr: 'Διαγραφή', en: 'Delete' })),
+              ]),
+            ]));
+          });
+        }).catch(function () { listHost.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Σφάλμα φόρτωσης.', en: 'Load error.' }))); });
+      }
+    }
+    function _aiSetEnabled(ids, on, cb) { var db = firebase.firestore(), b = db.batch(); ids.forEach(function (id) { b.update(db.collection('ai_corpus').doc(id), { enabled: !!on }); }); b.commit().then(cb).catch(cb); }
+    function _aiDelGroup(ids, cb) { var db = firebase.firestore(), b = db.batch(); ids.forEach(function (id) { b.delete(db.collection('ai_corpus').doc(id)); }); b.commit().then(cb).catch(cb); }
+
     /* ════════════════ PAINT ════════════════════════════════════════ */
     function paint() {
       pane.innerHTML = '';
@@ -1868,6 +2015,9 @@
         pane.appendChild(tlist);
         pane.appendChild(el('div', { style: 'height:1px;background:color-mix(in srgb,var(--sym-fg,#1E1810) 9%,transparent);margin:16px 0' }));
         renderGrant();
+      }
+      else if (activeSec === 'aisources') {
+        renderAiSources();
       }
       else if (activeSec === 'pricing') {
         renderPricing();

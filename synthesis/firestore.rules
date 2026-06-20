@@ -222,6 +222,17 @@ service cloud.firestore {
       allow read:  if true;
       allow write: if false;
     }
+
+    // AI reference corpus — admin-uploaded books/files the grader grounds its
+    // answers in. Content-admin only (the grader reads it via the Admin SDK, so
+    // it is NOT world-readable). Each doc holds one ≤900KB text chunk.
+    match /ai_corpus/{docId} {
+      allow read:           if can('content');
+      allow create, update: if can('content')
+                         && request.resource.data.text is string
+                         && request.resource.data.text.size() <= 900000;
+      allow delete:         if can('content');
+    }
     // Ιστορία (History) per-course content packs. World-readable so the
     // istoria game renders the admin's latest pack from Firestore on any
     // device; static JS (window.ISTORIA_CONTENT) is the offline fallback.

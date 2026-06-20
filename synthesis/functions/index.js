@@ -1052,12 +1052,17 @@ exports.adminSaveHistoryContent = functions.https.onCall(async (data, context) =
 // ============================================================
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
-function buildGraderPrompt(p) {
+function buildGraderPrompt(p, sources) {
   const rubric  = p.rubric ? (' ' + p.rubric) : '';
   const subject = (typeof p.subject === 'string' && p.subject.trim())
     ? p.subject.trim()
     : 'Ιστορίας Προσανατολισμού Γ΄ Λυκείου';
-  return `Είσαι έμπειρος βαθμολογητής ${subject}. Σύγκρινε ΣΗΜΑΣΙΟΛΟΓΙΚΑ (με βάση το νόημα, ΟΧΙ λέξη προς λέξη) την απάντηση του μαθητή με την ενδεικτική απάντηση και τα βασικά σημεία.${rubric}
+  // Admin-uploaded reference material (books/files). The grader is told to lean
+  // on it but may fall back to its own knowledge where the sources are silent.
+  const srcBlock = (typeof sources === 'string' && sources.trim())
+    ? `\n\nΥΛΙΚΟ ΑΝΑΦΟΡΑΣ (το ανέβασε ο διδάσκων — ΣΤΗΡΙΞΕ την αξιολόγηση ΚΥΡΙΩΣ σε αυτό· όπου ΔΕΝ καλύπτεται, χρησιμοποίησε τη γενική σου γνώση):\n"""\n${sources.trim()}\n"""\n`
+    : '';
+  return `Είσαι έμπειρος βαθμολογητής ${subject}. Σύγκρινε ΣΗΜΑΣΙΟΛΟΓΙΚΑ (με βάση το νόημα, ΟΧΙ λέξη προς λέξη) την απάντηση του μαθητή με την ενδεικτική απάντηση και τα βασικά σημεία.${rubric}${srcBlock}
 
 ΕΡΩΤΗΣΗ: ${p.question || ''}
 ΕΝΔΕΙΚΤΙΚΗ ΑΠΑΝΤΗΣΗ: ${p.model || ''}
@@ -1121,6 +1126,67 @@ async function _graderRateOk(uid, limit = 80, windowMs = 3600000) {
   });
 }
 
+// ── AI REFERENCE CORPUS (admin-uploaded books/files) ──────────
+// Subject-key → patterns that match the grader's free-text subject string.
+const AI_SUBJECT_MATCH = {
+  istoria:    /ιστορ/i,
+  archaia:    /αρχαί|αρχαια/i,
+  latinika:   /λατιν/i,
+  logotexnia: /λογοτεχν/i,
+  ekthesi:    /έκθεσ|εκθεσ/i,
+};
+
+// Keyword grounding (no embeddings → no extra cost): gather enabled sources whose
+// subject matches the grader call (or 'all'), then return the excerpts most
+// relevant to the question, capped to CAP chars so the prompt stays bounded.
+// Best-effort: returns '' on any error (grader still works without sources).
+async function getAiCorpus(graderSubject, question) {
+  const CAP = 7000;
+  try {
+    const snap = await admin.firestore().collection('ai_corpus')
+      .where('enabled', '==', true).limit(300).get();
+    if (snap.empty) return '';
+    const subj = String(graderSubject || '');
+    const texts = [];
+    snap.forEach((d) => {
+      const x = d.data() || {};
+      const ok = x.subject === 'all'
+        || (AI_SUBJECT_MATCH[x.subject] && AI_SUBJECT_MATCH[x.subject].test(subj));
+      if (ok && typeof x.text === 'string' && x.text) texts.push(x.text);
+    });
+    if (!texts.length) return '';
+    const full = texts.join('\n\n');
+    if (full.length <= CAP) return full;
+    // Too much material → keyword-select the most relevant paragraphs.
+    const qWords = String(question || '').toLowerCase()
+      .split(/[^a-z0-9Ͱ-Ͽἀ-῿]+/).filter((w) => w.length > 3);
+    const paras = full.split(/\n{2,}/).filter((p) => p.trim().length > 30);
+    const scored = paras.map((para) => {
+      const lp = para.toLowerCase();
+      let s = 0; qWords.forEach((w) => { if (lp.indexOf(w) >= 0) s++; });
+      return { para, s };
+    }).sort((a, b) => b.s - a.s);
+    let out = '';
+    for (let i = 0; i < scored.length && out.length < CAP; i++) {
+      if (scored[i].s > 0) out += (out ? '\n\n' : '') + scored[i].para;
+    }
+    return (out || full.slice(0, CAP)).slice(0, CAP);
+  } catch (_) { return ''; }
+}
+
+// Admin status pill: is the AI grader configured (key set) + how many sources.
+exports.aiGraderStatus = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+  const key   = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  const model = graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6');
+  let sources = 0;
+  try {
+    const s = await admin.firestore().collection('ai_corpus').where('enabled', '==', true).limit(500).get();
+    sources = s.size;
+  } catch (_) {}
+  return { configured: !!key, model: key ? model : null, sources };
+});
+
 exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
   // Normally same-origin via a Hosting rewrite. CORS does not stop non-browser
   // callers, so the real guard is the verified Firebase ID token below.
@@ -1154,6 +1220,9 @@ exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
     res.status(400).json({ error: 'answer required' }); return;
   }
 
+  // Ground the grader in admin-uploaded reference material (best-effort).
+  const sources = await getAiCorpus(p.subject, p.question);
+
   try {
     const resp = await fetch(ANTHROPIC_URL, {
       method: 'POST',
@@ -1165,7 +1234,7 @@ exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
       body: JSON.stringify({
         model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
         max_tokens: 1024,
-        messages: [{ role: 'user', content: buildGraderPrompt(p) }],
+        messages: [{ role: 'user', content: buildGraderPrompt(p, sources) }],
       }),
     });
     if (!resp.ok) {
