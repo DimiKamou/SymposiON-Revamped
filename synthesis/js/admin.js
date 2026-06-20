@@ -613,6 +613,8 @@ async function adminDeactivateBanner(id) {
   }
 }
 
+function _esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
 async function _adminLoadBanners() {
   const wrap = document.getElementById('admin-banners-items');
   if (!wrap) return;
@@ -640,13 +642,13 @@ async function _adminLoadBanners() {
       const expired = d.endsAt?.toDate?.() < new Date();
       return `
         <div class="admin-code-row${active ? '' : ' inactive'}">
-          <div class="admin-code-name" style="font-size:13px;">${typeIcon[d.type] || 'ℹ️'} ${d.titleGr}</div>
+          <div class="admin-code-name" style="font-size:13px;">${typeIcon[d.type] || 'ℹ️'} ${_esc(d.titleGr)}</div>
           <div class="admin-code-meta">
             <span class="admin-code-expiry ${expired ? 'expired' : ''}">${t('Λήξη','Exp')}: ${endsAt}</span>
             <span class="admin-code-status ${active ? 'active' : 'inactive'}">
               ${active ? (expired ? t('Έληξε','Expired') : t('Ενεργό','Active')) : t('Ανενεργό','Inactive')}
             </span>
-            ${d.ctaGr ? `<span style="font-size:11px;color:var(--stone);">CTA: ${d.ctaGr}</span>` : ''}
+            ${d.ctaGr ? `<span style="font-size:11px;color:var(--stone);">CTA: ${_esc(d.ctaGr)}</span>` : ''}
           </div>
           ${active && !expired
             ? `<button class="admin-deact-btn" onclick="adminDeactivateBanner('${doc.id}')"

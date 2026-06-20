@@ -575,7 +575,12 @@ function requireRole(context, domains) {
   if (!r) throw new functions.https.HttpsError('permission-denied', 'Authentication required.');
   if (r === 'super') return r;               // super can always proceed
   const allowed = ROLE_DOMAINS[r];
-  if (!allowed || allowed === '*') return r; // (shouldn't happen for non-super, but safe)
+  // Default-DENY any role that isn't a known non-super domain set. The old
+  // `if (!allowed || allowed === '*') return r` fell OPEN — a legacy/unknown
+  // claim was treated as fully authorized.
+  if (!Array.isArray(allowed)) {
+    throw new functions.https.HttpsError('permission-denied', `Role "${r}" is not authorized.`);
+  }
   const ok = Array.isArray(domains)
     ? domains.some(d => allowed.includes(d))
     : false;
@@ -1035,13 +1040,54 @@ function graderEnv(envName, legacyPath, fallback) {
   return fallback;
 }
 
+// Per-user rolling-window rate limit for the AI grader (best-effort, via a
+// Firestore counter the Admin SDK owns). Returns true if the call is allowed.
+async function _graderRateOk(uid, limit = 80, windowMs = 3600000) {
+  const ref = admin.firestore().doc(`grader_usage/${uid}`);
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now = Date.now();
+    let windowStart = now, count = 0;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      windowStart = d.windowStart || now;
+      count = d.count || 0;
+      if (now - windowStart >= windowMs) { windowStart = now; count = 0; }
+    }
+    if (count >= limit) return false;
+    tx.set(ref, {
+      windowStart,
+      count: count + 1,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return true;
+  });
+}
+
 exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
-  // Same-origin in production (Hosting rewrite); permissive CORS for safety.
+  // Normally same-origin via a Hosting rewrite. CORS does not stop non-browser
+  // callers, so the real guard is the verified Firebase ID token below.
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.set('Vary', 'Origin');
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
   if (req.method !== 'POST')    { res.status(405).json({ error: 'POST only' }); return; }
+
+  // ── AUTH: require a valid Firebase ID token (denial-of-wallet guard) ──
+  // Previously unauthenticated — anyone could POST and spend the owner's
+  // Anthropic credits. The istoria iframe attaches the parent user's token;
+  // signed-out users get the client's offline heuristic instead.
+  const m = (req.get('Authorization') || '').match(/^Bearer (.+)$/);
+  if (!m) { res.status(401).json({ error: 'auth-required' }); return; }
+  let caller;
+  try { caller = await admin.auth().verifyIdToken(m[1]); }
+  catch (_) { res.status(401).json({ error: 'auth-invalid' }); return; }
+
+  // ── RATE LIMIT: best-effort per-user cap ──
+  try {
+    if (!(await _graderRateOk(caller.uid))) { res.status(429).json({ error: 'rate-limited' }); return; }
+  } catch (_) { /* limiter unavailable → auth still enforced, proceed */ }
 
   const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
   if (!key) { res.status(503).json({ error: 'grader-unconfigured' }); return; } // → client offline fallback
