@@ -312,9 +312,14 @@
     const showType = SymPreview.typeFor(game);
     const bank = gameNeedsLevelPicker(game);
 
-    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
-      title:L(gName(game)),
-      actions:[ el('button',{class:'lv-share', onclick:()=>go('live')},[ glyph('grid-blocks','lv-share__gl'), L({gr:'Μοιράσου στην τάξη',en:'Share to class'}) ]) ] });
+    // Origin-aware back target: when reached from the Game Panel, return there;
+    // otherwise (subject page / mode screen launches) go back to the subject.
+    const fromGamePanel = !!(ctx.param && ctx.param.from === 'gamepanel');
+    const backTo    = fromGamePanel ? 'gamepanel' : 'subject';
+    const backLabel = fromGamePanel ? L({gr:'Πίνακας Παιχνιδιών',en:'Game Panel'}) : L(subject);
+
+    const body = P(home, { back:backTo, backLabel, accent, eyebrow:L(subject)+' · '+L(gName(game)),
+      title:L(gName(game)) });
 
     // ── No real level bank (reached only via launchTile's safe fallback for a
     //    game without GP_LEVEL_PROVIDERS data): offer a single honest launch. ──
@@ -330,6 +335,7 @@
         el('span',{class:'lv-cat__m'}, L({gr:'Χωρίς επίπεδα — άμεση έναρξη',en:'No levels — launches directly'})) ]),
         el('span',{class:'lv-cat__n'},'→') ]));
       body.appendChild(card);
+      body.appendChild(shareToClass());
       return;
     }
 
@@ -415,7 +421,24 @@
     }
     shell.appendChild(rail); shell.appendChild(list);
     body.appendChild(shell);
+    body.appendChild(shareToClass());
     paintList();
+
+    // Bottom "share to class" action: opens a themed QR/link modal scoped to
+    // this game (encoding specific levels + a boot auto-launch is a later phase).
+    function shareToClass(){
+      return el('button',{class:'lv-sharebtn', onclick:()=>{
+        const launchFn = (window.synResolveLaunch && synResolveLaunch(game)) || '';
+        if (window.showQR) window.showQR(L(gName(game)), { game: launchFn });
+      }},[
+        glyph('grid-blocks','lv-sharebtn__gl'),
+        el('span',{class:'lv-sharebtn__b'},[
+          el('span',{class:'lv-sharebtn__t'}, L({gr:'Μοιράσου στην τάξη',en:'Share to class'})),
+          el('span',{class:'lv-sharebtn__d'}, L({gr:'Σκάναρε το QR ή στείλε τον σύνδεσμο',en:'Scan the QR or send the link'})),
+        ]),
+        el('span',{class:'lv-sharebtn__qr',html:'&#9783;'}),
+      ]);
+    }
   };
 
   /* ══ 4 · GAME PANEL ══ (all engines · display modes · favorites · admin edit) */
@@ -488,7 +511,7 @@
     items.sort((a,b)=> ordered.indexOf(a.rid)-ordered.indexOf(b.rid));
     items.sort((a,b)=> (SymStore.isFav(b.rid)?1:0)-(SymStore.isFav(a.rid)?1:0));
     items.forEach(({e,rid,a})=>{
-      grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e})},[
+      grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e, from:'gamepanel'})},[
         favBtn(rid),
         el('span',{class:'sc-engc__ban'},[ e.illu ? glyph(e.illu,'sc-engc__illu') : el('span',{class:'sc-engc__illu sc-engc__illu--emoji'}, e.icon || '🎮') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
