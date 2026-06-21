@@ -8,7 +8,7 @@
 
      showQR(title, { url })          → explicit share URL
      showQR(title, { join: pin })    → location.origin + '/?join=' + pin
-     showQR(title, { game, levels }) → location.origin + '/?game=…(&levels=…)'
+     showQR(title, { game, ds, levels }) → origin + '/?game=…(&ds=…)(&levels=…)'
      showQR(title)                   → location.origin + '/'
    ════════════════════════════════════════════════════════════════════ */
 (function () {
@@ -43,6 +43,7 @@
     if (opts.join != null && opts.join !== '') return origin + '/?join=' + opts.join;
     if (opts.game) {
       var u = origin + '/?game=' + encodeURIComponent(opts.game);
+      if (opts.ds)     u += '&ds=' + encodeURIComponent(opts.ds);
       if (opts.levels) u += '&levels=' + encodeURIComponent(opts.levels);
       return u;
     }
