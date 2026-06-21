@@ -352,6 +352,39 @@ exports.cleanupStaleArenas = onSchedule(
 
 
 // ============================================================
+//  demoteExpiredSubscriptions  (scheduled — hourly)
+//  Reverts users whose paid grant has lapsed (expiresAt < now) back to the
+//  free role + plan, so the runtime gate (which reads `role`) stops granting
+//  Pro. The client also downgrades at read time (auth.js _loadUserRole); this
+//  is the durable server-side backstop. Single-field query → no composite index.
+//  Requires the Blaze plan for scheduled functions.
+// ============================================================
+exports.demoteExpiredSubscriptions = onSchedule(
+  { schedule: 'every 60 minutes', timeZone: 'Europe/Athens' },
+  async (_context) => {
+    const db  = admin.firestore();
+    const now = admin.firestore.Timestamp.now();
+    const snap = await db.collection('users').where('expiresAt', '<', now).limit(500).get();
+    if (snap.empty) { console.log('[demoteExpired] none'); return null; }
+
+    let batch = db.batch(), n = 0;
+    for (const d of snap.docs) {
+      const data = d.data() || {};
+      if (data.role === 'free' && data.plan !== 'pro') continue; // already demoted
+      batch.set(d.ref, {
+        role: 'free',
+        plan: 'free',
+        demotedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      if (++n % 400 === 0) { await batch.commit(); batch = db.batch(); }
+    }
+    if (n % 400 !== 0) await batch.commit();
+    console.log(`[demoteExpired] demoted ${n} lapsed subscriber(s)`);
+    return null;
+  });
+
+
+// ============================================================
 //  PayPal helpers
 //  Setup:
 //    firebase functions:config:set \
