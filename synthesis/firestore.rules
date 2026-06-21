@@ -335,9 +335,14 @@ service cloud.firestore {
                    && uid                         == request.auth.uid
                    && request.resource.data.uid   == request.auth.uid
                    && request.resource.data.score == 0;
+        // A player may update only their OWN doc and may raise their own score by
+        // at most one correct-answer award (+100) per write — so a participant
+        // can't self-award an arbitrary score (the client increments by 100; the
+        // host, who owns scoring/leaderboard, may write freely).
         allow update: if request.auth != null
                    && (
-                     uid == request.auth.uid
+                     (uid == request.auth.uid
+                      && request.resource.data.get('score', 0) <= resource.data.get('score', 0) + 100)
                      || get(/databases/$(database)/documents/live_arenas/$(pin))
                           .data.hostUid == request.auth.uid
                    );
@@ -362,11 +367,20 @@ service cloud.firestore {
                    && request.resource.data.status    == 'waiting'
                    && request.resource.data.p1Id        is string
                    && request.resource.data.p1Id.size() <= 64
+                   && request.resource.data.get('p1Uid', '') == request.auth.uid
                    && request.resource.data.winner      == null;
+      // Only the two participants may mutate a match. p1Uid/p2Uid hold the real
+      // auth uids (p1Id/p2Id are random display ids, not identity). The joiner
+      // may set p2Uid to itself while the slot is still open. The previous rule's
+      // `p1Id == p1Id` clause was a no-op — any signed-in user could PATCH any
+      // match (force winner, flip turns).
       allow update: if request.auth != null
-                   && (resource.data.p1Id == request.resource.data.p1Id
-                       || resource.data.p2Id  == null
-                       || resource.data.p2Id  == request.resource.data.p2Id);
+                   && (
+                     request.auth.uid == resource.data.get('p1Uid', '')
+                     || request.auth.uid == resource.data.get('p2Uid', '')
+                     || (resource.data.get('p2Uid', null) == null
+                         && request.resource.data.get('p2Uid', '') == request.auth.uid)
+                   );
       allow delete: if isSuper();
     }
 

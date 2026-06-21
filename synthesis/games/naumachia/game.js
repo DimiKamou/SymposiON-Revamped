@@ -336,7 +336,7 @@ async function _nauMatchmake() {
       const doc = snap.docs[0];
       NAU.pvp.matchId = doc.id;
       NAU.pvp.myRole  = 'p2';
-      await doc.ref.update({ p2Id: myId, status: 'placement', p2Ready: false });
+      await doc.ref.update({ p2Id: myId, p2Uid: _authed.uid, status: 'placement', p2Ready: false });
       _nauPvPListen();
       _nauPhase('place');
     } else {
@@ -344,7 +344,9 @@ async function _nauMatchmake() {
       const ref = await col.add({
         status:    'waiting',
         p1Id:      myId,
+        p1Uid:     _authed.uid,
         p2Id:      null,
+        p2Uid:     null,
         p1Ready:   false,
         p2Ready:   false,
         turn:      'p1',
