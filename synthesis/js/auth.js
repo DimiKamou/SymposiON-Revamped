@@ -26,8 +26,9 @@ const _ADMIN_EMAIL  = 'dimikamou@gmail.com';
 //   • free content (no tier, or 'free') → always pass
 //   • otherwise rank-compare via SymTiers.meets (Free<Student<Teacher<Pro
 //     plus any admin-created custom tiers)
-//   • if the tier registry hasn't loaded, fail OPEN — never lock the
-//     whole site on a transient load error.
+//   • if the tier registry can't be consulted, fail CLOSED (deny paid content)
+//     so the gate can't be bypassed by blocking the SymTiers script. Free
+//     content is allowed at the top guard, so this never locks the whole site.
 function symCurrentTier() {
   if (isAdmin || currentUserRole === 'teacher') return 'teacher';
   return currentUserRole || 'free';
@@ -39,8 +40,8 @@ function _gpCanAccessTier(requiredTier) {
     if (window.SymTiers && typeof window.SymTiers.meets === 'function') {
       return window.SymTiers.meets(symCurrentTier(), requiredTier);
     }
-  } catch (_) { /* fall through to fail-open */ }
-  return true; // registry unavailable → don't hard-block
+  } catch (_) { /* fall through to fail-CLOSED */ }
+  return false; // registry unavailable → deny paid content (fail closed)
 }
 // Expose for non-closure callers (admin preview, debugging).
 window.symCurrentTier  = symCurrentTier;
@@ -201,6 +202,17 @@ function _loadUserRole(uid) {
     .then(([doc, tokenResult]) => {
       currentUserRole = doc.exists ? (doc.data().role || 'free') : 'free';
 
+      // Enforce subscription expiry at runtime: a lapsed paid grant reverts to
+      // 'free' before any gating runs (the scheduled Cloud Function is the
+      // durable server-side backstop). The bootstrap-admin override below
+      // re-elevates admins, so this only affects real subscribers.
+      if (doc.exists) {
+        const _exp = doc.data().expiresAt;
+        const _expMs = (_exp && typeof _exp.toMillis === 'function') ? _exp.toMillis()
+                     : (typeof _exp === 'number' ? _exp : null);
+        if (_expMs && _expMs < Date.now()) currentUserRole = 'free';
+      }
+
       // Read provisioned admin role from custom claim.
       const claimRole = tokenResult?.claims?.role || null;
       adminRole = claimRole;
@@ -251,6 +263,30 @@ function _ensureUserDoc(user) {
   }).catch(() => {});
 }
 
+// ── MODAL A11Y: Esc-to-close + Tab focus-trap + focus restore (shared) ──
+// Stores the per-modal handler + the trigger element on the modal node so the
+// auth and sign-out dialogs don't clash. WCAG 2.1.2 / 2.4.3 / 4.1.2.
+function _modalTrapOn(modal, closeFn) {
+  if (modal.__trap) document.removeEventListener('keydown', modal.__trap, true);
+  modal.__prevFocus = document.activeElement;
+  modal.__trap = function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeFn(); return; }
+    if (e.key !== 'Tab') return;
+    const f = modal.querySelectorAll('a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    const list = Array.prototype.filter.call(f, function (n) { return n.offsetParent !== null; });
+    if (!list.length) return;
+    const first = list[0], last = list[list.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener('keydown', modal.__trap, true);
+}
+function _modalTrapOff(modal) {
+  if (modal && modal.__trap) { document.removeEventListener('keydown', modal.__trap, true); modal.__trap = null; }
+  try { if (modal && modal.__prevFocus && modal.__prevFocus.focus) modal.__prevFocus.focus(); } catch (_) {}
+  if (modal) modal.__prevFocus = null;
+}
+
 // ── MODAL OPEN / CLOSE ──
 function openAuthModal(view) {
   const modal = document.getElementById('auth-modal');
@@ -259,6 +295,7 @@ function openAuthModal(view) {
   switchAuthTab(view || 'login');
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+  _modalTrapOn(modal, closeAuthModal);
   setTimeout(() => {
     const first = modal.querySelector('input:not([type=hidden])');
     if (first) first.focus();
@@ -270,6 +307,7 @@ function closeAuthModal() {
   if (modal) modal.classList.remove('active');
   document.body.style.overflow = '';
   _clearAuthError();
+  _modalTrapOff(modal);
 }
 
 // ── TAB TOGGLE ──
@@ -459,6 +497,8 @@ function signOutUser() {
     }
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    _modalTrapOn(modal, closeSignoutModal);
+    setTimeout(() => { const c = modal.querySelector('.sym-confirm-cancel'); if (c) c.focus(); }, 60);
   } else {
     // Fallback if modal not in DOM
     if (confirm('Θέλεις σίγουρα να αποσυνδεθείς;')) _doSignOut();
@@ -477,6 +517,7 @@ function closeSignoutModal() {
   if (!document.querySelector('.game-overlay.active, #auth-modal.active')) {
     document.body.style.overflow = '';
   }
+  _modalTrapOff(modal);
 }
 
 // ── MICROSOFT (OUTLOOK) SIGN-IN ──
