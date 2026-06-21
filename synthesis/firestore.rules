@@ -298,7 +298,9 @@ service cloud.firestore {
                  && request.resource.data.score    >= 0
                  && request.resource.data.configId is string
                  && request.resource.data.configId.size() <= 100
-                 && request.resource.data.username is string;
+                 && request.resource.data.username is string
+                 && request.resource.data.username.size() <= 40
+                 && request.resource.data.score    <= 100000000;
       allow update: if false;
       allow delete: if isSuper();
     }

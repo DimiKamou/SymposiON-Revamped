@@ -456,14 +456,9 @@ window.ContentSource = (function () {
     if (!data || data.schema !== 'quiz' || !Array.isArray(data.units)) return false;
     const tgt = _quizTargets(contentId);
     if (!tgt || !tgt.Q) {
-      // No live global on this page — mirror into a generic question store the
-      // engines can fall back to, then we're done (persisted above).
-      try {
-        if (typeof window !== 'undefined') {
-          window.SYM_CONTENT_OVERRIDES = window.SYM_CONTENT_OVERRIDES || Object.create(null);
-          window.SYM_CONTENT_OVERRIDES[contentId] = clone(data);
-        }
-      } catch (_) {}
+      // No live global on this page — already persisted via _persistLocal above;
+      // nothing more to do. (The old SYM_CONTENT_OVERRIDES mirror here had no
+      // reader anywhere in js/ or games/, so it was dead — removed.)
       return false;
     }
     const Q = tgt.Q;
