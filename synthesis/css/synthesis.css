@@ -72,6 +72,17 @@
 .syn-theme__lang { display:flex; gap:6px; }
 .syn-theme__lang button { flex:1; padding:7px 0; border-radius:9px; border:1px solid var(--line); background:var(--sink); color:var(--fg-70); font-weight:700; font-size:12px; cursor:pointer; letter-spacing:.06em; }
 .syn-theme__lang button.on { border-color:var(--terra); background:var(--terra-soft); color:var(--terra-dk); }
+/* cursor picker (shape + icon) inside the theme menu */
+.syn-theme__cur { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:0 0 2px; }
+.syn-theme__curopt { position:relative; display:grid; place-items:center; aspect-ratio:1; border:1px solid var(--line); border-radius:10px; background:var(--sink); color:var(--terra); cursor:pointer; padding:0; transition:border-color .15s, box-shadow .15s; }
+.syn-theme__curopt:hover { border-color:var(--line-bold); }
+.syn-theme__curopt.on { border-color:var(--terra); box-shadow:inset 0 0 0 1.5px var(--terra); }
+.syn-theme__curopt.locked { opacity:.55; }
+.syn-theme__curgl { width:22px; height:22px; display:grid; place-items:center; font-size:14px; line-height:1; color:var(--fg-50); }
+.syn-theme__curopt .syn-theme__curgl svg { width:100%; height:100%; display:block; }
+.syn-theme__curprice { position:absolute; bottom:1px; right:3px; font-size:8px; font-weight:700; color:var(--fg-50); }
+.syn-theme__curopt.shake { animation:synShake .42s; }
+@keyframes synShake { 10%,90%{transform:translateX(-1px)} 30%,70%{transform:translateX(2px)} 50%{transform:translateX(-2px)} }
 @media (max-width: 880px){ .syn-theme__menu { right:auto; left:0; } }
 .syn-live { display:inline-flex; align-items:center; gap:6px; background:var(--gold-soft); color:var(--gold); border:0; font-family:var(--sans); font-weight:700; font-size:13px; padding:9px 15px; border-radius:999px; cursor:pointer; }
 .syn-btn { font-family:var(--sans); font-weight:700; font-size:13.5px; padding:10px 18px; border-radius:999px; cursor:pointer; border:0; transition:.16s; }
