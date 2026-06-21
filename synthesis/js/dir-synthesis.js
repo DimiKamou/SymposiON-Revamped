@@ -313,6 +313,49 @@
           el('span', { class:'syn-theme__optnm' }, t.nm) ])));
       menu.appendChild(grid);
     });
+
+    // cursor picker — shape + inner icon. Ported into the visible menu because
+    // the original picker lived in the now-hidden dev harness, leaving users with
+    // the custom ring-cursor ON and no way to change or disable it. "None" shape +
+    // "None" icon restores the normal system cursor. Premium shapes/icons cost
+    // Kleos (same economy as the harness).
+    if (window.SymCursor) {
+      const SS = window.SymStore;
+      const CUR_PREMIUM = ['monsterball','invader','ghost','mushroom','pixelheart','joystick','skull','katana'];
+      const curPrice = (kind,id)=> id==='none'?0 : (kind==='shape'&&id==='circle')?0 : (kind==='icon'&&CUR_PREMIUM.indexOf(id)>=0)?1800:600;
+      const curOwned = (kind,id)=>{ if(curPrice(kind,id)===0) return true; const def=kind==='shape'?['none','circle']:['none']; return ((SS&&SS.get('own_cursor_'+kind,def))||[]).indexOf(id)>=0; };
+      const curNow = (kind)=> kind==='shape' ? (SymCursor.shape||'circle') : (SymCursor.icon||'none');
+      function curRow(kind, label, opts){
+        menu.appendChild(el('div', { class:'syn-theme__sec' }, L(label)));
+        const row = el('div', { class:'syn-theme__cur' });
+        opts.forEach(([id,nm])=>{
+          const gl = el('span', { class:'syn-theme__curgl' });
+          if(id==='none') gl.textContent='∅';
+          else if(kind==='shape') gl.innerHTML = SymCursor.shapeSVG(id)||'';
+          else gl.innerHTML = SymCursor.iconSVG(id)||'';
+          const price = curPrice(kind,id), owned = curOwned(kind,id);
+          const apply = (b)=>{ if(kind==='shape'){ if(window.STATE) STATE.cursorShape=id; SS&&SS.set('cursor_shape',id); SymCursor.setShape(id); }
+                               else { if(window.STATE) STATE.cursorIcon=id; SS&&SS.set('cursor_icon',id); SymCursor.setIcon(id); }
+                               row.querySelectorAll('.syn-theme__curopt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
+          const b = el('button', { class:'syn-theme__curopt'+(curNow(kind)===id?' on':'')+(owned?'':' locked'),
+            title: nm + (owned?'':' · ⌾'+price.toLocaleString('en-US')), 'aria-label': nm,
+            onclick:(e)=>{ e.stopPropagation();
+              if(owned){ apply(e.currentTarget); return; }
+              const k = SS?SS.get('kleos',0):0;
+              if(k>=price){ SS.set('kleos', k-price); const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SS.get(key,def).slice(); ow.push(id); SS.set(key,ow); e.currentTarget.classList.remove('locked'); const pr=e.currentTarget.querySelector('.syn-theme__curprice'); if(pr) pr.remove(); apply(e.currentTarget); }
+              else { e.currentTarget.classList.add('shake'); setTimeout(()=>e.currentTarget.classList.remove('shake'),420); } } },
+            [ gl ]);
+          if(!owned) b.appendChild(el('span', { class:'syn-theme__curprice' }, '⌾'+price.toLocaleString('en-US')));
+          row.appendChild(b);
+        });
+        menu.appendChild(row);
+      }
+      curRow('shape', {gr:'Δείκτης · Σχῆμα', en:'Cursor · Shape'},
+        [['none','Κανένα · None'],['circle','Κύκλος'],['diamond','Ρόμβος'],['square','Τετράγωνο'],['hexagon','Εξάγωνο'],['triangle','Τρίγωνο'],['reticle','Στόχαστρο']]);
+      curRow('icon', {gr:'Δείκτης · Εικονίδιο', en:'Cursor · Icon'},
+        [['none','Κανένα · None'],['star','Αστέρι'],['eye','Μάτι'],['dot','Κουκκίδα'],['arrow','Βέλος'],['meander','Μαίανδρος'],['bolt','Κεραυνός'],['monsterball','Σφαίρα'],['invader','Invader'],['ghost','Φάντασμα'],['mushroom','Μανιτάρι'],['pixelheart','Καρδιά'],['joystick','Joystick'],['skull','Κρανίο'],['katana','Κατάνα']]);
+    }
+
     // language toggle
     menu.appendChild(el('div', { class:'syn-theme__sec' }, L({gr:'Γλώσσα',en:'Language'})));
     const lang = el('div', { class:'syn-theme__lang' });
