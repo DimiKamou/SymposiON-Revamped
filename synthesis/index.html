@@ -53,6 +53,10 @@
      Drop-in CSS from the design handoff. Styles the sticky #site-banners-wrap
      bar rendered by js/banner-bar.js + the live preview in js/banner-admin.js. -->
 <link rel="stylesheet" href="css/site-banners.css?v=2"/>
+<!-- ══════════ FLAPPY "while you wait" SLOT ══════════
+     Styles ONLY the small outer card chrome (.sym-flappy-*) that wraps the
+     Shadow-DOM-isolated <flappy-waiting-game> on multiplayer waiting screens. -->
+<link rel="stylesheet" href="css/flappy-slot.css?v=1"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -332,6 +336,16 @@
 <!-- SymposiON loading marks: self-injects CSS + exposes window.SymLoaders.
      Loaded BEFORE js/app.js so SymLoader can mount a random variant. -->
 <script src="js/sym-loaders.js?v=1"></script>
+
+<!-- ══════════ FLAPPY "while you wait" mini-game ══════════
+     flappy-waiting-game.js eagerly registers the <flappy-waiting-game> custom
+     element + window.FlappyWaiting, so it's ready before any lazily-loaded
+     waiting screen (Live Arena lobby / Naumachia matchmaking) mounts it.
+     flappy-slot.js exposes window.SymFlappy.{mount,unmount} — a single shared
+     instance that follows the active waiting screen. -->
+<script src="games/flappy/flappy-waiting-game.js?v=1"></script>
+<script src="js/flappy-slot.js?v=1"></script>
+
 <script src="js/app.js"></script>
 
 <!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════

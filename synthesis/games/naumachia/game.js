@@ -102,6 +102,7 @@ function openNaumachia(cfg) {
 }
 
 function closeNaumachia() {
+  if (window.SymFlappy) SymFlappy.unmount();
   _nauCleanup();
   document.getElementById('naumachia-overlay')?.classList.remove('active');
 }
@@ -150,6 +151,8 @@ function _nauBuild() {
         <div class="nau-code-box" id="nau-code-box"></div>
       </div>
       <button class="nau-btn nau-btn-sm nau-btn-danger" onclick="_nauCancelMM()">✕ Ακύρωση</button>
+      <!-- "while you wait" mini-game (matchmaking) -->
+      <div class="nau-flappy-slot" id="nau-flappy"></div>
     </div>
   </div>
 
@@ -287,6 +290,13 @@ function _nauPhase(name) {
   NAU.phase = name;
   document.querySelectorAll('#nau-root .nau-phase').forEach(p => p.classList.remove('active'));
   document.getElementById('nau-ph-' + name)?.classList.add('active');
+
+  // "While you wait" Flappy mini-game: only during matchmaking; one shared
+  // instance, stopped on every other phase.
+  if (window.SymFlappy) {
+    if (name === 'mm') SymFlappy.mount(document.getElementById('nau-flappy'));
+    else SymFlappy.unmount();
+  }
 }
 
 // ── Menu ──────────────────────────────────────────────────────
