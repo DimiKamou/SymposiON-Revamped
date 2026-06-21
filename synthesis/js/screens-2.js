@@ -367,13 +367,70 @@
     body.appendChild(orcGrid);
   };
 
+  /* ══ MISTAKE CAPTURE ══ */
+  // Games call window.symLogMistake({...}) whenever a learner answers wrong.
+  // We persist a deduped, recency-weighted list in SymStore('sym_mistakes')
+  // that S.tartarus reads, and forward to the Firestore archive when present.
+  // Shape: { q:{gr,en}|string, wrong, right, cat, gameId, ds }
+  window.symLogMistake = function(m){
+    if(!m) return;
+    try{
+      var key = function(x){ var q = (x && x.q && (x.q.gr||x.q.en)) || (x && x.q) || ''; return String(q)+'¦'+String(x&&x.right||''); };
+      var list = SymStore.get('sym_mistakes', []) || [];
+      if(!Array.isArray(list)) list = [];
+      var k = key(m), hit = null;
+      for(var i=0;i<list.length;i++){ if(key(list[i])===k){ hit = list[i]; break; } }
+      if(hit){ hit.n = (hit.n||1) + 1; hit.wrong = m.wrong != null ? m.wrong : hit.wrong; hit.t = m.t || hit.t; }
+      else { list.push({ q:m.q, wrong:m.wrong, right:m.right, cat:m.cat||'', gameId:m.gameId||'', ds:m.ds||'', n:1, t:m.t||0 }); }
+      // keep most-frequent first, cap to a sane window
+      list.sort(function(a,b){ return (b.n||0)-(a.n||0); });
+      if(list.length > 200) list = list.slice(0, 200);
+      SymStore.set('sym_mistakes', list);
+    }catch(_){ }
+    // Forward to the real Firestore archive (review-hub.js) when wired in.
+    try{
+      if(typeof logStudentMistake === 'function'){
+        logStudentMistake(m.gameId||'engine', m.ds||'', m.lessonType||'', m.q||{}, m.wrong);
+      }
+    }catch(_){ }
+  };
+
   /* ══ ANODOS ══ (ritualistic, replayable, editable tiers, riddles) */
+  // Anodos roguelike — the Slay-the-Spire handoff is a self-contained React +
+  // in-browser-Babel app. Mount it full-screen in an iframe (relative paths
+  // resolve from games/anodos/), reusing the .game-overlay convention so the
+  // shell suppresses its custom cursor and cursors.js stamps the active theme.
+  window.openAnodos = function(){
+    var prev = document.getElementById('anodos-overlay'); if (prev) prev.remove();
+    var ov = document.createElement('div');
+    ov.id = 'anodos-overlay'; ov.className = 'game-overlay active';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#0b0d10;';
+    var close = function(){ try{ ov.remove(); }catch(_){} document.body.classList.remove('syn-game-open'); document.removeEventListener('keydown', esc); };
+    var esc = function(e){ if(e.key==='Escape') close(); };
+    ov.innerHTML =
+      '<button id="anodos-close" aria-label="Έξοδος" style="position:fixed;top:14px;right:16px;z-index:10;font:600 13px Montserrat,system-ui,sans-serif;color:#EDE5DA;background:rgba(20,18,14,.82);border:1px solid rgba(212,174,88,.45);border-radius:999px;padding:8px 15px;cursor:pointer;backdrop-filter:blur(6px)">✕ Έξοδος</button>' +
+      '<iframe src="games/anodos/Anodos_2.html" title="Ἄνοδος — The Ascent" style="width:100%;height:100%;border:0;display:block" allow="autoplay; fullscreen"></iframe>';
+    document.body.appendChild(ov);
+    document.body.classList.add('syn-game-open');
+    ov.querySelector('#anodos-close').onclick = close;
+    document.addEventListener('keydown', esc);
+    if (window.symApplyThemeClass) { try { window.symApplyThemeClass(ov); } catch(_){} }
+  };
+
   S.anodos = function(home, ctx){
     const accent = '#9C3F1F';
     const reached = SymStore.get('anodos_reached', 4); // tier index reached (from bottom)
     const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ἄνοδος · The Ascent',en:'Anodos · The Ascent'}),
-      title:L({gr:'Από τον Τάρταρο στον Όλυμπο',en:'From Tartarus to Olympus'}), sub:L({gr:'Λύσε γρίφους, κέρδισε προκλήσεις, ανέβα τις βαθμίδες.',en:'Solve riddles, win challenges, climb the tiers.'}),
-      actions:[ el('button',{class:'sc-cta sc-cta--solid', onclick:()=>beginRun()},[ glyph('flame','sc-cta__gl'), L({gr:'Ξεκίνα την Άνοδο',en:'Begin the Ascent'}) ]) ] });
+      title:L({gr:'Από τον Τάρταρο στον Όλυμπο',en:'From Tartarus to Olympus'}), sub:L({gr:'Ένα roguelike ανάβασης — διάλεξε ύλη, ανέβα τον διακλαδωτό χάρτη, νίκησε τους κόμβους με σωστές απαντήσεις.',en:'An ascent roguelike — pick a syllabus, climb the branching map, beat each node by answering.'}),
+      actions:[ el('button',{class:'sc-cta sc-cta--solid', onclick:()=>window.openAnodos()},[ glyph('flame','sc-cta__gl'), L({gr:'Ξεκίνα την Άνοδο',en:'Begin the Ascent'}) ]) ] });
+    // Anodos is now the Slay-the-Spire roguelike (games/anodos/Anodos_2.html),
+    // mounted full-screen. The old riddle-ladder below is retired (unreachable).
+    body.appendChild(el('button',{class:'lv-cat lv-cat--custom sc-stagger', style:'width:100%;margin-top:10px', onclick:()=>window.openAnodos()},[
+      el('div',{class:'lv-cat__b'},[
+        el('span',{class:'lv-cat__t'}, L({gr:'Είσοδος στον Ναό των Μουσών →',en:'Enter the Temple of the Muses →'})),
+        el('span',{class:'lv-cat__m'}, L({gr:'Slay-the-Spire · 3 Πράξεις · χάρτης κόμβων · κλέος & ανταμοιβές',en:'Slay-the-Spire · 3 Acts · node map · kleos & rewards'})) ]),
+      el('span',{class:'lv-cat__n'},'⛰') ]));
+    return;
 
     function beginRun(){
       SymStore.set('anodos_reached', 0); SymStore.set('anodos_run', (SymStore.get('anodos_run',0)+1));
@@ -434,10 +491,23 @@
     const body = P(home, { back:'home', accent, eyebrow:L({gr:'Μνημοσύνη · Spaced Repetition',en:'Mnemosyne · Spaced Repetition'}),
       title:'Tartarus Review', sub:L({gr:'Τα λάθη σου επιστρέφουν — μέχρι να τα κατακτήσεις.',en:'Your mistakes return — until you master them.'}),
       actions:[
+        el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>{ if(window.confirm(L({gr:'Επαναφορά Τάρταρου; Θα διαγραφούν όλα τα καταγεγραμμένα λάθη.',en:'Reset Tartarus? All recorded mistakes will be cleared.'}))){ try{ SymStore.set('sym_mistakes', []); }catch(_){ } if(typeof resetTartarus==='function'){ try{ resetTartarus(); }catch(_){ } } symRender(); } }},[ el('span',{html:'↺'}), L({gr:'Επαναφορά',en:'Reset'}) ]),
         el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>shareModal()},[ el('span',{html:'⤴'}), L({gr:'Κοινοποίηση',en:'Share'}) ]),
         el('button',{class:'sc-cta sc-cta--solid', onclick:()=>SymPreview.open('flash',{title:'Tartarus Review'})},[ glyph('flame','sc-cta__gl'), L({gr:'Ξεκίνα ανασκόπηση',en:'Start review'}) ]),
       ] });
-    body.appendChild(el('div',{class:'sc-stats sc-stagger'},[ stat('38',L({gr:'Προς ανασκόπηση',en:'Due today'}),accent), stat('7',L({gr:'Ημέρες σερί',en:'Day streak'}),accent), stat('214',L({gr:'Κατακτημένα',en:'Mastered'}),accent), stat('92%',L({gr:'Συγκράτηση',en:'Retention'}),accent) ]));
+
+    // Real mistakes captured from games via window.symLogMistake (SymStore
+    // 'sym_mistakes'); a small demo set is shown until something is logged.
+    const DEMO_MIS = [
+      { q:{gr:'Κλίση: λύομεν → ?',en:'Conjugate: λύομεν → ?'}, wrong:'λύωμεν', right:'λύομεν', n:14, cat:'Λύω' },
+      { q:{gr:'Latin gen. sing. rosa → ?',en:'Latin gen. sing. rosa → ?'}, wrong:'rosā', right:'rosae', n:11, cat:'Latin' },
+      { q:{gr:'Ποιος σκότωσε τον Έκτορα;',en:'Who slew Hector?'}, wrong:'Αἴας', right:'Ἀχιλλεύς', n:9, cat:'Ιλιάδα' },
+      { q:{gr:'Μάχη Μαραθώνα: έτος;',en:'Battle of Marathon: year?'}, wrong:'480 π.Χ.', right:'490 π.Χ.', n:7, cat:'Ιστορία' },
+    ];
+    const _real = ((SymStore.get('sym_mistakes', []) || []).map(function(x){ return { q:x.q, wrong:x.wrong, right:x.right, n:x.n||1, cat:x.cat||'' }; })).sort(function(a,b){ return (b.n||0)-(a.n||0); });
+    const mistakes = _real.length ? _real : DEMO_MIS;
+    const _due = mistakes.reduce(function(s,m){ return s + (m.n||1); }, 0);
+    body.appendChild(el('div',{class:'sc-stats sc-stagger'},[ stat(String(_due),L({gr:'Προς ανασκόπηση',en:'Due today'}),accent), stat(String((SymStore.get('streak_days', _real.length?0:7))||0),L({gr:'Ημέρες σερί',en:'Day streak'}),accent), stat(String(SymStore.get('mastered_count', _real.length?0:214)||0),L({gr:'Κατακτημένα',en:'Mastered'}),accent), stat((_real.length?'—':'92%'),L({gr:'Συγκράτηση',en:'Retention'}),accent) ]));
 
     // categorization
     body.appendChild(el('div',{class:'sc-cat sc-stagger'},[
@@ -446,13 +516,7 @@
     ]));
 
     // most common mistakes
-    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, L({gr:'Πιο συχνά λάθη',en:'Most common mistakes'})));
-    const mistakes = [
-      { q:{gr:'Κλίση: λύομεν → ?',en:'Conjugate: λύομεν → ?'}, wrong:'λύωμεν', right:'λύομεν', n:14, cat:'Λύω' },
-      { q:{gr:'Latin gen. sing. rosa → ?',en:'Latin gen. sing. rosa → ?'}, wrong:'rosā', right:'rosae', n:11, cat:'Latin' },
-      { q:{gr:'Ποιος σκότωσε τον Έκτορα;',en:'Who slew Hector?'}, wrong:'Αἴας', right:'Ἀχιλλεύς', n:9, cat:'Ιλιάδα' },
-      { q:{gr:'Μάχη Μαραθώνα: έτος;',en:'Battle of Marathon: year?'}, wrong:'480 π.Χ.', right:'490 π.Χ.', n:7, cat:'Ιστορία' },
-    ];
+    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, _real.length ? L({gr:'Πιο συχνά λάθη',en:'Most common mistakes'}) : L({gr:'Πιο συχνά λάθη (δείγμα)',en:'Most common mistakes (demo)'})));
     const mwrap = el('div',{class:'sc-mistakes sc-stagger has-accent', style:`--ca:${accent}`});
     mistakes.forEach(m=> mwrap.appendChild(el('div',{class:'sc-mis'},[
       el('span',{class:'sc-mis__n'}, m.n+'×'),

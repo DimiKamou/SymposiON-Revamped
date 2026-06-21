@@ -185,10 +185,10 @@
     }
     const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) closeOv(); } });
     const box = el('div', { class:'acro-box', role:'dialog', 'aria-modal':'true', 'aria-label':L({gr:'Ακρωτήρια',en:'Acroteria'}) });
-    const kleos = SymStore.get('kleos', 0);
+    const kleosLabel = (window.symKleosLabel) ? window.symKleosLabel() : SymStore.get('kleos', 0).toLocaleString('en-US');
     box.appendChild(el('div', { class:'acro-box__bar' }, [
       el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}), el('span',{ class:'acro-box__count', style:'opacity:.62;font-weight:600;margin-left:8px;font-size:.82em' }, '· '+((window.SYM&&window.SYM.ACROTERIA)?window.SYM.ACROTERIA.length:0)) ]),
-      el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleos.toLocaleString('en-US')), 'Kleos' ]),
+      el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleosLabel), 'Kleos' ]),
       el('button', { class:'acro-box__x', type:'button', 'aria-label':L({gr:'Κλείσιμο',en:'Close'}), onclick:()=>closeOv(), html:'&times;' }),
     ]));
     const detail = el('div', { class:'acro-detail' });

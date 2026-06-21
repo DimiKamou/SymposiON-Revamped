@@ -726,19 +726,22 @@ function _nauShowQuestion() {
     const btn = document.createElement('button');
     btn.className   = 'nau-q-opt';
     btn.textContent = opt;
-    btn.addEventListener('click', () => _nauAnswer(i, q.ans, optsEl));
+    btn.addEventListener('click', () => _nauAnswer(i, q.ans, optsEl, q));
     optsEl.appendChild(btn);
   });
   document.getElementById('nau-qov').classList.add('active');
 }
 
-function _nauAnswer(chosen, correct, optsEl) {
+function _nauAnswer(chosen, correct, optsEl, q) {
   optsEl.querySelectorAll('.nau-q-opt').forEach((btn, i) => {
     btn.disabled = true;
     if (i === correct) btn.classList.add('correct');
     if (i === chosen && chosen !== correct) btn.classList.add('wrong');
   });
   const won = chosen === correct;
+  if (!won && q && window.symLogMistake) {
+    try { window.symLogMistake({ q: q.q, wrong: (q.opts && q.opts[chosen]) || '', right: (q.opts && q.opts[correct]) || '', cat: 'Ναυμαχία', gameId: 'naumachia' }); } catch (_) {}
+  }
   setTimeout(() => {
     document.getElementById('nau-qov').classList.remove('active');
     const pf = NAU?.pendingFire;
