@@ -719,6 +719,17 @@
 .lv-share { display:inline-flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--terra); color:var(--terra-dk); font-family:var(--disp); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:9px 15px; border-radius:8px; cursor:pointer; }
 .lv-share:hover { background:var(--terra-soft); }
 .lv-share__gl { width:15px; height:15px; } .lv-share__gl svg{ width:100%; height:100%; }
+
+/* ── bottom "share to class" action (replaces the old header lv-share) ── */
+.lv-sharebtn { display:flex; align-items:center; gap:14px; width:100%; margin-top:18px; padding:16px 20px; background:linear-gradient(180deg, var(--ca-tint,var(--card)), var(--card)); border:1px solid var(--line); border-radius:16px; cursor:pointer; color:var(--fg); text-align:left; transition:.16s; }
+.lv-sharebtn:hover { border-color:var(--ca,var(--terra)); transform:translateY(-2px); box-shadow:0 12px 28px var(--shadow); }
+.lv-sharebtn__gl { display:grid; place-items:center; width:42px; height:42px; flex:none; border-radius:12px; background:var(--ca,var(--terra)); color:#fff; }
+.lv-sharebtn__gl svg { width:22px; height:22px; }
+.lv-sharebtn__b { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.lv-sharebtn__t { font-family:var(--disp); font-weight:600; font-size:16px; letter-spacing:.02em; text-transform:uppercase; }
+.lv-sharebtn__d { font-size:12.5px; color:var(--muted); }
+.lv-sharebtn__qr { flex:none; font-size:30px; line-height:1; color:var(--ca-ink,var(--terra-dk)); opacity:.9; }
+
 .lv-progress { display:flex; align-items:center; gap:13px; margin-bottom:18px; }
 .lv-progress__bar { flex:1; height:4px; border-radius:3px; background:var(--sink); overflow:hidden; }
 .lv-progress__fill { display:block; height:100%; background:var(--ca,var(--terra)); }
@@ -727,14 +738,17 @@
 .lv-shell { display:grid; grid-template-columns:230px 1fr; gap:16px; }
 .lv-cats { display:flex; flex-direction:column; gap:7px; align-content:start; }
 .lv-cats__hd { font-family:var(--disp); font-weight:500; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); padding:0 4px 4px; }
-.lv-cat { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-left:3px solid transparent; border-radius:12px; padding:13px 14px; cursor:pointer; color:var(--fg); text-align:left; transition:.14s; }
-.lv-cat:hover { border-color:var(--line-bold); }
-.lv-cat.active { border-color:var(--line); border-left-color:var(--ca,var(--terra)); background:color-mix(in srgb,var(--ca) 8%,var(--card)); }
+/* Categories — non-active rails read as quiet-but-legible tabs, the active
+   one gets a clear accent spine + tint so the selection is obvious. */
+.lv-cat { display:flex; align-items:center; gap:10px; background:var(--raise,var(--card)); border:1px solid var(--line); border-left:3px solid transparent; border-radius:12px; padding:13px 14px; cursor:pointer; color:var(--fg); text-align:left; transition:.14s; }
+.lv-cat:hover { border-color:var(--line-bold); border-left-color:var(--ca-mid,var(--line-bold)); background:var(--card); }
+.lv-cat.active { border-color:var(--ca-mid,var(--line-bold)); border-left-color:var(--ca,var(--terra)); background:color-mix(in srgb,var(--ca) 10%,var(--card)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ca) 22%,transparent); }
 .lv-cat__b { flex:1; min-width:0; }
-.lv-cat__t { display:block; font-family:var(--disp); font-weight:600; font-size:15px; letter-spacing:.01em; }
+.lv-cat__t { display:block; font-family:var(--disp); font-weight:600; font-size:15px; letter-spacing:.01em; color:var(--fg); }
 .lv-cat.active .lv-cat__t { color:var(--ca-ink,var(--terra-dk)); }
-.lv-cat__m { display:block; font-size:11px; color:var(--muted); margin-top:2px; }
-.lv-cat__n { display:grid; place-items:center; width:24px; height:24px; flex:none; border-radius:50%; background:var(--sink); color:var(--muted); font-family:var(--disp); font-weight:600; font-size:12px; }
+.lv-cat__m { display:block; font-size:11px; color:var(--fg-70,var(--muted)); margin-top:2px; }
+.lv-cat__n { display:grid; place-items:center; width:24px; height:24px; flex:none; border-radius:50%; background:color-mix(in srgb,var(--fg) 9%,var(--card)); color:var(--fg-70,var(--muted)); font-family:var(--disp); font-weight:600; font-size:12px; }
+.lv-cat.active .lv-cat__n { background:var(--ca-mid,var(--sink)); color:var(--ca-ink,var(--fg)); }
 .lv-cat__n.full { background:var(--ca,var(--terra)); color:#fff; }
 .lv-cat--custom { border-left-color:var(--gold); margin-top:6px; }
 .lv-cat--custom .lv-cat__t { color:var(--gold); }
@@ -747,16 +761,21 @@
 .lv-list__hd { display:flex; align-items:baseline; gap:10px; padding:2px 2px 6px; }
 .lv-list__ttl { font-family:var(--disp); font-weight:600; font-size:clamp(18px,2.2vw,24px); letter-spacing:.04em; text-transform:uppercase; color:var(--ca-ink,var(--terra-dk)); }
 .lv-list__ct { font-size:12px; color:var(--muted); }
+/* Level rows — a not-yet-done row is a confident, playable card (not greyed
+   out); the number badge carries the accent so "available" reads clearly.
+   Done rows are tinted with a sage check; hover lifts toward the accent. */
 .lv-row { display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:15px 18px; cursor:pointer; color:var(--fg); text-align:left; transition:.14s; }
-.lv-row:hover { border-color:var(--ca,var(--terra)); transform:translateX(2px); }
+.lv-row:hover { border-color:var(--ca,var(--terra)); transform:translateX(2px); box-shadow:0 6px 18px var(--shadow); }
 .lv-row.now { border-color:var(--ca,var(--terra)); box-shadow:0 0 0 1px var(--ca,var(--terra)); }
-.lv-row__n { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:9px; background:var(--sink); color:var(--muted); font-family:var(--disp); font-weight:600; font-size:15px; }
+.lv-row__n { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:9px; background:var(--ca-soft,var(--sink)); color:var(--ca-ink,var(--terra-dk)); font-family:var(--disp); font-weight:700; font-size:15px; }
+.lv-row.done { background:color-mix(in srgb,var(--sage) 7%,var(--card)); border-color:color-mix(in srgb,var(--sage) 30%,var(--line)); }
 .lv-row.done .lv-row__n { background:var(--sage); color:#fff; }
 .lv-row.now .lv-row__n { background:var(--ca,var(--terra)); color:#fff; }
-.lv-row__t { flex:1; font-size:15px; font-weight:500; }
-.lv-row__sec { font-weight:600; color:var(--muted); letter-spacing:.01em; }
-.lv-row__go { font-family:var(--disp); font-weight:500; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
-.lv-row:hover .lv-row__go { color:var(--ca-ink,var(--terra-dk)); }
+.lv-row__t { flex:1; font-size:15px; font-weight:500; color:var(--fg); }
+.lv-row__sec { font-weight:600; color:var(--fg-70,var(--muted)); letter-spacing:.01em; }
+.lv-row__go { font-family:var(--disp); font-weight:600; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ca-ink,var(--terra-dk)); opacity:.72; }
+.lv-row:hover .lv-row__go { opacity:1; }
+.lv-row.done .lv-row__go { color:var(--sage); opacity:.85; }
 
 /* live config controls */
 .sc-gmode { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
@@ -796,6 +815,26 @@
   .lv-cats { flex-direction:row; overflow-x:auto; }
   .lv-cat { min-width:170px; }
 }
+
+/* ── Share-QR modal (window.showQR) — theme-adaptive, --sym-* tokens ── */
+.qrm { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:color-mix(in srgb,var(--sym-ink,#000) 58%,transparent); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); animation:qrm-fade .14s ease both; }
+@keyframes qrm-fade { from{opacity:0} to{opacity:1} }
+.qrm__card { position:relative; width:min(360px,92vw); background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:20px; padding:26px 24px 22px; box-shadow:0 30px 70px var(--shadow); text-align:center; animation:qrm-rise .18s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes qrm-rise { from{opacity:0; transform:translateY(12px) scale(.98)} to{opacity:1; transform:none} }
+.qrm__x { position:absolute; top:12px; right:12px; width:32px; height:32px; display:grid; place-items:center; border:0; background:var(--sink); color:var(--muted); border-radius:9px; font-size:20px; line-height:1; cursor:pointer; transition:.14s; }
+.qrm__x:hover { background:var(--terra-soft); color:var(--terra-dk); }
+.qrm__title { margin:0 24px 4px; font-family:var(--disp); font-weight:600; font-size:20px; letter-spacing:.02em; color:var(--fg); }
+.qrm__sub { margin:0 0 18px; font-size:12.5px; color:var(--muted); }
+.qrm__qr { display:grid; place-items:center; width:216px; height:216px; margin:0 auto 16px; padding:8px; background:#fff; border:1px solid var(--line); border-radius:14px; }
+.qrm__qr img, .qrm__qr canvas { display:block; }
+.qrm__qr.is-empty { background:var(--sink); color:var(--muted); font-size:12.5px; padding:18px; }
+.qrm__link { font-family:var(--sans); font-size:12.5px; color:var(--fg-70,var(--muted)); background:var(--sink); border:1px solid var(--line); border-radius:9px; padding:9px 11px; margin-bottom:14px; word-break:break-all; user-select:all; }
+.qrm__acts { display:flex; gap:9px; }
+.qrm__btn { flex:1; font-family:var(--sans); font-weight:700; font-size:13px; padding:11px 14px; border:1px solid var(--line-bold); background:var(--card); color:var(--fg); border-radius:11px; cursor:pointer; transition:.14s; }
+.qrm__btn:hover { border-color:var(--terra); }
+.qrm__btn--primary { background:var(--terra-dk); border-color:transparent; color:#fff; }
+.qrm__btn--primary:hover { filter:brightness(1.06); }
+.qrm__btn--primary.is-done { background:var(--sage); }
 
 /* admin extra panes */
 .sc-crumbs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
