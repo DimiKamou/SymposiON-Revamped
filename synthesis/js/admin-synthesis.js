@@ -1398,6 +1398,8 @@
         document.head.appendChild(s);
       });
     }
+    // Resolves to { text, pdf } so callers can reuse the already-parsed pdf
+    // document (page count, OCR rendering) instead of re-buffering + re-parsing.
     function _extractPdf(file) {
       return _loadPdfJs().then(function (lib) {
         return file.arrayBuffer().then(function (buf) {
@@ -1411,7 +1413,7 @@
                 });
               })(i);
             }
-            return chain;
+            return chain.then(function (text) { return { text: text, pdf: pdf }; });
           });
         });
       });
@@ -1458,7 +1460,10 @@
       });
     }
     // .epub → unzip, concatenate the text of every (x)html chapter in name order.
+    // Bounded (chapter count + cumulative chars) so a huge or pathological/zip-
+    // bomb epub can't decompress unbounded and freeze the tab.
     function _extractEpub(file) {
+      var MAX_CHAPTERS = 2000, MAX_CHARS = 12000000; // ~12M chars hard ceiling
       return _loadJSZip().then(function (JSZip) {
         return file.arrayBuffer().then(function (buf) {
           return JSZip.loadAsync(buf).then(function (zip) {
@@ -1468,9 +1473,11 @@
               if (/\.x?html?$/i.test(path)) names.push(path);
             });
             names.sort(); // spine order ≈ alphabetical (acceptable approximation)
+            if (names.length > MAX_CHAPTERS) names = names.slice(0, MAX_CHAPTERS);
             var chain = Promise.resolve('');
             names.forEach(function (path) {
               chain = chain.then(function (acc) {
+                if (acc.length >= MAX_CHARS) return acc; // cumulative ceiling — stop growing
                 return zip.file(path).async('string').then(function (html) {
                   var txt = '';
                   try {
@@ -1497,48 +1504,43 @@
     var OCR_PAGE_CAP = 30;
     function _extractPdfSmart(file, onStatus) {
       var note = function (m) { if (onStatus) onStatus(m); };
-      return _extractPdf(file).then(function (pdfText) {
-        return _loadPdfJs().then(function (lib) {
-          return file.arrayBuffer().then(function (buf) {
-            return lib.getDocument({ data: buf }).promise.then(function (pdf) {
-              var pages = pdf.numPages;
-              var trimmed = (pdfText || '').trim();
-              var looksScanned = trimmed.length < 40 || (pages > 0 && trimmed.length < pages * 15);
-              if (!looksScanned) return pdfText;
-              // → OCR fallback.
-              return _loadTesseract().then(function (Tesseract) {
-                var cap = Math.min(pages, OCR_PAGE_CAP);
-                if (pages > OCR_PAGE_CAP) {
-                  note(L({ gr: 'Σαρωμένο PDF — OCR στις πρώτες ' + OCR_PAGE_CAP + ' σελίδες (από ' + pages + ')…',
-                           en: 'Scanned PDF — OCR on first ' + OCR_PAGE_CAP + ' pages (of ' + pages + ')…' }));
-                }
-                var chain = Promise.resolve('');
-                for (var i = 1; i <= cap; i++) {
-                  (function (n) {
-                    chain = chain.then(function (acc) {
-                      note(L({ gr: 'OCR σελίδα ' + n + '/' + cap + '…', en: 'OCR page ' + n + '/' + cap + '…' }));
-                      return pdf.getPage(n).then(function (pg) {
-                        var viewport = pg.getViewport({ scale: 2 });
-                        var canvas = document.createElement('canvas');
-                        canvas.width = viewport.width; canvas.height = viewport.height;
-                        var ctx = canvas.getContext('2d');
-                        return pg.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
-                          return Tesseract.recognize(canvas, 'ell+eng').then(function (r) {
-                            return acc + ((r && r.data && r.data.text) || '') + '\n\n';
-                          });
-                        });
-                      });
+      return _extractPdf(file).then(function (res) {
+        var pdfText = res.text, pdf = res.pdf;     // reuse the already-parsed doc
+        var pages = pdf.numPages;
+        var trimmed = (pdfText || '').trim();
+        var looksScanned = trimmed.length < 40 || (pages > 0 && trimmed.length < pages * 15);
+        if (!looksScanned) return pdfText;
+        // → OCR fallback (only here do we pay for rendering each page).
+        return _loadTesseract().then(function (Tesseract) {
+          var cap = Math.min(pages, OCR_PAGE_CAP);
+          if (pages > OCR_PAGE_CAP) {
+            note(L({ gr: 'Σαρωμένο PDF — OCR στις πρώτες ' + OCR_PAGE_CAP + ' σελίδες (από ' + pages + ')…',
+                     en: 'Scanned PDF — OCR on first ' + OCR_PAGE_CAP + ' pages (of ' + pages + ')…' }));
+          }
+          var chain = Promise.resolve('');
+          for (var i = 1; i <= cap; i++) {
+            (function (n) {
+              chain = chain.then(function (acc) {
+                note(L({ gr: 'OCR σελίδα ' + n + '/' + cap + '…', en: 'OCR page ' + n + '/' + cap + '…' }));
+                return pdf.getPage(n).then(function (pg) {
+                  var viewport = pg.getViewport({ scale: 2 });
+                  var canvas = document.createElement('canvas');
+                  canvas.width = viewport.width; canvas.height = viewport.height;
+                  var ctx = canvas.getContext('2d');
+                  return pg.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+                    return Tesseract.recognize(canvas, 'ell+eng').then(function (r) {
+                      return acc + ((r && r.data && r.data.text) || '') + '\n\n';
                     });
-                  })(i);
-                }
-                return chain.then(function (ocrText) {
-                  // If OCR yielded more than pdf.js, use it; else keep what we had.
-                  return (ocrText.trim().length > trimmed.length) ? ocrText : pdfText;
+                  });
                 });
-              }).catch(function () { return pdfText; }); // OCR unavailable → pdf.js text
-            });
+              });
+            })(i);
+          }
+          return chain.then(function (ocrText) {
+            // If OCR yielded more than pdf.js, use it; else keep what we had.
+            return (ocrText.trim().length > trimmed.length) ? ocrText : pdfText;
           });
-        });
+        }).catch(function () { return pdfText; }); // OCR unavailable → pdf.js text
       });
     }
     function renderAiSources() {
@@ -1577,6 +1579,14 @@
       fileInp.addEventListener('change', function () {
         var f = fileInp.files && fileInp.files[0]; if (!f) return;
         extracted = { text: '', name: f.name };
+        // Guard against absurd inputs before any in-browser extraction/OCR runs
+        // (a huge or pathological file would otherwise freeze the admin's tab).
+        var MAX_MB = 80;
+        if (f.size > MAX_MB * 1024 * 1024) {
+          statusLine.textContent = L({ gr: 'Πολύ μεγάλο αρχείο (όριο ' + MAX_MB + 'MB) — χώρισέ το σε μέρη.',
+                                       en: 'File too large (' + MAX_MB + 'MB limit) — split it into parts.' });
+          fileInp.value = ''; return;
+        }
         var done = function (txt) {
           extracted.text = txt || '';
           statusLine.textContent = (extracted.text.length).toLocaleString('en-US') + ' ' + L({ gr: 'χαρακτήρες', en: 'chars' }) + ' · ' + f.name;

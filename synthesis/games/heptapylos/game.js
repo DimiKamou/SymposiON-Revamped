@@ -14,8 +14,10 @@
      • ΑΣΠΙΣ  (Aegis)  — wedge a neutral war-stone to wall off a line
                                                           [5 correct in a row]
    API:  Heptapylos.open(cfg)  Heptapylos.close()
-   Reads window.HEP_Q (Games-Panel bridge) → window.SYM_QUESTIONS fallback,
-   and window.siteLang ('gr'|'en').
+   Reads window.HEP_Q if a launcher seeds it; otherwise the shared
+   window.SYM_QUESTIONS bank — the current synthesis launch path uses the
+   fallback (no per-engine HEP_Q bridge is wired yet). Also window.siteLang
+   ('gr'|'en').
 ═══════════════════════════════════════════════════════════════════════════ */
 const Heptapylos = (() => {
 
