@@ -225,12 +225,16 @@ service cloud.firestore {
 
     // AI reference corpus — admin-uploaded books/files the grader grounds its
     // answers in. Content-admin only (the grader reads it via the Admin SDK, so
-    // it is NOT world-readable). Each doc holds one ≤900KB text chunk.
+    // it is NOT world-readable). Each doc holds one text chunk.
+    // NOTE: Rules' string .size() counts CHARACTERS, not bytes. Firestore's hard
+    // limit is 1,048,576 BYTES per document; Greek code points are 2 bytes in
+    // UTF-8, so the cap must guarantee < 1 MiB even when every char is 2 bytes:
+    // 480000 chars × 2 = 960000 bytes, leaving headroom for the other fields.
     match /ai_corpus/{docId} {
       allow read:           if can('content');
       allow create, update: if can('content')
                          && request.resource.data.text is string
-                         && request.resource.data.text.size() <= 900000;
+                         && request.resource.data.text.size() <= 480000;
       allow delete:         if can('content');
     }
     // Ιστορία (History) per-course content packs. World-readable so the

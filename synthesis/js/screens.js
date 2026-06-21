@@ -427,7 +427,7 @@
     const gmodes = [
       { v:'solo', illu:'runner', t:{gr:'Ατομικά',en:'Solo'}, d:{gr:'Παίξε μόνος σου',en:'Play on your own'}, to:()=>go('subject') },
       { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>openRealLiveArena() },
-      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>go('live',{step:'config',cfg:{mode:'team',teams:3,gmode:'tow',time:5,score:['standard'],count:10}}) },
+      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>synLaunch('openTow') },
       { v:'pvp', illu:'crossed-swords', t:{gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'}, d:{gr:'Μονομαχίες & ομαδικοί αγώνες',en:'Duels & free-for-all'}, to:()=>launchPvPArena() },
       { v:'practice', illu:'scroll', t:{gr:'Εξάσκηση',en:'Practice'}, d:{gr:'Χωρίς βαθμολογία',en:'No scoring'}, to:()=>go('subject') },
     ];
@@ -690,12 +690,11 @@
     // LiveArena engine (Firestore live_arenas → real PIN + QR + live players),
     // and shows a brief opening panel with a manual fallback in case the
     // engine is still loading.
-    const gName = (cfg.game && L(cfg.game)) || L({gr:'Παιχνίδι',en:'Game'});
-    const partName = cfg.mode==='team'?{gr:cfg.teams+' Ομάδες',en:cfg.teams+' Teams'}:{gr:'Μόνος',en:'Solo'};
-    const contentName = (cfg.content==='upload') ? {gr:'Δικό σου ('+cfg.count+' ερωτ.)',en:'Custom ('+cfg.count+' Qs)'} : (cfg.nav ? {gr:cfg.nav.subject+' · '+cfg.nav.exercise,en:cfg.nav.subject+' · '+cfg.nav.exercise} : {gr:'Υπάρχον',en:'Existing'});
-    body.appendChild(el('div',{class:'sc-cfg-recap sc-stagger'},[
-      pill(gName, accent), pill(L(contentName), accent), pill(L(partName), accent), pill((cfg.time||5)+' '+L({gr:'λεπτά',en:'min'}), accent),
-    ]));
+    // NOTE: the config step's cfg (game/level/teams/time/scoring) is NOT
+    // forwarded here — the real LiveArena engine owns its own host picker
+    // where the teacher configures the round (and prompts sign-in for
+    // signed-out users). We therefore do NOT render a recap of those values,
+    // which the engine would otherwise silently drop.
     const wrap = el('div',{class:'sc-live sc-stagger'});
     wrap.appendChild(el('div',{class:'sc-live__join', style:'text-align:center'},[
       el('div',{class:'sc-live__url'},[ el('span',{class:'sc-live__urll'},L({gr:'Άνοιγμα Ζωντανής Αρένας…',en:'Opening Live Arena…'})) ]),

@@ -175,7 +175,7 @@ const Heptapylos = (() => {
       `</div></div>`;
     w.innerHTML =
       seg('variant', T('ΠΑΡΑΛΛΑΓΗ', 'VARIANT'), [
-        { val: 'triliza', main: T('ΤΡΙΛΙΖΑ', 'TRILIZA'), sub: T('4 σε σειρά', 'line 4').replace('4', '3') },
+        { val: 'triliza', main: T('ΤΡΙΛΙΖΑ', 'TRILIZA'), sub: T('3 σε σειρά', 'line 3') },
         { val: 'tetras',  main: T('ΤΕΤΡΑΣ', 'TETRAS'),   sub: T('4 σε σειρά', 'line 4') },
         { val: 'pentas',  main: T('ΠΕΝΤΑΣ', 'PENTAS'),   sub: T('5 σε σειρά', 'line 5') },
       ]) +
@@ -482,14 +482,14 @@ const Heptapylos = (() => {
     st.cur.a.forEach((opt, i) => {
       const b = document.createElement('button'); b.className = 'hep-ans'; b.disabled = false;
       b.innerHTML = `<span class="hep-ans-key">${KEYS[i]}</span><span class="hep-ans-txt">${opt}</span>`;
-      b.onclick = () => answer(i, b); wrap.appendChild(b);
+      b.onclick = () => answer(i); wrap.appendChild(b);
     });
     renderPowerbar();
     document.getElementById('hep-timer-fill').style.width = '100%';
     startTimer();
   }
 
-  function answer(choice, btn) {
+  function answer(choice) {
     if (st.answered) return; st.answered = true; stopTimer();
     const correct = choice === st.cur.c;
     const speed = frac();
@@ -646,7 +646,7 @@ const Heptapylos = (() => {
     st.timer = setInterval(() => {
       const el = performance.now() - st.tStart, f = Math.max(0, 1 - el / DUR);
       fill.style.width = (f * 100) + '%'; fill.classList.toggle('warn', f < 0.32);
-      if (el >= DUR) { stopTimer(); if (!st.answered) answer(-1, null); }
+      if (el >= DUR) { stopTimer(); if (!st.answered) answer(-1); }
     }, 50);
   }
   function stopTimer() { if (st.timer) { clearInterval(st.timer); st.timer = null; } }

@@ -144,7 +144,7 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
   // real content, never an empty board.
   openHeptapylos: {
     js:      ['games/heptapylos/game.js'],
-    css:     ['games/pvp-shell.css', 'games/heptapylos/game.css'],
+    css:     ['games/pvp-shell.css'],
     overlay: null,
     eager:   true,
     fb:      false

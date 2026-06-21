@@ -8,12 +8,17 @@
    If this endpoint is unreachable, Iris automatically falls back to the
    browser's built-in voice, so the app keeps working offline.
 
+   AUTH  ·  This endpoint bills Google Cloud TTS per character, so it requires
+   a verified Firebase ID token (Authorization: Bearer <token>) — without it,
+   anyone could POST /api/tts and drain the project's TTS budget. A best-effort
+   per-user rate limit (Firestore counter) caps abuse. Clients (Iris, Narration
+   Studio) must attach the signed-in user's ID token when they call /api/tts.
+
    DEPLOY
-     1.  cd firebase/functions && npm i @google-cloud/text-to-speech firebase-functions
+     1.  cd functions && npm i @google-cloud/text-to-speech firebase-functions firebase-admin
      2.  Make sure Cloud Text-to-Speech API is enabled in your GCP project.
      3.  firebase deploy --only functions:tts
-     4.  In firebase.json add a rewrite so /api/tts → this function
-         (see firebase/firebase.json in this folder).
+     4.  firebase.json (at the repo root) already rewrites /api/tts → this function.
 
    COST NOTE  ·  Google/Azure neural TTS bill per character. Iris caches
    each clip in-memory per session, but for fixed canonical texts (epics,
@@ -22,8 +27,32 @@
 
 const functions = require('firebase-functions');
 const textToSpeech = require('@google-cloud/text-to-speech');
+const admin = require('firebase-admin');
+// index.js already calls admin.initializeApp(); guard in case tts.js is loaded
+// standalone (idempotent — never double-init).
+if (!admin.apps.length) { try { admin.initializeApp(); } catch (_) {} }
 
 const client = new textToSpeech.TextToSpeechClient();
+
+// Best-effort per-user rate limit. The counter lives in grader_usage/* which is
+// locked to Admin-SDK-only in firestore.rules. Returns false when over the cap.
+async function _ttsRateOk(uid, limit = 120, windowMs = 3600000) {
+  const ref = admin.firestore().doc('grader_usage/tts_' + uid);
+  return admin.firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now = Date.now();
+    let windowStart = now, count = 0;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      windowStart = d.windowStart || now;
+      count = d.count || 0;
+      if (now - windowStart >= windowMs) { windowStart = now; count = 0; }
+    }
+    if (count >= limit) return false;
+    tx.set(ref, { windowStart, count: count + 1, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    return true;
+  });
+}
 
 // Map the short codes Iris sends to real provider voice names.
 const VOICE_MAP = {
@@ -38,9 +67,23 @@ exports.tts = functions
   .https.onRequest(async (req, res) => {
     // CORS (same-origin via the /api/tts rewrite needs none, but allow for dev)
     res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Vary', 'Origin');
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'POST only' }); return; }
+
+    // ── AUTH: require a verified Firebase ID token (denial-of-wallet guard) ──
+    // Cloud TTS bills per character; without this anyone could POST /api/tts and
+    // drain the project budget. CORS does not stop non-browser callers — the
+    // token does. Signed-out clients fall back to the browser voice.
+    const m = (req.get('Authorization') || '').match(/^Bearer (.+)$/);
+    if (!m) { res.status(401).json({ error: 'auth-required' }); return; }
+    let caller;
+    try { caller = await admin.auth().verifyIdToken(m[1]); }
+    catch (_) { res.status(401).json({ error: 'auth-invalid' }); return; }
+    try {
+      if (!(await _ttsRateOk(caller.uid))) { res.status(429).json({ error: 'rate-limited' }); return; }
+    } catch (_) { /* limiter unavailable → auth still enforced, proceed */ }
 
     try {
       const { text, lang = 'el-GR', voice, rate = 1 } = req.body || {};
