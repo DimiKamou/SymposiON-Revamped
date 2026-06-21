@@ -13,7 +13,7 @@
   },
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "functions/**", "**/*.bat", "**/*.exe", "**/*.sh", "**/*.cmd"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "functions/**", "**/*.bat", "**/*.exe", "**/*.sh", "**/*.cmd", "handoff/**", "**/*.md"],
     "rewrites": [
       {
         "source": "/stripeWebhook",
