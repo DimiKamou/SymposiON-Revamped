@@ -528,6 +528,25 @@ function boot(){
     var _jpin = (new URLSearchParams(location.search)).get('join');
     if (_jpin && /^\d{4,8}$/.test(_jpin) && window.synLaunch) setTimeout(function () { try { window.synLaunch('openLiveArena'); } catch (_) {} }, 0);
   } catch (_) {}
+  // Combined-content deep link (?game=<openFn>&ds=<dataset>&levels=<csv>): a
+  // scanned QR from the engine setup screen opens the EXACT combined selection.
+  // Build the merged bank via SymMix and launch the engine with it (same
+  // injection path as the Start button → window.launchEngineWithBank). Guarded:
+  // a malformed/absent param is a silent no-op (engines without a setup also
+  // launch with whatever the launcher passes). Mirrors the ?join= handler.
+  try {
+    var _q = new URLSearchParams(location.search);
+    var _g = _q.get('game'), _ds = _q.get('ds'), _lv = _q.get('levels');
+    if (_g && _ds && _lv && window.SymMix && typeof window.launchEngineWithBank === 'function'
+        && window.SYN_GAMES && window.SYN_GAMES[_g]) {
+      var _ids = _lv.split(',').map(function (s) { var n = parseInt(s, 10); return isNaN(n) ? s.trim() : n; })
+                    .filter(function (v) { return v !== '' && v != null; });
+      if (_ids.length) {
+        var _inj = (window.SymMix.ENGINE_INJECTION && window.SymMix.ENGINE_INJECTION[_g]) || null;
+        setTimeout(function () { try { window.launchEngineWithBank(_g, _inj, _ds, _ids, ''); } catch (_) {} }, 0);
+      }
+    }
+  } catch (_) {}
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').replace(/^#/, '');
     if (h.indexOf('tag-') === 0) { const id = h.slice(4); if (STATE.screen !== 'tag' || !STATE.screenParam || STATE.screenParam.tag !== id) { STATE.screen = 'tag'; STATE.screenParam = { tag: id }; render(); window.scrollTo(0, 0); } return; }

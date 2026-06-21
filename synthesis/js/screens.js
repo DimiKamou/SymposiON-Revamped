@@ -321,10 +321,16 @@
     const body = P(home, { back:backTo, backLabel, accent, eyebrow:L(subject)+' · '+L(gName(game)),
       title:L(gName(game)) });
 
-    // ── No real level bank (reached only via launchTile's safe fallback for a
-    //    game without GP_LEVEL_PROVIDERS data): offer a single honest launch. ──
+    // ── No real level bank. Two sub-cases:
+    //    (a) an ENGINE that can take injected content (Agora Surfers, Heptapylos,
+    //        …) → rich "mix any material" setup (material picker + multi-select).
+    //    (b) anything else → a single honest direct-launch card (unchanged). ──
     if (!bank) {
       const fn = window.synResolveLaunch && synResolveLaunch(game);
+      const inj = (fn && window.SymMix && SymMix.ENGINE_INJECTION) ? SymMix.ENGINE_INJECTION[fn] : null;
+      const mats = (window.SymMix && SymMix.materials) ? SymMix.materials() : [];
+      if (inj && mats.length) { engineSetup(body, game, fn, inj, mats, accent); return; }
+
       const card = el('div',{class:'lv-shell sc-stagger has-accent', style:`--ca:${accent}`});
       card.appendChild(el('button',{class:'lv-cat lv-cat--custom', style:'width:100%', onclick:()=>{
         if (game && game.soon) return comingSoon(game);
@@ -440,6 +446,159 @@
       ]);
     }
   };
+
+  /* ── ENGINE SETUP (Phase 2 · multi-select content mixing) ──────────────
+     For engine games that ship no questions but accept injected content
+     (Agora Surfers, Heptapylos, …): pick a grammar MATERIAL, then MULTI-
+     SELECT its levels, then launch the engine with the merged bank.
+     The existing single-pick grammar path (S.level's bank branch) is
+     untouched — this only replaces the old "no levels" fallback card. */
+  function engineSetup(body, game, fn, inj, mats, accent){
+    const wrap = el('div',{class:'syn-mix sc-stagger has-accent', style:`--ca:${accent}`});
+
+    // selection state
+    let ds = mats[0].id;          // chosen material (dataset id)
+    const selected = new Set();   // selected level ids (for the chosen material)
+
+    // ── material picker (chips) ──
+    const matBar = el('div',{class:'syn-mix__mats'});
+    function paintMats(){
+      matBar.innerHTML='';
+      mats.forEach(m=>{
+        matBar.appendChild(el('button',{class:'syn-mat'+(m.id===ds?' active':''),
+          onclick:()=>{ if(ds===m.id) return; ds=m.id; selected.clear(); paintMats(); paintLevels(); updateBar(); }},
+          [ el('span',{class:'syn-mat__t'}, m.label) ]));
+      });
+    }
+    wrap.appendChild(el('div',{class:'syn-mix__lbl'}, L({gr:'Διάλεξε ύλη',en:'Pick material'})));
+    wrap.appendChild(matBar);
+
+    // ── level multi-select (grouped, checkbox rows + per-group select-all) ──
+    wrap.appendChild(el('div',{class:'syn-mix__lbl'}, L({gr:'Διάλεξε επίπεδα',en:'Pick levels'})+' '
+      + L({gr:'(πολλαπλή επιλογή)',en:'(multi-select)'})));
+    const levelsWrap = el('div',{class:'syn-mix__levels'});
+    wrap.appendChild(levelsWrap);
+
+    function provLevels(){
+      const p = window.GP_LEVEL_PROVIDERS && window.GP_LEVEL_PROVIDERS[ds];
+      return (p && p.levels) || [];
+    }
+    function paintLevels(){
+      levelsWrap.innerHTML='';
+      const levels = provLevels();
+      const order=[], byGroup={};
+      levels.forEach(lv=>{ const g=lv.group||L({gr:'Επίπεδα',en:'Levels'}); if(!byGroup[g]){byGroup[g]=[];order.push(g);} byGroup[g].push(lv); });
+      order.forEach(g=>{
+        const rows = byGroup[g];
+        const cat = el('div',{class:'syn-cat'});
+        const allOn = rows.every(lv=>selected.has(lv.id));
+        const head = el('div',{class:'syn-cat__hd'},[
+          el('span',{class:'syn-cat__t'}, g),
+          el('button',{class:'syn-cat__all'+(allOn?' on':''), onclick:()=>{
+            const on = !rows.every(lv=>selected.has(lv.id));
+            rows.forEach(lv=>{ if(on) selected.add(lv.id); else selected.delete(lv.id); });
+            paintLevels(); updateBar();
+          }}, allOn ? L({gr:'Καμία',en:'None'}) : L({gr:'Όλα',en:'All'})),
+        ]);
+        cat.appendChild(head);
+        rows.forEach(lv=>{
+          const on = selected.has(lv.id);
+          cat.appendChild(el('button',{class:'syn-lvrow'+(on?' on':'')+(lv.color?' syn-lvrow--'+lv.color:''),
+            onclick:()=>{ if(selected.has(lv.id)) selected.delete(lv.id); else selected.add(lv.id); paintLevels(); updateBar(); }},[
+            el('span',{class:'syn-lvrow__chk'}, on?'✓':''),
+            el('span',{class:'syn-lvrow__t'},[
+              lv.section ? el('span',{class:'syn-lvrow__sec'}, lv.section+' · ') : null,
+              lv.desc || (L({gr:'Επίπεδο',en:'Level'})+' '+lv.id) ]),
+          ]));
+        });
+        levelsWrap.appendChild(cat);
+      });
+    }
+
+    // ── sticky "N selected" bar + Mix-all + Start + Share ──
+    const bar = el('div',{class:'syn-mix__bar'});
+    const count = el('span',{class:'syn-mix__count'});
+    const mixAll = el('button',{class:'syn-mix__allbtn', onclick:()=>{
+      provLevels().forEach(lv=>selected.add(lv.id)); paintLevels(); updateBar();
+    }}, L({gr:'Μείξη όλων',en:'Mix all'}));
+    const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
+      if(!selected.size) return;
+      const ids = Array.from(selected);
+      startBtn.disabled = true;
+      const old = startBtn.textContent;
+      startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
+      window.launchEngineWithBank(fn, inj, ds, ids, L(gName(game))).then(()=>{
+        startBtn.disabled = false; startBtn.textContent = old;
+      }).catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
+    }});
+    const shareBtn = el('button',{class:'syn-mix__share', title:L({gr:'Μοιράσου στην τάξη',en:'Share to class'}), onclick:()=>{
+      if(!selected.size || !window.showQR) return;
+      window.showQR(L(gName(game)), { game: fn, ds: ds, levels: Array.from(selected).join(',') });
+    }}, [ el('span',{html:'&#9783;'}), ' ', L({gr:'QR',en:'QR'}) ]);
+    bar.appendChild(count);
+    bar.appendChild(el('span',{class:'syn-mix__sp'}));
+    bar.appendChild(mixAll);
+    bar.appendChild(shareBtn);
+    bar.appendChild(startBtn);
+
+    function updateBar(){
+      const n = selected.size;
+      count.textContent = n+' '+L({gr:'επιλεγμένα',en:'selected'});
+      startBtn.disabled = n===0;
+      startBtn.classList.toggle('is-off', n===0);
+      startBtn.textContent = n
+        ? L({gr:'Ξεκίνα με '+n+' επίπεδα',en:'Start with '+n+' levels'})
+        : L({gr:'Διάλεξε επίπεδα',en:'Pick levels'});
+      shareBtn.disabled = n===0;
+    }
+
+    wrap.appendChild(bar);
+    body.appendChild(wrap);
+    paintMats(); paintLevels(); updateBar();
+  }
+
+  /* Build the combined bank for (ds, ids) and launch the engine with it,
+     per the engine's injection mode. Returns a Promise (resolves after the
+     opener is invoked). Reused by the boot deep-link handler in app.js. */
+  function launchEngineWithBank(fn, inj, ds, ids, title){
+    inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
+    if (!(window.SymMix && typeof SymMix.bank === 'function')) return Promise.resolve();
+    return SymMix.bank(ds, ids).then(function(qs){
+      qs = qs || [];
+      if (inj.mode === 'config'){
+        // Engine takes a config arg (Agora Surfers reads config.questions).
+        return window.synLaunch ? window.synLaunch(fn, { questions: qs, title: title }) : null;
+      }
+      // mode 'sym': engine reads window.SYM_QUESTIONS at open. Snapshot the
+      // shared bank, swap in our selection, and RESTORE it when the engine's
+      // close fn runs (mirrors the Heptapylos HEP_Q snapshot/restore pattern),
+      // so the global library isn't clobbered for the next launch.
+      if (qs.length){
+        var prev = window.SYM_QUESTIONS;
+        window.SYM_QUESTIONS = qs;
+        var closeName = inj.closeFn;
+        if (closeName){
+          var restore = function(){
+            try { window.SYM_QUESTIONS = prev; } catch(_){}
+            try { if (window[closeName] && window[closeName].__symMixWrapped) window[closeName] = window[closeName].__symMixOrig; } catch(_){}
+          };
+          // Wrap the engine's close fn once so the restore fires on teardown.
+          var attachWrap = function(){
+            var orig = window[closeName];
+            if (typeof orig === 'function' && !orig.__symMixWrapped){
+              var wrapped = function(){ var r = orig.apply(this, arguments); restore(); return r; };
+              wrapped.__symMixWrapped = true; wrapped.__symMixOrig = orig;
+              window[closeName] = wrapped;
+            }
+          };
+          return Promise.resolve(window.synLaunch ? window.synLaunch(fn, { title: title }) : null)
+            .then(function(r){ attachWrap(); return r; });
+        }
+      }
+      return window.synLaunch ? window.synLaunch(fn, { title: title }) : null;
+    });
+  }
+  window.launchEngineWithBank = launchEngineWithBank;
 
   /* ══ 4 · GAME PANEL ══ (all engines · display modes · favorites · admin edit) */
   S.gamepanel = function(home, ctx){

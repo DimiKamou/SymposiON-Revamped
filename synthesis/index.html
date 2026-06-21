@@ -272,6 +272,13 @@
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
 <script src="js/trivia-iframe-launchers.js?v=3"></script>
 
+<!-- Phase 2 · multi-select content mixing. window.SymMix.bank(ds, ids) builds a
+     merged engine-ready question bank; the engine setup screen (js/screens.js)
+     and the ?game=&ds=&levels= deep link (js/app.js) consume it. Loads AFTER
+     gp-levels/gp-content (providers + raw-DB loaders) and trivia-iframe-launchers
+     (window._gpNormalizeQuestions), BEFORE js/app.js (boot deep-link handler). -->
+<script src="js/syn-mix.js?v=1"></script>
+
 <!-- ══════════ ADMIN COMMAND CENTER (admin-only) ══════════
      Ver1 admin engine. admin.js = backend handlers; admin-cc.js = the
      Command Center UI (navToAdmin / _renderAdminPage); realm + studio are
