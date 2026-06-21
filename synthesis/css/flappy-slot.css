@@ -1,0 +1,72 @@
+/* =============================================================================
+ * SymFlappy slot — the small collapsible "while you wait" card chrome.
+ * Only the OUTER card is styled here; the game itself is Shadow-DOM isolated.
+ * Theme-neutral / dark / unobtrusive so it sits quietly under lobby content.
+ * ========================================================================== */
+.sym-flappy-card {
+  width: 232px;
+  max-width: 100%;
+  margin: 14px auto 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(14, 18, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: "Montserrat", "Trebuchet MS", system-ui, sans-serif;
+  color: #f1ece4;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sym-flappy-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sym-flappy-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sym-flappy-toggle {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sym-flappy-toggle:hover { background: rgba(255, 255, 255, 0.18); }
+
+.sym-flappy-body {
+  width: 220px;
+  max-width: 100%;
+  /* 420:640 aspect → ~220 × 335 */
+  aspect-ratio: 420 / 640;
+  margin: 8px auto;
+  display: block;
+}
+
+/* Collapsed: hide the game body, keep the header strip. */
+.sym-flappy-card.is-collapsed .sym-flappy-body {
+  display: none;
+}

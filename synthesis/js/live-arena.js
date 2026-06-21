@@ -156,6 +156,7 @@ const LiveArena = (() => {
 
   async function close() {
     _detachAll();
+    if (window.SymFlappy) SymFlappy.unmount();
     const ov = document.getElementById('la-overlay');
     if (ov) ov.style.display = 'none';
     _reset();
@@ -957,6 +958,18 @@ const LiveArena = (() => {
     document.querySelectorAll('#la-wrap .la-screen').forEach(s => s.classList.remove('la-active'));
     const el = document.getElementById(id);
     if (el) el.classList.add('la-active');
+
+    // "While you wait" Flappy mini-game: one shared instance that follows the
+    // active waiting screen, and stops everywhere else.
+    if (window.SymFlappy) {
+      if (id === 'la-host-lobby') {
+        SymFlappy.mount(document.getElementById('la-flappy-host'));
+      } else if (id === 'la-student-lobby') {
+        SymFlappy.mount(document.getElementById('la-flappy-student'));
+      } else {
+        SymFlappy.unmount();
+      }
+    }
   }
 
   function _setEl(id, text) {
