@@ -582,6 +582,7 @@ if (document.readyState !== 'loading') boot(); else document.addEventListener('D
 /* ── SymLoader · branded loading overlay (login / async) ─────────────── */
 window.SymLoader = (function () {
   let ov;
+  const SYM_VARIANTS = ['ignite', 'meander', 'kylix', 'laurel', 'inscribe'];
   function ensure() {
     if (ov) return ov;
     ov = document.createElement('div'); ov.className = 'sym-loader'; ov.setAttribute('aria-hidden', 'true');
@@ -591,7 +592,20 @@ window.SymLoader = (function () {
     box.appendChild(mark); box.appendChild(txt); ov.appendChild(box);
     document.body.appendChild(ov); return ov;
   }
-  function show(msg) { const o = ensure(); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on')); return o; }
+  // Render a freshly-randomised SymLoaders variant into .sym-loader__mark.
+  // Falls back to the static brandMark if window.SymLoaders is unavailable.
+  function renderMark(o) {
+    const mark = o.querySelector('.sym-loader__mark');
+    if (!mark) return;
+    if (window.SymLoaders && typeof window.SymLoaders.mount === 'function') {
+      mark.innerHTML = ''; // clear so variants don't stack
+      const variant = SYM_VARIANTS[Math.floor(Math.random() * SYM_VARIANTS.length)];
+      window.SymLoaders.mount(mark, { variant: variant, size: 96 });
+    } else if (!mark.firstChild) {
+      mark.appendChild(brandMark('sym-loader__svg'));
+    }
+  }
+  function show(msg) { const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on')); return o; }
   function hide() { if (ov) ov.classList.remove('on'); }
   return { show, hide };
 })();
