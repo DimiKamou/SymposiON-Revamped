@@ -349,8 +349,8 @@ function buildHarness() {
       const btn = el('button',{ class:'cursor-opt'+(cur()===id?' active':'')+(owned?'':' locked')+(premium?' premium':''), title:nm+(owned?'':' · ⌾ '+price.toLocaleString('en-US')),
         onclick:(e)=>{ e.stopPropagation();
           if(owned){ applySel(id, e.currentTarget); return; }
-          const k=SymStore.get('kleos',0);
-          if(k>=price){ SymStore.set('kleos',k-price); const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SymStore.get(key,def).slice(); ow.push(id); SymStore.set(key,ow); const pr=e.currentTarget.querySelector('.cursor-opt__price'); if(pr) pr.remove(); e.currentTarget.classList.remove('locked'); applySel(id, e.currentTarget); }
+          const spend = (window.symSpendKleos) ? window.symSpendKleos(price) : (function(){ const k=SymStore.get('kleos',0); if(k>=price){ SymStore.set('kleos',k-price); return true; } return false; })();
+          if(spend){ const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SymStore.get(key,def).slice(); ow.push(id); SymStore.set(key,ow); const pr=e.currentTarget.querySelector('.cursor-opt__price'); if(pr) pr.remove(); e.currentTarget.classList.remove('locked'); applySel(id, e.currentTarget); }
           else { e.currentTarget.classList.add('shake'); setTimeout(()=>e.currentTarget.classList.remove('shake'),420); } } },
         [ glm, el('span',{class:'cursor-opt__nm'}, nm) ]);
       if(!owned) btn.appendChild(el('span',{class:'cursor-opt__price'}, '⌾'+price.toLocaleString('en-US')));
@@ -394,9 +394,8 @@ function buildHarness() {
 
   function buyTheme(t, btn){
     const price = themePrice(t);
-    const k = SymStore.get('kleos', 0);
-    if(k < price){ btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),440); return; }
-    SymStore.set('kleos', k - price);
+    const spend = (window.symSpendKleos) ? window.symSpendKleos(price) : (function(){ const k=SymStore.get('kleos',0); if(k>=price){ SymStore.set('kleos',k-price); return true; } return false; })();
+    if(!spend){ btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),440); return; }
     const own = SymStore.get('own_theme', freeThemeIds()); own.push(t.id); SymStore.set('own_theme', own);
     btn.classList.add('unlocking');
     const pr = btn.querySelector('.theme-opt__price'); if(pr) pr.remove();

@@ -494,6 +494,9 @@ const Heptapylos = (() => {
   function answer(choice) {
     if (st.answered) return; st.answered = true; stopTimer();
     const correct = choice === st.cur.c;
+    if (!correct && window.symLogMistake) {
+      try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[choice]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Επτάπυλος', gameId: 'heptapylos' }); } catch (_) {}
+    }
     const speed = frac();
     document.querySelectorAll('#hep-answers .hep-ans').forEach((b, i) => {
       b.disabled = true;

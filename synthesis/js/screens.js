@@ -605,21 +605,9 @@
     const body = P(home, { back:'home', accent:SITE, eyebrow:L({gr:'Μηχανές & Ύλη',en:'Engines & content'}),
       title:L({gr:'Πίνακας Παιχνιδιών',en:'Game Panel'}), sub:L({gr:'Διάλεξε μηχανή, ταίριαξέ τη με ύλη — ή ανέβασε δική σου.',en:'Pick an engine, pair it with any material — or upload your own.'}) });
     const cats = ['Όλα','Ιλιάδα','Οδύσσεια','Γραμματική','Ιστορία','Λατινικά'];
-    // ── game mode selection ──
-    const gmodes = [
-      { v:'solo', illu:'runner', t:{gr:'Ατομικά',en:'Solo'}, d:{gr:'Παίξε μόνος σου',en:'Play on your own'}, to:()=>go('subject') },
-      { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>openRealLiveArena() },
-      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>synLaunch('openTow') },
-      { v:'pvp', illu:'crossed-swords', t:{gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'}, d:{gr:'Μονομαχίες & ομαδικοί αγώνες',en:'Duels & free-for-all'}, to:()=>launchPvPArena() },
-      { v:'practice', illu:'scroll', t:{gr:'Εξάσκηση',en:'Practice'}, d:{gr:'Χωρίς βαθμολογία',en:'No scoring'}, to:()=>go('subject') },
-    ];
-    const gmwrap = el('div',{class:'sc-pmodes sc-stagger'}, gmodes.map(m=> el('button',{class:'sc-pmode', onclick:m.to},[
-      el('span',{class:'sc-pmode__ic'},[ glyph(m.illu,'sc-pmode__gl') ]),
-      el('span',{class:'sc-pmode__b'},[ el('span',{class:'sc-pmode__t'}, L(m.t)), el('span',{class:'sc-pmode__d'}, L(m.d)) ]),
-    ])));
-    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:'margin-top:0'}, L({gr:'Λειτουργία παιχνιδιού',en:'Game mode'})));
-    body.appendChild(gmwrap);
-    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, L({gr:'Μηχανές',en:'Engines'})));
+    // (Game-mode block removed from the panel per owner request — game modes live
+    //  on the subject/Live screens, not here.)
+    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:'margin-top:0'}, L({gr:'Μηχανές',en:'Engines'})));
     const filwrap = el('div',{class:'sc-fils sc-stagger'}, cats.map((c,i)=>chip(c,i===0)));
     body.appendChild(filwrap);
     // ── FULL engine catalogue ──
@@ -669,10 +657,21 @@
     const ordered = SymStore.order('gamepanel', items.map(x=>x.rid));
     items.sort((a,b)=> ordered.indexOf(a.rid)-ordered.indexOf(b.rid));
     items.sort((a,b)=> (SymStore.isFav(b.rid)?1:0)-(SymStore.isFav(a.rid)?1:0));
+    // Engine-card icons: consistent line-art SVG everywhere. The curated SY.ENGINES
+    // carry `illu`; the GP_ENGINES entries only carry an emoji `icon`, which looked
+    // inconsistent next to the SVGs — map each to a known illu key (these all exist
+    // in the _injectIllus registry), falling back to a neutral default.
+    const GP_ILLU = {
+      naumachia:'trident', heptapylos:'walls', invaders:'invader', labyrinth:'labyrinth',
+      'myth-memory':'cards', phalanx:'shield-round', 'rapid-fire':'lightning-bolt', tow:'sword',
+      'epic-puzzle':'timeline', dig:'amphora', mnemosyne:'lyre', blade:'sword', 'temple-run':'runner',
+      'golden-fleece':'trireme', halieia:'trident', krypteia:'torch', hegemonia:'acropolis',
+      toxotes:'helmet', agora:'column', discus:'wreath-laurel'
+    };
     items.forEach(({e,rid,a})=>{
       grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e, from:'gamepanel'})},[
         favBtn(rid),
-        el('span',{class:'sc-engc__ban'},[ e.illu ? glyph(e.illu,'sc-engc__illu') : el('span',{class:'sc-engc__illu sc-engc__illu--emoji'}, e.icon || '🎮') ]),
+        el('span',{class:'sc-engc__ban'},[ glyph(e.illu || GP_ILLU[e.id] || 'amphora','sc-engc__illu') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
         el('span',{class:'sc-engc__tools'},[
           el('button',{class:'sc-engc__eye', title:'Preview', onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu}); }, html:'&#128065;'}),
