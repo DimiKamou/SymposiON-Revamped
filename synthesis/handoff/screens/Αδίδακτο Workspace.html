@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Αδίδακτο Κείμενο</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+    /* syntactic role colors */
+    --c-subj:#2F6F8E; --c-verb:#C5572F; --c-obj:#7C5AC2; --c-ptc:#5B7544;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(120% 75% at 50% -15%,var(--gold-soft),transparent 55%);}
+
+  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:18px;padding:15px 34px;
+    background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .sig{width:28px;height:28px;color:var(--terra);}
+  .brand{font-family:var(--serif);font-size:18px;font-weight:600;}.brand b{color:var(--terra);}
+  .bar-sub{font-family:var(--disp);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-left:16px;border-left:1px solid var(--line);}
+  .spacer{flex:1;}
+  .timer{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-size:14px;font-weight:600;
+    color:var(--fg);background:var(--sink);border:1px solid var(--line);border-radius:10px;padding:8px 13px;}
+  .timer svg{width:15px;height:15px;color:var(--terra);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 34px 70px;}
+
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px;flex-wrap:wrap;}
+  .head .ht .eyebrow{font-family:var(--disp);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);}
+  .head .ht h1{font-family:var(--serif);font-size:29px;font-weight:700;line-height:1;margin-top:6px;}
+  .head .ht .src{font-family:var(--greek);font-style:italic;font-size:15px;color:var(--muted);margin-top:7px;}
+  .head .meta{display:flex;gap:9px;align-items:center;}
+  .badge{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+    padding:7px 12px;border-radius:9px;background:var(--sink);border:1px solid var(--line);color:var(--muted);}
+  .badge.diff{color:var(--gold);background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 28%,transparent);}
+
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+  .tbtn{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-size:12px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+    color:var(--fg-70);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:.15s;}
+  .tbtn:hover{border-color:var(--line-bold);}
+  .tbtn.on{color:#fff;background:var(--c-subj);border-color:transparent;}
+  .tbtn svg{width:15px;height:15px;}
+  .tbtn.help{margin-left:auto;color:var(--terra);border-color:var(--terra-soft);background:var(--terra-soft);}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 26px;}
+  .card-t{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;}
+
+  /* passage */
+  .passage{font-family:var(--greek);font-size:23px;line-height:2.15;color:var(--fg);}
+  .snum{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;
+    background:var(--sink);border:1px solid var(--line-soft);font-family:var(--disp);font-size:10px;color:var(--muted);
+    margin-right:8px;vertical-align:2px;}
+  .sent{transition:background .2s;border-radius:6px;padding:1px 2px;}
+  .sent.active{background:var(--gold-soft);}
+  .w{cursor:pointer;border-radius:4px;padding:0 1px;transition:background .12s,color .12s;border-bottom:1.5px solid transparent;}
+  .w.has:hover{background:var(--sink);border-bottom-color:var(--line-bold);}
+  .w.sel{background:var(--terra-soft);border-bottom-color:var(--terra);}
+  /* syntax mode */
+  .syntax .w.subj{color:var(--c-subj);border-bottom-color:color-mix(in srgb,var(--c-subj) 45%,transparent);}
+  .syntax .w.verb{color:var(--c-verb);border-bottom-color:color-mix(in srgb,var(--c-verb) 45%,transparent);font-weight:600;}
+  .syntax .w.obj{color:var(--c-obj);border-bottom-color:color-mix(in srgb,var(--c-obj) 45%,transparent);}
+  .syntax .w.ptc{color:var(--c-ptc);border-bottom-color:color-mix(in srgb,var(--c-ptc) 45%,transparent);font-style:italic;}
+  .syn-leg{display:none;gap:14px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--line-soft);}
+  .syntax-on .syn-leg{display:flex;}
+  .syn-leg .sl{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+  .syn-leg .sl .sw{width:11px;height:11px;border-radius:3px;}
+
+  /* parse popover */
+  .pop{position:absolute;z-index:40;width:240px;background:var(--card);border:1px solid var(--line-bold);border-radius:14px;
+    box-shadow:0 18px 44px -16px rgba(40,20,0,.4);padding:15px 16px;display:none;}
+  .pop.open{display:block;}
+  .pop .pw{font-family:var(--greek);font-size:21px;font-weight:700;color:var(--terra-dk);}
+  .pop .plem{font-family:var(--greek);font-size:13px;color:var(--muted);margin-top:2px;}
+  .pop .pmorph{font-size:11.5px;color:var(--fg-70);margin-top:9px;line-height:1.5;}
+  .pop .pgloss{font-size:13px;font-weight:600;margin-top:9px;padding-top:9px;border-top:1px solid var(--line-soft);}
+  .pop .prole{display:inline-block;font-family:var(--disp);font-size:9.5px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+    margin-top:9px;padding:3px 8px;border-radius:6px;}
+  .prole.subj{color:var(--c-subj);background:color-mix(in srgb,var(--c-subj) 12%,transparent);}
+  .prole.verb{color:var(--c-verb);background:var(--terra-soft);}
+  .prole.obj{color:var(--c-obj);background:color-mix(in srgb,var(--c-obj) 12%,transparent);}
+  .prole.ptc{color:var(--c-ptc);background:var(--sage-soft);}
+  .prole.other{color:var(--muted);background:var(--sink);}
+
+  /* translation workspace */
+  .ws-sent{padding:16px 0;border-bottom:1px solid var(--line-soft);}
+  .ws-sent:last-child{border-bottom:none;}
+  .ws-gr{font-family:var(--greek);font-size:17px;line-height:1.5;color:var(--fg);margin-bottom:11px;}
+  .ws-gr .n{font-family:var(--disp);font-size:11px;color:var(--terra);font-weight:600;margin-right:8px;}
+  .ws-ta{width:100%;min-height:54px;resize:vertical;font-family:var(--sans);font-size:13.5px;color:var(--fg);line-height:1.5;
+    background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:11px 13px;outline:none;transition:.15s;}
+  .ws-ta:focus{border-color:var(--terra);background:var(--card);}
+  .ws-ta::placeholder{color:var(--muted);}
+  .ws-actions{display:flex;align-items:center;gap:10px;margin-top:9px;}
+  .reveal-btn{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--terra);
+    background:var(--terra-soft);border:none;border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s;}
+  .reveal-btn:hover{background:color-mix(in srgb,var(--terra) 22%,transparent);}
+  .model{display:none;margin-top:11px;background:var(--sage-soft);border:1px solid color-mix(in srgb,var(--sage) 30%,transparent);
+    border-radius:11px;padding:13px 15px;}
+  .model.show{display:block;}
+  .model .ml{font-family:var(--disp);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--sage);margin-bottom:5px;}
+  .model .mtxt{font-size:13.5px;line-height:1.55;color:var(--fg);}
+  .self{display:flex;gap:8px;margin-top:11px;}
+  .self button{flex:1;font-family:var(--disp);font-size:10px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;
+    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 4px;cursor:pointer;color:var(--muted);transition:.14s;}
+  .self button[data-v="ok"]:hover,.self button[data-v="ok"].on{color:var(--sage);border-color:var(--sage);background:var(--sage-soft);}
+  .self button[data-v="mid"]:hover,.self button[data-v="mid"].on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft);}
+  .self button[data-v="no"]:hover,.self button[data-v="no"].on{color:var(--terra);border-color:var(--terra);background:var(--terra-soft);}
+
+  /* comprehension */
+  .comp{margin-top:24px;}
+  .cq{padding:18px 0;border-bottom:1px solid var(--line-soft);}
+  .cq:last-child{border-bottom:none;}
+  .cq .cqt{font-size:14.5px;font-weight:600;margin-bottom:13px;line-height:1.4;}
+  .cq .cqt .qn{font-family:var(--disp);color:var(--terra);font-weight:700;margin-right:8px;}
+  .copts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .copt{text-align:left;background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;cursor:pointer;
+    font-family:var(--sans);font-size:13px;color:var(--fg);transition:.14s;}
+  .copt:hover{border-color:var(--line-bold);}
+  .copt.correct{border-color:var(--sage);background:var(--sage-soft);color:var(--sage);font-weight:600;}
+  .copt.wrong{border-color:var(--terra);background:var(--terra-soft);color:var(--terra);}
+  .copt .gr{font-family:var(--greek);font-style:italic;}
+
+  /* help drawer */
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;z-index:50;background:var(--card);
+    border-left:1px solid var(--line-bold);box-shadow:-20px 0 50px -20px rgba(40,20,0,.35);
+    transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;}
+  .drawer.open{transform:none;}
+  .drawer-h{display:flex;align-items:center;gap:11px;padding:20px 22px;border-bottom:1px solid var(--line-soft);}
+  .drawer-h .da{width:38px;height:38px;border-radius:11px;background:var(--terra-soft);color:var(--terra);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .drawer-h .da svg{width:22px;height:22px;}
+  .drawer-h .dt b{font-family:var(--serif);font-size:17px;font-weight:700;}
+  .drawer-h .dt span{display:block;font-family:var(--disp);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .drawer-h .dclose{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--sink);color:var(--muted);cursor:pointer;}
+  .drawer-body{flex:1;overflow-y:auto;padding:20px 22px;}
+  .sok-msg{background:var(--sink);border:1px solid var(--line-soft);border-radius:13px;padding:14px 16px;font-size:13.5px;line-height:1.6;margin-bottom:14px;}
+  .sok-msg .gr{font-family:var(--greek);font-style:italic;color:var(--terra-dk);}
+  .sok-msg.q{background:var(--terra-soft);border-color:transparent;margin-left:30px;}
+  .glossary{display:flex;flex-direction:column;gap:0;}
+  .gloss-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+  .gloss-row .gw{font-family:var(--greek);font-size:15px;font-weight:700;color:var(--terra-dk);width:115px;flex-shrink:0;}
+  .gloss-row .gd{font-size:12.5px;color:var(--fg-70);line-height:1.4;}
+
+  .foot{text-align:center;margin-top:30px;font-family:var(--disp);font-size:10.5px;letter-spacing:.8px;color:var(--muted);line-height:1.9;}
+  .foot b{color:var(--terra);}
+  @media(max-width:920px){.cols{grid-template-columns:1fr;}.copts{grid-template-columns:1fr;}.bar-sub{display:none;}}
+</style>
+</head>
+<body class="theme-alabaster">
+<script>
+  if(document.fonts&&document.fonts.load){const poly='ἀἁὰάᾶὲέὴήῆὶίῖὸόὺύῦὼώῶᾳῃῷ';
+    ['400','700'].forEach(w=>{document.fonts.load(w+" 1em 'Cardo'",poly).catch(()=>{});document.fonts.load('italic '+w+" 1em 'Cardo'",poly).catch(()=>{});});}
+</script>
+<div class="has-accent" style="--ca:#C5572F;">
+
+  <header class="bar">
+    <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+      <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+    <span class="brand">Symposi<b>ON</b></span>
+    <span class="bar-sub">Αδίδακτο</span>
+    <span class="spacer"></span>
+    <span class="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock">09:42</span></span>
+  </header>
+
+  <div class="wrap">
+    <div class="head">
+      <div class="ht">
+        <div class="eyebrow">Αδίδακτο κείμενο · Εξάσκηση</div>
+        <h1>Λέων καὶ μῦς</h1>
+        <div class="src">Αἴσωπος, Μῦθοι — ἀττικὴ διασκευή</div>
+      </div>
+      <div class="meta">
+        <span class="badge">5 περίοδοι · 58 λέξεις</span>
+        <span class="badge diff">Δυσκολία · Μεσαία</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="tbtn" id="synBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h7"/></svg>Συντακτική ανάλυση</button>
+      <button class="tbtn" id="glossBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4zM4 9h16"/></svg>Λεξιλόγιο</button>
+      <span style="font-size:11.5px;color:var(--muted);font-style:italic;">Πάτησε οποιαδήποτε λέξη για ανάλυση τύπου →</span>
+      <button class="tbtn help" id="helpBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.1 9a3 3 0 1 1 4.5 2.6c-.9.5-1.6 1.2-1.6 2.4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>Ρώτα τον Σωκράτη</button>
+    </div>
+
+    <div class="cols">
+      <!-- PASSAGE -->
+      <div class="card" id="passageCard">
+        <div class="card-t"><span>Το κείμενο</span><span id="synHint" style="display:none;color:var(--c-subj);">Συντακτική όψη ενεργή</span></div>
+        <div class="passage" id="passage"></div>
+        <div class="syn-leg">
+          <span class="sl"><span class="sw" style="background:var(--c-subj)"></span>Υποκείμενο</span>
+          <span class="sl"><span class="sw" style="background:var(--c-verb)"></span>Ρήμα</span>
+          <span class="sl"><span class="sw" style="background:var(--c-obj)"></span>Αντικείμενο</span>
+          <span class="sl"><span class="sw" style="background:var(--c-ptc)"></span>Μετοχή</span>
+        </div>
+      </div>
+
+      <!-- WORKSPACE -->
+      <div class="card">
+        <div class="card-t"><span>Η μετάφρασή σου</span><span>περίοδος προς περίοδο</span></div>
+        <div id="workspace"></div>
+      </div>
+    </div>
+
+    <!-- COMPREHENSION -->
+    <div class="card comp">
+      <div class="card-t"><span>Ερωτήσεις κατανόησης</span><span>3 ερωτήσεις</span></div>
+      <div id="comp"></div>
+    </div>
+
+    <div class="foot">SYMPOSION · ΑΔΙΔΑΚΤΟ — ΑΝΑΛΥΣΗ &amp; ΜΕΤΑΦΡΑΣΗ<br/>Στην πλήρη έκδοση, η <b>μετάφρασή σου βαθμολογείται από τον Σωκράτη</b> και τα λάθη μπαίνουν στον Τάρταρο.</div>
+  </div>
+
+  <!-- parse popover -->
+  <div class="pop" id="pop"></div>
+
+  <!-- help drawer -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-h">
+      <div class="da"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
+      <div class="dt"><b>Σωκράτης</b><span>AI Tutor</span></div>
+      <button class="dclose" id="dclose">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+</div>
+
+<script>
+/* ── token model ── role: subj/verb/obj/ptc/other; parse optional ── */
+const P=(w,lemma,morph,gloss,role)=>({w,lemma,morph,gloss,role,has:true});
+const T=w=>({w,has:false});
+const SENTENCES=[
+  {
+    tokens:[P('Λέοντος','λέων, -οντος (ὁ)','ουσιαστικό · γ΄ κλίση · γενική ενικού','λιονταριού — (γενική απόλυτη)','ptc'),
+      P('κοιμωμένου','κοιμάομαι','μετοχή ενεστώτα · μέσης φωνής · γενική ενικού','που κοιμόταν — (γενική απόλυτη)','ptc'),
+      P('μῦς','μῦς, μυός (ὁ)','ουσιαστικό · γ΄ κλίση · ονομαστική ενικού','ποντίκι — υποκείμενο','subj'),
+      P('τῷ','ὁ, ἡ, τό','άρθρο · δοτική ενικού','το','other'),
+      P('σώματι','σῶμα, -ατος (τό)','ουσιαστικό · γ΄ κλίση · δοτική ενικού','στο σώμα — δοτική (τόπου)','obj'),
+      P('ἐπέδραμεν','ἐπιτρέχω','ρήμα · αόριστος β΄ · οριστική · γ΄ ενικού','έτρεξε πάνω','verb'),T('.')],
+    model:'Ενώ ένα λιοντάρι κοιμόταν, ένα ποντίκι έτρεξε πάνω στο σώμα του.'
+  },
+  {
+    tokens:[P('ὁ','ὁ, ἡ, τό','άρθρο (ουσιαστικοποιημένο) · ονομαστική','εκείνος (το λιοντάρι) — υποκείμενο','subj'),
+      P('δὲ','δέ','σύνδεσμος αντιθετικός','όμως / και','other'),
+      P('ἐξαναστὰς','ἐξανίσταμαι','μετοχή αορίστου β΄ · ονομαστική ενικού','αφού σηκώθηκε','ptc'),
+      P('καὶ','καί','σύνδεσμος','και','other'),
+      P('συλλαβὼν','συλλαμβάνω','μετοχή αορίστου β΄ · ονομαστική ενικού','αφού (το) έπιασε','ptc'),
+      P('αὐτὸν','αὐτός','αντωνυμία · αιτιατική ενικού','αυτό — αντικείμενο','obj'),
+      P('ἤμελλε','μέλλω','ρήμα · παρατατικός · γ΄ ενικού','επρόκειτο / ετοιμαζόταν','verb'),
+      P('καταθοινήσασθαι','καταθοινάομαι','απαρέμφατο αορίστου · μέσης φωνής','να (το) καταβροχθίσει','other'),T('.')],
+    model:'Εκείνο, αφού σηκώθηκε και το έπιασε, ετοιμαζόταν να το καταβροχθίσει.'
+  },
+  {
+    tokens:[P('τοῦ','ὁ, ἡ, τό','άρθρο · γενική ενικού','του (ποντικιού) — γενική απόλυτη','ptc'),
+      P('δὲ','δέ','σύνδεσμος','όμως','other'),
+      P('δεηθέντος','δέομαι','μετοχή αορίστου · παθητικής φωνής · γενική','καθώς παρακαλούσε — (γενική απόλυτη)','ptc'),
+      P('μεθεῖναι','μεθίημι','απαρέμφατο αορίστου β΄','να (το) αφήσει','other'),
+      P('αὐτὸν','αὐτός','αντωνυμία · αιτιατική','αυτό','obj'),
+      P('καὶ','καί','σύνδεσμος','και','other'),
+      P('λέγοντος','λέγω','μετοχή ενεστώτα · γενική ενικού','λέγοντας — (γενική απόλυτη)','ptc'),
+      P('ὅτι','ὅτι','σύνδεσμος ειδικός','ότι','other'),
+      P('σωθεὶς','σῴζω','μετοχή αορίστου · παθητικής φωνής · ονομαστική','αν σωθεί — υποθετική μετοχή','ptc'),
+      P('χάριτας','χάρις, -ιτος (ἡ)','ουσιαστικό · γ΄ κλίση · αιτιατική πληθ.','χάρες / ευγνωμοσύνη — αντικείμενο','obj'),
+      P('ἀποδώσει','ἀποδίδωμι','ρήμα · μέλλοντας · γ΄ ενικού','θα ανταποδώσει','verb'),
+      T(','),P('γελάσας','γελάω','μετοχή αορίστου · ονομαστική ενικού','αφού γέλασε','ptc'),
+      P('ἀπέλυσεν','ἀπολύω','ρήμα · αόριστος · γ΄ ενικού','(το) ελευθέρωσε','verb'),
+      P('αὐτόν','αὐτός','αντωνυμία · αιτιατική','αυτό — αντικείμενο','obj'),T('.')],
+    model:'Καθώς όμως το ποντίκι το παρακαλούσε να το αφήσει, λέγοντας ότι, αν σωθεί, θα του ανταποδώσει τη χάρη, το λιοντάρι γέλασε και το ελευθέρωσε.'
+  }
+];
+
+/* render passage */
+let wid=0;
+const passEl=document.getElementById('passage');
+passEl.innerHTML=SENTENCES.map((s,si)=>{
+  const inner=s.tokens.map(t=>{
+    if(!t.has) return /^[.,·;]/.test(t.w)?t.w:(' '+t.w);
+    const id='w'+(wid++);
+    return ` <span class="w has ${t.role}" data-id="${id}" data-si="${si}">${t.w}</span>`;
+  }).join('');
+  return `<span class="sent" data-si="${si}"><span class="snum">${si+1}</span>${inner} </span>`;
+}).join('');
+// flat lookup
+const TOKMAP={};let k=0;
+SENTENCES.forEach((s,si)=>s.tokens.forEach(t=>{if(t.has){TOKMAP['w'+k]=t;k++;}}));
+
+/* parse popover */
+const pop=document.getElementById('pop');
+function roleLabel(r){return {subj:'Υποκείμενο',verb:'Ρήμα',obj:'Αντικείμενο',ptc:'Μετοχή',other:'—'}[r]||'—';}
+passEl.addEventListener('click',e=>{
+  const w=e.target.closest('.w.has');
+  document.querySelectorAll('.w.sel').forEach(x=>x.classList.remove('sel'));
+  if(!w){pop.classList.remove('open');return;}
+  const t=TOKMAP[w.dataset.id];if(!t)return;
+  w.classList.add('sel');
+  pop.innerHTML=`<div class="pw">${t.w}</div><div class="plem">${t.lemma}</div>
+    <div class="pmorph">${t.morph}</div><div class="pgloss">${t.gloss.split('—')[0]}</div>
+    <span class="prole ${t.role}">${roleLabel(t.role)}</span>`;
+  pop.classList.add('open');
+  const r=w.getBoundingClientRect();
+  let left=r.left+window.scrollX+r.width/2-120;
+  left=Math.max(12,Math.min(left,window.innerWidth-252));
+  let top=r.bottom+window.scrollY+8;
+  pop.style.left=left+'px';pop.style.top=top+'px';
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.w')&&!e.target.closest('.pop'))pop.classList.remove('open');});
+
+/* syntax toggle */
+document.getElementById('synBtn').addEventListener('click',function(){
+  const on=document.getElementById('passageCard').classList.toggle('syntax-on');
+  passEl.classList.toggle('syntax',on);this.classList.toggle('on',on);
+  document.getElementById('synHint').style.display=on?'block':'none';
+});
+
+/* workspace */
+document.getElementById('workspace').innerHTML=SENTENCES.map((s,si)=>{
+  const gr=s.tokens.map(t=>t.has?t.w:t.w).join(' ').replace(/\s+([.,·;])/g,'$1');
+  return `<div class="ws-sent" data-si="${si}">
+    <div class="ws-gr"><span class="n">${si+1}</span>${gr}</div>
+    <textarea class="ws-ta" placeholder="Γράψε εδώ τη μετάφρασή σου…"></textarea>
+    <div class="ws-actions"><button class="reveal-btn" data-si="${si}">Δες πρότυπη μετάφραση</button></div>
+    <div class="model" id="model${si}">
+      <div class="ml">Πρότυπη μετάφραση</div><div class="mtxt">${s.model}</div>
+      <div class="self">
+        <button data-v="ok">Το πέτυχα</button><button data-v="mid">Σχεδόν</button><button data-v="no">Λάθος</button>
+      </div>
+    </div></div>`;
+}).join('');
+document.getElementById('workspace').addEventListener('click',e=>{
+  const rb=e.target.closest('.reveal-btn');
+  if(rb){document.getElementById('model'+rb.dataset.si).classList.add('show');rb.style.display='none';
+    document.querySelector('.sent[data-si="'+rb.dataset.si+'"]')?.classList.add('active');
+    setTimeout(()=>document.querySelector('.sent[data-si="'+rb.dataset.si+'"]')?.classList.remove('active'),1400);return;}
+  const sb=e.target.closest('.self button');
+  if(sb){sb.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on'));sb.classList.add('on');}
+});
+
+/* comprehension */
+const COMP=[
+  {q:'Τι έκανε ο μῦς ενώ ο λέων κοιμόταν;',opts:['Έτρεξε πάνω στο σώμα του','Τον δάγκωσε στο αυτί','Έφυγε τρομαγμένος','Φώναξε τους φίλους του'],c:0},
+  {q:'Γιατί τελικά ο λέων άφησε ελεύθερο τον μῦν;',opts:['Δεν πεινούσε','Γέλασε και τον λυπήθηκε','Φοβήθηκε','Τον έπιασε ύπνος'],c:1},
+  {q:'Τι συντακτικό φαινόμενο είναι το «Λέοντος κοιμωμένου»;',opts:['Απόλυτη αφαιρετική','Γενική απόλυτη','Κατηγορηματική μετοχή','Δοτική προσωπική'],c:1},
+];
+document.getElementById('comp').innerHTML=COMP.map((c,i)=>`
+  <div class="cq" data-i="${i}">
+    <div class="cqt"><span class="qn">${i+1}.</span>${c.q}</div>
+    <div class="copts">${c.opts.map((o,j)=>`<button class="copt" data-j="${j}">${o}</button>`).join('')}</div>
+  </div>`).join('');
+document.getElementById('comp').addEventListener('click',e=>{
+  const o=e.target.closest('.copt');if(!o)return;
+  const cq=o.closest('.cq');if(cq.dataset.done)return;cq.dataset.done=1;
+  const i=+cq.dataset.i,j=+o.dataset.j;
+  if(j===COMP[i].c)o.classList.add('correct');
+  else{o.classList.add('wrong');cq.querySelectorAll('.copt')[COMP[i].c].classList.add('correct');}
+});
+
+/* help drawer (mock Sokrates conversation) */
+const drawer=document.getElementById('drawer');
+document.getElementById('drawerBody').innerHTML=`
+  <div class="sok-msg q">Δεν καταλαβαίνω το <span class="gr">«Λέοντος κοιμωμένου»</span>.</div>
+  <div class="sok-msg">Καλή ερώτηση. Πρόσεξε ότι και οι δύο λέξεις είναι σε <b>γενική</b> και δεν συνδέονται με το ρήμα της πρότασης. Αυτό λέγεται <b>γενική απόλυτη</b>: ένα ουσιαστικό + μετοχή που μαζί δηλώνουν μια επιρρηματική σχέση — εδώ <i>χρόνο</i>.</div>
+  <div class="sok-msg">Μετάφρασέ το χρονικά: <span class="gr">«ενώ / όταν το λιοντάρι κοιμόταν…»</span>. Θες να δούμε άλλο ένα παράδειγμα γενικής απόλυτης από το κείμενο;</div>
+  <div class="sok-msg" style="background:transparent;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:12px;">— Δοκιμαστική συνομιλία · συνδέεται με τον Σωκράτη AI Tutor —</div>
+  <div style="font-family:var(--disp);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:22px 0 4px;">Λεξιλόγιο κειμένου</div>
+  <div class="glossary">
+    <div class="gloss-row"><span class="gw">ἐπιτρέχω</span><span class="gd">τρέχω πάνω σε κάτι</span></div>
+    <div class="gloss-row"><span class="gw">καταθοινάομαι</span><span class="gd">κατατρώγω, καταβροχθίζω</span></div>
+    <div class="gloss-row"><span class="gw">μεθίημι</span><span class="gd">αφήνω ελεύθερο, απολύω</span></div>
+    <div class="gloss-row"><span class="gw">χάρις, -ιτος</span><span class="gd">ευγνωμοσύνη, χάρη</span></div>
+    <div class="gloss-row"><span class="gw">ἀποδίδωμι</span><span class="gd">ανταποδίδω, επιστρέφω</span></div>
+  </div>`;
+function openDrawer(){drawer.classList.add('open');}
+function closeDrawer(){drawer.classList.remove('open');}
+document.getElementById('helpBtn').addEventListener('click',openDrawer);
+document.getElementById('glossBtn').addEventListener('click',openDrawer);
+document.getElementById('dclose').addEventListener('click',closeDrawer);
+
+/* countdown timer */
+let secs=9*60+42;
+setInterval(()=>{secs=Math.max(0,secs-1);const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');
+  document.getElementById('clock').textContent=m+':'+s;},1000);
+</script>
+</body>
+</html>

@@ -27,6 +27,11 @@
      grammar games (Greek + Latin). Loaded eagerly because their manifest css:[] is empty;
      lyo/game.css is purely game-scoped (no global/body rules), so it never touches the home. -->
 <link rel="stylesheet" href="games/lyo/game.css?v=2"/>
+<!-- Ἑπτάπυλος (Connect-Four siege quiz). game.css is overlay-scoped (#hep-overlay
+     / .hep-*), so it never touches the home — safe to link eagerly. The shared
+     .sym-overlay shell + dark-Hearth --sym-* tokens it relies on come from
+     games/pvp-shell.css, lazy-loaded FIRST by the manifest entry on launch. -->
+<link rel="stylesheet" href="games/heptapylos/game.css?v=1"/>
 <!-- ══════════ ADMIN (Command Center) — admin-only, lazy-visible ══════════
      Ver1 admin styles. Scoped to #page-admin so they never touch the shell.
      The overlay host (#page-admin) is added below; SYM_SCREENS.admin shows it. -->
@@ -324,6 +329,9 @@
 <script src="js/syn-hydrate.js?v=1"></script>
 <script src="js/banner-admin.js?v=2"></script>
 
+<!-- SymposiON loading marks: self-injects CSS + exposes window.SymLoaders.
+     Loaded BEFORE js/app.js so SymLoader can mount a random variant. -->
+<script src="js/sym-loaders.js?v=1"></script>
 <script src="js/app.js"></script>
 
 <!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════

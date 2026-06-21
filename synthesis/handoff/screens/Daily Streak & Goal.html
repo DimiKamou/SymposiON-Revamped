@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Το Σερί σου</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810; --sym-cream:#FBF8F1;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(120% 75% at 50% -15%,var(--terra-soft),transparent 55%);}
+
+  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:15px 34px;
+    background:color-mix(in srgb,var(--card) 86%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .sig{width:28px;height:28px;color:var(--terra);}
+  .brand{font-family:var(--serif);font-size:18px;font-weight:600;}.brand b{color:var(--terra);}
+  .bar-sub{font-family:var(--disp);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-left:16px;border-left:1px solid var(--line);}
+  .spacer{flex:1;}
+  .kleos{display:inline-flex;align-items:center;gap:7px;font-family:var(--disp);font-size:13px;font-weight:600;color:var(--gold);
+    background:var(--gold-soft);border-radius:999px;padding:7px 14px;}
+  .kleos svg{width:15px;height:15px;}
+
+  .wrap{max-width:980px;margin:0 auto;padding:30px 34px 70px;}
+
+  /* hero ember */
+  .ember{position:relative;overflow:hidden;border-radius:24px;padding:38px 40px;margin-bottom:26px;
+    background:linear-gradient(150deg,var(--terra),var(--terra-dk) 78%);color:#FBF1E8;
+    display:grid;grid-template-columns:auto 1fr auto;gap:34px;align-items:center;box-shadow:0 24px 60px -24px var(--terra);}
+  .ember::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 90% at 18% 120%,rgba(255,220,150,.35),transparent 60%);pointer-events:none;}
+  .ember::after{content:"";position:absolute;right:-40px;top:-40px;width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,230,170,.22),transparent 65%);pointer-events:none;}
+  .flame{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;}
+  .flame svg{width:120px;height:120px;filter:drop-shadow(0 6px 16px rgba(120,30,0,.5));}
+  .flame .fnum{position:absolute;top:54%;left:50%;transform:translate(-50%,-50%);font-family:var(--serif);font-size:46px;font-weight:700;color:#fff;}
+  .ember-mid{position:relative;z-index:1;}
+  .ember-mid .lab{font-family:var(--disp);font-size:13px;letter-spacing:2.5px;text-transform:uppercase;opacity:.85;}
+  .ember-mid h1{font-family:var(--serif);font-size:38px;font-weight:700;line-height:1.05;margin:6px 0 10px;}
+  .ember-mid p{font-size:14px;opacity:.92;line-height:1.5;max-width:380px;}
+  .ember-mid p b{font-weight:700;}
+  .ember-goal{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .gring{width:128px;height:128px;border-radius:50%;display:grid;place-items:center;position:relative;
+    background:conic-gradient(#FBE8C8 0 var(--p),rgba(255,255,255,.22) var(--p) 100%);}
+  .gring::after{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--terra-dk);}
+  .gring .gc{position:relative;text-align:center;color:#fff;}
+  .gring .gc b{font-family:var(--serif);font-size:26px;font-weight:700;display:block;line-height:1;}
+  .gring .gc span{font-family:var(--disp);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;opacity:.85;}
+  .ember-goal .glab{font-family:var(--disp);font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.9;text-align:center;}
+
+  /* week strip */
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:26px;}
+  .wday{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 8px 13px;text-align:center;position:relative;}
+  .wday .wn{font-family:var(--disp);font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:11px;}
+  .wday .wdot{width:42px;height:42px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--sink);border:1px solid var(--line-soft);}
+  .wday .wdot svg{width:22px;height:22px;}
+  .wday.hit .wdot{background:var(--terra-soft);border-color:transparent;color:var(--terra);}
+  .wday.freeze .wdot{background:color-mix(in srgb,#5C8AA8 16%,transparent);border-color:transparent;color:#5C8AA8;}
+  .wday.today{border-color:var(--terra);box-shadow:0 0 0 1px var(--terra);}
+  .wday.today .wn{color:var(--terra);font-weight:700;}
+  .wday .wdate{font-size:10px;color:var(--muted);margin-top:9px;}
+
+  .cols{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;}
+  .card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .card-h .ct{font-family:var(--serif);font-size:19px;font-weight:700;}
+  .card-h .cmeta{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+
+  /* calendar */
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-dow{font-family:var(--disp);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:4px;}
+  .cal-cell{aspect-ratio:1;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative;
+    background:var(--sink);color:var(--fg-70);}
+  .cal-cell.empty{background:transparent;}
+  .cal-cell.hit{background:var(--terra);color:#fff;font-weight:600;}
+  .cal-cell.hit.soft{background:var(--terra-soft);color:var(--terra);}
+  .cal-cell.freeze{background:color-mix(in srgb,#5C8AA8 22%,transparent);color:#3E6A88;}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--gold);font-weight:700;}
+  .cal-cell.miss{background:transparent;border:1px dashed var(--line);color:var(--muted);}
+  .cal-foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);}
+  .cal-leg{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);}
+  .cal-leg .sw{width:12px;height:12px;border-radius:4px;}
+
+  /* freezes */
+  .freeze-box{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:14px;background:color-mix(in srgb,#5C8AA8 8%,var(--card));border:1px solid color-mix(in srgb,#5C8AA8 24%,transparent);margin-bottom:18px;}
+  .freeze-box .fi{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:color-mix(in srgb,#5C8AA8 18%,transparent);color:#3E6A88;display:flex;align-items:center;justify-content:center;}
+  .freeze-box .fi svg{width:26px;height:26px;}
+  .freeze-box .ft{flex:1;}
+  .freeze-box .ft b{font-family:var(--serif);font-size:16px;font-weight:700;}
+  .freeze-box .ft p{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.45;}
+  .freeze-box .fcount{font-family:var(--serif);font-size:30px;font-weight:700;color:#3E6A88;}
+  .buy-freeze{width:100%;font-family:var(--disp);font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;
+    color:var(--gold);background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);border-radius:11px;padding:12px;cursor:pointer;transition:.15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;}
+  .buy-freeze:hover{background:color-mix(in srgb,var(--gold) 22%,transparent);}
+  .buy-freeze svg{width:14px;height:14px;}
+
+  /* milestones */
+  .miles{display:flex;flex-direction:column;gap:0;margin-top:6px;}
+  .mile{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .mile:last-child{border-bottom:none;}
+  .mile-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+    background:var(--sink);border:1px solid var(--line-soft);}
+  .mile.got .mile-ic{background:var(--terra-soft);border-color:transparent;}
+  .mile.next .mile-ic{background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 30%,transparent);}
+  .mile-body .mt{font-size:13.5px;font-weight:700;}
+  .mile-body .mt .gr{font-family:var(--serif);font-style:italic;color:var(--terra-dk);font-weight:600;}
+  .mile-body .mr{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .mile-prog{text-align:right;}
+  .mile-prog .mp{font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;}
+  .mile.got .mp{color:var(--terra);} .mile.next .mp{color:var(--gold);} .mile.lock .mp{color:var(--muted);}
+  .mile-prog .mbar{width:90px;height:6px;border-radius:99px;background:var(--sink);overflow:hidden;margin-top:6px;border:1px solid var(--line-soft);}
+  .mile-prog .mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--terra));border-radius:99px;}
+
+  /* goal detail */
+  .goal-rows{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+  .goal-row{display:flex;align-items:center;gap:12px;font-size:12.5px;}
+  .goal-row .gck{width:22px;height:22px;border-radius:6px;background:var(--sage-soft);color:var(--sage);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .goal-row .gck svg{width:13px;height:13px;}
+  .goal-row.todo .gck{background:var(--sink);color:var(--muted);}
+  .goal-row .gx{margin-left:auto;font-family:var(--disp);font-size:11px;color:var(--muted);}
+  .goal-pick{display:flex;gap:8px;margin-top:18px;}
+  .goal-pick button{flex:1;font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    background:var(--sink);border:1px solid var(--line);border-radius:10px;padding:11px 6px;cursor:pointer;color:var(--muted);transition:.14s;}
+  .goal-pick button.on{background:var(--terra-soft);border-color:var(--terra);color:var(--terra);}
+  .goal-pick button:hover{border-color:var(--line-bold);}
+
+  .foot{text-align:center;margin-top:30px;font-family:var(--disp);font-size:10.5px;letter-spacing:.8px;color:var(--muted);line-height:1.9;}
+  @media(max-width:880px){.ember{grid-template-columns:1fr;text-align:center;justify-items:center;}.cols{grid-template-columns:1fr;}.week{grid-template-columns:repeat(7,1fr);gap:5px;}.bar-sub{display:none;}}
+</style>
+</head>
+<body class="theme-alabaster">
+<div class="has-accent" style="--ca:#C5572F;">
+
+  <header class="bar">
+    <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+      <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+    <span class="brand">Symposi<b>ON</b></span>
+    <span class="bar-sub">Το Σερί σου</span>
+    <span class="spacer"></span>
+    <span class="kleos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H9"/></svg>3.420 Δραχμές</span>
+  </header>
+
+  <div class="wrap">
+    <!-- HERO EMBER -->
+    <section class="ember">
+      <div class="flame">
+        <svg viewBox="0 0 64 64" fill="none"><path d="M32 4c7 9 13 14 13 24a13 13 0 0 1-26 0c0-4 1.8-7.2 4-10C26 24 29 20 32 4z" fill="#F2B24C"/><path d="M32 20c4 5 7 8 7 14a7 7 0 0 1-14 0c0-3 1.4-5 3-7 1.6-2 3-4 4-7z" fill="#E0742F"/></svg>
+        <span class="fnum">12</span>
+      </div>
+      <div class="ember-mid">
+        <div class="lab">Τρέχον σερί</div>
+        <h1>12 ημέρες στη σειρά!</h1>
+        <p>Το μεγαλύτερό σου σερί ήταν <b>21 ημέρες</b>. Παίξε σήμερα για να το κρατήσεις ζωντανό — σου μένουν <b>6 ώρες</b>.</p>
+      </div>
+      <div class="ember-goal">
+        <div class="gring" style="--p:80%;"><div class="gc"><b>24<span style="font-size:14px;">/30</span></b><span>XP σήμερα</span></div></div>
+        <div class="glab">Ημερήσιος στόχος<br/>σχεδόν εκεί!</div>
+      </div>
+    </section>
+
+    <!-- WEEK STRIP -->
+    <div class="week" id="week"></div>
+
+    <div class="cols">
+      <!-- LEFT: calendar -->
+      <div>
+        <div class="card">
+          <div class="card-h"><span class="ct">Ιούνιος 2026</span><span class="cmeta">18 ενεργές ημέρες</span></div>
+          <div class="cal-grid" id="cal"></div>
+          <div class="cal-foot">
+            <span class="cal-leg"><span class="sw" style="background:var(--terra)"></span>Ενεργή</span>
+            <span class="cal-leg"><span class="sw" style="background:color-mix(in srgb,#5C8AA8 30%,transparent)"></span>Ασπίδα</span>
+            <span class="cal-leg"><span class="sw" style="background:transparent;border:1px dashed var(--line)"></span>Χαμένη</span>
+            <span class="cal-leg"><span class="sw" style="box-shadow:0 0 0 2px var(--gold)"></span>Σήμερα</span>
+          </div>
+        </div>
+        <!-- goal detail -->
+        <div class="card" style="margin-top:22px;">
+          <div class="card-h"><span class="ct">Ημερήσιος στόχος</span><span class="cmeta">24 / 30 XP</span></div>
+          <div class="goal-rows">
+            <div class="goal-row"><span class="gck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Έπαιξες 1 παιχνίδι<span class="gx">+12 XP</span></div>
+            <div class="goal-row"><span class="gck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Επανέλαβες κάρτες μνήμης<span class="gx">+12 XP</span></div>
+            <div class="goal-row todo"><span class="gck">○</span>Ολοκλήρωσε 1 ανάθεση<span class="gx">+6 XP</span></div>
+          </div>
+          <div class="goal-pick">
+            <button>Χαλαρά · 20</button>
+            <button class="on">Κανονικά · 30</button>
+            <button>Εντατικά · 50</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: freezes + milestones -->
+      <div>
+        <div class="card">
+          <div class="card-h"><span class="ct">Ασπίδες</span><span class="cmeta">Streak freeze</span></div>
+          <div class="freeze-box">
+            <div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg></div>
+            <div class="ft"><b>Ασπίδα Αθηνάς</b><p>Προστατεύει το σερί σου για 1 χαμένη ημέρα. Ενεργοποιείται αυτόματα.</p></div>
+            <div class="fcount">2</div>
+          </div>
+          <button class="buy-freeze"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h4.5a1.5 1.5 0 0 1 0 3H9"/></svg>Απόκτησε ασπίδα · 200 Δραχμές</button>
+        </div>
+        <div class="card" style="margin-top:22px;">
+          <div class="card-h"><span class="ct">Ορόσημα σερί</span><span class="cmeta">Rewards</span></div>
+          <div class="miles" id="miles"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">SYMPOSION · ΣΕΡΙ &amp; ΗΜΕΡΗΣΙΟΣ ΣΤΟΧΟΣ<br/>Μία ενεργή ημέρα = έφτασες τον στόχο σου. Οι ασπίδες σώζουν ένα χαμένο σερί.</div>
+  </div>
+</div>
+
+<script>
+/* week strip — last 7 days */
+const WEEK=[
+  {n:'Πα',d:'14',st:'hit'},{n:'Σα',d:'15',st:'hit'},{n:'Κυ',d:'16',st:'freeze'},
+  {n:'Δε',d:'17',st:'hit'},{n:'Τρ',d:'18',st:'hit'},{n:'Τε',d:'19',st:'hit'},{n:'Πε',d:'20',st:'today'}
+];
+const flameSvg='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c3 4 5 6 5 9a5 5 0 0 1-10 0c0-1.5.7-2.8 1.5-3.8C9 8.5 10 7 12 2z"/></svg>';
+const shieldSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg>';
+document.getElementById('week').innerHTML=WEEK.map(w=>{
+  const cls=w.st==='today'?'today':w.st;
+  const icon=w.st==='freeze'?shieldSvg:(w.st==='today'?'<span style="font-family:var(--disp);font-weight:700;color:var(--terra);font-size:13px;">ΣΗΜ</span>':flameSvg);
+  return `<div class="wday ${cls} ${w.st==='hit'?'hit':''}">
+    <div class="wn">${w.n}</div><div class="wdot">${icon}</div><div class="wdate">${w.d} Ιουν</div></div>`;
+}).join('');
+
+/* calendar — June 2026 (starts Monday=Δ). 1 Jun 2026 = Monday */
+const DOW=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
+// status per date: hit / freeze / miss / soft(hit but light). Today=20.
+const STAT={};
+[1,2,3,4,6,7,8,9,10,11,13,15,16,17,18,19].forEach(d=>STAT[d]='hit');
+[5,12].forEach(d=>STAT[d]='freeze');
+[14].forEach(d=>STAT[d]='miss');
+STAT[20]='today';
+let cal='';
+DOW.forEach(d=>cal+=`<div class="cal-dow">${d}</div>`);
+// June starts Monday → no leading empties. 30 days.
+for(let d=1;d<=30;d++){
+  if(d>20){cal+=`<div class="cal-cell"></div>`;continue;}
+  const s=STAT[d];
+  if(s==='today')cal+=`<div class="cal-cell hit today">${d}</div>`;
+  else if(s==='hit')cal+=`<div class="cal-cell hit">${d}</div>`;
+  else if(s==='freeze')cal+=`<div class="cal-cell freeze">${d}</div>`;
+  else if(s==='miss')cal+=`<div class="cal-cell miss">${d}</div>`;
+  else cal+=`<div class="cal-cell">${d}</div>`;
+}
+document.getElementById('cal').innerHTML=cal;
+
+/* milestones */
+const MILES=[
+  {n:7,ic:'🔥',name:'Ἑβδομάς',reward:'+150 Δραχμές',state:'got',pct:100},
+  {n:14,ic:'🌿',name:'Δίεβδομάς',reward:'Στεφάνι ελιάς (avatar frame)',state:'got',pct:100},
+  {n:30,ic:'⚜',name:'Μήνας',reward:'Τίτλος «Ἀθλητής» + 500 Δραχμές',state:'next',pct:40,prog:'12/30'},
+  {n:100,ic:'🏛',name:'Ἑκατονταετηρίς',reward:'Θέμα «Ακρωτήριον»',state:'lock',pct:12,prog:'12/100'},
+  {n:365,ic:'☀',name:'Ἐνιαυτός',reward:'Τίτλος «Ἀθάνατος» + Acroterion',state:'lock',pct:3,prog:'12/365'},
+];
+document.getElementById('miles').innerHTML=MILES.map(m=>`
+  <div class="mile ${m.state}">
+    <div class="mile-ic">${m.ic}</div>
+    <div class="mile-body"><div class="mt">${m.n} ημέρες · <span class="gr">${m.name}</span></div><div class="mr">${m.reward}</div></div>
+    <div class="mile-prog">
+      <div class="mp">${m.state==='got'?'✓ Κερδ.':m.prog}</div>
+      ${m.state!=='got'?`<div class="mbar"><i style="width:${m.pct}%"></i></div>`:''}
+    </div>
+  </div>`).join('');
+
+/* goal target picker */
+document.querySelectorAll('.goal-pick button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.goal-pick button').forEach(x=>x.classList.remove('on'));b.classList.add('on');}));
+</script>
+</body>
+</html>

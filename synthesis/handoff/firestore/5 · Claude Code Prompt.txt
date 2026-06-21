@@ -1,0 +1,70 @@
+PASTE-READY PROMPT FOR CLAUDE CODE (run inside the paideia repo)
+════════════════════════════════════════════════════════════════════
+
+You are wiring SymposiON's new prototype screens to live Firebase.
+Read `handoff-firestore/1 · DATA MODEL & INTEGRATION MAP.md` FIRST and
+follow it exactly. Work in the existing vanilla-JS style (template
+strings + event delegation, like admin-cc.js / nav.js). Do not pull in
+frameworks. Reuse existing collections (users, classrooms,
+teacher_reports, custom_games, assignments) — extend, don't replace.
+
+SCOPE (in this order; commit per step):
+
+1. AUTH/USERS: extend `users/{uid}` with grade, track, locale,
+   guardianEmail, kleos, level, dailyGoalXp, fcmTokens, streak{}, a11y{}
+   (map §A). Add `setUserClaims` Function (file 4) mirroring role/tier
+   to custom claims. Capture an FCM token on login into fcmTokens.
+
+2. CORPUS: create `corpus` collection (schema §C). Port Admin · Unseen
+   Corpus to read/write it (replace localStorage 'sym_corpus_v1' +
+   SEED). Port the Exam Simulator picker and Narration Studio merge to
+   read `corpus` (replace CORPUS_SEED / mergeCorpus). Keep field names.
+
+3. NARRATION + STORAGE (§F): store audio in Cloud Storage at
+   narration/{id}/{source}.mp3; metadata doc in `narration`. Wire the
+   Studio's three sources (pre-render via tts Fn → upload; record →
+   uploadBytes; upload). Change Iris read-aloud to look up `narration`
+   by textHash (NFC-normalized) before live tts before browser voice.
+
+4. GAME-END HOOK (§E): one batched transaction on game completion →
+   users.kleos/level, users.streak (with freeze logic), per-concept
+   users/{uid}/mastery/{concept}, assignments progress if ?assign=,
+   and append a kleos_event. Emit game_events on start/exit too.
+   Repoint Mastery & Daily Practice and Daily Streak screens to read
+   users + mastery subcollection (replace their MOCK arrays). Build the
+   adaptive queue from mastery(score<55) + srs(due<=today) + open
+   assignments; cache to users/{uid}/daily/{date}.
+
+5. LEADERBOARDS + ANALYTICS (read-only screens): add
+   `aggregateLeaderboards` (hourly) and `rollupAnalytics` (daily)
+   Functions (file 4). Repoint Global Leaderboards to read
+   leaderboards/{scope}/{grade_track}; repoint Admin · Game Analytics
+   to read analytics_daily (replace GAMES/MODES/genData).
+
+6. NOTIFICATIONS (§H): users/{uid}/notifications subcollection +
+   users.notifPrefs. Add streakReminders, dueReminders,
+   onAssignmentCreate Functions; push via FCM, email via the existing
+   mailer (or Trigger Email extension). Client only lists/marks-read/
+   edits prefs. Remove the "Demo" button.
+
+7. EXAMS (§D, §J): `exams` collection; persist answers/timer/flags.
+   Add gradeExam + generateExamQuestions callables using the Anthropic
+   key from functions config (NOT the client window.claude). Keep the
+   AI-grading disclaimer. Client cannot write grade{} (rules in file 2).
+
+8. STRIPE (§K): install the "Run Subscriptions with Stripe" extension
+   (or Billing + stripeWebhook stub). Pricing page → Checkout Session;
+   webhook maps price → users.tier; manage-sub → Billing Portal link.
+   Enable Stripe receipt emails. B2B contact form → b2bLeads collection.
+
+THEN: merge file 2 into firestore.rules and file 3 into
+firestore.indexes.json; `firebase deploy`. Run the QA checklist in
+`0 · README`. Delete all mock SEED/MOCK/genData arrays and the
+localStorage keys listed in §L (keep a11y as offline cache).
+
+CONSTRAINTS:
+• Never compute leaderboards or analytics on the client.
+• Never let the client write kleos/tier/streak/grade — server only.
+• Never put audio in Firestore — Storage only.
+• Anthropic + Stripe keys via functions config/secrets, never client.
+• Match the prototypes 1:1 visually; they are the approved design.

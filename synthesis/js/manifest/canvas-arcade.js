@@ -128,6 +128,26 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     overlay: 'noun-tow-overlay',
     eager:   false,
     fb:      false
+  },
+
+  // ── Ἑπτάπυλος — Connect-Four "siege of seven-gated Thebes" quiz engine ──
+  // IIFE that self-registers window.openHeptapylos/closeHeptapylos and BUILDS
+  // ITS OWN overlay shell on demand (<div id="hep-overlay" class="sym-overlay">),
+  // exactly like the pvp-pack engines — so overlay:null (synLaunch must NOT gate
+  // on / fetch an overlays/hep-overlay.html partial; the engine injects the shell
+  // itself). It reuses the shared `.sym-overlay` shell + dark "Hearth" `--sym-*`
+  // tokens which, in synthesis, live in games/pvp-shell.css — loaded FIRST so the
+  // overlay renders styled (synthesis' eager tokens.css is the LIGHT alabaster
+  // home palette and does NOT define .sym-overlay or the --sym-*-lt / font tokens
+  // this game uses). Reads its bank live from window.HEP_Q, falling back to the
+  // eagerly-seeded shared library window.SYM_QUESTIONS — so it always opens with
+  // real content, never an empty board.
+  openHeptapylos: {
+    js:      ['games/heptapylos/game.js'],
+    css:     ['games/pvp-shell.css'],
+    overlay: null,
+    eager:   true,
+    fb:      false
   }
 });
 
@@ -152,7 +172,10 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Naumachia':                'openNaumachia',
   'Rapid Fire':               'openRapidFire',
   'Καταιγισμός':              'openRapidFire',
-  'Tug of War':               'openTow'
+  'Tug of War':               'openTow',
+  'Ἑπτάπυλος':                'openHeptapylos',
+  'Επτάπυλος':                'openHeptapylos',
+  'Heptapylos':               'openHeptapylos'
 });
 
 // ── iliada-arcade eager-boot trap ──────────────────────────────────────────

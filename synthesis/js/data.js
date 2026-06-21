@@ -189,6 +189,7 @@ const ENGINES = [
   { gr:'Grammar Invaders', en:'Grammar Invaders', meta:{gr:'Action · Γραμματική',en:'Action · Grammar'}, illu:'invader' },
   { gr:'Φάλαγγα', en:'Phalanx', meta:{gr:'Strategy · turn-based',en:'Strategy · turn-based'}, illu:'shield-round' },
   { gr:'Ναυμαχία', en:'Naumachia', meta:{gr:'Naval · PvP',en:'Naval · PvP'}, illu:'trident' },
+  { gr:'Ἑπτάπυλος', en:'Heptapylos', meta:{gr:'Connect Four · Στρατηγική',en:'Connect Four · Strategy'}, illu:'walls' },
   { gr:'Λαβύρινθος', en:'Labyrinth', meta:{gr:'Maze · Μυθολογία',en:'Maze · Mythology'}, illu:'labyrinth' },
   { gr:'Συμπόσιον', en:'Symposion', meta:{gr:'Επιτραπέζιο · 2–8 παίκτες',en:'Board game · 2–8 players'}, illu:'amphora' },
 ];

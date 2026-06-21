@@ -1615,8 +1615,40 @@
         if (!fsReady() || !firebase.firestore) { statusLine.textContent = L({ gr: 'Χρειάζεται σύνδεση Firebase.', en: 'Firebase connection required.' }); return; }
         upBtn.disabled = true; upBtn.textContent = '…';
         var db = firebase.firestore(); var sid = 'src_' + Date.now();
-        var SIZE = 700000, chunks = [];
-        for (var i = 0; i < txt.length; i += SIZE) chunks.push(txt.slice(i, i + SIZE));
+        // Chunk by UTF-8 BYTE length, not character count. Firestore's hard
+        // per-document limit is 1,048,576 bytes; Greek code points are 2 bytes
+        // in UTF-8, so a fixed 700K-char stride yields ~1.4 MB chunks that the
+        // batch rejects (a sizeable Greek book then silently fails to upload).
+        // We grow each chunk character-by-character until adding the next char
+        // would push its encoded size past MAX_BYTES (~900 KB headroom under the
+        // 1 MiB cap, leaving room for the other doc fields + Firestore overhead).
+        var MAX_BYTES = 900000;
+        var enc = (typeof TextEncoder !== 'undefined') ? new TextEncoder() : null;
+        var byteLen = enc
+          ? function (s) { return enc.encode(s).length; }
+          : function (s) { return unescape(encodeURIComponent(s)).length; };
+        var chunks = [];
+        (function () {
+          var n = txt.length, start = 0;
+          while (start < n) {
+            // Coarse upper bound: at most 1 byte/char, so MAX_BYTES chars is a
+            // safe ceiling. Greek text settles well below this after the trim.
+            var end = Math.min(n, start + MAX_BYTES);
+            var piece = txt.slice(start, end);
+            // Shrink until the encoded piece fits. Always keep at least one
+            // character so a lone multi-byte char can never spin forever.
+            while (piece.length > 1 && byteLen(piece) > MAX_BYTES) {
+              // Scale the cut proportionally to the current overshoot, then
+              // step back by one as a safety margin (handles surrogate pairs).
+              var ratio = MAX_BYTES / byteLen(piece);
+              var cut = Math.max(1, Math.floor(piece.length * ratio) - 1);
+              piece = piece.slice(0, cut);
+            }
+            if (!piece.length) piece = txt.slice(start, start + 1); // guard
+            chunks.push(piece);
+            start += piece.length;
+          }
+        })();
         var batch = db.batch();
         chunks.forEach(function (ch, idx) {
           batch.set(db.collection('ai_corpus').doc(), { sourceId: sid, title: titleInp.value.trim(), subject: subjSel.value, part: idx, parts: chunks.length, text: ch, chars: ch.length, filename: extracted.name || '', enabled: true, uploadedAt: Date.now() });
@@ -1625,7 +1657,20 @@
           upBtn.disabled = false; upBtn.textContent = L({ gr: 'Ανέβασμα', en: 'Upload' });
           statusLine.textContent = '✓ ' + L({ gr: 'Αποθηκεύτηκε', en: 'Saved' }) + ' (' + chunks.length + ' ' + L({ gr: 'τμήματα', en: 'chunks' }) + ')';
           titleInp.value = ''; fileInp.value = ''; extracted = { text: '', name: '' }; loadList();
-        }).catch(function (e) { upBtn.disabled = false; upBtn.textContent = L({ gr: 'Ανέβασμα', en: 'Upload' }); statusLine.textContent = L({ gr: 'Σφάλμα: ', en: 'Error: ' }) + (e && e.message || e); });
+        }).catch(function (e) {
+          upBtn.disabled = false; upBtn.textContent = L({ gr: 'Ανέβασμα', en: 'Upload' });
+          var em = (e && (e.message || e.code) || '') + '';
+          var oversize = (e && e.code === 'invalid-argument')
+            || /invalid[_ -]?argument|too large|1048576|exceeds the maximum/i.test(em);
+          if (oversize) {
+            statusLine.textContent = L({
+              gr: 'Σφάλμα: το αρχείο είναι πολύ μεγάλο για ένα τμήμα (όριο Firestore 1 MiB ανά έγγραφο). Δοκίμασε μικρότερο αρχείο.',
+              en: 'Error: a chunk exceeds Firestore\'s 1 MiB per-document limit. Try a smaller file.'
+            });
+          } else {
+            statusLine.textContent = L({ gr: 'Σφάλμα: ', en: 'Error: ' }) + (e && e.message || e);
+          }
+        });
       }
 
       // ── existing sources ──

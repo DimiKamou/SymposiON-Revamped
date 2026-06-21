@@ -34,6 +34,37 @@
     window.open(base + 'games/pvp-arena/index.html', '_blank', 'noopener');
   }
   window.launchPvPArena = launchPvPArena;
+
+  // ── Real Live Arena launcher ──
+  // The home "Live" screen (S.live) used to be a mockup (hardcoded PIN, fake
+  // players). This lazy-loads the REAL LiveArena engine (Firestore live_arenas)
+  // via synLaunch('openLiveArena') and opens the host/join picker. If a 6-digit
+  // PIN is supplied (student "Join with PIN"), it pre-fills the join screen.
+  // Firestore rules require auth for live_arenas — LiveArena.submitJoin already
+  // prompts sign-in, but we also surface a friendly prompt up-front for hosting.
+  function openRealLiveArena(pin){
+    const _pin = (pin || '').toString().replace(/\D/g, '').slice(0, 6);
+    if (!(window.synLaunch && window.SYN_GAMES && window.SYN_GAMES.openLiveArena)) {
+      // Manifest not loaded — should not happen, but fail loudly rather than silently.
+      if (typeof window.showToast === 'function') showToast('Η Ζωντανή Αρένα δεν είναι διαθέσιμη', 'Live Arena unavailable');
+      return;
+    }
+    // synLaunch lazy-loads la-overlay + the engine, then calls window.openLiveArena().
+    Promise.resolve(window.synLaunch('openLiveArena')).then(()=>{
+      if (typeof LiveArena === 'undefined') return;
+      if (_pin && _pin.length === 6) {
+        // Student join with a known PIN: open join screen + prefill, then submit.
+        LiveArena.launchStudent();
+        const inp = document.getElementById('la-pin-input');
+        if (inp) { inp.value = _pin; }
+        // Auto-submit so "Join" on the Live screen goes straight in.
+        if (typeof LiveArena.submitJoin === 'function') LiveArena.submitJoin();
+      }
+      // No PIN → openLiveArena already opened the host/join picker (or student
+      // join for non-teachers). Nothing more to do.
+    }).catch((e)=>{ console.warn('[screens] Live Arena launch failed', e); });
+  }
+  window.openRealLiveArena = openRealLiveArena;
   // "Coming soon" helpers — tiles flagged `soon:true` in data.js have no real
   // game yet. Reuse the shared badge + friendly notice defined in dir-synthesis.js;
   // fall back to inline equivalents if that module hasn't registered them.
@@ -395,8 +426,8 @@
     // ── game mode selection ──
     const gmodes = [
       { v:'solo', illu:'runner', t:{gr:'Ατομικά',en:'Solo'}, d:{gr:'Παίξε μόνος σου',en:'Play on your own'}, to:()=>go('subject') },
-      { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>go('live',{step:'config'}) },
-      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>go('live',{step:'config',cfg:{mode:'team',teams:3,gmode:'tow',time:5,score:['standard'],count:10}}) },
+      { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>openRealLiveArena() },
+      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>synLaunch('openTow') },
       { v:'pvp', illu:'crossed-swords', t:{gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'}, d:{gr:'Μονομαχίες & ομαδικοί αγώνες',en:'Duels & free-for-all'}, to:()=>launchPvPArena() },
       { v:'practice', illu:'scroll', t:{gr:'Εξάσκηση',en:'Practice'}, d:{gr:'Χωρίς βαθμολογία',en:'No scoring'}, to:()=>go('subject') },
     ];
@@ -480,20 +511,26 @@
     const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ζωντανή Αρένα',en:'Live Arena'}),
       title: step==='lobby'?L({gr:'Λόμπι Μάχης',en:'Battle Lobby'}):L({gr:'Ζωντανή Μάχη',en:'Live Battle'}),
       sub: step==='lobby'?L({gr:'Οι μαθητές μπαίνουν με PIN ή QR.',en:'Students join with a PIN or QR.'}):L({gr:'Φιλοξένησε ή μπες σε αγώνα.',en:'Host or join a match.'}),
-      actions: step==='lobby'?[ el('button',{class:'sc-cta sc-cta--solid'},[ glyph('play-button','sc-cta__gl'), L({gr:'Έναρξη',en:'Start'}) ]) ]:null });
+      actions: null });
 
     if(step==='choose'){
       const ch = el('div',{class:'sc-live2 sc-stagger'});
-      ch.appendChild(el('button',{class:'sc-host', onclick:()=>go('live',{step:'config',cfg})},[
+      // ── Host: launch the REAL Live Arena engine (Firestore live_arenas room
+      //    → PIN → share → student join). openLiveArena() with no cfg opens the
+      //    host/join picker (teachers) or the student join screen. This replaces
+      //    the old mockup config/lobby flow (hardcoded PIN, fake players). ──
+      ch.appendChild(el('button',{class:'sc-host', onclick:()=>openRealLiveArena()},[
         el('span',{class:'sc-host__ic'},[ glyph('crown-laurel','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Φιλοξένησε',en:'Host'})),
         el('span',{class:'sc-host__d'}, L({gr:'Στήσε αγώνα για την τάξη σου',en:'Set up a match for your class'})),
       ]));
+      const joinPin = el('input',{class:'sc-join2__pin',maxlength:'6',inputmode:'numeric',placeholder:'000000',
+        oninput:(e)=>{ e.target.value = e.target.value.replace(/\D/g,''); }});
       ch.appendChild(el('div',{class:'sc-join2'},[
         el('span',{class:'sc-host__ic'},[ glyph('lightning-bolt','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Μπες με PIN',en:'Join with PIN'})),
-        el('div',{class:'sc-join2__form'},[ el('input',{class:'sc-join2__pin',maxlength:'6',placeholder:'A7K92M'}),
-          el('button',{class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>go('live',{step:'lobby',cfg})}, L({gr:'Μπες',en:'Join'})) ]),
+        el('div',{class:'sc-join2__form'},[ joinPin,
+          el('button',{class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>openRealLiveArena(joinPin.value)}, L({gr:'Μπες',en:'Join'})) ]),
       ]));
       // ── PvP · Ο Ἀγών — the standalone duel arena, surfaced here on Live
       //    (previously only reachable from the Game Panel; user: "on live I cannot see pvp").
@@ -647,29 +684,26 @@
       return;
     }
 
-    // lobby
-    const gName = (cfg.game && L(cfg.game)) || L({gr:'Παιχνίδι',en:'Game'});
-    const partName = cfg.mode==='team'?{gr:cfg.teams+' Ομάδες',en:cfg.teams+' Teams'}:{gr:'Μόνος',en:'Solo'};
-    const contentName = (cfg.content==='upload') ? {gr:'Δικό σου ('+cfg.count+' ερωτ.)',en:'Custom ('+cfg.count+' Qs)'} : (cfg.nav ? {gr:cfg.nav.subject+' · '+cfg.nav.exercise,en:cfg.nav.subject+' · '+cfg.nav.exercise} : {gr:'Υπάρχον',en:'Existing'});
-    body.appendChild(el('div',{class:'sc-cfg-recap sc-stagger'},[
-      pill(gName, accent), pill(L(contentName), accent), pill(L(partName), accent), pill((cfg.time||5)+' '+L({gr:'λεπτά',en:'min'}), accent),
-      el('button',{class:'sc-mini', onclick:()=>go('live',{step:'config',cfg})}, '✎ '+L({gr:'Αλλαγή',en:'Edit'})),
-    ]));
+    // ── lobby → launch the REAL Live Arena ──────────────────────────────
+    // This step previously rendered a static mockup (hardcoded PIN "A7K92M",
+    // fake QR, fake player list) that did nothing. Now it boots the real
+    // LiveArena engine (Firestore live_arenas → real PIN + QR + live players),
+    // and shows a brief opening panel with a manual fallback in case the
+    // engine is still loading.
+    // NOTE: the config step's cfg (game/level/teams/time/scoring) is NOT
+    // forwarded here — the real LiveArena engine owns its own host picker
+    // where the teacher configures the round (and prompts sign-in for
+    // signed-out users). We therefore do NOT render a recap of those values,
+    // which the engine would otherwise silently drop.
     const wrap = el('div',{class:'sc-live sc-stagger'});
-    wrap.appendChild(el('div',{class:'sc-live__join'},[
-      el('div',{class:'sc-live__url'},[ el('span',{class:'sc-live__urll'},L({gr:'Μπες από',en:'Join at'})), el('b',{},'symposi-on.com') ]),
-      el('div',{class:'sc-live__pinrow'},[
-        el('div',{class:'sc-qr'}, Array.from({length:64}).map((_,i)=>el('i',{class:(i*7+((i*i)%5))%3===0?'on':''}))),
-        el('div',{class:'sc-live__pinbox'},[ el('span',{class:'sc-live__pinl'},'PIN'), el('div',{class:'sc-live__pin'},'A7K92M'),
-          el('div',{class:'sc-live__share'},[ el('button',{class:'sc-mini'},'⌁ '+L({gr:'Σύνδεσμος',en:'Link'})), el('button',{class:'sc-mini'},'⎘ PIN') ]) ]),
-      ]),
-    ]));
-    const players = ['Αλέξης','Μαρία','Νίκος','Ελένη','Γιώργος','Σοφία','Δημήτρης','Κατερίνα','Παύλος'];
-    wrap.appendChild(el('div',{class:'sc-live__players'},[
-      el('div',{class:'sc-live__phd'},[ el('span',{},[glyph('owl','sc-gl'),' '+L({gr:'Παίκτες',en:'Players'})]), el('span',{class:'sc-live__count'},'9') ]),
-      el('div',{class:'sc-live__grid'}, players.map(n=>el('div',{class:'sc-pl'},[ el('span',{class:'sc-pl__av'}, n[0]), el('span',{class:'sc-pl__n'}, n) ]))),
+    wrap.appendChild(el('div',{class:'sc-live__join', style:'text-align:center'},[
+      el('div',{class:'sc-live__url'},[ el('span',{class:'sc-live__urll'},L({gr:'Άνοιγμα Ζωντανής Αρένας…',en:'Opening Live Arena…'})) ]),
+      el('button',{class:'sc-cta sc-cta--solid', style:'margin-top:14px', onclick:()=>openRealLiveArena()},[
+        glyph('lightning-bolt','sc-cta__gl'), L({gr:'Άνοιξε την Αρένα',en:'Open the Arena'}) ]),
     ]));
     body.appendChild(wrap);
+    // Auto-open the real engine on entering the lobby step.
+    setTimeout(()=>openRealLiveArena(), 0);
   };
 
   /* ══ 6 · HERO PROFILE ══ */
