@@ -16,6 +16,13 @@
   }
   window.synMagnetize = magnetize;
 
+  // a11y: honour the OS "reduce motion" setting. When true we skip magnet hover,
+  // auto-advancing carousels/tickers and GSAP reveals (rendering final state).
+  function reduceMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  window.synReduceMotion = reduceMotion;
+
   /* ── "Coming soon" treatment (shared) ──
      Tiles flagged `soon:true` in data.js have NO backing game yet. Instead of
      pretending they are playable, we badge them "ΣΥΝΤΟΜΑ / Coming soon" and, on
@@ -66,7 +73,7 @@
     if (variant === 'monogram') {
       const wrap = el('div', { class:'syn-mono' });
       wrap.appendChild(brandMark('syn-mono__mark'));
-      wrap.appendChild(el('div', { class:'syn-mono__wm', html:'Symposi<span>ON</span>' }));
+      wrap.appendChild(el('h1', { class:'syn-mono__wm', style:'margin:0', html:'Symposi<span>ON</span>' }));
       wrap.appendChild(el('div', { class:'syn-mono__sub' }, window.SYM_LANG==='en'?'Play the ancient world':'Παίξε τον αρχαίο κόσμο'));
       return wrap;
     }
@@ -87,7 +94,7 @@
     ]);
     const cta = el('button', { class:'syn-show__try', onclick:()=>symGo('gamepanel') }, [ L({gr:'Δοκίμασέ το',en:'Try now'}), el('span',{class:'syn-show__arr',html:'&rarr;'}) ]);
     const dots = el('div', { class:'syn-show__dots' },
-      ITEMS.map((_,i)=> el('button', { class:'syn-show__dot'+(i===0?' on':''), onclick:()=>{ setShow(i, true); } })));
+      ITEMS.map((_,i)=> el('button', { class:'syn-show__dot'+(i===0?' on':''), 'aria-label':L({gr:'Διαφάνεια ',en:'Slide '}) + (i+1), onclick:()=>{ setShow(i, true); } })));
     show.appendChild(art); show.appendChild(body); show.appendChild(cta); show.appendChild(dots);
     // admin-only: jump straight to the Hero Carousel editor (Admin → Hero)
     if (window.STATE && window.STATE.role === 'admin') {
@@ -104,12 +111,13 @@
       kind.className = 'syn-show__kind syn-show__kind--'+it.kind;
       body.querySelector('.syn-show__nm').textContent = L(it.t);
       body.querySelector('.syn-show__desc').textContent = L(it.d);
-      if(window.gsap) gsap.fromTo(body,{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
-      if(manual){ clearInterval(window.__symShow); window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000); }
+      if(window.gsap && !reduceMotion()) gsap.fromTo(body,{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
+      if(manual && !reduceMotion()){ clearInterval(window.__symShow); window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000); }
     }
     setShow(0);
     clearInterval(window.__symShow);
-    window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000);
+    // reduced-motion: render the first slide statically, no auto-advance (dots still work).
+    if(!reduceMotion()) window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000);
     return show;
   }
   window.synHeroVisual = heroVisual;
@@ -146,21 +154,42 @@
         el('span',{class:'syn-tick__lbl'}, L(it.fact.tag || {gr:'Ήξερες;',en:'Did you know'})),
         el('span',{class:'syn-tick__tx'}, L(it.fact)) ]);
       host.innerHTML=''; host.appendChild(node);
-      if(window.gsap) gsap.from(node,{y:8,autoAlpha:0,duration:.4,ease:'power2.out'});
+      if(window.gsap && !reduceMotion()) gsap.from(node,{y:8,autoAlpha:0,duration:.4,ease:'power2.out'});
       i++;
     }
     paint();
-    window.__symTicker = setInterval(paint, 5200);
+    // reduced-motion: show one fact statically, no auto-rotation.
+    if(!reduceMotion()) window.__symTicker = setInterval(paint, 5200);
   }
 
   function openAcroteria(ctx) {
-    const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) ov.remove(); } });
-    const box = el('div', { class:'acro-box' });
+    const _prevFocus = document.activeElement;
+    // a11y: dialog semantics + Esc + focus trap + focus restore. closeOv() is the
+    // single close path — every dismissal (✕, backdrop, Esc, Emporion) routes here
+    // so the keydown handler is removed and focus returns to where it was.
+    function closeOv(){
+      document.removeEventListener('keydown', onKey);
+      ov.remove();
+      if (_prevFocus && _prevFocus.focus) { try { _prevFocus.focus(); } catch(_){} }
+    }
+    function onKey(e){
+      if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); closeOv(); return; }
+      if (e.key === 'Tab') {
+        const f = box.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.prototype.filter.call(f, n => !n.disabled && n.offsetParent !== null);
+        if (!list.length) return;
+        const first = list[0], last = list[list.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) closeOv(); } });
+    const box = el('div', { class:'acro-box', role:'dialog', 'aria-modal':'true', 'aria-label':L({gr:'Ακρωτήρια',en:'Acroteria'}) });
     const kleos = SymStore.get('kleos', 0);
     box.appendChild(el('div', { class:'acro-box__bar' }, [
       el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}), el('span',{ class:'acro-box__count', style:'opacity:.62;font-weight:600;margin-left:8px;font-size:.82em' }, '· '+((window.SYM&&window.SYM.ACROTERIA)?window.SYM.ACROTERIA.length:0)) ]),
       el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleos.toLocaleString('en-US')), 'Kleos' ]),
-      el('button', { class:'acro-box__x', onclick:()=>ov.remove(), html:'&times;' }),
+      el('button', { class:'acro-box__x', type:'button', 'aria-label':L({gr:'Κλείσιμο',en:'Close'}), onclick:()=>closeOv(), html:'&times;' }),
     ]));
     const detail = el('div', { class:'acro-detail' });
     function showDetail(a){
@@ -217,13 +246,17 @@
     box.appendChild(grid);
     box.appendChild(el('div', { class:'acro-box__foot' }, [
       el('span', {}, L({gr:'Κέρδισε Kleos παίζοντας.',en:'Earn Kleos by playing.'})),
-      el('button', { class:'acro-box__temple', onclick:()=>{ ov.remove(); symGo('temple'); } }, [ L({gr:'Ἐμπόριον',en:'Emporion'}), el('span',{html:' &rarr;'}) ]),
+      el('button', { class:'acro-box__temple', onclick:()=>{ closeOv(); symGo('temple'); } }, [ L({gr:'Ἐμπόριον',en:'Emporion'}), el('span',{html:' &rarr;'}) ]),
     ]));
     ov.appendChild(box);
     document.querySelector('.stage').appendChild(ov);
     if(window.injectIllus) injectIllus(ov);
     requestAnimationFrame(()=>ov.classList.add('in'));
     if(window.gsap) gsap.from(box,{y:24,scale:.97,autoAlpha:0,duration:.4,ease:'back.out(1.5)'});
+    // a11y: trap keys while the dialog is open, and move focus into it (the ✕).
+    document.addEventListener('keydown', onKey);
+    const _x = box.querySelector('.acro-box__x');
+    if (_x) _x.focus();
   }
   window.synOpenAcroteria = openAcroteria;
 
@@ -555,6 +588,8 @@
 
   function synHome(home, ctx) {
     const STR = ctx.STR;
+    // a11y: honour OS reduced-motion — computed once for this render.
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* HERO */
     const hero = el('header', { class:'syn-hero' });
@@ -643,7 +678,7 @@
         cta:{gr:'Δες τους οδηγούς',en:'See the guides'}, go:()=>{ if(window.SymInfoPanel) SymInfoPanel.guides(); } },
     ];
     const pKick = el('span', { class:'syn-promo__kick' });
-    const pTtl  = el('h3', { class:'syn-promo__ttl' });
+    const pTtl  = el('h2', { class:'syn-promo__ttl' });
     const pDesc = el('p', { class:'syn-promo__desc' });
     const pCta  = el('button', { class:'syn-promo__cta' }, [ el('span',{class:'syn-promo__ctal'}), el('span',{class:'syn-promo__ca',html:'&rarr;'}) ]);
     const pDots = el('div', { class:'syn-promo__dots' },
@@ -667,12 +702,13 @@
       pCta.onclick = it.go;
       pDots.querySelectorAll('.syn-promo__dot').forEach((d,i)=>d.classList.toggle('on', i===pIdx));
       if(window.injectIllus) injectIllus(pArt);
-      if(window.gsap) gsap.fromTo(promoCard.querySelector('.syn-promo__txt'),{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
-      if(manual){ clearInterval(window.__symPromo); window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500); }
+      if(window.gsap && !reduce) gsap.fromTo(promoCard.querySelector('.syn-promo__txt'),{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
+      if(manual && !reduce){ clearInterval(window.__symPromo); window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500); }
     }
     setPromo(0);
     clearInterval(window.__symPromo);
-    window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500);
+    // reduced-motion: first promo card static, no auto-advance (dots still work).
+    if(!reduce) window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500);
     chips.appendChild(el('div', { class:'syn-classes__split' }, [
       el('div', { class:'syn-classes__col' }, [ groupsWrap ]),
       el('div', { class:'syn-classes__showw' }, [ heroVisual('showcase'), promoCard ]),
@@ -688,7 +724,7 @@
         block.appendChild(el('div', { class:'syn-subj__hd' }, [
           el('span', { class:'syn-subj__no' }, String(i+1).padStart(2,'0')),
           el('span', { class:'syn-subj__badge' }, [ el('span', { class:'syn-subj__illu', 'data-illu':s.illu }) ]),
-          el('div', { class:'syn-subj__tx' }, [ el('h3', { class:'syn-subj__ttl' }, L(s)), el('p', { class:'syn-subj__sum' }, L(s.summary)) ]),
+          el('div', { class:'syn-subj__tx' }, [ el('h2', { class:'syn-subj__ttl' }, L(s)), el('p', { class:'syn-subj__sum' }, L(s.summary)) ]),
           el('a', { class:'syn-subj__all', href:'javascript:void 0', onclick:()=>symGo('subject', {subject:s, cls:ac}) }, [ L(STR.allGames), el('span', { class:'syn-subj__cnt' }, s.games.length) ]),
         ]));
         block.appendChild(el('div', { class:'syn-subj__grid' }, s.games.map(gm => tile(gm, ac.accent, ()=>symGo('mode', {subject:s, game:gm, cls:ac})))));
@@ -702,8 +738,8 @@
       STATE.classId = id; ctx.classId = id; ctx.activeClass = ac;
       buildSubjects(ac);
       chips.querySelectorAll('.syn-chip[data-cls]').forEach(b => b.classList.toggle('active', b.getAttribute('data-cls')===id));
-      if (window.gsap) gsap.fromTo(wrap.children, { y:14, autoAlpha:0 }, { y:0, autoAlpha:1, duration:.45, stagger:.06, ease:'power2.out', clearProps:'opacity,visibility,transform' });
-      if (userInitiated) startClassRotation(); // user took the wheel → restart the timer
+      if (window.gsap && !reduce) gsap.fromTo(wrap.children, { y:14, autoAlpha:0 }, { y:0, autoAlpha:1, duration:.45, stagger:.06, ease:'power2.out', clearProps:'opacity,visibility,transform' });
+      if (userInitiated && !reduce) startClassRotation(); // user took the wheel → restart the timer
     }
     // auto-rotate through the grade tracks so the subject panels cycle on their own
     function startClassRotation(){
@@ -719,7 +755,8 @@
     }
     buildSubjects(ctx.activeClass);
     home.appendChild(wrap);
-    startClassRotation();
+    // reduced-motion: leave the active class static, no auto-rotation through tracks.
+    if(!reduce) startClassRotation();
 
     /* SUBJECT MARQUEE (rolling band — carousel.js) */
     const mq = el('section', { class:'syn-mq' });
@@ -772,7 +809,7 @@
           el('p', { class:'syn-join__sub' }, L(STR.joinSub)),
         ]),
         el('div', { class:'syn-join__form' }, [
-          el('input', { class:'syn-join__pin', type:'text', maxlength:'6', placeholder:'A7K92M' }),
+          el('input', { class:'syn-join__pin', type:'text', maxlength:'6', placeholder:'A7K92M', 'aria-label':L({gr:'Κωδικός παιχνιδιού',en:'Game PIN'}) }),
           el('button', { class:'syn-cta syn-cta--solid', onclick:()=>symGo('live') }, [ L(STR.joinBtn), el('span',{html:'&rarr;'}) ]),
         ]),
       ]),
@@ -781,9 +818,20 @@
     synFooter(home, ctx);
 
     /* GSAP reveal */
-    home.querySelectorAll('.syn-cta--solid').forEach(b => magnetize(b, 0.3));
+    // a11y reduced-motion: no magnet hover, and render every element at its final
+    // resting state (gsap.set, not .from) — fully visible, no entrance/scroll motion.
+    if (!reduce) home.querySelectorAll('.syn-cta--solid').forEach(b => magnetize(b, 0.3));
     if (window.gsap && ctx.fresh) {
       if (window.ScrollTrigger) ScrollTrigger.getAll().forEach(s => s.kill());
+      if (reduce) {
+        // final resting values — no entrance/scroll motion. The .from() reveals never
+        // run, so elements simply stay at their natural (visible) CSS state.
+        gsap.set(['.syn-nav__in', '.syn-hero__ix', '.syn-hero__l > :nth-child(2)', '.syn-hero__lede',
+                  '.syn-hero__cta .syn-cta', '.syn-chiplet', '.syn-spec', '.syn-spec__t',
+                  '.syn-spec__ticker', '.syn-rail', '.syn-classes__row .syn-chip',
+                  '.syn-subj', '.syn-engines', '.syn-join', '.syn-foot'],
+                 { x: 0, y: 0, scale: 1, scaleY: 1, autoAlpha: 1 });
+      } else {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
       tl.from('.syn-nav__in', { y: -22, autoAlpha: 0, duration: 0.6 })
         .from('.syn-hero__ix', { y: 16, autoAlpha: 0, duration: 0.5 }, '-=0.2')
@@ -803,6 +851,7 @@
       // hidden in the scaled stage). Animate y only — opacity stays 1 throughout.
       gsap.from('.syn-foot', { y: 24, duration: 0.6, ease: 'power3.out', clearProps: 'transform',
         scrollTrigger: window.ScrollTrigger ? { trigger: '.syn-foot', start: 'top 96%', once: true } : undefined });
+      }
     }
   }
 

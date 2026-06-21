@@ -94,11 +94,11 @@
      inherits the revamp's token tree, and .sym-auth-skin for the on-brand
      skin in css/auth-skin.css. -->
 <div id="auth-modal" class="auth-modal-overlay sym-auth-skin theme-alabaster" onclick="if(event.target===this)closeAuthModal()">
-  <div class="auth-modal-box sym-auth">
+  <div class="auth-modal-box sym-auth" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
 
     <div class="auth-modal-top">
-      <div class="auth-modal-logo">Symposi<span>ON</span></div>
-      <button class="auth-close-btn" onclick="closeAuthModal()">✕</button>
+      <div class="auth-modal-logo" id="auth-modal-title">Symposi<span>ON</span></div>
+      <button class="auth-close-btn" onclick="closeAuthModal()" aria-label="Κλείσιμο" title="Κλείσιμο">✕</button>
     </div>
 
     <div class="auth-tabs">
@@ -149,16 +149,16 @@
       <p class="auth-switch-link">Έχεις ήδη λογαριασμό; <span onclick="switchAuthTab('login')">Είσοδος</span></p>
     </div>
 
-    <div class="auth-error" id="auth-error" style="display:none;"></div>
+    <div class="auth-error" id="auth-error" role="alert" style="display:none;"></div>
   </div>
 </div>
 
 <!-- ══════════ SIGN-OUT CONFIRMATION MODAL ══════════ -->
 <div id="signout-modal" class="sym-confirm-overlay sym-auth-skin theme-alabaster" onclick="if(event.target===this)closeSignoutModal()">
-  <div class="sym-confirm-box">
+  <div class="sym-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="signout-title" aria-describedby="signout-msg">
     <div class="sym-confirm-icon">↩</div>
-    <div class="sym-confirm-title">Έξοδος από τον λογαριασμό</div>
-    <div class="sym-confirm-msg">Θέλεις σίγουρα να αποσυνδεθείς;</div>
+    <div class="sym-confirm-title" id="signout-title">Έξοδος από τον λογαριασμό</div>
+    <div class="sym-confirm-msg" id="signout-msg">Θέλεις σίγουρα να αποσυνδεθείς;</div>
     <div class="sym-confirm-btns">
       <button class="sym-confirm-btn sym-confirm-cancel" onclick="closeSignoutModal()">Άκυρο</button>
       <button class="sym-confirm-btn sym-confirm-yes" onclick="_doSignOut()">Ναι, έξοδος</button>

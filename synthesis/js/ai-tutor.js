@@ -160,6 +160,7 @@
       class: 'sc-field__i',
       id: 'tutorQuestion',
       rows: '3',
+      'aria-label': L({ gr: 'Η ερώτησή σου', en: 'Your question' }),
       placeholder: L({ gr: 'Γράψε την ερώτησή σου…', en: 'Type your question…' }),
       style: 'width:100%;resize:vertical;min-height:72px;font:inherit;line-height:1.5',
     });
