@@ -599,8 +599,12 @@ window.SymLoader = (function () {
     if (!mark) return;
     if (window.SymLoaders && typeof window.SymLoaders.mount === 'function') {
       mark.innerHTML = ''; // clear so variants don't stack
+      // The variant brings its OWN spin; neutralise the host .sym-loader__mark's
+      // sym-spin + fixed 60px box so the mark doesn't double-rotate or overflow.
+      mark.style.animation = 'none';
+      mark.style.width = 'auto'; mark.style.height = 'auto';
       const variant = SYM_VARIANTS[Math.floor(Math.random() * SYM_VARIANTS.length)];
-      window.SymLoaders.mount(mark, { variant: variant, size: 96 });
+      window.SymLoaders.mount(mark, { variant: variant, size: 56 });
     } else if (!mark.firstChild) {
       mark.appendChild(brandMark('sym-loader__svg'));
     }

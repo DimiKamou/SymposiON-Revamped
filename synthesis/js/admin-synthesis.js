@@ -1631,9 +1631,12 @@
         (function () {
           var n = txt.length, start = 0;
           while (start < n) {
-            // Coarse upper bound: at most 1 byte/char, so MAX_BYTES chars is a
-            // safe ceiling. Greek text settles well below this after the trim.
-            var end = Math.min(n, start + MAX_BYTES);
+            // Coarse CHAR ceiling = the ai_corpus rule's 480K-char cap. For
+            // ASCII/Latin (1 byte/char) a MAX_BYTES-wide slice would be ~900K
+            // CHARS — over the 480K char rule → permission-denied. Capping the
+            // slice at 480K chars satisfies the char rule; the byte-shrink below
+            // then enforces the 900KB byte cap on top (binds for 2-byte Greek).
+            var end = Math.min(n, start + 480000);
             var piece = txt.slice(start, end);
             // Shrink until the encoded piece fits. Always keep at least one
             // character so a lone multi-byte char can never spin forever.
