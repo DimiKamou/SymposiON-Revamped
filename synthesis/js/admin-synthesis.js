@@ -654,6 +654,7 @@
       ['voyage', '⚱', { gr: 'Πρότυπα', en: 'Templates' }],
       ['realm', '⛩', { gr: 'Curator · Ναός', en: 'Curator · Realm' }],
       ['games', '▦', { gr: 'Παιχνίδια — Έλεγχος', en: 'Games — Review' }],
+      ['arcade', '⚔', { gr: 'Arcade — Ραψωδίες', en: 'Arcade — Rhapsodies' }],
       ['tags', '#', { gr: 'Ετικέτες Παιχνιδιών', en: 'Game Tags' }],
       ['tartarus', '❂', { gr: 'Tartarus', en: 'Tartarus' }],
       ['banners', '◰', { gr: 'Banners', en: 'Banners' }],
@@ -1752,6 +1753,371 @@
     function _aiSetEnabled(ids, on, cb) { var db = firebase.firestore(), b = db.batch(); ids.forEach(function (id) { b.update(db.collection('ai_corpus').doc(id), { enabled: !!on }); }); b.commit().then(cb).catch(cb); }
     function _aiDelGroup(ids, cb) { var db = firebase.firestore(), b = db.batch(); ids.forEach(function (id) { b.delete(db.collection('ai_corpus').doc(id)); }); b.commit().then(cb).catch(cb); }
 
+    /* ════════════════ ARCADE — ΡΑΨΩΔΙΕΣ (Iliada/Odysseia editor) ═════
+       Edits the rhapsody meta + quiz banks of the Iliada/Odysseia Arcade game.
+       Baseline = window.ARCADE_DEFAULTS; admin overrides saved to
+       SymStore('arcade_content') and consumed by play/override.js. The saved
+       cfg shape MUST match override.js:
+         { iliada:{ rhaps:{ <key>:{ roman,latin?,title,quiz:[{q,o:[4],a}] } }, order?:[keys] }, odysseia:{…} }
+       Firestore persistence + student boot-hydration are AUTOMATIC (the key is
+       whitelisted in syn-hydrate.js) — no Firestore code here. */
+    var ARCADE_CAMPS = [['iliada', { gr: 'ΙΛΙΑΔΑ', en: 'ILIAD' }], ['odysseia', { gr: 'ΟΔΥΣΣΕΙΑ', en: 'ODYSSEY' }]];
+    function _arcDefaults() { return (window.ARCADE_DEFAULTS && typeof window.ARCADE_DEFAULTS === 'object') ? window.ARCADE_DEFAULTS : { iliada: { order: [], rhaps: {} }, odysseia: { order: [], rhaps: {} } }; }
+    // Deep-ish clone (data is plain JSON: strings/numbers/arrays/objects).
+    function _arcClone(v) { try { return JSON.parse(JSON.stringify(v)); } catch (_) { return v; } }
+    // Effective content for a campaign = ARCADE_DEFAULTS overlaid by the saved
+    // override, mirroring override.js (existing keys: roman/latin/title/quiz
+    // replaced; new keys added; order applied if present).
+    function _arcEffective(camp) {
+      var defs = _arcClone((_arcDefaults()[camp]) || { order: [], rhaps: {} });
+      if (!defs.rhaps) defs.rhaps = {};
+      if (!Array.isArray(defs.order)) defs.order = Object.keys(defs.rhaps);
+      var ov = (SymStore ? SymStore.get('arcade_content', null) : null);
+      var cc = ov && ov[camp];
+      if (cc && cc.rhaps) {
+        Object.keys(cc.rhaps).forEach(function (key) {
+          var src = cc.rhaps[key]; if (!src) return;
+          if (defs.rhaps[key]) {
+            if (src.roman) defs.rhaps[key].roman = src.roman;
+            if (src.latin != null) defs.rhaps[key].latin = src.latin;
+            if (src.title) defs.rhaps[key].title = src.title;
+            if (Array.isArray(src.quiz)) defs.rhaps[key].quiz = _arcClone(src.quiz);
+          } else {
+            defs.rhaps[key] = {
+              roman: src.roman || key.toUpperCase().slice(0, 1),
+              latin: src.latin || '',
+              title: src.title || key,
+              boss: src.boss || '',
+              quiz: Array.isArray(src.quiz) ? _arcClone(src.quiz) : []
+            };
+            if (defs.order.indexOf(key) < 0) defs.order.push(key);
+          }
+        });
+      }
+      if (cc && Array.isArray(cc.order) && cc.order.length) {
+        defs.order = cc.order.filter(function (k) { return defs.rhaps[k]; });
+      }
+      // Make sure every rhapsody has a quiz array of well-formed questions.
+      defs.order.forEach(function (k) {
+        var r = defs.rhaps[k]; if (!r) return;
+        if (!Array.isArray(r.quiz)) r.quiz = [];
+        r.quiz = r.quiz.map(function (q) {
+          var o = Array.isArray(q.o) ? q.o.slice(0, 4) : [];
+          while (o.length < 4) o.push('');
+          var a = (typeof q.a === 'number' && q.a >= 0 && q.a <= 3) ? q.a : 0;
+          return { q: q.q || '', o: o, a: a };
+        });
+      });
+      return defs;
+    }
+    // slugify a label to a lowercase ascii key (Greek → translit-ish fallback);
+    // ensure uniqueness against `taken` keys.
+    function _arcSlug(s, taken) {
+      var base = String(s || '').toLowerCase()
+        .replace(/[άα]/g, 'a').replace(/[έε]/g, 'e').replace(/[ήη]/g, 'i')
+        .replace(/[ίϊΐι]/g, 'i').replace(/[όο]/g, 'o').replace(/[ύϋΰυ]/g, 'y')
+        .replace(/[ώω]/g, 'o').replace(/β/g, 'v').replace(/γ/g, 'g').replace(/δ/g, 'd')
+        .replace(/ζ/g, 'z').replace(/θ/g, 'th').replace(/κ/g, 'k').replace(/λ/g, 'l')
+        .replace(/μ/g, 'm').replace(/ν/g, 'n').replace(/ξ/g, 'x').replace(/π/g, 'p')
+        .replace(/ρ/g, 'r').replace(/[σς]/g, 's').replace(/τ/g, 't').replace(/φ/g, 'f')
+        .replace(/χ/g, 'ch').replace(/ψ/g, 'ps')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      if (!base) base = 'extra';
+      var key = base, n = 1;
+      while (taken.indexOf(key) >= 0) { key = base + '-' + (++n); }
+      if (taken.indexOf(base) < 0 && base === key) return base;
+      // if base alone wasn't taken we'd have returned it; otherwise key is unique.
+      return key;
+    }
+
+    function renderArcade() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Arcade — Ραψωδίες & Ερωτήσεις (Ιλιάδα / Οδύσσεια)', en: 'Arcade — Rhapsodies & Questions (Iliad / Odyssey)' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+        gr: 'Πρόσθεσε ραψωδίες και επεξεργάσου το κουίζ κάθε ραψωδίας του παιχνιδιού Arcade. Βάση = το ενσωματωμένο περιεχόμενο· οι αλλαγές αποθηκεύονται ως override και — με σύνδεση — συγχρονίζονται αυτόματα στο Firestore και φτάνουν στους μαθητές.',
+        en: 'Add rhapsodies and edit the quiz of each Arcade rhapsody. Baseline = built-in content; edits are saved as an override and — when connected — auto-sync to Firestore and reach students.'
+      })));
+
+      var fsOk = fsReady();
+      pane.appendChild(el('div', { class: 'sc-ac__status' }, [
+        el('span', { class: 'sc-ac__dot' + (fsOk ? ' on' : '') }),
+        L(fsOk ? { gr: 'Συγχρονισμός Firestore ενεργός', en: 'Firestore sync active' } : { gr: 'Τοπική αποθήκευση (χωρίς firebase εδώ)', en: 'Local-only (no firebase here)' }),
+      ]));
+
+      // Working model: per-campaign effective content, edited live in memory.
+      // We diff against ARCADE_DEFAULTS at save time to build the override cfg.
+      var activeCamp = (window.__arcCamp === 'odysseia') ? 'odysseia' : 'iliada';
+      var model = { iliada: _arcEffective('iliada'), odysseia: _arcEffective('odysseia') };
+
+      // ── campaign switcher (pills) ──
+      var tabs = el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px' });
+      ARCADE_CAMPS.forEach(function (c) {
+        tabs.appendChild(el('button', {
+          class: 'sc-cta sc-cta--sm' + (c[0] === activeCamp ? ' sc-cta--solid' : ''),
+          onclick: (function (id) { return function () { sweep(); window.__arcCamp = id; activeCamp = id; paintArc(); }; })(c[0])
+        }, L(c[1])));
+      });
+      pane.appendChild(tabs);
+
+      var host = el('div', {});
+      pane.appendChild(host);
+
+      // Validate the whole model; returns array of human-readable problems.
+      function validate() {
+        var probs = [];
+        ARCADE_CAMPS.forEach(function (c) {
+          var camp = c[0], m = model[camp];
+          (m.order || []).forEach(function (key) {
+            var r = m.rhaps[key]; if (!r) return;
+            if (!String(r.title || '').trim()) probs.push(L(c[1]) + ' · ' + key + ': ' + L({ gr: 'λείπει τίτλος', en: 'missing title' }));
+            (r.quiz || []).forEach(function (q, qi) {
+              var label = L(c[1]) + ' · ' + (r.roman || key) + ' · Q' + (qi + 1);
+              if (!String(q.q || '').trim()) probs.push(label + ': ' + L({ gr: 'κενή ερώτηση', en: 'empty question' }));
+              var filled = (q.o || []).filter(function (x) { return String(x || '').trim(); }).length;
+              if (filled < 2) probs.push(label + ': ' + L({ gr: '≥2 απαντήσεις', en: 'needs ≥2 options' }));
+              if (!(typeof q.a === 'number' && q.a >= 0 && q.a <= 3)) probs.push(label + ': ' + L({ gr: 'μη έγκυρη σωστή', en: 'invalid correct index' }));
+              else if (!String((q.o || [])[q.a] || '').trim()) probs.push(label + ': ' + L({ gr: 'η σωστή είναι κενή', en: 'correct option is empty' }));
+            });
+          });
+        });
+        return probs;
+      }
+
+      // Pull every live input value into the model (mirrors pricing's save sweep).
+      function sweep() {
+        try {
+          host.querySelectorAll('[data-arc-q]').forEach(function (inp) {
+            var key = inp.getAttribute('data-rhap'), qi = +inp.getAttribute('data-qi');
+            var r = model[activeCamp].rhaps[key]; if (!r || !r.quiz[qi]) return;
+            r.quiz[qi].q = inp.value;
+          });
+          host.querySelectorAll('[data-arc-o]').forEach(function (inp) {
+            var key = inp.getAttribute('data-rhap'), qi = +inp.getAttribute('data-qi'), oi = +inp.getAttribute('data-oi');
+            var r = model[activeCamp].rhaps[key]; if (!r || !r.quiz[qi]) return;
+            r.quiz[qi].o[oi] = inp.value;
+          });
+          host.querySelectorAll('[data-arc-a]:checked').forEach(function (inp) {
+            var key = inp.getAttribute('data-rhap'), qi = +inp.getAttribute('data-qi');
+            var r = model[activeCamp].rhaps[key]; if (!r || !r.quiz[qi]) return;
+            r.quiz[qi].a = +inp.getAttribute('data-arc-a');
+          });
+          host.querySelectorAll('[data-arc-roman]').forEach(function (inp) {
+            var r = model[activeCamp].rhaps[inp.getAttribute('data-rhap')]; if (r) r.roman = inp.value;
+          });
+          host.querySelectorAll('[data-arc-title]').forEach(function (inp) {
+            var r = model[activeCamp].rhaps[inp.getAttribute('data-rhap')]; if (r) r.title = inp.value;
+          });
+        } catch (_e) {}
+      }
+
+      // Build the override cfg by diffing the model against ARCADE_DEFAULTS.
+      // Only campaigns/rhapsodies with actual changes are included.
+      function buildCfg() {
+        var defs = _arcDefaults();
+        var cfg = {};
+        ARCADE_CAMPS.forEach(function (c) {
+          var camp = c[0], m = model[camp];
+          var dCamp = defs[camp] || { order: [], rhaps: {} };
+          var dRhaps = dCamp.rhaps || {};
+          var dOrder = Array.isArray(dCamp.order) ? dCamp.order : Object.keys(dRhaps);
+          var outRhaps = {}, touched = false;
+          (m.order || []).forEach(function (key) {
+            var r = m.rhaps[key]; if (!r) return;
+            var d = dRhaps[key];
+            if (!d) {
+              // NEW rhapsody → store full editable object (override.js clones visuals).
+              outRhaps[key] = { roman: r.roman || key.toUpperCase().slice(0, 1), latin: r.latin || '', title: r.title || key, quiz: _arcCleanQuiz(r.quiz) };
+              touched = true;
+            } else {
+              // Existing default → include only if roman/latin/title/quiz changed.
+              var changed = false, entry = {};
+              if ((r.roman || '') !== (d.roman || '')) { entry.roman = r.roman || ''; changed = true; }
+              if ((r.latin || '') !== (d.latin || '')) { entry.latin = r.latin || ''; changed = true; }
+              if ((r.title || '') !== (d.title || '')) { entry.title = r.title || ''; changed = true; }
+              if (!_arcQuizEq(r.quiz, d.quiz)) { entry.quiz = _arcCleanQuiz(r.quiz); changed = true; }
+              if (changed) { outRhaps[key] = entry; touched = true; }
+            }
+          });
+          // order override only if rhapsodies were added or reordered.
+          var orderChanged = m.order.length !== dOrder.length || m.order.some(function (k, i) { return dOrder[i] !== k; });
+          if (touched || orderChanged) {
+            cfg[camp] = { rhaps: outRhaps };
+            if (orderChanged) cfg[camp].order = m.order.slice();
+          }
+        });
+        return cfg;
+      }
+
+      function paintArc() {
+        host.innerHTML = '';
+        var m = model[activeCamp];
+        var order = m.order || [];
+
+        if (!order.length) {
+          host.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Καμία ραψωδία σε αυτή την εκστρατεία.', en: 'No rhapsodies in this campaign.' })));
+        }
+
+        order.forEach(function (key) {
+          var r = m.rhaps[key]; if (!r) return;
+          var isDefault = !!((_arcDefaults()[activeCamp] || {}).rhaps || {})[key];
+          var card = el('div', { class: 'sc-form', style: 'margin:0 0 14px' });
+
+          // ── rhapsody header: roman + title + count + actions ──
+          var head = el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px' });
+          head.appendChild(el('label', { class: 'sc-field', style: 'flex:0 0 auto;width:70px' }, [
+            el('span', { class: 'sc-field__l' }, L({ gr: 'Ραψ.', en: 'Rhap.' })),
+            el('input', { class: 'sc-field__i', value: r.roman || '', 'data-arc-roman': '1', 'data-rhap': key, oninput: (function (k) { return function (e) { model[activeCamp].rhaps[k].roman = e.target.value; }; })(key) }),
+          ]));
+          head.appendChild(el('label', { class: 'sc-field', style: 'flex:1;min-width:160px' }, [
+            el('span', { class: 'sc-field__l' }, L({ gr: 'Τίτλος', en: 'Title' })),
+            el('input', { class: 'sc-field__i', value: r.title || '', 'data-arc-title': '1', 'data-rhap': key, oninput: (function (k) { return function (e) { model[activeCamp].rhaps[k].title = e.target.value; }; })(key) }),
+          ]));
+          head.appendChild(el('em', { class: 'sc-badge2 sc-badge2--' + (isDefault ? 'done' : 'open'), style: 'flex:0 0 auto' },
+            (r.quiz || []).length + ' ' + L({ gr: 'ερωτ.', en: 'Q' }) + (isDefault ? '' : ' · ' + L({ gr: 'νέα', en: 'new' }))));
+          if (isDefault) {
+            head.appendChild(el('button', { class: 'sc-mini', style: 'flex:0 0 auto', onclick: (function (k) { return function () {
+              adminConfirm(L({ gr: 'Επαναφορά της ραψωδίας «' + (model[activeCamp].rhaps[k].title || k) + '» στις προεπιλογές;', en: 'Reset rhapsody “' + (model[activeCamp].rhaps[k].title || k) + '” to defaults?' }), function () {
+                var d = _arcClone(((_arcDefaults()[activeCamp] || {}).rhaps || {})[k]);
+                if (d) {
+                  if (!Array.isArray(d.quiz)) d.quiz = [];
+                  d.quiz = d.quiz.map(function (q) { var o = Array.isArray(q.o) ? q.o.slice(0, 4) : []; while (o.length < 4) o.push(''); return { q: q.q || '', o: o, a: (typeof q.a === 'number' ? q.a : 0) }; });
+                  model[activeCamp].rhaps[k] = d;
+                }
+                paintArc();
+              });
+            }; })(key) }, L({ gr: 'Επαναφορά', en: 'Reset' })));
+          } else {
+            head.appendChild(el('button', { class: 'sc-mini', style: 'flex:0 0 auto', onclick: (function (k) { return function () {
+              adminConfirm(L({ gr: 'Διαγραφή της νέας ραψωδίας «' + (model[activeCamp].rhaps[k].title || k) + '»;', en: 'Delete new rhapsody “' + (model[activeCamp].rhaps[k].title || k) + '”?' }), function () {
+                delete model[activeCamp].rhaps[k];
+                model[activeCamp].order = model[activeCamp].order.filter(function (x) { return x !== k; });
+                paintArc();
+              });
+            }; })(key) }, L({ gr: '✕ Διαγραφή', en: '✕ Delete' })));
+          }
+          card.appendChild(head);
+
+          // ── question list ──
+          var qHost = el('div', {});
+          (r.quiz || []).forEach(function (q, qi) {
+            qHost.appendChild(_arcQuestionRow(key, q, qi));
+          });
+          card.appendChild(qHost);
+
+          // ── add question ──
+          card.appendChild(el('button', { class: 'sc-cta sc-cta--sm', style: 'margin-top:6px', onclick: (function (k) { return function () {
+            sweep();
+            model[activeCamp].rhaps[k].quiz.push({ q: '', o: ['', '', '', ''], a: 0 });
+            paintArc();
+          }; })(key) }, L({ gr: '＋ Ερώτηση', en: '＋ Question' })));
+
+          host.appendChild(card);
+        });
+
+        // ── add rhapsody ──
+        host.appendChild(el('div', { class: 'sc-form', style: 'margin:0 0 16px' }, [
+          el('div', { class: 'sc-cfg__l' }, L({ gr: 'Νέα ραψωδία', en: 'New rhapsody' })),
+          el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
+            el('input', { class: 'sc-field__i', id: 'arcNewRoman', placeholder: L({ gr: 'Γράμμα (π.χ. Ν)', en: 'Letter (e.g. Ν)' }), style: 'flex:0 0 auto;width:110px' }),
+            el('input', { class: 'sc-field__i', id: 'arcNewTitle', placeholder: L({ gr: 'Τίτλος ραψωδίας', en: 'Rhapsody title' }), style: 'flex:2;min-width:160px' }),
+            el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+              sweep();
+              var roman = ((document.getElementById('arcNewRoman') || {}).value || '').trim();
+              var title = ((document.getElementById('arcNewTitle') || {}).value || '').trim();
+              if (!title && !roman) return;
+              if (!title) title = roman;
+              var taken = Object.keys(model[activeCamp].rhaps);
+              var key = _arcSlug(title || roman, taken);
+              model[activeCamp].rhaps[key] = { roman: roman || (title.toUpperCase().slice(0, 1)), latin: '', title: title, boss: '', quiz: [] };
+              model[activeCamp].order.push(key);
+              paintArc();
+            } }, L({ gr: '＋ Πρόσθεσε ραψωδία', en: '＋ Add rhapsody' })),
+          ]),
+        ]));
+
+        // ── save ──
+        var msg = el('span', { class: 'sc-hint', style: 'margin-left:10px' });
+        host.appendChild(el('div', { style: 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px' }, [
+          el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function (e) {
+            sweep();
+            var probs = validate();
+            if (probs.length) {
+              msg.textContent = '⚠ ' + probs.slice(0, 4).join(' · ') + (probs.length > 4 ? ' …(+' + (probs.length - 4) + ')' : '');
+              msg.style.color = '#b3261e';
+              return;
+            }
+            try {
+              var cfg = buildCfg();
+              if (Object.keys(cfg).length) { if (SymStore) SymStore.set('arcade_content', cfg); }
+              else { if (SymStore) SymStore.set('arcade_content', null); }
+            } catch (_e) {}
+            msg.style.color = '';
+            var btn = e.currentTarget;
+            btn.textContent = '✓ ' + L({ gr: 'Αποθηκεύτηκε', en: 'Saved' });
+            setTimeout(function () { try { btn.textContent = L({ gr: 'Αποθήκευση Arcade', en: 'Save Arcade' }); } catch (_e2) {} }, 1400);
+          } }, L({ gr: 'Αποθήκευση Arcade', en: 'Save Arcade' })),
+          msg,
+        ]));
+      }
+
+      // Single editable question row (q + 4 options + correct radio + delete).
+      function _arcQuestionRow(key, q, qi) {
+        var row = el('div', { class: 'sc-form', style: 'margin:0 0 8px;background:color-mix(in srgb,var(--sym-fg,#1E1810) 4%,transparent)' });
+        var top = el('div', { style: 'display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap' });
+        top.appendChild(el('label', { class: 'sc-field', style: 'flex:1;min-width:200px' }, [
+          el('span', { class: 'sc-field__l' }, L({ gr: 'Ερώτηση', en: 'Question' }) + ' ' + (qi + 1)),
+          el('input', { class: 'sc-field__i', value: q.q || '', 'data-arc-q': '1', 'data-rhap': key, 'data-qi': qi, oninput: (function (k, i) { return function (e) { model[activeCamp].rhaps[k].quiz[i].q = e.target.value; }; })(key, qi) }),
+        ]));
+        top.appendChild(el('button', { class: 'sc-mini', style: 'flex:0 0 auto', onclick: (function (k, i) { return function () {
+          sweep();
+          model[activeCamp].rhaps[k].quiz.splice(i, 1);
+          paintArc();
+        }; })(key, qi) }, L({ gr: '✕', en: '✕' })));
+        row.appendChild(top);
+
+        // four options, each with a "correct" radio.
+        var radioName = 'arc-' + activeCamp + '-' + key + '-' + qi;
+        var opts = el('div', { style: 'display:flex;flex-direction:column;gap:6px;margin-top:8px' });
+        [0, 1, 2, 3].forEach(function (oi) {
+          var radioAttrs = { type: 'radio', name: radioName, 'data-arc-a': oi, 'data-rhap': key, 'data-qi': qi,
+            style: 'flex:0 0 auto', onchange: (function (k, i, idx) { return function () { model[activeCamp].rhaps[k].quiz[i].a = idx; }; })(key, qi, oi) };
+          if (q.a === oi) radioAttrs.checked = 'checked';
+          opts.appendChild(el('label', { class: 'sc-field', style: 'flex-direction:row;align-items:center;gap:8px;margin:0' }, [
+            el('input', radioAttrs),
+            el('span', { class: 'sc-field__l', style: 'margin:0;min-width:54px' }, L({ gr: 'Σωστή', en: 'Correct' })),
+            el('input', { class: 'sc-field__i', style: 'flex:1', value: (q.o && q.o[oi]) || '', placeholder: L({ gr: 'Επιλογή', en: 'Option' }) + ' ' + (oi + 1),
+              'data-arc-o': '1', 'data-rhap': key, 'data-qi': qi, 'data-oi': oi,
+              oninput: (function (k, i, idx) { return function (e) { model[activeCamp].rhaps[k].quiz[i].o[idx] = e.target.value; }; })(key, qi, oi) }),
+          ]));
+        });
+        row.appendChild(opts);
+        return row;
+      }
+
+      paintArc();
+    }
+    // Normalise a quiz array to the exact {q,o:[4],a} shape override.js expects.
+    function _arcCleanQuiz(quiz) {
+      return (Array.isArray(quiz) ? quiz : []).map(function (q) {
+        var o = Array.isArray(q.o) ? q.o.slice(0, 4) : [];
+        while (o.length < 4) o.push('');
+        var a = (typeof q.a === 'number' && q.a >= 0 && q.a <= 3) ? q.a : 0;
+        return { q: String(q.q || ''), o: o.map(function (x) { return String(x == null ? '' : x); }), a: a };
+      });
+    }
+    // Structural equality of two quiz arrays (for change detection vs defaults).
+    function _arcQuizEq(a, b) {
+      a = Array.isArray(a) ? a : []; b = Array.isArray(b) ? b : [];
+      if (a.length !== b.length) return false;
+      for (var i = 0; i < a.length; i++) {
+        var x = a[i], y = b[i];
+        if (String(x.q || '') !== String(y.q || '')) return false;
+        if ((x.a | 0) !== (y.a | 0)) return false;
+        var xo = Array.isArray(x.o) ? x.o : [], yo = Array.isArray(y.o) ? y.o : [];
+        for (var j = 0; j < 4; j++) { if (String(xo[j] || '') !== String(yo[j] || '')) return false; }
+      }
+      return true;
+    }
+
     /* ════════════════ PAINT ════════════════════════════════════════ */
     function paint() {
       pane.innerHTML = '';
@@ -2248,6 +2614,9 @@
       }
       else if (activeSec === 'pricing') {
         renderPricing();
+      }
+      else if (activeSec === 'arcade') {
+        renderArcade();
       }
       else if (activeSec === 'discounts') {
         renderCoupons();

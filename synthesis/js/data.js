@@ -181,6 +181,7 @@ const SUBJECTS = {
 // ── Game-engine carousel (shared, bottom of page) ──
 const ENGINES = [
   { gr:'Ιλιάδα Arcade', en:'Iliad Arcade', meta:{gr:'2D Arcade · Ιλιάδα',en:'2D Arcade · Iliad'}, illu:'sword' },
+  { gr:'Οδύσσεια Arcade', en:'Odyssea Arcade', meta:{gr:'2D Arcade · Οδύσσεια',en:'2D Arcade · Odyssey'}, illu:'trireme' },
   { gr:'Agora Surfers', en:'Agora Surfers', meta:{gr:'Runner · Ιλιάδα / Οδύσσεια',en:'Runner · Iliad / Odyssey'}, illu:'runner' },
   { gr:'Rapid Fire', en:'Rapid Fire', meta:{gr:'Speed quiz · όλες οι ύλες',en:'Speed quiz · any material'}, illu:'lightning-bolt' },
   { gr:'Mythology Memory', en:'Mythology Memory', meta:{gr:'Ζεύγη καρτών · Μυθολογία',en:'Card pairs · Mythology'}, illu:'cards' },
