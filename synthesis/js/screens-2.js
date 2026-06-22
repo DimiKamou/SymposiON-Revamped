@@ -405,7 +405,7 @@
     var ov = document.createElement('div');
     ov.id = 'anodos-overlay'; ov.className = 'game-overlay active';
     ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:#0b0d10;';
-    var close = function(){ try{ ov.remove(); }catch(_){} document.body.classList.remove('syn-game-open'); document.removeEventListener('keydown', esc); };
+    var close = function(){ try{ ov.remove(); }catch(_){} document.body.classList.remove('syn-game-open'); document.removeEventListener('keydown', esc); if (window.SymNav) try { SymNav.endGame(); } catch(_){} };
     var esc = function(e){ if(e.key==='Escape') close(); };
     ov.innerHTML =
       '<button id="anodos-close" aria-label="Έξοδος" style="position:fixed;top:14px;right:16px;z-index:10;font:600 13px Montserrat,system-ui,sans-serif;color:#EDE5DA;background:rgba(20,18,14,.82);border:1px solid rgba(212,174,88,.45);border-radius:999px;padding:8px 15px;cursor:pointer;backdrop-filter:blur(6px)">✕ Έξοδος</button>' +
@@ -415,6 +415,8 @@
     ov.querySelector('#anodos-close').onclick = close;
     document.addEventListener('keydown', esc);
     if (window.symApplyThemeClass) { try { window.symApplyThemeClass(ov); } catch(_){} }
+    // Register with the history router so Back prompts + closes the game.
+    if (window.SymNav) { try { SymNav.beginGame('anodos', 'Ἄνοδος', close); } catch(_){} }
   };
 
   S.anodos = function(home, ctx){

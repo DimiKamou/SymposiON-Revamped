@@ -152,18 +152,25 @@ window.symRender = render;
 // Screens that take no params and are safe to deep-link / restore from the URL hash
 const DEEPLINK = ['home','assignments','gamepanel','live','profile','levelup','temple','anodos','tartarus','anathesi','parent','settings','checkout','admin','login','subscribe','account','tutor'];
 function symGo(screen, param){
+  var _prevScreen = STATE.screen, _prevParam = STATE.screenParam;
   STATE.screen = screen || 'home';
   STATE.screenParam = param || null;
   if (STATE.direction !== 'synthesis') { STATE.direction = 'synthesis'; buildHarness(); }
-  // keep the URL hash in sync so a screen survives refresh & is shareable
-  try {
-    if (STATE.screen === 'tag' && STATE.screenParam && STATE.screenParam.tag) {
-      history.replaceState(null, '', '#tag-' + STATE.screenParam.tag);
-    } else if (!STATE.screenParam && DEEPLINK.indexOf(STATE.screen) >= 0) {
-      if (STATE.screen === 'home') history.replaceState(null, '', location.pathname + location.search);
-      else history.replaceState(null, '', '#' + STATE.screen);
-    }
-  } catch (_) {}
+  // History/URL is owned by SymNav (js/sym-nav.js): it pushes a real back-stack
+  // entry per navigation so Back returns to the previous screen, not home.
+  if (window.SymNav && typeof SymNav._sync === 'function') {
+    SymNav._sync(_prevScreen, _prevParam);
+  } else {
+    // Fallback before SymNav loads: legacy hash sync (replaceState).
+    try {
+      if (STATE.screen === 'tag' && STATE.screenParam && STATE.screenParam.tag) {
+        history.replaceState(null, '', '#tag-' + STATE.screenParam.tag);
+      } else if (!STATE.screenParam && DEEPLINK.indexOf(STATE.screen) >= 0) {
+        if (STATE.screen === 'home') history.replaceState(null, '', location.pathname + location.search);
+        else history.replaceState(null, '', '#' + STATE.screen);
+      }
+    } catch (_) {}
+  }
   render();
   window.scrollTo(0, 0);
 }
@@ -506,7 +513,7 @@ function boot(){
   if(savedIcon)  STATE.cursorIcon = savedIcon;
   if(window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
   // deep-link: restore screen from the URL hash (#temple, #admin, …)
-  try { const h = (location.hash || '').replace(/^#/, ''); if (h.indexOf('tag-') === 0) { STATE.screen = 'tag'; STATE.screenParam = { tag: h.slice(4) }; } else if (h && DEEPLINK.indexOf(h) >= 0) STATE.screen = h; } catch(_){}
+  try { const h = (location.hash || '').replace(/^#\/?/, ''); const segs = h.split('/'); const first = segs[0] || ''; if (first === 'tag' && segs[1]) { STATE.screen = 'tag'; STATE.screenParam = { tag: segs[1] }; } else if (first.indexOf('tag-') === 0) { STATE.screen = 'tag'; STATE.screenParam = { tag: first.slice(4) }; } else if (first && DEEPLINK.indexOf(first) >= 0) STATE.screen = first; } catch(_){}
   // PREVIEW bootstrap — only when ?preview params are present (used by the overview panel).
   // e.g. ?screen=admin&sec=tags&role=admin   ·   ?screen=tag&tag=tragedies
   try {
@@ -546,12 +553,9 @@ function boot(){
       }
     }
   } catch (_) {}
-  window.addEventListener('hashchange', () => {
-    const h = (location.hash || '').replace(/^#/, '');
-    if (h.indexOf('tag-') === 0) { const id = h.slice(4); if (STATE.screen !== 'tag' || !STATE.screenParam || STATE.screenParam.tag !== id) { STATE.screen = 'tag'; STATE.screenParam = { tag: id }; render(); window.scrollTo(0, 0); } return; }
-    const s = (h && DEEPLINK.indexOf(h) >= 0) ? h : 'home';
-    if (s !== STATE.screen) { STATE.screen = s; STATE.screenParam = null; render(); window.scrollTo(0, 0); }
-  });
+  // History/back-button navigation is owned by SymNav (js/sym-nav.js) via a
+  // popstate-driven back-stack. The legacy hashchange restorer is retired so
+  // the two don't double-handle the same Back press.
   // Agora auto-update: re-render the open Agora when new content is added,
   // in this tab (custom event) or another (native 'storage' event).
   function agoraSync(key){
