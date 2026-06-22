@@ -105,6 +105,10 @@ function render() {
   home.className = 'theme-' + STATE.theme + ' dir-' + STATE.direction
     + ' density-' + STATE.density + ' orn-' + STATE.ornament + ' accent-' + STATE.accent;
   document.querySelector('.stage').className = 'stage theme-' + STATE.theme;
+  // Mirror the active theme onto <body> so body-level game overlays inherit the
+  // --sym-* tokens (the shared overlay chrome adapts to the selected theme).
+  [...document.body.classList].forEach(c => { if (c.indexOf('theme-') === 0) document.body.classList.remove(c); });
+  document.body.classList.add('theme-' + STATE.theme);
   home.innerHTML = '';
 
   const ctx = {

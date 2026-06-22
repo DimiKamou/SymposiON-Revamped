@@ -73,6 +73,7 @@ const SUBJECTS = {
     { id:'odysseia', roman:'I', illu:'trireme', gr:'Οδύσσεια', en:'Odyssey', sub:'Odyssey',
       summary:{ gr:'Ο νόστος του Οδυσσέα — νησιά, τέρατα, θεοί.', en:'Odysseus\u2019 homecoming — islands, monsters, gods.' },
       games:[ g('Ζωφόρος Οδύσσειας','Odyssey Frieze','Καμπάνια · 11 ραψωδίες · διάλογοι','trireme',{fn:'openOdysseiaVoyage'}),
+              g('Οδύσσεια Arcade','Odyssea Arcade','5 ραψωδίες · waves','trireme'),
               g('Odyssey Trivia','Odyssey Trivia','MC · Tug of War','trireme'),
               g('Οδύσσεια 3D','Odyssey 3D','8 νησιά · Μεσόγειος','trojan-horse'),
               g('Χρονολόγιο','Chronicle','Timeline · γεγονότα','walls'),

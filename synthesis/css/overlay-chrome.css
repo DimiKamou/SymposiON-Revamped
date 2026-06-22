@@ -34,6 +34,9 @@
 }
 .game-overlay.active { display: flex; animation: none; }
 
+/* Theme-adaptive chrome: the bar follows the active synthesis theme via the
+   --sym-* tokens (mirrored onto <body> in app.js render). The previous fixed
+   dark values remain as fallbacks for any overlay shown before a theme is set. */
 .overlay-topbar {
   display: flex;
   align-items: center;
@@ -43,8 +46,8 @@
   padding-left: max(2rem, calc(1rem + env(safe-area-inset-left)));
   padding-right: max(2rem, calc(1rem + env(safe-area-inset-right)));
   min-height: 52px;
-  background: #201408;            /* var(--dark-panel) */
-  border-bottom: 1px solid rgba(195,165,105,0.14);
+  background: var(--sym-bg-panel, #201408);
+  border-bottom: 1px solid var(--sym-hairline, rgba(195,165,105,0.14));
   flex-shrink: 0;
 }
 
@@ -58,37 +61,44 @@
   font-size: 11px;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  color: #907860;
+  color: var(--sym-fg-muted, #907860);
   cursor: pointer;
   background: transparent;
-  border: 1px solid rgba(195,165,105,0.18);
+  border: 1px solid var(--sym-hairline, rgba(195,165,105,0.18));
   padding: 6px 14px;
-  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-family: var(--sym-font-sans, 'Inter', 'Montserrat', sans-serif);
   font-weight: 500;
-  transition: color 0.25s, border-color 0.25s;
+  transition: color 0.25s, border-color 0.25s, background 0.25s;
 }
-.overlay-back:hover { color: #F6F2EB; border-color: rgba(195,165,105,0.5); }
+.overlay-back:hover {
+  color: var(--sym-fg, #F6F2EB);
+  border-color: var(--sym-gold, rgba(195,165,105,0.5));
+  background: color-mix(in srgb, var(--sym-gold, #C8A23C) 12%, transparent);
+}
 
 .overlay-title {
-  font-family: 'Cormorant Garamond', 'Alegreya', serif;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
   font-size: 16px;
   font-weight: 400;
-  color: rgba(195,165,105,0.8);
+  color: var(--sym-gold, rgba(195,165,105,0.8));
 }
 
-.overlay-lang { display: flex; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+.overlay-lang { display: flex; border: 1px solid var(--sym-hairline, rgba(255,255,255,0.1)); overflow: hidden; }
 .overlay-lang button {
   font-size: 11px;
   padding: 4px 12px;
   cursor: pointer;
-  color: #907A68;
+  color: var(--sym-fg-muted, #907A68);
   background: transparent;
   border: none;
-  font-family: 'Inter', 'Montserrat', sans-serif;
+  font-family: var(--sym-font-sans, 'Inter', 'Montserrat', sans-serif);
   transition: all 0.15s;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.overlay-lang button.active { background: rgba(255,255,255,0.08); color: #F6F2EB; }
+.overlay-lang button.active {
+  background: color-mix(in srgb, var(--sym-fg, #fff) 8%, transparent);
+  color: var(--sym-fg, #F6F2EB);
+}
 
 .overlay-frame { flex: 1; overflow-y: auto; overflow-x: hidden; }
