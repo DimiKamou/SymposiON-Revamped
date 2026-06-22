@@ -360,6 +360,9 @@
 <script src="js/flappy-slot.js?v=1"></script>
 
 <script src="js/app.js"></script>
+<!-- History-based routing + in-game exit guard. Loaded after app.js (symGo,
+     STATE, symRender) and syn-launch.js (synLaunch) so it can own the back-stack. -->
+<script src="js/sym-nav.js"></script>
 
 <!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════
      Show the branded SymLoader (the real one is defined in app.js, loaded just
