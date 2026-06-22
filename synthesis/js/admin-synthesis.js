@@ -2266,6 +2266,7 @@
         [
           { ic: '◆', gr: 'Πρότυπο Trivia', en: 'Trivia Template', mgr: 'Σύνθεση Trivia — περιεχόμενο, πίνακας & ρυθμίσεις', men: 'Compose Trivia — content, board & setup', fn: 'openTriviaTemplate' },
           { ic: '⛩', gr: 'Πρότυπο Ιστορίας', en: 'History Template', mgr: 'Σύνθεση Ιστορίας — θεματικές ενότητες & λειτουργίες μελέτης', men: 'Compose History — thematic units & study modes', fn: 'openHistoryTemplate' },
+          { ic: '📜', gr: 'Κείμενα · Μεταφράσεις', en: 'Texts · Translations', mgr: 'Σύνθεση παράλληλου κειμένου — απόδοση & σύνταξη ανά λέξη', men: 'Compose parallel text — translation & per-word syntax', fn: 'openParallelStudio' },
         ].forEach(function (t) {
           twrap.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
             el('span', { class: 'sc-voyadmin__ic', style: 'display:flex;align-items:center;justify-content:center;font-size:18px' }, t.ic),
