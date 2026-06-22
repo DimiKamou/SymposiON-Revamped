@@ -295,14 +295,23 @@
     var db = _db(); if (!db) return Promise.reject(new Error('offline'));
     return db.doc('authored_lessons/' + id).get().then(function (d) { if (!d.exists) throw new Error('not found'); return modelFromDoc(id, d.data()); });
   }
-  function openParallelLesson(idOrDoc) {
-    _resolveDoc(idOrDoc).then(function (m) { show(m, false); }).catch(function () { toast('Δεν βρέθηκε το κείμενο'); });
+  function _blankLesson(id) {
+    return { id: id, kind: 'parallel', _isNew: true, navGroup: 'literature', title: '', tag: '', level: '', intro: '', leftLabel: 'Αρχαίο κείμενο', rightLabel: 'Νέα ελληνικά', commentary: '', pairs: [{ a: '', g: '', syn: {} }] };
   }
-  function openParallelStudio() {
+  function openParallelLesson(idOrDoc) {
+    _resolveDoc(idOrDoc).then(function (m) { show(m, false); }).catch(function () {
+      // Not authored yet. A curator authors it in place under this exact id
+      // (so a grade's "Κείμενα · Μεταφράσεις" tile becomes its own text);
+      // students just see a friendly "coming soon".
+      if (isCurator() && typeof idOrDoc === 'string') { show(_blankLesson(_docId(idOrDoc)), true); }
+      else { toast('Το κείμενο δεν έχει αναρτηθεί ακόμη'); }
+    });
+  }
+  function openParallelStudio(fixedId) {
     if (!isCurator()) { toast('Μόνο για καθηγητές'); return; }
     var uid = _uid() || 'anon';
-    var id = 'pl-' + uid.slice(0, 4) + '-' + Math.abs(_hash(String(Date_now()))).toString(36);
-    show({ id: id, kind: 'parallel', _isNew: true, navGroup: 'literature', title: '', tag: '', level: '', intro: '', leftLabel: 'Αρχαίο κείμενο', rightLabel: 'Νέα ελληνικά', commentary: '', pairs: [{ a: '', g: '' }] }, true);
+    var id = (typeof fixedId === 'string' && fixedId) ? _docId(fixedId) : ('pl-' + uid.slice(0, 4) + '-' + Math.abs(_hash(String(Date_now()))).toString(36));
+    show(_blankLesson(id), true);
   }
   function _hash(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
   function Date_now() { try { return Date.now(); } catch (_) { return 0; } }
