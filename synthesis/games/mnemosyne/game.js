@@ -207,6 +207,7 @@ const Mnemosyne = (() => {
       renderBoard();
     } else {
       btn.classList.add('wrong'); _fx('wrong',{el:btn});
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Μνημοσύνη', gameId: 'mnemosyne' }); } catch(_){} }
       advanceRivals(true);
       fb.textContent=T('ΛΑΘΟΣ — οι Μούσες θυμούνται για σένα','WRONG — the Muses recall for others'); fb.className='mn-feedback mn-fb-bad';
       renderBoard();

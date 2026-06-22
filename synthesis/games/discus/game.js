@@ -196,6 +196,7 @@ const Discus = (() => {
       setTimeout(showDrop, 900);
     } else {
       btn.classList.add('wrong'); _fx('wrong',{el:btn});
+      if (window.symLogMistake) { try { window.symLogMistake({ q: (st.cur.q && (st.cur.q.gr || st.cur.q.en)) || '', wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Δίσκος', gameId: 'discus' }); } catch(_){} }
       fb.textContent=T('ΛΑΘΟΣ — άκυρη βολή','WRONG — no throw'); fb.className='di-feedback di-fb-bad';
       renderBoard();
       setTimeout(()=>{ st.round>=ROUNDS ? end() : nextQ(); }, 1450);

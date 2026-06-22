@@ -51,11 +51,13 @@
 <script src="js/questions.js"></script>
 <!-- Bridge: when launched from the SymposiON app (launchPvPArena), the live
      shared library window.SYM_QUESTIONS is handed across via localStorage.
-     Prefer it over the bundled js/questions.js sample when present. -->
+     If the launcher's content chooser stored a filtered/mixed selection
+     (SYM_QUESTIONS_SELECTION), prefer it; else fall back to the full bank,
+     then to the bundled js/questions.js sample. -->
 <script>
 (function(){
   try {
-    var raw = localStorage.getItem('SYM_QUESTIONS');
+    var raw = localStorage.getItem('SYM_QUESTIONS_SELECTION') || localStorage.getItem('SYM_QUESTIONS');
     if (raw) {
       var q = JSON.parse(raw);
       if (Array.isArray(q) && q.length) window.SYM_QUESTIONS = q;

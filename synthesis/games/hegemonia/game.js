@@ -294,6 +294,7 @@ const Hegemonia = (() => {
   function answer(chosen, btn) {
     if (st.answered) return; st.answered=true; stopTimer();
     const correct = chosen===st.cur.c;
+    if (!correct && window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Ηγεμονία', gameId: 'hegemonia' }); } catch (_) {} }
     const speed = frac();
     document.querySelectorAll('#hg-answers .hg-ans').forEach((b,i)=>{
       b.disabled=true;

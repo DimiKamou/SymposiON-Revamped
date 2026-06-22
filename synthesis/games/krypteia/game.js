@@ -311,6 +311,7 @@ const Krypteia = (() => {
       _fx('correct',{el:btn, pts});
       setTimeout(drawOperation, 900);
     } else {
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Κρυπτεία', gameId: 'krypteia' }); } catch(_){} }
       btn.classList.add('wrong');
       _fx('wrong',{el:btn});
       fb.textContent=T('ΛΑΘΟΣ — οι αντίπαλοι κερδίζουν έδαφος','WRONG — rivals gain ground');

@@ -280,6 +280,7 @@ const Agora = (() => {
       if (window.SymFX) SymFX.burst(window.innerWidth/2, window.innerHeight*0.4, {emoji:['🪙','✦'], count:16, power:11, up:0.5, life:1200});
     } else {
       btns[chosen].classList.add('wrong'); _fx('wrong',{el:btns[chosen]});
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Αγορά', gameId: 'agora' }); } catch (_) {} }
       st.drach = Math.max(0, st.drach - st.bid); pulsePurse(false);
       msg=T(`ΛΑΘΟΣ — έχασες την προσφορά σου (${st.bid} δρ.)`,`WRONG — you forfeit your bid (${st.bid} dr.)`);
       fb.className='ag-feedback ag-fb-bad';

@@ -327,6 +327,7 @@ const Toxotes = (() => {
       shatter(el,'good'); popScore(lx,ly,'+'+gain,'good');
       flashQ(T('ΕΥΣΤΟΧΑ!','A TRUE SHOT!'),'ok');
     } else {
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[idx]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat:'Τοξότης', gameId:'toxotes' }); } catch(_){} }
       st.streak=0; _fx('wrong');
       shatter(el,'bad'); popScore(lx,ly,T('ΑΣΤΟΧΙΑ','MISS'),'bad');
       // reveal correct amphora
@@ -373,6 +374,7 @@ const Toxotes = (() => {
       flashQ(T('ΣΩΣΤΟ — ΒΟΛΕΣ!','CORRECT — VOLLEY!'),'ok'); renderHud();
       later(startVolley, 700);
     } else {
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat:'Τοξότης', gameId:'toxotes' }); } catch(_){} }
       btn.classList.add('wrong'); _fx('wrong'); st.streak=0;
       advanceRivals(true);
       flashQ(T('ΛΑΘΟΣ — χωρίς βολές','WRONG — no volley'),'bad'); renderHud();

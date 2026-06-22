@@ -1338,6 +1338,40 @@
   letter-spacing: 0.04em;
 }
 
+/* ── Multi-select: picked datasets + "Combine & Start" footer ── */
+.la-ds-item.la-ds-selected {
+  background: rgba(201,164,74,0.14);
+  border-color: var(--la-gold);
+}
+.la-ds-item.la-ds-selected .la-ds-arrow {
+  opacity: 1;
+  font-weight: 900;
+}
+.la-hd-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(0deg, rgba(12,9,5,0.96), rgba(12,9,5,0.0));
+}
+.la-combine-btn {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #1a1206;
+  background: linear-gradient(135deg, #e7c66a, var(--la-gold));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.32);
+  transition: filter 0.15s, transform 0.12s;
+}
+.la-combine-btn:hover   { filter: brightness(1.06); }
+.la-combine-btn:active  { transform: translateY(1px); }
+.la-combine-btn:disabled{ opacity: 0.5; cursor: default; filter: none; }
+
 /* ── Host lobby back button ─────────────────────────────── */
 .la-back-btn {
   background: transparent;
