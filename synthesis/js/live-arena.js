@@ -574,6 +574,21 @@ const LiveArena = (() => {
       const doc     = await answerRef(_pin, _uid, data.activeQuestion).get();
       const correct = doc.exists && doc.data().choice === data.correctAns;
 
+      // Tartarus capture: log the learner's wrong pick to the mistake archive.
+      if (!correct && typeof window.symLogMistake === 'function') {
+        try {
+          const q    = (_cfg.questions && _cfg.questions[data.activeQuestion]) || {};
+          const opts = q.opts || q.a || [];
+          const ch   = doc.exists ? doc.data().choice : null;
+          window.symLogMistake({
+            q: q.q,
+            wrong: (ch != null && opts[ch]) || '',
+            right: opts[data.correctAns] || '',
+            cat: 'Live Arena', gameId: 'live-arena',
+          });
+        } catch (_) {}
+      }
+
       if (correct) {
         await playerRef(_pin, _uid).update({
           score: firebase.firestore.FieldValue.increment(100),
@@ -638,10 +653,82 @@ const LiveArena = (() => {
     return false;
   }
 
+  /* ── Multi-select accumulator ──────────────────────────────
+     Leaves (trivia sets, grammar/GP datasets) toggle into _laSel
+     instead of launching immediately; the footer button combines
+     every picked source into one bank and hosts it. Each entry:
+     { key, label, get:()=>Promise<Array>|Array }                */
+  let _laSel = [];
+
+  function _laIsSel(key) { return _laSel.some(s => s.key === key); }
+
+  function _laToggle(entry, btn) {
+    const i = _laSel.findIndex(s => s.key === entry.key);
+    const on = i < 0;
+    if (i >= 0) _laSel.splice(i, 1); else _laSel.push(entry);
+    if (btn) {
+      btn.classList.toggle('la-ds-selected', on);
+      const arrow = btn.querySelector('.la-ds-arrow');
+      if (arrow) arrow.textContent = on ? '✓' : '+';
+    }
+    _laUpdateCombineBtn();
+  }
+
+  function _laUpdateCombineBtn() {
+    const btn = document.getElementById('la-combine-btn');
+    if (!btn) return;
+    const n = _laSel.length;
+    const c = document.getElementById('la-sel-count');
+    if (c) c.textContent = n;
+    btn.disabled = n === 0;
+    btn.style.display = n > 0 ? '' : 'none';
+  }
+
+  // A selectable leaf item (toggles into _laSel; ✓ when picked).
+  function _laToggleItem(icon, name, sub, locked, entry) {
+    const on = _laIsSel(entry.key);
+    const btn = document.createElement('button');
+    btn.className = 'la-ds-item' + (locked ? ' la-ds-locked' : '') + (on ? ' la-ds-selected' : '');
+    btn.innerHTML =
+      `<span class="la-ds-icon">${locked ? '🔒' : icon}</span>` +
+      `<span class="la-ds-info">` +
+        `<span class="la-ds-name">${_esc(name)}</span>` +
+        `<span class="la-ds-count">${_esc(sub)}</span>` +
+      `</span>` +
+      `<span class="la-ds-arrow">${locked ? '' : (on ? '✓' : '+')}</span>`;
+    if (!locked) btn.addEventListener('click', () => _laToggle(entry, btn));
+    return btn;
+  }
+
+  // Combine every picked source into one bank and host it.
+  async function _laLaunchCombined() {
+    if (!_laSel.length) return;
+    const sel  = _laSel.slice();
+    const list = document.getElementById('la-dataset-list');
+    if (list) list.innerHTML = `<p class="la-ds-empty" style="color:#C9A44A">⏳ ${t('Συνδυασμός…', 'Combining…')}</p>`;
+    let combined = [];
+    try {
+      const arrs = await Promise.all(sel.map(s => Promise.resolve(s.get()).catch(() => [])));
+      arrs.forEach(a => { if (Array.isArray(a)) combined = combined.concat(a); });
+    } catch (_) {}
+    combined = combined.filter(q => q && q.opts && q.opts.length >= 2);
+    if (!combined.length) {
+      if (list) list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκαν ερωτήσεις.', 'No questions found.')}</p>`;
+      return;
+    }
+    // shuffle so mixed sources interleave
+    for (let i = combined.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [combined[i], combined[j]] = [combined[j], combined[i]]; }
+    const gameName = sel.length === 1 ? sel[0].label : (sel[0].label + ' +' + (sel.length - 1));
+    _laSel = [];
+    launchHost({ questions: combined, gameName });
+  }
+
   function _showDatasetPicker() {
     _laNav = { level: 'root', sectionKey: null, gradeKey: null };
+    _laSel = [];
     _showScreen('la-host-dataset');
     _laNavRender();
+    _laUpdateCombineBtn();
   }
 
   function navBack() {
@@ -721,11 +808,11 @@ const LiveArena = (() => {
       if (!qs || !qs.length) return;
       shown++;
       const label = typeof ds.label === 'object' ? t(ds.label.gr, ds.label.en) : ds.label;
-      list.appendChild(_laItem(
+      list.appendChild(_laToggleItem(
         ds.icon, label,
         `${qs.length} ${t('ερωτήσεις', 'questions')}`,
         false,
-        () => selectDataset(idx)
+        { key: 'ds:' + ds.id, label, get: () => ds.getQuestions() }
       ));
     });
 
@@ -799,46 +886,40 @@ const LiveArena = (() => {
       : [];
 
     if (gpDs.length > 0 && typeof gpLoadQuestions === 'function') {
-      // Multiple datasets available → show a list to pick from
-      if (gpDs.length > 1) {
-        if (list) {
-          list.innerHTML = '';
-          gpDs.forEach(ds => {
-            const tier   = ds.tier || 'free';
-            const locked = !_laCanAccess(tier);
-            list.appendChild(_laItem(
-              ds.icon ? String.fromCodePoint(0x1F4DA) : '📚',
-              ds.label, ds.meta || '',
-              locked,
-              async () => {
-                if (list) list.innerHTML = `<p class="la-ds-empty" style="color:#C9A44A">⏳ ${t('Φόρτωση…','Loading…')}</p>`;
-                const loaded = await gpLoadQuestions(ds.id, {});
-                if (!loaded || loaded.denied || !(loaded.questions || []).length) {
-                  if (list) list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκαν ερωτήσεις.','No questions found.')}</p>`;
-                  return;
-                }
-                const qs = typeof _gpToNauItems === 'function' ? _gpToNauItems(loaded.questions) : loaded.questions;
-                launchHost({ questions: qs.filter(q => q && q.opts), gameName: ds.label });
-              }
-            ));
-          });
-        }
-        return;
+      // Render every dataset as a toggle leaf — pick several here and/or
+      // across other subjects, then hit "Combine & Start".
+      if (list) {
+        list.innerHTML = '';
+        gpDs.forEach(ds => {
+          const tier   = ds.tier || 'free';
+          const locked = !_laCanAccess(tier);
+          list.appendChild(_laToggleItem(
+            '📚', ds.label, ds.meta || '',
+            locked,
+            { key: 'gp:' + ds.id, label: ds.label, get: async () => {
+              const loaded = await gpLoadQuestions(ds.id, {});
+              return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
+            } }
+          ));
+        });
       }
-      // Single dataset — load and launch directly
-      const loaded = await gpLoadQuestions(gpDs[0].id, {});
-      if (loaded && !loaded.denied && (loaded.questions || []).length) {
-        const qs = typeof _gpToNauItems === 'function' ? _gpToNauItems(loaded.questions) : loaded.questions;
-        launchHost({ questions: qs.filter(q => q && q.opts), gameName });
-        return;
-      }
+      return;
     }
 
-    // Fallback: try matching built-in dataset by subject id
+    // Fallback: try matching built-in dataset by subject id (as a toggle)
     const builtIn = _DATASETS.find(d => d.id === subj.id || d.id === subj.id + '-trivia');
     if (builtIn) {
       const qs = builtIn.getQuestions();
-      if (qs && qs.length) { launchHost({ questions: qs, gameName }); return; }
+      if (qs && qs.length && list) {
+        list.innerHTML = '';
+        const blabel = typeof builtIn.label === 'object' ? t(builtIn.label.gr, builtIn.label.en) : builtIn.label;
+        list.appendChild(_laToggleItem(
+          builtIn.icon, blabel, `${qs.length} ${t('ερωτήσεις', 'questions')}`,
+          false,
+          { key: 'ds:' + builtIn.id, label: blabel, get: () => builtIn.getQuestions() }
+        ));
+        return;
+      }
     }
 
     // Nothing found
@@ -869,19 +950,13 @@ const LiveArena = (() => {
       datasets.forEach(ds => {
         const tier   = ds.tier || 'free';
         const locked = !_laCanAccess(tier);
-        list.appendChild(_laItem(
+        list.appendChild(_laToggleItem(
           '📚', ds.label, ds.meta || '',
           locked,
-          async () => {
-            if (list) list.innerHTML = `<p class="la-ds-empty" style="color:#C9A44A">⏳ ${t('Φόρτωση…','Loading…')}</p>`;
+          { key: 'gp:' + ds.id, label: ds.label, get: async () => {
             const loaded = typeof gpLoadQuestions === 'function' ? await gpLoadQuestions(ds.id, {}) : null;
-            if (!loaded || loaded.denied || !(loaded.questions || []).length) {
-              if (list) list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκαν ερωτήσεις.','No questions found.')}</p>`;
-              return;
-            }
-            const qs = typeof _gpToNauItems === 'function' ? _gpToNauItems(loaded.questions) : loaded.questions;
-            launchHost({ questions: qs.filter(q => q && q.opts), gameName: ds.label });
-          }
+            return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
+          } }
         ));
       });
     });
@@ -1019,6 +1094,7 @@ const LiveArena = (() => {
     _answered     = false;
     _uid          = null;
     _totalPlayers = 0;
+    _laSel        = [];
   }
 
   /* ── INVITE HELPERS ──────────────────────────────────── */
@@ -1095,6 +1171,7 @@ const LiveArena = (() => {
     launchPicker, launchHost, launchStudent,
     // Host flow
     showPicker, pickDataset, selectDataset, startBattle, navBack,
+    launchCombined: _laLaunchCombined,
     // Student flow
     submitJoin,
     // Invite

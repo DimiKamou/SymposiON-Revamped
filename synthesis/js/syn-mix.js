@@ -231,7 +231,19 @@
     openNaumachia:    { mode: 'sym', closeFn: 'closeNaumachia' },
     openPhalanx:      { mode: 'sym', closeFn: 'closePhalanx' },
     openRapidFire:    { mode: 'sym', closeFn: 'closeRapidFire' },
-    openDig:          { mode: 'sym', closeFn: 'closeDig' }
+    openDig:          { mode: 'sym', closeFn: 'closeDig' },
+    // ── coverage extension: quiz-driven engines that read window.SYM_QUESTIONS ──
+    openMnemosyne:    { mode: 'sym', closeFn: 'closeMnemosyne' },
+    openGoldenFleece: { mode: 'sym', closeFn: 'closeGoldenFleece' },
+    openHalieia:      { mode: 'sym', closeFn: 'closeHalieia' },
+    openHegemonia:    { mode: 'sym', closeFn: 'closeHegemonia' },
+    openToxotes:      { mode: 'sym', closeFn: 'closeToxotes' },
+    openAgora:        { mode: 'sym', closeFn: 'closeAgora' },
+    openDiscus:       { mode: 'sym', closeFn: 'closeDiscus' },
+    openKrypteia:     { mode: 'sym', closeFn: 'closeKrypteia' },
+    // ── config-mode engines taught to read cfg.questions (own data source) ──
+    openTow:          { mode: 'config' },
+    openBlade:        { mode: 'config', closeFn: 'closeBlade' }
   };
 
   window.SymMix = {

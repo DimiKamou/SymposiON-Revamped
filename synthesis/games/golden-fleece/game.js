@@ -304,6 +304,7 @@ const GoldenFleece = (() => {
       setTimeout(showPick, 1000);
     } else {
       btn.classList.add('wrong');
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q[L()], wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Χρυσόμαλλον Δέρας', gameId: 'golden-fleece' }); } catch (_) {} }
       fb.textContent=T('ΛΑΘΟΣ — οι αντίπαλοι κερδίζουν έδαφος','WRONG — rivals gain ground'); fb.className='gf-feedback gf-fb-bad';
       renderBoard();
       setTimeout(()=>{ if(st.qNum>=TOTAL) end(); else nextQ(); }, 1700);

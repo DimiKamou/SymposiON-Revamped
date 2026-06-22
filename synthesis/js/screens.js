@@ -35,6 +35,88 @@
   }
   window.launchPvPArena = launchPvPArena;
 
+  // ── PvP content chooser ──
+  // Before opening the standalone Arena, let the host pick which material(s)
+  // the duel questions are drawn from (instead of dumping the whole bank). The
+  // picked mix is stored as SYM_QUESTIONS_SELECTION; the Arena prelude prefers
+  // it over the full SYM_QUESTIONS. "All content" clears the key for full-bank.
+  function _pvpMatLabel(m){ return (m && m.label && typeof m.label === 'object') ? L(m.label) : ((m && (m.label || m.id)) || ''); }
+  function _pvpCombineAndGo(sel, btn, close){
+    var ids = Object.keys(sel).filter(function(k){ return sel[k]; });
+    if (!ids.length) return;
+    if (btn) { btn.disabled = true; }
+    var provs = window.GP_LEVEL_PROVIDERS || {};
+    var jobs = ids.map(function(id){
+      var lv = (provs[id] && provs[id].levels) || [];
+      var levelIds = lv.map(function(x){ return x.id; });
+      return (window.SymMix && SymMix.bank) ? SymMix.bank(id, levelIds) : Promise.resolve([]);
+    });
+    Promise.all(jobs).then(function(arrs){
+      var combined = [];
+      arrs.forEach(function(a){ if (Array.isArray(a)) combined = combined.concat(a); });
+      combined = combined.filter(function(q){ return q && q.a && q.a.length >= 2; });
+      try {
+        if (combined.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(combined));
+        else localStorage.removeItem('SYM_QUESTIONS_SELECTION');
+      } catch (_) {}
+      if (close) close();
+      launchPvPArena();
+    }).catch(function(){
+      try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {}
+      if (close) close();
+      launchPvPArena();
+    });
+  }
+  function openPvPContentChooser(){
+    var mats = (window.SymMix && typeof SymMix.materials === 'function') ? SymMix.materials() : [];
+    // No mixer / no materials → just open with the full bank.
+    if (!mats.length) { try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {} return launchPvPArena(); }
+    var prev = document.getElementById('pvp-content-chooser'); if (prev) prev.remove();
+    var sel = {};
+    var ov = el('div',{ id:'pvp-content-chooser', class:'game-overlay active',
+      style:'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(8,6,4,.72);backdrop-filter:blur(4px);' });
+    if (window.symApplyThemeClass) { try { window.symApplyThemeClass(ov); } catch (_) {} }
+    var card = el('div',{ class:'has-accent',
+      style:'--ca:'+SITE+';width:min(520px,92vw);max-height:88vh;overflow:auto;background:var(--sym-parch,#1a1410);color:var(--sym-ink,#eadfce);border:1px solid color-mix(in srgb,var(--ca) 40%,transparent);border-radius:16px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);' });
+    var esc = function(e){ if (e.key === 'Escape') close(); };
+    var close = function(){ try { ov.remove(); } catch (_) {} document.removeEventListener('keydown', esc); };
+    document.addEventListener('keydown', esc);
+    ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+    card.appendChild(el('div',{ style:'font:800 18px/1.2 Inter,sans-serif;margin-bottom:4px' }, L({ gr:'Διάλεξε περιεχόμενο για τον Ἀγῶνα', en:'Choose content for the duel' })));
+    card.appendChild(el('div',{ style:'opacity:.7;font-size:13px;margin-bottom:16px' }, L({ gr:'Διάλεξε ύλη για τις ερωτήσεις, ή ξεκίνα με όλο το περιεχόμενο.', en:'Pick material for the questions, or start with all content.' })));
+    var listWrap = el('div',{ style:'display:flex;flex-direction:column;gap:8px;margin-bottom:18px' });
+    var count = el('span', {}, '0');
+    var combineBtn = el('button',{ class:'sc-cta sc-cta--solid', onclick:function(){ _pvpCombineAndGo(sel, combineBtn, close); } });
+    function refresh(){
+      var n = Object.keys(sel).filter(function(k){ return sel[k]; }).length;
+      count.textContent = String(n);
+      combineBtn.disabled = n === 0;
+      combineBtn.style.opacity = n === 0 ? '.5' : '1';
+    }
+    mats.forEach(function(m){
+      var on = false;
+      var row = el('button',{ style:'display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ca) 24%,transparent);background:rgba(255,255,255,.03);color:inherit;cursor:pointer;font:600 14px Inter,sans-serif;' });
+      var chk = el('span',{ style:'width:20px;flex:none;font-weight:900;color:var(--ca)' }, '');
+      row.appendChild(chk);
+      row.appendChild(el('span',{ style:'flex:1' }, _pvpMatLabel(m)));
+      row.addEventListener('click', function(){ on = !on; sel[m.id] = on; chk.textContent = on ? '✓' : ''; row.style.background = on ? 'color-mix(in srgb,var(--ca) 16%,transparent)' : 'rgba(255,255,255,.03)'; refresh(); });
+      listWrap.appendChild(row);
+    });
+    card.appendChild(listWrap);
+    var bar = el('div',{ style:'display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap' });
+    bar.appendChild(el('button',{ class:'sc-cta sc-cta--ghost', onclick:function(){ try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {} close(); launchPvPArena(); } }, L({ gr:'Όλο το περιεχόμενο', en:'All content' })));
+    combineBtn.appendChild(el('span', {}, L({ gr:'Συνδυασμός & Είσοδος (', en:'Combine & enter (' })));
+    combineBtn.appendChild(count);
+    combineBtn.appendChild(el('span', {}, ')'));
+    bar.appendChild(combineBtn);
+    card.appendChild(bar);
+    ov.appendChild(card);
+    document.body.appendChild(ov);
+    if (window.injectIllus) { try { injectIllus(card); } catch (_) {} }
+    refresh();
+  }
+  window.openPvPContentChooser = openPvPContentChooser;
+
   // ── Real Live Arena launcher ──
   // The home "Live" screen (S.live) used to be a mockup (hardcoded PIN, fake
   // players). This lazy-loads the REAL LiveArena engine (Firestore live_arenas)
@@ -715,10 +797,10 @@
       ]));
       // ── PvP · Ο Ἀγών — the standalone duel arena, surfaced here on Live
       //    (previously only reachable from the Game Panel; user: "on live I cannot see pvp").
-      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>launchPvPArena()},[
+      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>openPvPContentChooser()},[
         el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'})),
-        el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — άνοιγμα Αρένας',en:'Student duels — open the Arena'})),
+        el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — διάλεξε ύλη & άνοιγμα Αρένας',en:'Student duels — pick content & open the Arena'})),
       ]));
       body.appendChild(ch);
       return;

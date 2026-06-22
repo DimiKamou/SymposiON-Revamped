@@ -57,10 +57,10 @@
     renderLobby();
   }
   function clearWrap(id) { const w = document.getElementById(id); if (w) w.innerHTML = ''; }
-  function closeCurrent() { hide(OVERLAY_ID); teardown(); clearWrap(WRAP_ID); }
+  function closeCurrent() { hide(OVERLAY_ID); teardown(); clearWrap(WRAP_ID); window._gpTowPool = null; }
 
   // Ιλιάδα entry point (and GP / engine-configurator launches)
-  window.openTow = function (cfg) { openWith('tow-overlay', 'tow-wrap', 'iliada'); };
+  window.openTow = function (cfg) { window._gpTowPool = (cfg && cfg.questions && cfg.questions.length) ? cfg.questions.map(_towNormalize) : null; openWith('tow-overlay', 'tow-wrap', 'iliada'); };
   window.closeTow = function () { if (OVERLAY_ID === 'tow-overlay') closeCurrent(); else hide('tow-overlay'); };
 
   // Ουσιαστικά entry point
@@ -454,6 +454,7 @@
       advance(1700);
     } else {
       if (window.TowAudio) window.TowAudio.deny();
+      if (window.symLogMistake) { try { window.symLogMistake({ q: q.q, wrong: (q.opts && q.opts[i]) || '', right: (q.opts && q.opts[q.ans]) || '', cat: 'Διελκυστίνδα', gameId: 'tow' }); } catch (_) {} }
       flashPad(side, 'out', 'Λάθος');
       if (S.mode === 'buzz' && !isSteal) {
         // first team wrong → STEAL. Do NOT reveal the answer yet;
@@ -704,4 +705,6 @@
   function updateScores() { setText('tow-sa', S.scoreA); setText('tow-sb', S.scoreB); }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function timeout(fn, ms) { S._to = setTimeout(fn, ms); }
+  // ── SymMix paideia-shape → TOW question adapter ──────────
+  function _towNormalize(it){ if(!it) return {q:'—',opts:['—'],ans:0}; if(Array.isArray(it.opts)) return it; var stem=(it.q&&typeof it.q==='object')?(it.q[window.siteLang]||it.q.gr||it.q.en):it.q; return { q: stem, opts: (it.a||it.opts||[]).slice(), ans: (typeof it.c==='number'?it.c:(it.ans||0)) }; }
 })();

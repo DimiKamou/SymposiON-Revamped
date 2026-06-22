@@ -342,7 +342,9 @@ const Halieia = (() => {
       setTimeout(toCast, 650);
     } else {
       btn.classList.add('wrong');
-      st.streak=0; updateHud();
+      st.streak=0;
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q[L()], wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Αλιεία', gameId: 'halieia' }); } catch (_) {} }
+      updateHud();
       fb.textContent=T('ΛΑΘΟΣ — δεν ρίχνεις δίχτυ','WRONG — no cast for you'); fb.className='al-feedback al-fb-bad';
       renderBoard();
       setTimeout(()=>{ if(st.qNum>=TOTAL) end(); else nextQ(); }, 1700);
