@@ -11,16 +11,12 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
 
   // ── canvas / arcade / engine games ─────────────────────────────────────
 
-  // EAGER: IliadaControls.js wires touch/mobile controls on DOMContentLoaded
-  // (already fired by lazy time), so the boot shim below dispatches a synthetic
-  // DOMContentLoaded after the engine loads so the controls init runs.
-  openIliadaArcade: {
-    js:      ['games/iliada-arcade/game.js', 'games/iliada-arcade/IliadaControls.js'],
-    css:     ['games/iliada-arcade/game.css'],
-    overlay: 'iliada-arcade-overlay',
-    eager:   true,
-    fb:      false
-  },
+  // Iliada / Odyssea Arcade — the combat-quiz arcade is a self-contained HTML
+  // document opened as a full-screen iframe overlay (window.openIliadaArcade /
+  // openOdysseaArcade in js/arcade-launch.js). Empty manifest so synLaunch just
+  // loads nothing and calls the opener; SymNav wraps it as a game session.
+  openIliadaArcade:  { js: [], css: [], overlay: null, eager: false, fb: false },
+  openOdysseaArcade: { js: [], css: [], overlay: null, eager: false, fb: false },
 
   // Agora Surfers (alias openTempleRun). adapter.js builds its OWN iframe
   // overlay (agora-surfers-overlay) and loads src/* inside the iframe.
@@ -155,6 +151,9 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Grammar Invaders':         'openInvaders',
   'Ιλιάδα Arcade':            'openIliadaArcade',
   'Iliad Arcade':             'openIliadaArcade',
+  'Οδύσσεια Arcade':          'openOdysseaArcade',
+  'Odyssey Arcade':           'openOdysseaArcade',
+  'Odyssea Arcade':           'openOdysseaArcade',
   'Agora Surfers':            'openAgoraSurfers',
   'Mythology Memory':         'openMythMemory',
   'Epic Puzzle':              'openEpicPuzzle',
@@ -178,37 +177,6 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Heptapylos':               'openHeptapylos'
 });
 
-// ── iliada-arcade eager-boot trap ──────────────────────────────────────────
-// IliadaControls.js registers its mobile-controls init on DOMContentLoaded,
-// which has already fired by the time the engine is lazy-loaded. We trap the
-// assignment game.js makes to window.openIliadaArcade and wrap it so the first
-// launch dispatches a synthetic DOMContentLoaded (booting the controls) before
-// calling the real opener. Idempotent and non-enumerable so it stays invisible.
-(function () {
-  var booted = false;
-  function wrap(real) {
-    if (typeof real !== 'function' || real.__synWrapped) return real;
-    var wrapped = function () {
-      if (!booted) {
-        booted = true;
-        try { document.dispatchEvent(new Event('DOMContentLoaded')); } catch (_) {}
-      }
-      return real.apply(window, arguments);
-    };
-    wrapped.__synWrapped = true;
-    return wrapped;
-  }
-  if (typeof window.openIliadaArcade === 'function') {
-    window.openIliadaArcade = wrap(window.openIliadaArcade);
-    return;
-  }
-  var stored;
-  try {
-    Object.defineProperty(window, 'openIliadaArcade', {
-      configurable: true,
-      enumerable: true,
-      get: function () { return stored; },
-      set: function (fn) { stored = wrap(fn); }
-    });
-  } catch (_) { /* if trap fails, fall back to plain assignment by game.js */ }
-})();
+// (The old iliada-arcade eager-boot trap was removed: the arcade is now a
+// self-contained iframe overlay — see js/arcade-launch.js — with no in-page
+// game.js/IliadaControls.js to boot.)

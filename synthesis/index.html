@@ -363,6 +363,10 @@
 <!-- History-based routing + in-game exit guard. Loaded after app.js (symGo,
      STATE, symRender) and syn-launch.js (synLaunch) so it can own the back-stack. -->
 <script src="js/sym-nav.js"></script>
+<!-- Iliada / Odyssea Arcade: effective default content (admin-editor baseline)
+     + the iframe-overlay launcher (opener + close globals). -->
+<script src="js/arcade-defaults.js"></script>
+<script src="js/arcade-launch.js"></script>
 
 <!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════
      Show the branded SymLoader (the real one is defined in app.js, loaded just

@@ -27,7 +27,8 @@
     'access_control', 'template_assignments', 'admin_pricing', 'admin_flags',
     'admin_messages', 'hero_slides', 'guides', 'custom_acroteria', 'admin_custom_secs',
     'msg_signup', 'msg_sub', 'about_title', 'about_mission',
-    'contact_email', 'contact_address', 'contact_hours'
+    'contact_email', 'contact_address', 'contact_hours',
+    'arcade_content'
   ];
   var KEYSET = {}; KEYS.forEach(function (k) { KEYSET[k] = true; });
 
