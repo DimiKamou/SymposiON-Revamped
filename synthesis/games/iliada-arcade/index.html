@@ -222,6 +222,14 @@ html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sa
 </style>
 </head>
 <body>
+  <style>
+    #ia-boot{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#05060a;color:#ECDAB4;font-family:'Oswald',system-ui,sans-serif}
+    #ia-boot.gone{opacity:0;pointer-events:none;transition:opacity .35s}
+    .ia-boot-mark{width:46px;height:46px;border:3px solid rgba(232,201,106,.22);border-top-color:#E8C96A;border-radius:50%;animation:ia-spin .9s linear infinite}
+    .ia-boot-txt{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#C8A23C}
+    @keyframes ia-spin{to{transform:rotate(360deg)}}
+  </style>
+  <div id="ia-boot" aria-hidden="true"><div class="ia-boot-mark"></div><div class="ia-boot-txt">Φόρτωση…</div></div>
   <div class="rotate"><div class="ph"></div><div class="rt">ΓΥΡΙΣΕ ΤΗ ΣΥΣΚΕΥΗ</div><div class="rs">Η μάχη παίζεται οριζόντια — γύρισε το κινητό σου στο πλάι.</div></div>
   <div class="topbar">
     <div class="camp-row">
@@ -343,14 +351,16 @@ html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sa
       </div>
     </div>
   </div>
-  <script src="play/config.js"></script>
-  <script src="play/data.js"></script>
-  <script src="play/quiz.js"></script>
-  <script src="play/override.js"></script>
-  <script src="play/draw.js"></script>
-  <script src="battle-bg/bg.js"></script>
-  <script src="play/sfx.js"></script>
-  <script src="play/engine.js"></script>
+  <!-- defer: download in parallel, execute in document order (config→…→engine),
+       so the 8 deps don't block sequentially on a slow/high-latency server. -->
+  <script defer src="play/config.js"></script>
+  <script defer src="play/data.js"></script>
+  <script defer src="play/quiz.js"></script>
+  <script defer src="play/override.js"></script>
+  <script defer src="play/draw.js"></script>
+  <script defer src="battle-bg/bg.js"></script>
+  <script defer src="play/sfx.js"></script>
+  <script defer src="play/engine.js"></script>
   <template id="__bundler_thumbnail">
     <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <rect width="200" height="200" fill="#17110C"/>

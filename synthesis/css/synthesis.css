@@ -17,10 +17,18 @@
 /* ── NAV (playful pill) ── */
 /* Nav sits near the top now that the dev harness is hidden; taller + roomier so
    the brand, links, theme picker and action icons don't feel stacked. */
-.syn-nav { padding: 18px var(--pad) 0; position:sticky; top:14px; z-index:40; }
+.syn-nav { padding: 14px var(--pad) 10px; position:sticky; top:0; z-index:60; }
+/* Opaque backdrop strip so scrolled content never bleeds through the floating
+   pill or its surrounding gaps — the nav reads as a clean fixed header. At the
+   page top it matches the background (invisible); on scroll it masks content. */
+.syn-nav::before {
+  content:''; position:absolute; left:0; right:0; top:0; bottom:0;
+  background:linear-gradient(var(--bg) 62%, color-mix(in srgb, var(--bg) 55%, transparent) 86%, transparent);
+  z-index:-1; pointer-events:none;
+}
 .syn-nav__in {
   display:flex; align-items:center; gap:22px;
-  background:color-mix(in srgb, var(--card) 86%, transparent); backdrop-filter:blur(12px);
+  background:color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter:blur(12px);
   border:1px solid var(--line); border-radius:999px; padding:13px 16px 13px 26px;
   box-shadow:0 10px 30px var(--shadow);
 }

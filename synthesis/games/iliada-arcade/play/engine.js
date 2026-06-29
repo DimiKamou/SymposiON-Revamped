@@ -505,6 +505,7 @@ function fit(){ const vp=document.querySelector('.viewport'); const s=Math.min(v
 
 /* ---------- boot ---------- */
 function boot(){
+  var _ib=document.getElementById('ia-boot'); if(_ib){ _ib.classList.add('gone'); setTimeout(function(){ if(_ib&&_ib.remove) _ib.remove(); }, 380); }
   canvas=document.getElementById('game'); canvas.width=W; canvas.height=H; ctx=canvas.getContext('2d');
   hud=document.getElementById('hud'); bindInput();
   bindJoystick();
