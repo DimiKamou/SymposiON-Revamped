@@ -140,6 +140,11 @@ const LiveArena = (() => {
     _cfg  = { questions: [], gameName: 'Live Arena', ...config };
     _showOverlay();
     _showScreen('la-host-lobby');
+    // Fresh session: clear any leftover chips and show the empty state up-front
+    // (before the first players snapshot lands).
+    const grid = document.getElementById('la-player-grid');
+    if (grid) grid.innerHTML = '';
+    _laUpdatePlayersEmpty();
     _createArena();
   }
 
@@ -262,19 +267,31 @@ const LiveArena = (() => {
         const grid = document.getElementById('la-player-grid');
         if (!grid) return;
 
-        // Additive diff — never clear existing chips
+        // Reconcile: drop chips for players who left / were kicked …
+        const ids = new Set(snap.docs.map(d => d.id));
+        Array.from(grid.querySelectorAll('.la-player-chip')).forEach(el => {
+          if (!ids.has(el.dataset.uid)) el.remove();
+        });
+        // … then add chips for new joiners (avatar + name + hover kick).
         const existing = new Set(
           Array.from(grid.querySelectorAll('.la-player-chip')).map(el => el.dataset.uid)
         );
         snap.docs.forEach(doc => {
           if (existing.has(doc.id)) return;
+          const name = doc.data().name || t('Παίκτης', 'Player');
           const chip = document.createElement('div');
           chip.className   = 'la-player-chip';
           chip.dataset.uid = doc.id;
-          chip.textContent = doc.data().name || 'Player';
+          chip.innerHTML =
+            `<span class="la-player-av" style="background:${_laColorFor(name)}">${_esc(_laInitials(name))}</span>` +
+            `<span class="la-player-name">${_esc(name)}</span>` +
+            `<button class="la-player-kick" title="${t('Αφαίρεση', 'Remove')}" aria-label="${t('Αφαίρεση', 'Remove')}">✕</button>`;
+          const kb = chip.querySelector('.la-player-kick');
+          if (kb) kb.onclick = () => _kickPlayer(doc.id, chip);
           grid.appendChild(chip);
-          requestAnimationFrame(() => chip.classList.add('la-chip-visible'));
+          requestAnimationFrame(() => chip.classList.add('la-chip-visible', 'la-chip-pop'));
         });
+        _laUpdatePlayersEmpty();
 
         arenaRef(_pin).update({ totalPlayers: _totalPlayers }).catch(() => {});
       }, err => console.error('[LiveArena] lobby listener:', err));
@@ -1138,6 +1155,40 @@ const LiveArena = (() => {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  /* ── Host-lobby player chips (avatar + name + kick) ──────────
+     The roster chips used to be plain name text. The redesign shows a
+     colour-hashed avatar with initials, the name, and a hover kick ✕,
+     plus an empty state while nobody has joined. Pure presentation —
+     fed by the same Firestore players listener. */
+  const _LA_AV_COLORS = ['#c9a44a','#8eba72','#cd8b5a','#7fa9c4','#c47fa9','#b0a04a','#6fae8e','#cf9b6b'];
+  function _laInitials(name) {
+    const p = String(name || '').trim().split(/\s+/);
+    return (((p[0] || '')[0] || '') + (p.length > 1 ? (p[1][0] || '') : '')).toUpperCase() || '•';
+  }
+  function _laColorFor(name) {
+    let h = 0; const s = String(name || '');
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return _LA_AV_COLORS[h % _LA_AV_COLORS.length];
+  }
+  // Show the "players will appear here" empty state when the roster is empty,
+  // and swap the grid out of the layout so the message can center.
+  function _laUpdatePlayersEmpty() {
+    const grid  = document.getElementById('la-player-grid');
+    const empty = document.getElementById('la-players-empty');
+    if (!grid) return;
+    const has = grid.children.length > 0;
+    grid.style.display = has ? 'grid' : 'none';
+    if (empty) empty.style.display = has ? 'none' : 'flex';
+  }
+  // Host removes a waiting player: drop the Firestore doc (the lobby listener
+  // reconciles the grid) and animate the chip out immediately for snappiness.
+  function _kickPlayer(uid, chip) {
+    if (!uid) return;
+    if (chip) { chip.style.opacity = '0'; chip.style.transform = 'scale(.8)'; }
+    try { playerRef(_pin, uid).delete().catch(() => {}); } catch (_) {}
+    setTimeout(() => { if (chip && chip.parentNode) chip.remove(); _laUpdatePlayersEmpty(); }, 220);
   }
 
   function _stopTimer() {

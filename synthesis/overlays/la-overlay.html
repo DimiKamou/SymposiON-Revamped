@@ -69,20 +69,34 @@
       <div class="la-host-id">
         <div class="la-host-avatar" id="la-host-avatar" onclick="LAX.uploadAvatar()" title="Ανέβασε avatar">
           <span class="la-av-initials">ΣΟ</span>
+          <span class="la-av-cam">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          </span>
         </div>
         <div class="la-host-id-txt">
           <div class="la-host-id-name" data-gr="Ο Καθηγητής" data-en="The Host">Ο Καθηγητής</div>
-          <div class="la-host-id-role" data-gr="Οικοδεσπότης" data-en="Host">Οικοδεσπότης</div>
+          <div class="la-host-id-role">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 4 4 5-7 5 7 4-4-2 12H5z"/><path d="M5 20h14"/></svg>
+            <span data-gr="Οικοδεσπότης" data-en="Host">Οικοδεσπότης</span>
+          </div>
         </div>
+        <button class="la-host-id-edit" onclick="LAX.uploadAvatar()" data-gr="Επεξεργασία" data-en="Edit">Επεξεργασία</button>
       </div>
     </div>
 
     <div class="la-players-col">
       <div class="la-players-header">
-        <span data-gr="Παίκτες σε αναμονή" data-en="Players waiting">Παίκτες σε αναμονή</span>
-        <span class="la-player-badge" id="la-player-count">0</span>
+        <span class="la-players-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span data-gr="Παίκτες σε αναμονή" data-en="Players waiting">Παίκτες σε αναμονή</span>
+        </span>
+        <span class="la-player-badge"><span class="la-pulse"></span><span id="la-player-count">0</span></span>
       </div>
       <div class="la-player-grid" id="la-player-grid"></div>
+      <div class="la-players-empty" id="la-players-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="la-pe-txt" data-gr="Μόλις μπουν μαθητές, θα εμφανιστούν εδώ…" data-en="Players will appear here as they join…">Μόλις μπουν μαθητές, θα εμφανιστούν εδώ…</span>
+      </div>
     </div>
 
   </div>
