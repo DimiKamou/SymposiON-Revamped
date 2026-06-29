@@ -30,6 +30,7 @@
   var st = { cycle: 'gym', gradeKey: null, subId: null };
   var _authored = {};           // subId → { contentId: bool } (resolved once per subject)
   var _pvp = false;             // true when the picker is choosing PvP material
+  var _live = false;            // true when the picker is choosing Live-Arena host material
 
   // PvP: build the duel question bank from a catalog game's authored content,
   // store it as SYM_QUESTIONS_SELECTION, then open the standalone Arena.
@@ -88,7 +89,12 @@
   var _pvpCat = [];
 
   function renderPvp(home) {
-    var body = window.synPage(home, {
+    var body = window.synPage(home, _live ? {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Ζωντανή Μάχη · Φιλοξενία', en: 'Live Arena · Host' }),
+      title: L({ gr: 'Διάλεξε ύλη για τη Ζωντανή Μάχη', en: 'Pick content for the Live Arena' }),
+      sub: L({ gr: 'Διάλεξε ύλη (και επίπεδα) από όλη την πλατφόρμα — ή συνδύασε πολλές. Μετά ανοίγει η αίθουσα.', en: 'Pick content (and levels) from across the platform — then the lobby opens.' }),
+    } : {
       back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
       eyebrow: L({ gr: 'Ο Ἀγών · PvP', en: 'The Agon · PvP' }),
       title: L({ gr: 'Διάλεξε ύλη για τον Αγώνα', en: 'Pick content for the duel' }),
@@ -225,12 +231,24 @@
       var old = startBtn.textContent;
       startBtn.textContent = L({ gr: 'Φόρτωση…', en: 'Loading…' });
       window.SymMix.bankMulti(picks).then(function (arr) {
-        var items = (arr || []).map(function (it) { return { q: (it.q && (it.q.gr || it.q.en)) || it.q, a: it.a, c: it.c }; });
-        try {
-          if (items.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(items));
-          else localStorage.removeItem('SYM_QUESTIONS_SELECTION');
-        } catch (_e) {}
-        if (typeof window.launchPvPArena === 'function') window.launchPvPArena();
+        if (_live) {
+          // Live Arena host: feed the merged bank straight into launchHost, which
+          // opens the (dark, handoff-styled) lobby. SymMix items are {q,a,c}; the
+          // live engine wants {q:<text>, opts, ans}.
+          var liveQs = (arr || []).map(function (it) {
+            return { q: (it.q && (it.q.gr || it.q.en)) || it.q, opts: it.a, ans: it.c };
+          }).filter(function (x) { return x.q && x.opts && x.opts.length >= 2; });
+          if (liveQs.length && window.synLaunch) {
+            window.synLaunch('openLiveArena', { questions: liveQs, gameName: L({ gr: 'Ζωντανή Μάχη', en: 'Live Arena' }) });
+          }
+        } else {
+          var items = (arr || []).map(function (it) { return { q: (it.q && (it.q.gr || it.q.en)) || it.q, a: it.a, c: it.c }; });
+          try {
+            if (items.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(items));
+            else localStorage.removeItem('SYM_QUESTIONS_SELECTION');
+          } catch (_e) {}
+          if (typeof window.launchPvPArena === 'function') window.launchPvPArena();
+        }
         startBtn.disabled = false; startBtn.textContent = old;
       }).catch(function () { startBtn.disabled = false; startBtn.textContent = old; });
     } });
@@ -244,7 +262,7 @@
       startBtn.disabled = n === 0;
       startBtn.classList.toggle('is-off', n === 0);
       startBtn.textContent = n
-        ? L({ gr: 'Έναρξη Αγώνα', en: 'Start the Agon' })
+        ? (_live ? L({ gr: 'Ξεκίνα τη Ζωντανή Μάχη', en: 'Start the Live Arena' }) : L({ gr: 'Έναρξη Αγώνα', en: 'Start the Agon' }))
         : L({ gr: 'Διάλεξε ύλη', en: 'Choose content' });
     }
 
@@ -261,7 +279,7 @@
   }
 
   function render(home) {
-    if (_pvp) { renderPvp(home); return; }
+    if (_pvp || _live) { renderPvp(home); return; }
     var P = window.synPage;
     var body = P(home, _pvp ? {
       back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
@@ -395,9 +413,16 @@
   // Entry points: the Game Panel opens it to browse+launch; the Live PvP button
   // opens it to pick duel content (same picker, different leaf action).
   window.SymCurriculum = {
-    openPanel: function () { _pvp = false; window.symGo('curriculum'); },
+    openPanel: function () { _pvp = false; _live = false; window.symGo('curriculum'); },
     openForPvp: function () {
-      _pvp = true;
+      _pvp = true; _live = false;
+      _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
+      window.symGo('curriculum');
+    },
+    // Live Arena host content selection — same universal (light) picker; on start
+    // it feeds the merged bank into the host lobby instead of the PvP arena.
+    openForLiveHost: function () {
+      _live = true; _pvp = false;
       _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
       window.symGo('curriculum');
     },
