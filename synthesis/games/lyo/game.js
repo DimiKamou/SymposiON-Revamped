@@ -536,6 +536,38 @@ function lyoGenQ(keys){
   return{qt,opts,correct,endings:g.endings,fi_endings,fi_correct:fi_endings[0],stem,fw_correct,fw_ends,_wrongMetaMap};
 }
 
+// Headless MC generator for the Live Arena / content mixers. Returns up to N
+// ready questions for a Λύω level in the shared {q, opts, ans} shape, reusing
+// the game's own lyoKeys()/lyoGenQ(). GP_DATASETS['lyo'].loader calls this; it
+// was referenced across the app (gp-levels/gp-content/syn-mix) but never
+// defined — so hosting/​mixing Λύω produced nothing. The question text is the
+// game's qt with its markup stripped (the arena renders plain text).
+function _gpLyoGenQuestions(levelId, n){
+  if(typeof LYO_LVL==='undefined') return [];
+  const lvl = LYO_LVL.find(l => l.id === +levelId) || LYO_LVL[0];
+  if(!lvl) return [];
+  const keys = lyoKeys(lvl.filter);
+  if(!keys.length) return [];
+  const want = Math.max(1, n || 25);
+  const out = [], seen = new Set();
+  let guard = 0;
+  while(out.length < want && guard < want * 8){
+    guard++;
+    const q = lyoGenQ(keys);
+    if(!q || !q.opts || q.opts.length < 2) continue;
+    const ans = q.opts.indexOf(q.correct);
+    if(ans < 0) continue;
+    const text = String(q.qt||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    if(!text) continue;
+    const sig = text + '|' + q.correct;
+    if(seen.has(sig)) continue;        // light dedup; tiny levels may yield < N
+    seen.add(sig);
+    out.push({ q: text, opts: q.opts.slice(), ans });
+  }
+  return out;
+}
+if(typeof window!=='undefined') window._gpLyoGenQuestions = _gpLyoGenQuestions;
+
 function lyoBuildQText(g){
   const v=`<em>λύω</em>`;
   function tags(...items){return '<div class="lq-tags">'+items.map(([cls,txt])=>`<span class="lq-tag ${cls}">${txt}</span>`).join('')+'</div>';}
