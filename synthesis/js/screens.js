@@ -126,6 +126,12 @@
   // prompts sign-in, but we also surface a friendly prompt up-front for hosting.
   function openRealLiveArena(pin){
     const _pin = (pin || '').toString().replace(/\D/g, '').slice(0, 6);
+    // Host (no PIN) → the light synthesis universal ύλη picker (matches the game
+    // panel / PvP). On "start" it builds the bank and opens the host lobby. The
+    // student join (PIN) path keeps the live overlay flow below.
+    if (!_pin && window.SymCurriculum && typeof SymCurriculum.openForLiveHost === 'function') {
+      return SymCurriculum.openForLiveHost();
+    }
     if (!(window.synLaunch && window.SYN_GAMES && window.SYN_GAMES.openLiveArena)) {
       // Manifest not loaded — should not happen, but fail loudly rather than silently.
       if (typeof window.showToast === 'function') showToast('Η Ζωντανή Αρένα δεν είναι διαθέσιμη', 'Live Arena unavailable');
