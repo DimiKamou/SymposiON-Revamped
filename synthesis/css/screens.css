@@ -808,13 +808,31 @@
 .syn-tagchip { font-family:var(--sans); font-weight:600; font-size:12px; color:var(--fg-70,var(--muted)); background:var(--card); border:1px solid var(--line); padding:7px 13px; border-radius:999px; cursor:pointer; transition:.14s; }
 .syn-tagchip:hover { border-color:var(--line-bold); color:var(--fg); }
 .syn-tagchip.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
-/* per-source level pills (spans the full grid width under a selected leveled card) */
-.syn-ds-levels { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:10px 12px; margin:-2px 0 4px; background:color-mix(in srgb,var(--ca) 6%,var(--card)); border:1px solid var(--ca-mid,var(--line)); border-radius:12px; }
-.syn-lvgrp { font-family:var(--sans); font-weight:700; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 2px 0 6px; }
-.syn-lvpill { font-family:var(--sans); font-weight:700; font-size:12px; color:var(--fg-70,var(--muted)); background:var(--card); border:1px solid var(--line); border-left:3px solid transparent; padding:5px 9px; border-radius:8px; cursor:pointer; transition:.12s; }
-.syn-lvpill:hover { border-color:var(--line-bold); }
-.syn-lvpill.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
-.syn-lvpill--all { font-size:11px; letter-spacing:.03em; text-transform:uppercase; border-radius:999px; }
+/* per-source level picker (spans the full grid width under a selected leveled card).
+   Each level shows its full description inline (no hover needed). */
+.syn-ds-levels { grid-column:1 / -1; display:flex; flex-direction:column; align-items:stretch; gap:5px; padding:14px; margin:-2px 0 6px; background:color-mix(in srgb,var(--ca) 9%,var(--card)); border:2px solid var(--ca-mid,var(--line-bold)); border-radius:14px; box-shadow:0 6px 18px var(--shadow); }
+.syn-lvgrp { font-family:var(--sans); font-weight:700; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+/* group header row with a per-category select-all toggle */
+.syn-lvgrp-row { display:flex; align-items:center; gap:8px; margin:8px 2px 1px; }
+.syn-lvgrp-row .syn-lvgrp { margin:0; flex:1; }
+.syn-lvgrp-all { font-family:var(--sans); font-weight:700; font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--fg-70,var(--muted)); background:var(--sink); border:1px solid var(--line); padding:3px 9px; border-radius:999px; cursor:pointer; transition:.12s; }
+.syn-lvgrp-all:hover { border-color:var(--line-bold); color:var(--fg); }
+.syn-lvgrp-all.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
+/* "Select all levels" pill at the top */
+.syn-lvpill--all { align-self:flex-start; font-family:var(--sans); font-weight:700; font-size:11px; letter-spacing:.03em; text-transform:uppercase; color:var(--fg-70,var(--muted)); background:var(--card); border:1px solid var(--line); padding:6px 12px; border-radius:999px; cursor:pointer; transition:.12s; }
+.syn-lvpill--all:hover { border-color:var(--line-bold); }
+.syn-lvpill--all.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
+/* level row — checkbox + number badge + full description */
+.syn-lvrowpill { display:flex; align-items:center; gap:11px; width:100%; text-align:left; font-family:var(--sans); font-size:13px; color:var(--fg); background:var(--card); border:1.5px solid var(--line); border-left:4px solid transparent; padding:9px 12px; border-radius:10px; cursor:pointer; transition:.12s; }
+.syn-lvrowpill:hover { border-color:var(--line-bold); background:var(--sink); }
+.syn-lvrowpill.on { background:color-mix(in srgb,var(--ca) 16%,var(--card)); border-color:var(--ca,var(--terra)); box-shadow:inset 0 0 0 1px var(--ca,var(--terra)); }
+.syn-lvpill__box { flex:none; width:21px; height:21px; display:grid; place-items:center; border:2px solid var(--line-bold); border-radius:6px; background:var(--card); color:#fff; font-size:13px; font-weight:800; line-height:1; transition:.12s; }
+.syn-lvrowpill.on .syn-lvpill__box { background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
+.syn-lvpill__n { flex:none; font-family:var(--disp); font-weight:700; font-size:12px; color:var(--muted); min-width:20px; }
+.syn-lvrowpill.on .syn-lvpill__n { color:var(--ca-ink,var(--terra-dk)); }
+.syn-lvrowpill.on .syn-lvpill__t { font-weight:600; }
+.syn-lvpill__t { flex:1; min-width:0; line-height:1.3; }
+.syn-lvpill__sec { font-weight:600; color:var(--fg-70,var(--muted)); }
 .syn-lvpill--lgreen { border-left-color:var(--sage,#6f8f4f); }
 .syn-lvpill--lyellow { border-left-color:var(--gold,#A2862F); }
 .syn-lvpill--lred { border-left-color:var(--terra,#C5572F); }
