@@ -749,13 +749,29 @@ const LiveArena = (() => {
     _showOverlay();
     _laNav = { level: 'root', sectionKey: null, gradeKey: null };
     _laSel = [];
+    _laCatalog = null;
     _showScreen('la-host-dataset');
     _laNavRender();
     _laUpdateCombineBtn();
+    // Warm the universal catalog (merges Firestore published packs) in the
+    // background so "Όλη η ύλη" is populated the moment the host opens it.
+    if (window.GP_CONTENT && typeof GP_CONTENT.loadCloud === 'function') {
+      Promise.resolve(GP_CONTENT.loadCloud()).then(() => {
+        _laCatalog = (window.SymMix && typeof SymMix.catalog === 'function') ? SymMix.catalog() : null;
+        if (_laNav.level === 'universal') _laNavRender();
+      }).catch(() => {});
+    }
   }
 
   function navBack() {
-    if (_laNav.level === 'gplevels') {
+    if (_laNav.level === 'umlevels') {
+      // Universal-view level drill → back to the universal "Όλη η ύλη" list.
+      _laNav = { level: 'universal', sectionKey: null, gradeKey: null };
+      _laNavRender();
+    } else if (_laNav.level === 'universal') {
+      _laNav = { level: 'root', sectionKey: null, gradeKey: null };
+      _laNavRender();
+    } else if (_laNav.level === 'gplevels') {
       _laNav = { level: 'section', sectionKey: _laNav.sectionKey || 'grammatiki', gradeKey: null };
       _laNavRender();
     } else if (_laNav.level === 'grade') {
@@ -799,6 +815,10 @@ const LiveArena = (() => {
     if (title) {
       if (level === 'root') {
         title.textContent = t('Επίλεξε Ερωτηματολόγιο', 'Choose Question Set');
+      } else if (level === 'universal') {
+        title.textContent = t('Όλη η ύλη', 'All content');
+      } else if (level === 'umlevels') {
+        title.textContent = _laNav.dsLabel || t('Επίλεξε Επίπεδο', 'Choose Level');
       } else if (level === 'section') {
         const sec = _LA_SECTIONS.find(s => s.key === sectionKey);
         title.textContent = sec ? t(sec.labelGr, sec.labelEn) : t('Επίλεξε Βαθμίδα', 'Choose Level');
@@ -811,6 +831,8 @@ const LiveArena = (() => {
     }
 
     if (level === 'root')    { _laNavRenderRoot(list);               }
+    else if (level === 'universal') { _laNavRenderUniversal(list);    }
+    else if (level === 'umlevels')  { _laNavRenderUniversalLevels(list, _laNav.dsId); }
     else if (level === 'section') { _laNavRenderSection(list, sectionKey); }
     else if (level === 'grade')   { _laNavRenderGrade(list, gradeKey);    }
     else if (level === 'gplevels'){ _laNavRenderGpLevels(list, _laNav.dsId, _laNav.fn); }
@@ -831,6 +853,23 @@ const LiveArena = (() => {
   }
 
   function _laNavRenderRoot(list) {
+    // ── Universal "Όλη η ύλη" — the SAME catalog the game panel offers ──
+    // One tap into a flat, grouped list of ALL admin content (grammar + Homer
+    // trivia + Latin + published packs) via SymMix.catalog(); a host can pick
+    // any dataset(s), choose levels, and combine — identical universal ύλη.
+    list.appendChild(_laItem(
+      '🌐',
+      t('Όλη η ύλη', 'All content'),
+      t('Γραμματική + τρίβια + λατινικά + πακέτα', 'Grammar + trivia + Latin + packs'),
+      false,
+      () => { _laNav = { level: 'universal', sectionKey: null, gradeKey: null }; _laNavRender(); _laRefreshUniversal(); }
+    ));
+
+    // Divider
+    const udiv = document.createElement('div');
+    udiv.style.cssText = 'border-top:1px solid rgba(200,160,48,.18);margin:10px 0 6px';
+    list.appendChild(udiv);
+
     // ── Section tiles ────────────────────────────────────
     _LA_SECTIONS.forEach(sec => {
       const gradeCount = sec.grades.length;
@@ -875,6 +914,148 @@ const LiveArena = (() => {
       !hasCustomQuiz,
       () => _showScreen('la-custom-quiz')
     ));
+  }
+
+  /* ── Universal "Όλη η ύλη" view (mirrors the game-panel SymMix picker) ──
+     Lists window.SymMix.catalog() grouped by category. Each dataset is a
+     toggle into _laSel (defaults to ALL levels); leveled datasets ALSO get a
+     "→" drill into a per-level multi-select. Every toggle's get() maps SymMix's
+     {q,a,c} → the live-arena {q,opts,ans} shape. Tier-locked items render with
+     the 🔒 (la-ds-locked) style and are non-selectable.                       */
+  let _laCatalog = null;            // cached SymMix.catalog() (per picker session)
+
+  // How many of a universal dataset's sources are currently in _laSel — used to
+  // annotate the drill row ("2 / 9 επίπεδα"). Counts both per-level leaves
+  // (key "umlv:<ds>:<lv>") and the whole-set toggle (key "um:<ds>").
+  function _laUmSelCount(dsId) {
+    return _laSel.filter(s =>
+      s.key === 'um:' + dsId || s.key.indexOf('umlv:' + dsId + ':') === 0).length;
+  }
+
+  // SymMix {q:{gr,en}|str, a:[…], c:idx} → live-arena {q:<text>, opts:[…], ans:idx}.
+  function _laMixToLive(arr) {
+    return (Array.isArray(arr) ? arr : []).map(it => ({
+      q:    (it.q && (it.q.gr || it.q.en)) || it.q || '',
+      opts: it.a || [],
+      ans:  (typeof it.c === 'number') ? it.c : 0,
+    })).filter(x => x.q && x.opts && x.opts.length >= 2);
+  }
+
+  // Build a get() that hosts a universal dataset (optionally a level subset).
+  function _laMixGet(id, levelIds) {
+    return () => {
+      if (!(window.SymMix && typeof SymMix.bankMulti === 'function')) return Promise.resolve([]);
+      const ids = (levelIds && levelIds.length) ? levelIds : [];
+      return SymMix.bankMulti([{ id, levelIds: ids }])
+        .then(_laMixToLive).catch(() => []);
+    };
+  }
+
+  // Merge Firestore published packs once, then re-render the universal list.
+  function _laRefreshUniversal() {
+    const apply = () => {
+      _laCatalog = (window.SymMix && typeof SymMix.catalog === 'function') ? SymMix.catalog() : [];
+      if (_laNav.level === 'universal') _laNavRender();
+    };
+    apply(); // paint immediately from the synchronous catalog
+    if (window.GP_CONTENT && typeof GP_CONTENT.loadCloud === 'function') {
+      Promise.resolve(GP_CONTENT.loadCloud()).then(apply).catch(() => {});
+    }
+  }
+
+  function _laNavRenderUniversal(list) {
+    const cat = _laCatalog
+      || (window.SymMix && typeof SymMix.catalog === 'function' ? SymMix.catalog() : []);
+    _laCatalog = cat;
+    if (!cat.length) {
+      list.innerHTML = `<p class="la-ds-empty" style="color:#C9A44A">⏳ ${t('Φόρτωση ύλης…', 'Loading content…')}</p>`;
+      return;
+    }
+    let shown = 0;
+    cat.forEach(group => {
+      const items = group.items || [];
+      if (!items.length) return;
+      // Category header (same inline style as the grammar/level groupings)
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:8px 14px 4px;font:700 10px/1 Inter,sans-serif;letter-spacing:1px;color:#8A7258;text-transform:uppercase;';
+      hdr.textContent = group.group || '';
+      list.appendChild(hdr);
+
+      items.forEach(it => {
+        shown++;
+        const meta = it.meta || (it.leveled && it.levels
+          ? `${it.levels.length} ${t('επίπεδα', 'levels')}` : '');
+        if (it.leveled && it.levels && it.levels.length && !it.locked) {
+          // Leveled + accessible: drill into a per-level multi-select. (The
+          // whole set, all levels, is still reachable via "Όλα" inside the drill.)
+          const picked = _laUmSelCount(it.id);
+          const sub = picked
+            ? `${t('✓ Επιλεγμένα', '✓ Selected')}: ${picked}`
+            : meta;
+          list.appendChild(_laItem(it.icon || '◆', it.label, sub, false, () => {
+            _laNav = { level: 'umlevels', sectionKey: null, gradeKey: null,
+                       dsId: it.id, dsLabel: it.label };
+            _laNavRender();
+          }));
+        } else {
+          // Non-leveled (or locked): a single toggle hosting ALL levels.
+          list.appendChild(_laToggleItem(
+            it.icon || '◆', it.label + (it.isNew ? ' •' : ''), meta, !!it.locked,
+            { key: 'um:' + it.id, label: it.label, get: _laMixGet(it.id) }
+          ));
+        }
+      });
+    });
+    if (!shown) list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκε ύλη.', 'No content found.')}</p>`;
+  }
+
+  // Per-level multi-select for a universal leveled dataset. Each level toggles
+  // an individual {q,opts,ans} bank into _laSel (key includes the level id), and
+  // there is an "Όλα" leaf that hosts the whole set (all levels) in one toggle.
+  function _laNavRenderUniversalLevels(list, dsId) {
+    const cat = _laCatalog || [];
+    let item = null;
+    cat.some(g => (g.items || []).some(i => { if (i.id === dsId) { item = i; return true; } return false; }));
+    if (!item || !item.levels || !item.levels.length) {
+      list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκαν επίπεδα.', 'No levels found.')}</p>`;
+      return;
+    }
+
+    // "Όλα τα επίπεδα" — host the whole dataset (every level) as one source.
+    list.appendChild(_laToggleItem(
+      '📚', t('Όλα τα επίπεδα', 'All levels'),
+      `${item.levels.length} ${t('επίπεδα', 'levels')}`, false,
+      { key: 'um:' + dsId, label: item.label, get: _laMixGet(dsId) }
+    ));
+
+    const div = document.createElement('div');
+    div.style.cssText = 'border-top:1px solid rgba(200,160,48,.18);margin:10px 0 6px';
+    list.appendChild(div);
+
+    // Group levels like the game panel (lv.group), then a leaf per level.
+    const order = [], byGroup = {};
+    item.levels.forEach(lv => {
+      const g = lv.group || t('Επίπεδα', 'Levels');
+      if (!byGroup[g]) { byGroup[g] = []; order.push(g); }
+      byGroup[g].push(lv);
+    });
+    let n = 0;
+    order.forEach(g => {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:8px 14px 4px;font:700 10px/1 Inter,sans-serif;letter-spacing:1px;color:#8A7258;text-transform:uppercase;';
+      hdr.textContent = g;
+      list.appendChild(hdr);
+      byGroup[g].forEach(lv => {
+        n++;
+        const label = lv.desc || (t('Επίπεδο', 'Level') + ' ' + n);
+        list.appendChild(_laToggleItem(
+          '📕', label, '', false,
+          { key: 'umlv:' + dsId + ':' + lv.id,
+            label: item.label + ' · ' + (lv.desc || ('#' + lv.id)),
+            get: _laMixGet(dsId, [lv.id]) }
+        ));
+      });
+    });
   }
 
   function _laNavRenderSection(list, sectionKey) {
