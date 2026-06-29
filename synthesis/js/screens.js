@@ -132,7 +132,9 @@
       return;
     }
     // synLaunch lazy-loads la-overlay + the engine, then calls window.openLiveArena().
-    Promise.resolve(window.synLaunch('openLiveArena')).then(()=>{
+    // No PIN = the "Host" button → tell openLiveArena to open the host content
+    // picker directly (was falling to the student PIN screen for non-teachers).
+    Promise.resolve(window.synLaunch('openLiveArena', _pin ? undefined : { host: true })).then(()=>{
       if (typeof LiveArena === 'undefined') return;
       if (_pin && _pin.length === 6) {
         // Student join with a known PIN: open join screen + prefill, then submit.
@@ -141,9 +143,10 @@
         if (inp) { inp.value = _pin; }
         // Auto-submit so "Join" on the Live screen goes straight in.
         if (typeof LiveArena.submitJoin === 'function') LiveArena.submitJoin();
+      } else if (typeof LiveArena.pickDataset === 'function') {
+        // Belt-and-suspenders: ensure the host content picker is showing.
+        LiveArena.pickDataset();
       }
-      // No PIN → openLiveArena already opened the host/join picker (or student
-      // join for non-teachers). Nothing more to do.
     }).catch((e)=>{ console.warn('[screens] Live Arena launch failed', e); });
   }
   window.openRealLiveArena = openRealLiveArena;

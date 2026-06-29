@@ -22,9 +22,13 @@
         console.warn('[syn] LiveArena engine not loaded');
         return;
       }
-      // cfg with questions → launch directly as host;
-      // otherwise open the picker/lobby (host or ?join= student flow).
+      // cfg.questions → launch directly as host;
+      // cfg.host → the "Φιλοξένησε/Host" button: go STRAIGHT to the host content
+      //   picker (la-host-dataset, the section→grade→subject multi-select), not
+      //   the teacher-gated Host/Join chooser that fell to the student PIN screen;
+      // otherwise open the picker/lobby (host chooser or ?join= student flow).
       if (cfg && cfg.questions) return LiveArena.launchHost(cfg);
+      if (cfg && cfg.host && typeof LiveArena.pickDataset === 'function') return LiveArena.pickDataset();
       return LiveArena.launchPicker();
     };
   }
