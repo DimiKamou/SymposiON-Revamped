@@ -28,6 +28,42 @@
 
   var _catalog = null;          // cached { grades:[...] }
   var st = { cycle: 'gym', gradeKey: null, subId: null };
+  var _authored = {};           // subId → { contentId: bool } (resolved once per subject)
+  var _pvp = false;             // true when the picker is choosing PvP material
+
+  // PvP: build the duel question bank from a catalog game's authored content,
+  // store it as SYM_QUESTIONS_SELECTION, then open the standalone Arena.
+  function _pvpLaunchFromNode(node) {
+    function fire(sel) {
+      try { if (sel && sel.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(sel)); else localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_e) {}
+      if (typeof window.launchPvPArena === 'function') window.launchPvPArena();
+    }
+    if (!node.content || !window.ContentSource || typeof window.ContentSource.loadGameContent !== 'function') { fire(null); return; }
+    Promise.resolve(window.ContentSource.loadGameContent(node.content)).then(function (doc) {
+      var items = [];
+      (((doc && doc.units) || [])).forEach(function (u) {
+        (u.questions || u.items || []).forEach(function (q) {
+          var opts = q.opts || q.o || q.a || [];
+          items.push({ q: q.q, a: opts.slice ? opts.slice() : opts, c: (typeof q.ans === 'number' ? q.ans : (typeof q.c === 'number' ? q.c : 0)) });
+        });
+      });
+      items = items.filter(function (it) { return it.q && it.a && it.a.length >= 2; });
+      fire(items);
+    }).catch(function () { fire(null); });
+  }
+
+  // Resolve which quiz content ids in a subject have admin-authored content,
+  // then re-render (symRender = no extra history entry, unlike symGo).
+  function _resolveAuthored(subId, ids) {
+    var CS = window.ContentSource;
+    if (!CS || typeof CS.hasAuthored !== 'function') { _authored[subId] = {}; if (window.symRender) window.symRender(); return; }
+    Promise.all(ids.map(function (cid) {
+      return Promise.resolve(CS.hasAuthored(cid)).then(function (ok) { return [cid, ok]; }).catch(function () { return [cid, false]; });
+    })).then(function (pairs) {
+      var m = {}; pairs.forEach(function (p) { m[p[0]] = p[1]; }); _authored[subId] = m;
+      if (window.symRender) window.symRender();
+    }).catch(function () { _authored[subId] = {}; if (window.symRender) window.symRender(); });
+  }
 
   function launchOf(node) {
     var fn = (node._launch && node._launch.fn) ||
@@ -42,7 +78,12 @@
 
   function render(home) {
     var P = window.synPage;
-    var body = P(home, {
+    var body = P(home, _pvp ? {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Ο Ἀγών · PvP', en: 'The Agon · PvP' }),
+      title: L({ gr: 'Διάλεξε ύλη για τον Αγώνα', en: 'Pick content for the duel' }),
+      sub: L({ gr: 'Στάδιο → τάξη → μάθημα → παιχνίδι — διάλεξε ύλη και άνοιξε την Αρένα.', en: 'Stage → grade → subject → game — pick content and open the Arena.' }),
+    } : {
       back: 'gamepanel', backLabel: L({ gr: 'Πίνακας Παιχνιδιών', en: 'Game Panel' }), accent: '#C5572F',
       eyebrow: L({ gr: 'Η ύλη σου', en: 'Your curriculum' }),
       title: L({ gr: 'Διάλεξε από την ύλη', en: 'Browse by curriculum' }),
@@ -95,9 +136,27 @@
 
     // ── παιχνίδι (game) cards → launch ──
     body.appendChild(el('div', { class: 'sc-sec-lbl' }, L({ gr: 'Παιχνίδι', en: 'Game' })));
-    var games = (sub.games || []).map(function (n) { return { n: n, fn: launchOf(n) }; }).filter(function (x) { return x.fn; });
+    var launchable = (sub.games || []).map(function (n) { return { n: n, fn: launchOf(n) }; }).filter(function (x) { return x.fn; });
+    // Admin-authored only: a quiz game (with a content id) shows ONLY if content
+    // was uploaded/authored; built-in games (grammar, arcade, voyage — no content
+    // id) always show. The authored map is resolved once per subject (async).
+    var quizIds = launchable.filter(function (x) { return x.n.content; }).map(function (x) { return x.n.content; });
+    if (quizIds.length && !_authored[sub.id]) {
+      _resolveAuthored(sub.id, quizIds);
+      body.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Έλεγχος περιεχομένου…', en: 'Checking content…' })));
+      return;
+    }
+    var amap = _authored[sub.id] || {};
+    var games = launchable.filter(function (x) { return !x.n.content || amap[x.n.content] === true; });
     if (!games.length) {
-      body.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Δεν υπάρχει ακόμη περιεχόμενο γι’ αυτό το μάθημα — πρόσθεσέ το από το πάνελ διαχείρισης.', en: 'No content authored for this subject yet — add it from the admin panel.' })));
+      body.appendChild(el('div', { class: 'sc-form', style: 'text-align:center;padding:22px' }, [
+        el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Δεν έχει ανέβει περιεχόμενο γι’ αυτό το μάθημα ακόμη.', en: 'No content uploaded for this subject yet.' })),
+        el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+          if (typeof window.openTriviaTemplate === 'function') window.openTriviaTemplate();
+          else if (window.SymPreview) window.SymPreview.open('mc', { title: L({ gr: 'Ανέβασε περιεχόμενο', en: 'Upload content' }), note: L({ gr: 'Διαθέσιμο με συνδρομή καθηγητή — ανέβασε CSV/JSON ερωτήσεων.', en: 'Available with a teacher subscription — upload CSV/JSON questions.' }) });
+        } }, L({ gr: 'Ανέβασε περιεχόμενο →', en: 'Upload content →' })),
+        el('p', { class: 'sc-cap', style: 'margin:10px 0 0;opacity:.7' }, L({ gr: 'Οι καθηγητές με συνδρομή ανεβάζουν δικά τους αρχεία.', en: 'Teachers with a subscription upload their own files.' })),
+      ]));
       return;
     }
     var grid = el('div', { class: 'sc-eng-grid' });
@@ -106,6 +165,7 @@
       grid.appendChild(el('button', { class: 'sc-engc has-accent', style: '--ca:#C5572F',
         onclick: function () {
           try {
+            if (_pvp) { _pvpLaunchFromNode(node); return; }
             var args = (node._launch && node._launch.args) || [];
             if (window.synLaunch && window.SYN_GAMES && window.SYN_GAMES[x.fn]) return window.synLaunch.apply(null, [x.fn].concat(args));
             if (typeof window[x.fn] === 'function') return window[x.fn].apply(window, args);
@@ -132,6 +192,22 @@
     }).catch(function () { _catalog = { grades: [] }; go('curriculum'); });
   }
 
+  // Bust the authored-content cache when an admin/teacher saves game content, so
+  // a newly-uploaded game appears without a hard reload.
+  try {
+    window.addEventListener('sym-store', function (e) {
+      var k = e && e.detail && e.detail.key;
+      if (k && (k.indexOf('gameContent/') === 0 || k === 'studio_catalog')) { _authored = {}; if (k === 'studio_catalog') _catalog = null; }
+    });
+  } catch (_e) {}
+
   window.SYM_SCREENS = window.SYM_SCREENS || {};
   window.SYM_SCREENS.curriculum = function (home, ctx) { render(home, ctx); };
+
+  // Entry points: the Game Panel opens it to browse+launch; the Live PvP button
+  // opens it to pick duel content (same picker, different leaf action).
+  window.SymCurriculum = {
+    openPanel: function () { _pvp = false; window.symGo('curriculum'); },
+    openForPvp: function () { _pvp = true; window.symGo('curriculum'); },
+  };
 })();
