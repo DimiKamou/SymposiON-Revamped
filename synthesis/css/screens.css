@@ -803,6 +803,22 @@
 .syn-ds__mix:hover { background:color-mix(in srgb,var(--ca) 12%,var(--card)); }
 .syn-ds__mix.on { color:#fff; background:var(--ca,var(--terra)); border-style:solid; border-color:var(--ca,var(--terra)); }
 .syn-ds__flag { flex:none; font-family:var(--sans); font-weight:700; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); background:var(--sink); border:1px solid var(--line); padding:6px 10px; border-radius:999px; }
+/* subject-tag filter row */
+.syn-mix__tags { display:flex; flex-wrap:wrap; gap:7px; margin:2px 0; }
+.syn-tagchip { font-family:var(--sans); font-weight:600; font-size:12px; color:var(--fg-70,var(--muted)); background:var(--card); border:1px solid var(--line); padding:7px 13px; border-radius:999px; cursor:pointer; transition:.14s; }
+.syn-tagchip:hover { border-color:var(--line-bold); color:var(--fg); }
+.syn-tagchip.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
+/* per-source level pills (spans the full grid width under a selected leveled card) */
+.syn-ds-levels { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:10px 12px; margin:-2px 0 4px; background:color-mix(in srgb,var(--ca) 6%,var(--card)); border:1px solid var(--ca-mid,var(--line)); border-radius:12px; }
+.syn-lvgrp { font-family:var(--sans); font-weight:700; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 2px 0 6px; }
+.syn-lvpill { font-family:var(--sans); font-weight:700; font-size:12px; color:var(--fg-70,var(--muted)); background:var(--card); border:1px solid var(--line); border-left:3px solid transparent; padding:5px 9px; border-radius:8px; cursor:pointer; transition:.12s; }
+.syn-lvpill:hover { border-color:var(--line-bold); }
+.syn-lvpill.on { color:#fff; background:var(--ca,var(--terra)); border-color:var(--ca,var(--terra)); }
+.syn-lvpill--all { font-size:11px; letter-spacing:.03em; text-transform:uppercase; border-radius:999px; }
+.syn-lvpill--lgreen { border-left-color:var(--sage,#6f8f4f); }
+.syn-lvpill--lyellow { border-left-color:var(--gold,#A2862F); }
+.syn-lvpill--lred { border-left-color:var(--terra,#C5572F); }
+.syn-lvpill--lpurple { border-left-color:#7C5AC2; }
 
 /* grouped level checkbox grid */
 .syn-mix__levels { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
