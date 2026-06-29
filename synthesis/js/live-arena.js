@@ -755,7 +755,10 @@ const LiveArena = (() => {
   }
 
   function navBack() {
-    if (_laNav.level === 'grade') {
+    if (_laNav.level === 'gplevels') {
+      _laNav = { level: 'section', sectionKey: _laNav.sectionKey || 'grammatiki', gradeKey: null };
+      _laNavRender();
+    } else if (_laNav.level === 'grade') {
       _laNav = { level: 'section', sectionKey: _laNav.sectionKey, gradeKey: null };
       _laNavRender();
     } else if (_laNav.level === 'section') {
@@ -802,12 +805,15 @@ const LiveArena = (() => {
       } else if (level === 'grade') {
         const g = _laGrade(gradeKey);
         title.textContent = g ? t(g.title, g.titleEn) : t('Επίλεξε Ύλη', 'Choose Content');
+      } else if (level === 'gplevels') {
+        title.textContent = _laNav.dsLabel || t('Επίλεξε Επίπεδο', 'Choose Level');
       }
     }
 
     if (level === 'root')    { _laNavRenderRoot(list);               }
     else if (level === 'section') { _laNavRenderSection(list, sectionKey); }
     else if (level === 'grade')   { _laNavRenderGrade(list, gradeKey);    }
+    else if (level === 'gplevels'){ _laNavRenderGpLevels(list, _laNav.dsId, _laNav.fn); }
   }
 
   function _laItem(icon, name, sub, locked, onClick) {
@@ -964,18 +970,17 @@ const LiveArena = (() => {
     const gpDs = (typeof GP_DATASETS !== 'undefined')
       ? GP_DATASETS.filter(d => d.subject === subj.id || d.classKey === gradeKey)
       : [];
-    if (gpDs.length > 0 && typeof gpLoadQuestions === 'function') {
+    if (gpDs.length > 0) {
       clear();
       gpDs.forEach(ds => {
         const tier   = ds.tier || 'free';
         const locked = !_laCanAccess(tier);
+        // Whole-dataset toggle, hosted via the game's own loader (lazy-loaded);
+        // per-level drill lives in the Γραμματική section (_laNavRenderGpLevels).
         list.appendChild(_laToggleItem(
           '📚', ds.label, ds.meta || '',
           locked,
-          { key: 'gp:' + ds.id, label: ds.label, get: async () => {
-            const loaded = await gpLoadQuestions(ds.id, {});
-            return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
-          } }
+          { key: 'gp:' + ds.id, label: ds.label, get: () => _laLoadDsQuestions(ds) }
         ));
         added++;
       });
@@ -1036,13 +1041,95 @@ const LiveArena = (() => {
       datasets.forEach(ds => {
         const tier   = ds.tier || 'free';
         const locked = !_laCanAccess(tier);
+        const prov   = (typeof GP_LEVEL_PROVIDERS !== 'undefined') ? GP_LEVEL_PROVIDERS[ds.id] : null;
+        // Only offer the per-level drill for games whose headless generator
+        // actually produces hostable MC questions. The rest (their generators
+        // aren't ported yet) stay a single toggle so we never show a level
+        // picker that would host nothing. See _LA_GEN_OK.
+        const leveled = !!(ds.leveled && prov && prov.levels && prov.levels.length && _LA_GEN_OK.indexOf(ds.id) >= 0);
+        if (leveled && !locked) {
+          // Like the game panel: drill into this game's levels, multi-select
+          // some, then "Combine & Start" hosts exactly those levels' questions.
+          list.appendChild(_laItem('📚', ds.label, ds.meta || '', false, () => {
+            _laNav = { level: 'gplevels', sectionKey: 'grammatiki', gradeKey: null,
+                       dsId: ds.id, fn: _laFnForDs(ds.id), dsLabel: ds.label };
+            _laNavRender();
+          }));
+        } else {
+          // Non-leveled (or locked): one toggle hosting the whole set via its
+          // own loader (the game's data is lazy-loaded first).
+          list.appendChild(_laToggleItem(
+            '📚', ds.label, ds.meta || '', locked,
+            { key: 'gp:' + ds.id, label: ds.label, get: () => _laLoadDsQuestions(ds) }
+          ));
+        }
+      });
+    });
+  }
+
+  // GP_DATASETS id → its launch openFn (inverting SYM.LEVEL_BANK), so we can
+  // lazy-load the game's JS (which defines its question generator) before
+  // calling the dataset loader.
+  function _laFnForDs(dsId) {
+    const LB = (window.SYM && SYM.LEVEL_BANK) || {};
+    for (const fn in LB) { if (LB[fn] && LB[fn].ds === dsId) return fn; }
+    return null;
+  }
+  async function _laEnsureGameLoaded(fn) {
+    if (!fn || !window.SYN_GAMES || !window.SYN_GAMES[fn] || !window.lazyLoad) return;
+    try { await window.lazyLoad(window.SYN_GAMES[fn].js || []); } catch (_) {}
+  }
+  // Normalise any loader output to the arena's {q,opts,ans} (handles both the
+  // {q,opts,ans} and the games' raw {qt,opts,correct} shapes; strips markup).
+  function _laNormalizeQs(qs) {
+    return (Array.isArray(qs) ? qs : []).map(x => {
+      const opts = x.opts || x.o || x.a || [];
+      let ans = (typeof x.ans === 'number') ? x.ans
+              : (typeof x.c === 'number') ? x.c
+              : (x.correct != null ? opts.indexOf(x.correct) : 0);
+      const qtext = String(x.q || x.qt || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      return { q: qtext, opts: (opts.slice ? opts.slice() : opts), ans };
+    }).filter(x => x.q && x.opts && x.opts.length >= 2 && x.ans >= 0 && x.ans < x.opts.length);
+  }
+  // Load a grammar dataset's questions (optionally a single level) via its own
+  // loader, lazy-loading the backing game first. Falls back to [] gracefully
+  // (e.g. games whose generator isn't ported yet).
+  async function _laLoadDsQuestions(ds, levelId) {
+    if (!ds) return [];
+    await _laEnsureGameLoaded(_laFnForDs(ds.id));
+    let qs = [];
+    try { qs = await Promise.resolve(typeof ds.loader === 'function' ? ds.loader(levelId) : []); } catch (_) {}
+    return _laNormalizeQs(qs);
+  }
+
+  // Level picker for a leveled grammar game — grouped like the game panel; each
+  // level is a multi-select leaf that hosts that level's generated questions.
+  function _laNavRenderGpLevels(list, dsId) {
+    const prov = (typeof GP_LEVEL_PROVIDERS !== 'undefined') ? GP_LEVEL_PROVIDERS[dsId] : null;
+    const ds   = (typeof GP_DATASETS !== 'undefined') ? GP_DATASETS.find(d => d.id === dsId) : null;
+    if (!prov || !prov.levels || !prov.levels.length || !ds) {
+      list.innerHTML = `<p class="la-ds-empty">${t('Δεν βρέθηκαν επίπεδα.', 'No levels found.')}</p>`;
+      return;
+    }
+    const order = [], byGroup = {};
+    prov.levels.forEach(lv => {
+      const g = lv.group || t('Επίπεδα', 'Levels');
+      if (!byGroup[g]) { byGroup[g] = []; order.push(g); }
+      byGroup[g].push(lv);
+    });
+    order.forEach(g => {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:8px 14px 4px;font:700 10px/1 Inter,sans-serif;letter-spacing:1px;color:#8A7258;text-transform:uppercase;';
+      hdr.textContent = g;
+      list.appendChild(hdr);
+      byGroup[g].forEach((lv, i) => {
+        const label = lv.desc || (t('Επίπεδο', 'Level') + ' ' + (i + 1));
         list.appendChild(_laToggleItem(
-          '📚', ds.label, ds.meta || '',
-          locked,
-          { key: 'gp:' + ds.id, label: ds.label, get: async () => {
-            const loaded = typeof gpLoadQuestions === 'function' ? await gpLoadQuestions(ds.id, {}) : null;
-            return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
-          } }
+          '📕', label, '',
+          false,
+          { key: 'gplv:' + dsId + ':' + lv.id,
+            label: ds.label + ' · ' + (lv.desc || ('#' + lv.id)),
+            get: () => _laLoadDsQuestions(ds, lv.id) }
         ));
       });
     });
@@ -1163,6 +1250,13 @@ const LiveArena = (() => {
      plus an empty state while nobody has joined. Pure presentation —
      fed by the same Firestore players listener. */
   const _LA_AV_COLORS = ['#c9a44a','#8eba72','#cd8b5a','#7fa9c4','#c47fa9','#b0a04a','#6fae8e','#cf9b6b'];
+
+  // Leveled grammar datasets whose headless question generator is implemented
+  // (verified to produce hostable MC questions for the Live Arena). These get
+  // the game-panel-style per-level drill in the host picker. The remaining
+  // leveled games (aoristos-b, synirimmena, afwnolekta, antonymies, rimata-mi)
+  // still need their gen ported, so they stay a single whole-set toggle.
+  const _LA_GEN_OK = ['lyo', 'ousiastika', 'lat-nouns', 'lat-epitheta'];
   function _laInitials(name) {
     const p = String(name || '').trim().split(/\s+/);
     return (((p[0] || '')[0] || '') + (p.length > 1 ? (p[1][0] || '') : '')).toUpperCase() || '•';
