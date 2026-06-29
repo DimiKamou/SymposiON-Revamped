@@ -30,6 +30,7 @@
   var st = { cycle: 'gym', gradeKey: null, subId: null };
   var _authored = {};           // subId → { contentId: bool } (resolved once per subject)
   var _pvp = false;             // true when the picker is choosing PvP material
+  var _lvl = null;              // { node, fn, bank } when a game's levels are shown inline
 
   // PvP: build the duel question bank from a catalog game's authored content,
   // store it as SYM_QUESTIONS_SELECTION, then open the standalone Arena.
@@ -102,7 +103,7 @@
     CYCLES.forEach(function (c) {
       if (!gradesIn(c.id).length) return;
       cycleRow.appendChild(el('button', { class: 'sc-fil' + (st.cycle === c.id ? ' active' : ''),
-        onclick: function () { st.cycle = c.id; st.gradeKey = null; st.subId = null; go('curriculum'); } }, L(c)));
+        onclick: function () { st.cycle = c.id; st.gradeKey = null; st.subId = null; _lvl = null; go('curriculum'); } }, L(c)));
     });
     body.appendChild(cycleRow);
 
@@ -113,7 +114,7 @@
     var gradeRow = el('div', { class: 'sc-fils' });
     grades.forEach(function (g) {
       gradeRow.appendChild(el('button', { class: 'sc-fil' + (st.gradeKey === g.key ? ' active' : ''),
-        onclick: function () { st.gradeKey = g.key; st.subId = null; go('curriculum'); } }, g.label));
+        onclick: function () { st.gradeKey = g.key; st.subId = null; _lvl = null; go('curriculum'); } }, g.label));
     });
     body.appendChild(gradeRow);
 
@@ -127,7 +128,7 @@
     var subRow = el('div', { class: 'sc-fils' });
     subjects.forEach(function (s) {
       subRow.appendChild(el('button', { class: 'sc-fil' + (st.subId === s.id ? ' active' : ''),
-        onclick: function () { st.subId = s.id; go('curriculum'); } }, s.label));
+        onclick: function () { st.subId = s.id; _lvl = null; go('curriculum'); } }, s.label));
     });
     body.appendChild(subRow);
 
@@ -162,10 +163,17 @@
     var grid = el('div', { class: 'sc-eng-grid' });
     games.forEach(function (x) {
       var node = x.n;
-      grid.appendChild(el('button', { class: 'sc-engc has-accent', style: '--ca:#C5572F',
+      var selected = !!(_lvl && _lvl.node === node);
+      grid.appendChild(el('button', { class: 'sc-engc has-accent' + (selected ? ' is-active' : ''), style: '--ca:#C5572F',
         onclick: function () {
           try {
             if (_pvp) { _pvpLaunchFromNode(node); return; }
+            // A game with a real level bank (grammar games like Λύω, etc.) drills
+            // into an inline level picker — the same class→lesson→mode→level flow
+            // and visuals as the game-panel level screen — instead of launching
+            // straight away. Everything else launches directly as before.
+            var bank = _bankFor(node, x.fn);
+            if (bank) { _lvl = { node: node, fn: x.fn, bank: bank }; go('curriculum'); return; }
             var args = (node._launch && node._launch.args) || [];
             if (window.synLaunch && window.SYN_GAMES && window.SYN_GAMES[x.fn]) return window.synLaunch.apply(null, [x.fn].concat(args));
             if (typeof window[x.fn] === 'function') return window[x.fn].apply(window, args);
@@ -180,7 +188,107 @@
       ]));
     });
     body.appendChild(grid);
+
+    // ── επίπεδα (level) — inline, when a level-backed game is selected ──
+    if (_lvl && !_pvp) renderLevels(body, _lvl);
+
     if (window.injectIllus) try { window.injectIllus(body); } catch (_e) {}
+  }
+
+  // Resolve a catalog game node → its level bank ({fn,ds,prog,levels}) or null,
+  // exactly as the game-panel level screen does (SYM.levelBankFor).
+  function _bankFor(node, fn) {
+    try {
+      if (!(window.SYM && typeof window.SYM.levelBankFor === 'function')) return null;
+      var b = window.SYM.levelBankFor({ launch: node._launch, en: node.labelEn, gr: node.label });
+      return (b && b.levels && b.levels.length) ? b : null;
+    } catch (_e) { return null; }
+  }
+
+  // Render the level selector for the chosen game — mirrors S.level (screens.js):
+  // category rail (grouped by level.group) + level rows, honest localStorage
+  // progress, and synLaunch(fn, levelId, group) on click.
+  function renderLevels(body, lvl) {
+    var fn = lvl.fn, bank = lvl.bank, prog = bank.prog;
+    var node = lvl.node;
+
+    body.appendChild(el('div', { class: 'sc-sec-lbl' }, L({ gr: 'Επίπεδα — ' , en: 'Levels — ' }) + (node.label || '')));
+
+    function lvDone(id) {
+      if (!prog) return false;
+      try { var v = JSON.parse(localStorage.getItem(prog + id) || 'null'); return !!(v && v.completed); }
+      catch (_e) { return false; }
+    }
+    var isMix = function (g) { return /συνδυ|μείξ|combined|mix/i.test(g); };
+
+    // group levels by `group`, preserving order
+    var order = [], byGroup = {};
+    bank.levels.forEach(function (lv) {
+      var g = lv.group || L({ gr: 'Επίπεδα', en: 'Levels' });
+      if (!byGroup[g]) { byGroup[g] = []; order.push(g); }
+      byGroup[g].push(lv);
+    });
+    var CATS = order.map(function (g, i) {
+      var levels = byGroup[g];
+      var done = levels.reduce(function (s, lv) { return s + (lvDone(lv.id) ? 1 : 0); }, 0);
+      return { id: 'c' + i, group: g, mix: isMix(g), levels: levels, done: done, total: levels.length };
+    });
+    var totalAll = CATS.reduce(function (s, c) { return s + c.total; }, 0) || 1;
+    var doneAll = CATS.reduce(function (s, c) { return s + c.done; }, 0);
+
+    body.appendChild(el('div', { class: 'lv-progress' }, [
+      el('div', { class: 'lv-progress__bar' }, [el('span', { class: 'lv-progress__fill', style: 'width:' + (doneAll / totalAll * 100) + '%' })]),
+      el('span', { class: 'lv-progress__t' }, doneAll + '/' + totalAll + ' ' + L({ gr: 'ολοκληρωμένα', en: 'completed' })),
+    ]));
+
+    var shell = el('div', { class: 'lv-shell has-accent', style: '--ca:#C5572F' });
+    var rail = el('div', { class: 'lv-cats' });
+    rail.appendChild(el('div', { class: 'lv-cats__hd' }, L({ gr: 'Κατηγορίες', en: 'Categories' })));
+    var list = el('div', { class: 'lv-list' });
+    var activeCat = (CATS.find(function (c) { return !c.mix; }) || CATS[0]).id;
+
+    function launchLevel(lv, group) {
+      try {
+        if (fn && window.SYN_GAMES && window.SYN_GAMES[fn] && window.synLaunch) return window.synLaunch(fn, lv.id, group);
+        if (typeof window[fn] === 'function') return window[fn](lv.id, group);
+        if (window.SymPreview) window.SymPreview.open('mc', { title: node.label });
+      } catch (_e) {}
+    }
+
+    function paintList() {
+      var cat = CATS.find(function (c) { return c.id === activeCat; }) || CATS[0];
+      list.innerHTML = '';
+      list.appendChild(el('div', { class: 'lv-list__hd' }, [
+        el('span', { class: 'lv-list__ttl' }, cat.group),
+        el('span', { class: 'lv-list__ct' }, cat.total + ' ' + L({ gr: 'επίπεδα', en: 'levels' })),
+      ]));
+      cat.levels.forEach(function (lv, i) {
+        var dn = lvDone(lv.id);
+        var label = lv.desc || (L({ gr: 'Επίπεδο', en: 'Level' }) + ' ' + (i + 1));
+        list.appendChild(el('button', { class: 'lv-row' + (dn ? ' done' : '') + (lv.color ? ' lv-row--' + lv.color : ''),
+          onclick: function () { launchLevel(lv, cat.group); } }, [
+          el('span', { class: 'lv-row__n' }, dn ? '✓' : String(i + 1).padStart(2, '0')),
+          el('span', { class: 'lv-row__t' }, [
+            lv.section ? el('span', { class: 'lv-row__sec' }, lv.section + ' · ') : null,
+            label]),
+          el('span', { class: 'lv-row__go' }, (dn ? L({ gr: 'Ξανά', en: 'Replay' }) : L({ gr: 'Ξεκίνα', en: 'Start' })) + ' →'),
+        ]));
+      });
+    }
+    CATS.forEach(function (c) {
+      rail.appendChild(el('button', { class: 'lv-cat' + (c.id === activeCat ? ' active' : '') + (c.mix ? ' lv-cat--mix' : ''), 'data-c': c.id,
+        onclick: function () { activeCat = c.id; rail.querySelectorAll('.lv-cat').forEach(function (b) { b.classList.toggle('active', b.dataset.c === c.id); }); paintList(); } }, [
+        el('div', { class: 'lv-cat__b' }, [
+          el('span', { class: 'lv-cat__t' }, c.mix ? (L({ gr: 'Μείξη', en: 'Mix' }) + ' · ' + c.group) : c.group),
+          el('span', { class: 'lv-cat__m' }, c.mix
+            ? L({ gr: 'Συνδυαστικά επίπεδα — όλα μαζί', en: 'Combined levels — all together' })
+            : (c.done + '/' + c.total + ' ' + L({ gr: 'ολοκλ.', en: 'done' }))) ]),
+        el('span', { class: 'lv-cat__n' + (c.total && c.done === c.total ? ' full' : '') }, c.mix ? '∞' : c.done),
+      ]));
+    });
+    shell.appendChild(rail); shell.appendChild(list);
+    body.appendChild(shell);
+    paintList();
   }
 
   function _load(home) {

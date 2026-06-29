@@ -97,8 +97,10 @@
 .sc-upload__ic { font-size:26px; color:var(--terra); }
 .sc-upload__t { display:block; font-weight:700; font-size:15px; }
 .sc-upload__s { display:block; font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--muted); margin-top:2px; }
-.sc-engc { display:flex; align-items:center; gap:13px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px; text-decoration:none; color:var(--fg); transition:transform .15s, box-shadow .15s; }
+.sc-engc { display:flex; align-items:center; gap:13px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:14px; text-decoration:none; color:var(--fg); transition:transform .15s, box-shadow .15s, border-color .15s; }
 .sc-engc:hover { transform:translateY(-3px); box-shadow:0 14px 30px var(--shadow); }
+/* selected game whose level picker is open below the grid */
+.sc-engc.is-active { border-color:var(--ca,var(--terra)); box-shadow:0 0 0 2px var(--ca,var(--terra)) inset, 0 12px 28px var(--shadow); }
 .sc-engc__ban { display:grid; place-items:center; width:54px; height:54px; flex:none; border-radius:14px; background:var(--ca-tint); }
 .sc-engc__illu { width:34px; height:34px; color:var(--ca-ink); } .sc-engc__illu svg{ width:100%; height:100%; }
 /* emoji fallback for Game-Panel engines that carry an icon but no vector illu */
