@@ -693,7 +693,7 @@
     // (Game-mode block removed from the panel per owner request — game modes live
     //  on the subject/Live screens, not here.)
     // Curriculum browse — admin-authored content by στάδιο → τάξη → μάθημα → παιχνίδι
-    body.appendChild(el('button',{class:'lv-cat lv-cat--custom sc-stagger', style:'width:100%;margin:0 0 16px;text-align:left', onclick:()=>go('curriculum')},[
+    body.appendChild(el('button',{class:'lv-cat lv-cat--custom sc-stagger', style:'width:100%;margin:0 0 16px;text-align:left', onclick:()=>{ if(window.SymCurriculum) SymCurriculum.openPanel(); else go('curriculum'); }},[
       el('div',{class:'lv-cat__b'},[
         el('span',{class:'lv-cat__t'}, L({gr:'Διάλεξε από την ύλη',en:'Browse by curriculum'})),
         el('span',{class:'lv-cat__m'}, L({gr:'Στάδιο → τάξη → μάθημα → παιχνίδι · περιεχόμενο διαχείρισης',en:'Stage → grade → subject → game · admin content'})) ]),
@@ -806,7 +806,7 @@
       ]));
       // ── PvP · Ο Ἀγών — the standalone duel arena, surfaced here on Live
       //    (previously only reachable from the Game Panel; user: "on live I cannot see pvp").
-      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>openPvPContentChooser()},[
+      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>{ if(window.SymCurriculum) SymCurriculum.openForPvp(); else openPvPContentChooser(); }},[
         el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'})),
         el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — διάλεξε ύλη & άνοιγμα Αρένας',en:'Student duels — pick content & open the Arena'})),

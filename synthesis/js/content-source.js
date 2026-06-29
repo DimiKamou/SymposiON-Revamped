@@ -585,9 +585,19 @@ window.ContentSource = (function () {
   }
   _start();
 
+  // True only when an admin/teacher has actually authored content for this id
+  // (a gameContent/<cid> override exists in SymStore or Firestore) — i.e. it was
+  // "uploaded", as opposed to the bundled SYM seed. Used to filter the curriculum
+  // picker to admin-authored content only.
+  async function hasAuthored(contentId) {
+    if (!contentId) return false;
+    try { return !!(await _readOverride(contentKey(contentId), contentKey(contentId))); }
+    catch (_) { return false; }
+  }
+
   return {
     // loaders
-    loadCatalog, loadGameContent, loadContent,
+    loadCatalog, loadGameContent, loadContent, hasAuthored,
     // savers
     saveCatalog, saveContent,
     // apply / live
