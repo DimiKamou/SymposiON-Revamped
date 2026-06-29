@@ -692,6 +692,12 @@
     const cats = ['Όλα','Ιλιάδα','Οδύσσεια','Γραμματική','Ιστορία','Λατινικά'];
     // (Game-mode block removed from the panel per owner request — game modes live
     //  on the subject/Live screens, not here.)
+    // Curriculum browse — admin-authored content by στάδιο → τάξη → μάθημα → παιχνίδι
+    body.appendChild(el('button',{class:'lv-cat lv-cat--custom sc-stagger', style:'width:100%;margin:0 0 16px;text-align:left', onclick:()=>go('curriculum')},[
+      el('div',{class:'lv-cat__b'},[
+        el('span',{class:'lv-cat__t'}, L({gr:'Διάλεξε από την ύλη',en:'Browse by curriculum'})),
+        el('span',{class:'lv-cat__m'}, L({gr:'Στάδιο → τάξη → μάθημα → παιχνίδι · περιεχόμενο διαχείρισης',en:'Stage → grade → subject → game · admin content'})) ]),
+      el('span',{class:'lv-cat__n'},'→') ]));
     body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:'margin-top:0'}, L({gr:'Μηχανές',en:'Engines'})));
     const filwrap = el('div',{class:'sc-fils sc-stagger'}, cats.map((c,i)=>chip(c,i===0)));
     body.appendChild(filwrap);
