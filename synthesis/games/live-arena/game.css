@@ -56,6 +56,12 @@
   color: var(--la-text);
   border-color: var(--la-gold-dim);
 }
+/* The Host Lobby and Role Picker draw their OWN ✕ inside their header/topbar,
+   so the global overlay close would double up (two ✕ stacked top-right). Hide
+   the global one on just those screens; every other screen (dataset picker,
+   custom quiz, student views) still relies on it. */
+#la-overlay:has(#la-host-lobby.la-active) .la-close-btn,
+#la-overlay:has(#la-picker.la-active) .la-close-btn { display: none; }
 
 /* ── Screen management ──────────────────────────────────── */
 #la-wrap {
