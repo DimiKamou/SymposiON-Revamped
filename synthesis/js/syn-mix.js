@@ -51,9 +51,23 @@
     'lat-nouns':     ['games/lat-nouns/data.js'],
     'lat-epitheta':  ['games/lat-epitheta/data.js'],
     'lat-antonymies':['games/lat-antonymies/data.js'],
-    'lat-verbs':     ['games/lat-verbs/data.js']
-    // lyo uses a generator (no raw DB / data file needed here).
+    'lat-verbs':     ['games/lat-verbs/data.js'],
+    // lyo is generator-based, but the generator (_gpLyoGenQuestions) lives in the
+    // game file — load it so the universal picker can host Λύω.
+    'lyo':            ['games/lyo/game.js'],
+    // trivia banks: the loader reads QUESTIONS / OD_QUESTIONS, defined in these
+    // question files (lazy-loaded so the universal picker can host them too).
+    'iliada-trivia':  ['games/iliada-trivia/questions.js'],
+    'odyssey-trivia': ['games/odyssey-trivia/questions.js']
   };
+
+  // Lazy-load a dataset's backing code (generator game file / raw-DB data file)
+  // so its loader/generator is defined before we call it. Idempotent.
+  function _ensureData(id) {
+    var files = DATA_FILES[id];
+    if (!files || typeof window.lazyLoad !== 'function') return Promise.resolve();
+    return window.lazyLoad(files).then(function () {}, function () {});
+  }
 
   function _provider(datasetId) {
     return (window.GP_LEVEL_PROVIDERS && window.GP_LEVEL_PROVIDERS[datasetId]) || null;
@@ -130,6 +144,44 @@
     }).filter(function (it) { return it.a.length >= 2; });
   }
 
+  // ── universal raw → MC ─────────────────────────────────────────────
+  // Non-grammar datasets (trivia banks, published teacher quizzes, curriculum)
+  // expose questions through GP_CONTENT.find(id).loader(). Those come in a few
+  // shapes — a flat array of {q,opts/a,ans/correct}, OR a language→category pool
+  // ({gr:{cat:[…]}, en:{…}}). Flatten + normalize to the engine MC shape.
+  function _flattenPool(raw) {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') {
+      if (Array.isArray(raw.questions)) return raw.questions;
+      var lang = (typeof window.siteLang !== 'undefined' && window.siteLang === 'en') ? 'en' : 'gr';
+      var pool = raw[lang] || raw.gr || raw.en || raw;
+      var out = [];
+      Object.keys(pool || {}).forEach(function (k) {
+        var v = pool[k];
+        if (Array.isArray(v)) out = out.concat(v);
+      });
+      return out;
+    }
+    return [];
+  }
+  function _anyToMC(raw) {
+    return _flattenPool(raw).map(function (x) {
+      if (!x) return null;
+      var opts = x.opts || x.a || x.options || [];
+      if (!Array.isArray(opts) || opts.length < 2) return null;
+      var ans = (typeof x.ans === 'number') ? x.ans
+              : (typeof x.c === 'number') ? x.c
+              : (typeof x.correct === 'number') ? x.correct
+              : (x.correct != null ? opts.map(String).indexOf(String(x.correct)) : 0);
+      if (ans < 0 || ans >= opts.length) ans = 0;
+      var qRaw = (x.q != null) ? x.q : (x.question != null ? x.question : '');
+      var qText = (qRaw && typeof qRaw === 'object') ? qRaw
+        : { gr: String(qRaw).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+            en: String(qRaw).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() };
+      return { q: qText, a: opts.map(String).slice(0, 4), c: Math.min(ans, 3) };
+    }).filter(Boolean);
+  }
+
   // Normalize a generator item ({q, opts, ans}) to the engine MC shape.
   function _genItemToMC(g) {
     if (!g) return null;
@@ -144,46 +196,132 @@
 
   // ── public: bank(datasetId, levelIds) → Promise<Array<MCItem>> ──────
   function bank(datasetId, levelIds) {
-    return new Promise(function (resolve) {
-      try {
-        var prov = _provider(datasetId);
-        if (!prov) return resolve([]);
-        var ids = Array.isArray(levelIds) ? levelIds : (levelIds != null ? [levelIds] : []);
-        if (!ids.length) return resolve([]);
+    var ids = Array.isArray(levelIds) ? levelIds : (levelIds != null ? [levelIds] : []);
+    return _ensureData(datasetId).then(function () {
+      var prov = _provider(datasetId);
 
-        // GENERATOR path (lyo): build per-id question lists and concat.
-        if (typeof prov.generator === 'function') {
-          var out = [];
-          ids.forEach(function (id) {
-            var g = null;
-            try { g = prov.generator(id); } catch (_) { g = null; }
-            if (Array.isArray(g)) {
-              g.forEach(function (item) { var mc = _genItemToMC(item); if (mc) out.push(mc); });
-            }
-          });
-          return resolve(out);
-        }
-
-        // FILTER-RAW path: subset the raw DB (preserving its shape), then
-        // normalize → up-convert to MC. Needs the data file loaded first.
-        if (typeof prov.filterRaw === 'function') {
-          return _rawDB(datasetId).then(function (rawDB) {
-            try {
-              if (rawDB == null) return resolve([]);
-              var filtered = prov.filterRaw(rawDB, ids);
-              var norm = (typeof window._gpNormalizeQuestions === 'function')
-                ? (window._gpNormalizeQuestions(filtered, datasetId) || [])
-                : [];
-              return resolve(_toMC(norm));
-            } catch (_) { return resolve([]); }
-          }, function () { return resolve([]); });
-        }
-
-        return resolve([]);
-      } catch (_) {
-        return resolve([]);
+      // GENERATOR path (lyo): build per-id question lists and concat. Default to
+      // every level when none are passed (whole-dataset host).
+      if (prov && typeof prov.generator === 'function') {
+        var useIds = ids.length ? ids : _allLevelIds(datasetId);
+        var out = [];
+        useIds.forEach(function (id) {
+          var g = null;
+          try { g = prov.generator(id); } catch (_) { g = null; }
+          if (Array.isArray(g)) g.forEach(function (item) { var mc = _genItemToMC(item); if (mc) out.push(mc); });
+        });
+        return out;
       }
+
+      // FILTER-RAW path: subset the raw DB, normalize → up-convert to MC.
+      if (prov && typeof prov.filterRaw === 'function') {
+        var useIds2 = ids.length ? ids : _allLevelIds(datasetId);
+        return _rawDB(datasetId).then(function (rawDB) {
+          try {
+            if (rawDB == null) return [];
+            var filtered = prov.filterRaw(rawDB, useIds2);
+            var norm = (typeof window._gpNormalizeQuestions === 'function')
+              ? (window._gpNormalizeQuestions(filtered, datasetId) || []) : [];
+            return _toMC(norm);
+          } catch (_) { return []; }
+        }, function () { return []; });
+      }
+
+      // LOADER path (trivia / published quizzes / curriculum): no provider.
+      return _loaderBank(datasetId);
+    }).catch(function () { return []; });
+  }
+
+  // ── non-grammar (trivia / published quizzes / curriculum) bank ─────
+  // No GP_LEVEL_PROVIDERS entry: pull questions from GP_CONTENT.find(id).loader()
+  // (lazy-loading the dataset's data file first if we know it), normalise to MC.
+  function _loaderBank(datasetId) {
+    var rec = (window.GP_CONTENT && window.GP_CONTENT.find && window.GP_CONTENT.find(datasetId)) || null;
+    if (!rec || typeof rec.loader !== 'function') return Promise.resolve([]);
+    function read() { try { return rec.loader(); } catch (_) { return null; } }
+    var raw = read();
+    if (raw != null) return Promise.resolve(_anyToMC(raw));
+    // try lazy-loading a known data file, then re-read
+    var files = DATA_FILES[datasetId];
+    if (!files || typeof window.lazyLoad !== 'function') return Promise.resolve([]);
+    return window.lazyLoad(files).then(function () { return _anyToMC(read()); }, function () { return []; });
+  }
+
+  // ── public: bankMulti(selections) → Promise<Array<MCItem>> ─────────
+  // selections: [{ id, levelIds? }]. Builds each dataset's bank, concatenates,
+  // de-dups by question text, and shuffles so mixed sources interleave.
+  function bankMulti(selections) {
+    var sels = (selections || []).filter(function (s) { return s && s.id; });
+    if (!sels.length) return Promise.resolve([]);
+    return Promise.all(sels.map(function (s) {
+      return bank(s.id, (s.levelIds && s.levelIds.length) ? s.levelIds : _allLevelIds(s.id)).catch(function () { return []; });
+    })).then(function (banks) {
+      var out = [], seen = Object.create(null);
+      banks.forEach(function (b) {
+        (b || []).forEach(function (it) {
+          var key = (it.q && (it.q.gr || it.q.en)) || JSON.stringify(it.q);
+          if (key && seen[key]) return;
+          if (key) seen[key] = 1;
+          out.push(it);
+        });
+      });
+      return _shuffle(out);
     });
+  }
+  function _allLevelIds(datasetId) {
+    var prov = _provider(datasetId);
+    return (prov && prov.levels) ? prov.levels.map(function (l) { return l.id; }) : [];
+  }
+
+  // ── public: catalog() → grouped, hostable universal ύλη list ───────
+  // Mirrors GP_CONTENT.groups() but keeps only datasets we can actually turn
+  // into a question bank, and tags each with its access state for the picker.
+  function catalog() {
+    try {
+      var groups = (window.GP_CONTENT && typeof window.GP_CONTENT.groups === 'function')
+        ? window.GP_CONTENT.groups() : [];
+      var out = [];
+      groups.forEach(function (g) {
+        var items = (g.items || []).filter(_hostable).map(function (d) {
+          var prov = _provider(d.id);
+          return {
+            id: d.id, label: d.label || d.id, meta: d.meta || '', icon: d.icon || '◆',
+            tier: d.tier || 'free', source: d.source, isNew: !!d.isNew,
+            leveled: !!(prov && prov.levels && prov.levels.length),
+            levels: (prov && prov.levels) ? prov.levels : null,
+            locked: !_canAccess(d.tier)
+          };
+        });
+        if (items.length) out.push({ group: g.group, items: items });
+      });
+      return out;
+    } catch (_) { return []; }
+  }
+  // A dataset is hostable if it has a working grammar provider OR a loader that
+  // can yield questions (teacher quizzes carry them inline; trivia/grammar have
+  // known data files; cloud-only loaders that return null are skipped).
+  function _hostable(d) {
+    if (!d || !d.id) return false;
+    var prov = _provider(d.id);
+    if (prov && prov.levels && prov.levels.length) {
+      if (typeof prov.generator === 'function') {
+        try { if (Array.isArray(prov.generator(prov.levels[0].id))) return true; } catch (_) {}
+        return !!DATA_FILES[d.id];   // generator's code is lazy-loadable
+      }
+      return typeof prov.filterRaw === 'function';
+    }
+    if (typeof d.loader !== 'function') return false;
+    try { if (d.loader() != null) return true; } catch (_) {}
+    return !!DATA_FILES[d.id];   // loadable on demand
+  }
+  function _canAccess(tier) {
+    if (typeof window.isAdmin !== 'undefined' && window.isAdmin) return true;
+    if (typeof window._gpCanAccessTier === 'function') { try { return window._gpCanAccessTier(tier || 'free'); } catch (_) {} }
+    var role = (typeof window.currentUserRole !== 'undefined') ? window.currentUserRole : 'free';
+    if (!tier || tier === 'free') return true;
+    if (tier === 'student') return role === 'student' || role === 'teacher';
+    if (tier === 'teacher') return role === 'teacher';
+    return false;
   }
 
   // ── public: materials() → [{id,label}] ─────────────────────────────
@@ -248,7 +386,9 @@
 
   window.SymMix = {
     bank: bank,
+    bankMulti: bankMulti,
     materials: materials,
+    catalog: catalog,
     ENGINE_INJECTION: ENGINE_INJECTION,
     // exposed for tests / reuse
     _toMC: _toMC
