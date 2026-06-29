@@ -120,6 +120,16 @@ window.PvP = (function () {
 
   /* ════════════════════ CONTENT (your theory) ════════════════════ */
   function renderContent() {
+    // Content already chosen by the new universal "Διάλεξε ύλη" picker
+    // (renderPvp → SYM_QUESTIONS_SELECTION)? Skip this legacy per-subject screen
+    // and go straight to the lobby — that selection replaces this step.
+    try {
+      const pre = localStorage.getItem('SYM_QUESTIONS_SELECTION');
+      if (pre && Array.isArray(JSON.parse(pre)) && JSON.parse(pre).length) {
+        S.subject = (D.SUBJECTS && D.SUBJECTS[0]) || null;  // flavour label; questions come from the selection
+        return enterRoom();
+      }
+    } catch (_e) {}
     const sc = $('[data-screen="content"]', root);
     const modeLine = S.mode
       ? `Παιχνίδι / Mode: <b style="color:var(--sym-cream)">${S.mode.gr}</b>`
