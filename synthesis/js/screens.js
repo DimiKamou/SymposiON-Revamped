@@ -549,6 +549,209 @@
     let search = '', activeTag = null;
     let cat = (window.SymMix && SymMix.catalog) ? SymMix.catalog() : [];
 
+    // ── teacher's own uploaded questionnaire (mixed in alongside the catalog) ──
+    // Parsed MC items in the engine shape {q:{gr,en}, a:[≤4 strings], c:index};
+    // treated as a selected source so the footer count + Start include them.
+    var customQs = [];
+
+    // Coerce any raw text into a {gr,en} bilingual question label.
+    function _ownQText(v){
+      if (v && typeof v === 'object') return { gr: (v.gr||v.en||''), en: (v.en||v.gr||'') };
+      var s = (v == null ? '' : String(v)).trim();
+      return { gr:s, en:s };
+    }
+    // Normalise one loose item ({q, opts|a|options|choices, ans|correct|c|answer})
+    // into the engine MC shape, or null if it can't form ≥2 options.
+    function _ownNorm(item){
+      if (!item || typeof item !== 'object') return null;
+      var qraw = item.q != null ? item.q : (item.question != null ? item.question : item.front);
+      if (qraw == null || (typeof qraw === 'string' && !qraw.trim())) return null;
+      var opts, c = 0;
+      var rawOpts = item.a || item.opts || item.options || item.choices;
+      if (Array.isArray(rawOpts) && rawOpts.length){
+        opts = rawOpts.map(function(o){ return (o == null ? '' : String(o)).trim(); }).filter(Boolean).slice(0,4);
+        // correct index from explicit ans|c|correct, or by matching the correct text
+        var ci = (typeof item.ans === 'number') ? item.ans
+               : (typeof item.c === 'number') ? item.c
+               : (typeof item.correct === 'number') ? item.correct : null;
+        if (ci != null && ci >= 0 && ci < opts.length){ c = ci; }
+        else {
+          var ctext = item.correct || item.answer || item.ans;
+          if (ctext != null && typeof ctext !== 'number'){
+            var idx = opts.indexOf(String(ctext).trim());
+            if (idx >= 0) c = idx;
+          }
+        }
+      } else {
+        // {correct/answer/a, distractors|wrong}: correct first → index 0
+        var correct = item.correct || item.answer || item.a || item.back || '';
+        var distract = item.distractors || item.wrong || item.options || [];
+        opts = [String(correct).trim()].concat((Array.isArray(distract)?distract:[]).map(function(o){return String(o).trim();}))
+               .filter(Boolean).slice(0,4);
+        c = 0;
+      }
+      if (opts.length < 2) return null;
+      return { q:_ownQText(qraw), a:opts, c:c };
+    }
+    // JSON: array of items, or {questions:[…]} wrapper.
+    function _ownParseJSON(text){
+      var data = JSON.parse(text);
+      var arr = Array.isArray(data) ? data : (data && Array.isArray(data.questions) ? data.questions : null);
+      if (!arr) throw new Error('expected array or {questions:[…]}');
+      return arr.map(_ownNorm).filter(Boolean);
+    }
+    // Split a CSV/TSV line honouring simple double-quoted fields.
+    function _ownSplitRow(line, sep){
+      var out = [], cur = '', q = false;
+      for (var i=0; i<line.length; i++){
+        var ch = line[i];
+        if (ch === '"'){ if (q && line[i+1] === '"'){ cur += '"'; i++; } else q = !q; }
+        else if (ch === sep && !q){ out.push(cur); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur);
+      return out.map(function(c){ return c.trim().replace(/^"|"$/g,''); });
+    }
+    // CSV/TSV: columns = question, optionA..D, correctIndex|letter|text. Header optional.
+    function _ownParseDelimited(text, sep){
+      var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
+      if (!lines.length) return [];
+      var first = _ownSplitRow(lines[0], sep);
+      var hasHeader = /^(question|q|ερώτηση|ερωτηση)/i.test((first[0]||'').trim());
+      var start = hasHeader ? 1 : 0;
+      // Locate a "correct" column from the header (else assume options are cols 1..4)
+      var correctCol = -1;
+      if (hasHeader){
+        first.forEach(function(h,i){ if (/correct|answer|ans|σωστ/i.test(h)) correctCol = i; });
+      }
+      var out = [];
+      for (var r=start; r<lines.length; r++){
+        var cols = _ownSplitRow(lines[r], sep);
+        var q = cols[0];
+        if (!q) continue;
+        var optCols, cc;
+        if (correctCol > 0){
+          cc = cols[correctCol];
+          optCols = cols.slice(1).filter(function(_,i){ return (i+1) !== correctCol; });
+        } else {
+          optCols = cols.slice(1, 5);
+          cc = null;
+        }
+        var opts = optCols.map(function(o){ return (o||'').trim(); }).filter(Boolean).slice(0,4);
+        if (opts.length < 2) continue;
+        var c = 0;
+        if (cc != null && String(cc).trim() !== ''){
+          var s = String(cc).trim();
+          if (/^\d+$/.test(s)){ var n = parseInt(s,10); if (n>=0 && n<opts.length) c = n; }
+          else if (/^[A-Da-d]$/.test(s)){ var li = s.toUpperCase().charCodeAt(0)-65; if (li<opts.length) c = li; }
+          else { var ti = opts.indexOf(s); if (ti>=0) c = ti; }
+        }
+        out.push({ q:_ownQText(q), a:opts, c:c });
+      }
+      return out;
+    }
+    // TXT: Q:/A:/W: blocks separated by blank lines (correct = A, distractors = W).
+    function _ownParseTXT(text){
+      return text.split(/\n{2,}/).map(function(block){
+        var lines = block.split(/\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+        var q = '', ans = '', wrong = [];
+        lines.forEach(function(l){
+          if (/^Q:/i.test(l)) q = l.replace(/^Q:\s*/i,'');
+          else if (/^A:/i.test(l)) ans = l.replace(/^A:\s*/i,'');
+          else if (/^W:/i.test(l)) wrong.push(l.replace(/^W:\s*/i,''));
+        });
+        if (!q || !ans) return null;
+        var opts = [ans].concat(wrong).map(function(o){ return o.trim(); }).filter(Boolean).slice(0,4);
+        if (opts.length < 2) return null;
+        return { q:_ownQText(q), a:opts, c:0 };
+      }).filter(Boolean);
+    }
+
+    // ── upload card (teachers/admin only) ──
+    // currentUserRole is a top-level `let` in auth.js (admins get role 'teacher');
+    // window.currentUserRole / window.isAdmin do NOT exist, and screens.js's local
+    // `isAdmin` is the edit-mode helper — so gate on the bare auth role.
+    var isTeacher = (typeof currentUserRole !== 'undefined' && (currentUserRole === 'teacher' || currentUserRole === 'admin'));
+    var ownFile = el('input',{ type:'file', accept:'.json,.csv,.tsv,.txt', style:'display:none' });
+    var ownOk = el('div',{class:'syn-ds-upload__ok', style:'display:none'});
+    var ownCard;
+    function _ownClear(){
+      customQs = [];
+      ownOk.style.display = 'none';
+      ownCard.classList.remove('on');
+      ownCard.querySelector('.syn-ds-upload__cta').textContent = L({gr:'Ανέβασε αρχείο',en:'Upload file'});
+      if (typeof updateBar === 'function') updateBar();
+    }
+    function _ownShowOk(n){
+      ownOk.innerHTML = '';
+      ownOk.appendChild(el('span', null, '✓ ' + L({ gr: n + (n===1?' ερώτηση':' ερωτήσεις') + ' εντοπίστηκαν', en: n + (n===1?' question':' questions') + ' detected' })));
+      ownOk.appendChild(el('button',{ onclick:function(ev){ ev.stopPropagation(); _ownClear(); } }, L({gr:'Αφαίρεση',en:'Remove'})));
+      ownOk.style.display = '';
+      ownCard.classList.add('on');
+      ownCard.querySelector('.syn-ds-upload__cta').textContent = '✓ ' + L({gr:'Στη μείξη',en:'In mix'});
+    }
+    function _ownShowErr(){
+      ownOk.innerHTML = '';
+      ownOk.appendChild(el('p',{class:'syn-ds-upload__err'}, '✗ ' + L({gr:'Αδύνατη ανάγνωση αρχείου. Έλεγξε τη μορφή.',en:'Could not parse file. Check the format.'})));
+      ownOk.style.display = '';
+      ownCard.classList.remove('on');
+    }
+    function _ownHandleFile(input){
+      var file = input && input.files && input.files[0];
+      if (!file) return;
+      var name = (file.name||'').toLowerCase();
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try {
+          var text = ev.target.result;
+          var qs;
+          if (name.endsWith('.json')) qs = _ownParseJSON(text);
+          else if (name.endsWith('.csv')) qs = _ownParseDelimited(text, ',');
+          else if (name.endsWith('.tsv')) qs = _ownParseDelimited(text, '\t');
+          else qs = _ownParseTXT(text);
+          if (!qs || !qs.length) throw new Error('no questions');
+          customQs = qs;
+          _ownShowOk(qs.length);
+        } catch(_){
+          customQs = [];
+          _ownShowErr();
+        }
+        if (typeof updateBar === 'function') updateBar();
+        input.value = '';
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+    ownFile.addEventListener('change', function(){ _ownHandleFile(ownFile); });
+    if (isTeacher){
+      ownCard = el('div',{class:'syn-ds-upload', onclick:function(){ ownFile.click(); }},[
+        el('span',{class:'syn-ds-upload__ic'}, '📤'),
+        el('span',{class:'syn-ds-upload__info'},[
+          el('span',{class:'syn-ds-upload__name'}, L({gr:'Δικό μου ερωτηματολόγιο',en:'My own questionnaire'})),
+          el('span',{class:'syn-ds-upload__meta'}, L({gr:'Ανέβασε τις δικές σου ερωτήσεις και φιλοξένησέ τες με αυτή τη μηχανή.',en:'Upload your own questions and host them with this engine.'})),
+          el('span',{class:'syn-ds-upload__pills'},[
+            el('span',{class:'syn-ds-upload__pill'}, 'JSON'),
+            el('span',{class:'syn-ds-upload__pill'}, 'CSV'),
+            el('span',{class:'syn-ds-upload__pill'}, 'TSV'),
+            el('span',{class:'syn-ds-upload__pill'}, 'TXT'),
+          ]),
+        ]),
+        el('span',{class:'syn-ds-upload__cta'}, L({gr:'Ανέβασε αρχείο',en:'Upload file'})),
+      ]);
+      wrap.appendChild(ownCard);
+      wrap.appendChild(ownFile);
+      wrap.appendChild(ownOk);
+    } else {
+      ownCard = el('div',{class:'syn-ds-upload locked'},[
+        el('span',{class:'syn-ds-upload__ic'}, '🔒'),
+        el('span',{class:'syn-ds-upload__info'},[
+          el('span',{class:'syn-ds-upload__name'}, L({gr:'Δικό μου ερωτηματολόγιο',en:'My own questionnaire'})),
+          el('span',{class:'syn-ds-upload__meta'}, L({gr:'Ανέβασε τις δικές σου ερωτήσεις (μόνο για καθηγητές).',en:'Upload your own questions (teachers only).'})),
+        ]),
+        el('span',{class:'syn-ds-upload__flag'}, '🔒 ' + L({gr:'Απαιτείται συνδρομή καθηγητή',en:'Teacher subscription required'})),
+      ]);
+      wrap.appendChild(ownCard);
+    }
+
     wrap.appendChild(el('div',{class:'syn-mix__lbl', style:'margin-top:0'}, L({gr:'Διάλεξε ύλη',en:'Choose content'})));
     wrap.appendChild(el('p',{class:'sc-cap', style:'margin:0 0 6px;opacity:.8'},
       L({gr:'Αυτόματη λίστα: γραμματική + ύλη τάξεων + δημοσιευμένα πακέτα.',en:'Auto-listed: grammar + class content + published packs.'})));
@@ -663,16 +866,26 @@
     const bar = el('div',{class:'syn-mix__bar'});
     const count = el('span',{class:'syn-mix__count'});
     const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
-      if(!sel.size || !(window.SymMix && SymMix.bankMulti)) return;
+      if(!sel.size && !customQs.length) return;
       const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: Array.from(st.levels) }));
       startBtn.disabled = true;
       const old = startBtn.textContent;
       startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
-      SymMix.bankMulti(picks).then(qs=>{
-        const title = (picks.length===1)
-          ? L(gName(game))
-          : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
-        return injectBankAndLaunch(fn, inj, qs, title);
+      // Catalog picks (may be empty) resolve through SymMix.bankMulti; the teacher's
+      // uploaded customQs are then appended onto the merged bank. If only customQs
+      // were provided (no dataset picks) we still launch with just those.
+      const bankP = (picks.length && window.SymMix && SymMix.bankMulti)
+        ? Promise.resolve(SymMix.bankMulti(picks))
+        : Promise.resolve([]);
+      bankP.then(qs=>{
+        const merged = (qs||[]).concat(customQs);
+        const onlyOwn = !picks.length && customQs.length;
+        const title = onlyOwn
+          ? (L(gName(game)) + ' · ' + L({gr:'Δικό μου ερωτηματολόγιο',en:'My questionnaire'}))
+          : (picks.length===1 && !customQs.length)
+            ? L(gName(game))
+            : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
+        return injectBankAndLaunch(fn, inj, merged, title);
       }).then(()=>{ startBtn.disabled=false; startBtn.textContent=old; })
         .catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
     }});
@@ -681,7 +894,8 @@
     bar.appendChild(startBtn);
 
     function updateBar(){
-      const n = sel.size;
+      // The uploaded questionnaire counts as one extra source in the mix.
+      const n = sel.size + (customQs.length ? 1 : 0);
       count.textContent = n+' '+L({gr:'πηγές',en:'sources'});
       startBtn.disabled = n===0;
       startBtn.classList.toggle('is-off', n===0);
