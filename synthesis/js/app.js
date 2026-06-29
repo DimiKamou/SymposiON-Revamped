@@ -635,7 +635,16 @@ window.SymLoader = (function () {
       mark.appendChild(brandMark('sym-loader__svg'));
     }
   }
-  function show(msg) { const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on')); return o; }
-  function hide() { if (ov) ov.classList.remove('on'); }
+  let _safety = 0;
+  function show(msg) {
+    const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on'));
+    // Safety net: the loader has pointer-events:auto while .on, so if a lazy-load
+    // ever HANGS (e.g. a game engine + Firebase that never resolves), synLaunch's
+    // finally→hide never runs and the loader silently blocks EVERY click. Force a
+    // hide after 10s so the UI is never permanently frozen.
+    clearTimeout(_safety); _safety = setTimeout(hide, 10000);
+    return o;
+  }
+  function hide() { clearTimeout(_safety); if (ov) ov.classList.remove('on'); }
   return { show, hide };
 })();
