@@ -543,10 +543,10 @@
 
     // ── universal "Διάλεξε ύλη" picker (Ver1 ecx) ──
     // Multi-select ANY admin-uploaded ύλη from the universal catalog (grammar +
-    // class content + published packs), "+ MIX" to combine, then launch the
-    // engine with the merged bank. Tier-locked items show a Pro badge.
-    const sel = new Set();        // selected dataset ids (the mix)
-    let search = '';
+    // class content + published packs), filter by subject tag, "+ MIX" to
+    // combine, pick LEVELS per leveled source, then launch with the merged bank.
+    const sel = new Map();        // dsId → { all:bool, levels:Set, item }
+    let search = '', activeTag = null;
     let cat = (window.SymMix && SymMix.catalog) ? SymMix.catalog() : [];
 
     wrap.appendChild(el('div',{class:'syn-mix__lbl', style:'margin-top:0'}, L({gr:'Διάλεξε ύλη',en:'Choose content'})));
@@ -558,13 +558,50 @@
       oninput:(e)=>{ search=(e.target.value||'').toLowerCase(); paintList(); }});
     wrap.appendChild(searchInput);
 
+    // ── subject-tag filter row (the categories present, as icon chiplets) ──
+    const tagRow = el('div',{class:'syn-mix__tags'});
+    wrap.appendChild(tagRow);
+    function paintTags(){
+      tagRow.innerHTML='';
+      const chip = (key,label)=> el('button',{class:'syn-tagchip'+(activeTag===key?' on':''),
+        onclick:()=>{ activeTag=key; paintTags(); paintList(); }},
+        [ el('span',{class:'syn-tagchip__t'}, label) ]);
+      tagRow.appendChild(chip(null, L({gr:'Όλα',en:'All'})));
+      cat.forEach(g=>{ if((g.items||[]).length) tagRow.appendChild(chip(g.group, g.group)); });
+    }
+
     const listWrap = el('div',{class:'syn-mix__cats'});
     wrap.appendChild(listWrap);
+
+    function levelPanel(it, st){
+      const panel = el('div',{class:'syn-ds-levels'});
+      panel.appendChild(el('button',{class:'syn-lvpill syn-lvpill--all'+(st.all?' on':''),
+        onclick:()=>{ st.all=true; st.levels.clear(); paintList(); updateBar(); }},
+        L({gr:'Όλα τα επίπεδα',en:'All levels'})));
+      const order=[], byG={};
+      (it.levels||[]).forEach(lv=>{ const g=lv.group||''; if(!byG[g]){byG[g]=[];order.push(g);} byG[g].push(lv); });
+      order.forEach(g=>{
+        if(g) panel.appendChild(el('span',{class:'syn-lvgrp'}, g));
+        byG[g].forEach((lv,i)=>{
+          const lon = !st.all && st.levels.has(lv.id);
+          panel.appendChild(el('button',{class:'syn-lvpill'+(lon?' on':'')+(lv.color?' syn-lvpill--'+lv.color:''),
+            title: lv.desc||('Επίπεδο '+lv.id),
+            onclick:()=>{
+              st.all=false;
+              if(st.levels.has(lv.id)) st.levels.delete(lv.id); else st.levels.add(lv.id);
+              if(!st.levels.size) st.all=true;
+              paintList(); updateBar();
+            }}, String(i+1).padStart(2,'0')));
+        });
+      });
+      return panel;
+    }
 
     function paintList(){
       listWrap.innerHTML='';
       let shown=0;
       cat.forEach(group=>{
+        if(activeTag && group.group!==activeTag) return;
         const items = (group.items||[]).filter(i=> !search
           || (i.label||'').toLowerCase().includes(search)
           || (i.meta||'').toLowerCase().includes(search));
@@ -573,21 +610,27 @@
         const grid = el('div',{class:'syn-ds-grid'});
         items.forEach(it=>{
           shown++;
-          const on = sel.has(it.id);
+          const st = sel.get(it.id);
+          const on = !!st;
           const card = el('div',{class:'syn-ds'+(on?' on':'')+(it.locked?' locked':'')},[
             el('span',{class:'syn-ds__ic'}, it.icon||'◆'),
             el('span',{class:'syn-ds__info'},[
               el('span',{class:'syn-ds__name'}, it.label + (it.isNew?' •':'')),
-              el('span',{class:'syn-ds__meta'}, it.meta||''),
+              el('span',{class:'syn-ds__meta'}, on && it.leveled
+                ? (st.all ? L({gr:'όλα τα επίπεδα',en:'all levels'}) : (st.levels.size+' '+L({gr:'επίπεδα',en:'levels'})))
+                : (it.meta||'')),
             ]),
             it.locked
               ? el('span',{class:'syn-ds__flag'}, '🔒 Pro')
               : el('button',{class:'syn-ds__mix'+(on?' on':''), onclick:()=>{
-                  if(sel.has(it.id)) sel.delete(it.id); else sel.add(it.id);
+                  if(sel.has(it.id)) sel.delete(it.id);
+                  else sel.set(it.id, { all:true, levels:new Set(), item:it });
                   paintList(); updateBar();
                 }}, on ? ('✓ '+L({gr:'Στη μείξη',en:'In mix'})) : ('+ MIX')),
           ]);
           grid.appendChild(card);
+          // per-source level picker (leveled sources only)
+          if(on && it.leveled && it.levels && it.levels.length) grid.appendChild(levelPanel(it, st));
         });
         listWrap.appendChild(grid);
       });
@@ -599,13 +642,13 @@
     const count = el('span',{class:'syn-mix__count'});
     const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
       if(!sel.size || !(window.SymMix && SymMix.bankMulti)) return;
-      const ids = Array.from(sel);
+      const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: st.all ? [] : Array.from(st.levels) }));
       startBtn.disabled = true;
       const old = startBtn.textContent;
       startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
-      SymMix.bankMulti(ids.map(id=>({ id:id }))).then(qs=>{
-        const title = (ids.length===1)
-          ? L(gName(game)) // single source — keep clean
+      SymMix.bankMulti(picks).then(qs=>{
+        const title = (picks.length===1)
+          ? L(gName(game))
           : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
         return injectBankAndLaunch(fn, inj, qs, title);
       }).then(()=>{ startBtn.disabled=false; startBtn.textContent=old; })
@@ -627,12 +670,12 @@
 
     wrap.appendChild(bar);
     body.appendChild(wrap);
-    paintList(); updateBar();
+    paintTags(); paintList(); updateBar();
 
     // Merge Firestore published packs (config/datasets + custom_games), then refresh.
     if (window.GP_CONTENT && typeof GP_CONTENT.loadCloud === 'function'){
       Promise.resolve(GP_CONTENT.loadCloud()).then(()=>{
-        if (window.SymMix && SymMix.catalog){ cat = SymMix.catalog(); paintList(); }
+        if (window.SymMix && SymMix.catalog){ cat = SymMix.catalog(); paintTags(); paintList(); }
       }).catch(()=>{});
     }
   }
