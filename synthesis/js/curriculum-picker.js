@@ -76,7 +76,192 @@
     return ((_catalog && _catalog.grades) || []).filter(cy.match);
   }
 
+  // ── PvP universal picker ──────────────────────────────────────────────
+  // The Agon content chooser. Mirrors the game-panel universal picker
+  // (screens.js → engineSetup) but, instead of injecting a bank into an engine,
+  // writes SYM_QUESTIONS_SELECTION and opens the standalone Arena. Reuses the
+  // same syn-* visual classes (already in css/screens.css → no new CSS). The
+  // selection is held in a module-level Map so a re-render keeps the picks.
+  var _pvpSel = new Map();   // dsId → { levels:Set, item }
+  var _pvpSearch = '';
+  var _pvpTag = null;
+  var _pvpCat = [];
+
+  function renderPvp(home) {
+    var body = window.synPage(home, {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Ο Ἀγών · PvP', en: 'The Agon · PvP' }),
+      title: L({ gr: 'Διάλεξε ύλη για τον Αγώνα', en: 'Pick content for the duel' }),
+      sub: L({ gr: 'Διάλεξε ύλη (και επίπεδα) από όλη την πλατφόρμα — ή συνδύασε πολλές.', en: 'Pick content (and levels) from across the platform — or combine several.' }),
+    });
+
+    var SM = window.SymMix;
+    if (!SM || typeof SM.catalog !== 'function') {
+      body.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Η ύλη δεν είναι διαθέσιμη.', en: 'Content is unavailable.' })));
+      return;
+    }
+    _pvpCat = SM.catalog() || [];
+
+    var sel = _pvpSel;
+    var wrap = el('div', { class: 'syn-mix sc-stagger has-accent', style: '--ca:#C5572F' });
+
+    wrap.appendChild(el('div', { class: 'syn-mix__lbl', style: 'margin-top:0' }, L({ gr: 'Διάλεξε ύλη', en: 'Choose content' })));
+    wrap.appendChild(el('p', { class: 'sc-cap', style: 'margin:0 0 6px;opacity:.8' },
+      L({ gr: 'Αυτόματη λίστα: γραμματική + ύλη τάξεων + δημοσιευμένα πακέτα.', en: 'Auto-listed: grammar + class content + published packs.' })));
+
+    var searchInput = el('input', { class: 'syn-mix__search', type: 'text',
+      placeholder: L({ gr: 'Αναζήτηση ύλης…', en: 'Search content…' }),
+      oninput: function (e) { _pvpSearch = ((e.target && e.target.value) || '').toLowerCase(); paintList(); } });
+    if (_pvpSearch) searchInput.value = _pvpSearch;
+    wrap.appendChild(searchInput);
+
+    var tagRow = el('div', { class: 'syn-mix__tags' });
+    wrap.appendChild(tagRow);
+    function paintTags() {
+      tagRow.innerHTML = '';
+      function chip(key, label) {
+        return el('button', { class: 'syn-tagchip' + (_pvpTag === key ? ' on' : ''),
+          onclick: function () { _pvpTag = key; paintTags(); paintList(); } },
+          [el('span', { class: 'syn-tagchip__t' }, label)]);
+      }
+      tagRow.appendChild(chip(null, L({ gr: 'Όλα', en: 'All' })));
+      _pvpCat.forEach(function (g) { if ((g.items || []).length) tagRow.appendChild(chip(g.group, g.group)); });
+    }
+
+    var listWrap = el('div', { class: 'syn-mix__cats' });
+    wrap.appendChild(listWrap);
+
+    function levelPanel(it, st) {
+      var panel = el('div', { class: 'syn-ds-levels' });
+      var allIds = (it.levels || []).map(function (lv) { return lv.id; });
+      var allOn = allIds.length > 0 && allIds.every(function (id) { return st.levels.has(id); });
+      panel.appendChild(el('button', { class: 'syn-lvpill--all' + (allOn ? ' on' : ''),
+        onclick: function () { if (allOn) st.levels.clear(); else allIds.forEach(function (id) { st.levels.add(id); }); paintList(); updateBar(); } },
+        allOn ? ('✓ ' + L({ gr: 'Όλα επιλεγμένα — καθάρισε', en: 'All selected — clear' }))
+              : L({ gr: 'Επιλογή όλων των επιπέδων', en: 'Select all levels' })));
+      var order = [], byG = {};
+      (it.levels || []).forEach(function (lv) { var g = lv.group || ''; if (!byG[g]) { byG[g] = []; order.push(g); } byG[g].push(lv); });
+      var n = 0;
+      order.forEach(function (g) {
+        var rows = byG[g];
+        var gOn = rows.length > 0 && rows.every(function (lv) { return st.levels.has(lv.id); });
+        panel.appendChild(el('div', { class: 'syn-lvgrp-row' }, [
+          el('span', { class: 'syn-lvgrp' }, g || L({ gr: 'Επίπεδα', en: 'Levels' })),
+          el('button', { class: 'syn-lvgrp-all' + (gOn ? ' on' : ''), onclick: function () {
+            var turnOn = !gOn;
+            rows.forEach(function (lv) { if (turnOn) st.levels.add(lv.id); else st.levels.delete(lv.id); });
+            paintList(); updateBar();
+          } }, gOn ? L({ gr: 'Καμία', en: 'None' }) : L({ gr: 'Όλα', en: 'All' })),
+        ]));
+        rows.forEach(function (lv) {
+          n++;
+          var lon = st.levels.has(lv.id);
+          panel.appendChild(el('button', { class: 'syn-lvrowpill' + (lon ? ' on' : '') + (lv.color ? ' syn-lvpill--' + lv.color : ''),
+            onclick: function () {
+              if (st.levels.has(lv.id)) st.levels.delete(lv.id); else st.levels.add(lv.id);
+              paintList(); updateBar();
+            } }, [
+            el('span', { class: 'syn-lvpill__box' }, lon ? '✓' : ''),
+            el('span', { class: 'syn-lvpill__n' }, String(n).padStart(2, '0')),
+            el('span', { class: 'syn-lvpill__t' }, [
+              lv.section ? el('span', { class: 'syn-lvpill__sec' }, lv.section + ' · ') : null,
+              lv.desc || ('Επίπεδο ' + lv.id)]) ]));
+        });
+      });
+      return panel;
+    }
+
+    function paintList() {
+      listWrap.innerHTML = '';
+      var shown = 0;
+      _pvpCat.forEach(function (group) {
+        if (_pvpTag && group.group !== _pvpTag) return;
+        var items = (group.items || []).filter(function (i) {
+          return !_pvpSearch
+            || (i.label || '').toLowerCase().indexOf(_pvpSearch) >= 0
+            || (i.meta || '').toLowerCase().indexOf(_pvpSearch) >= 0;
+        });
+        if (!items.length) return;
+        listWrap.appendChild(el('div', { class: 'syn-ds-cat' }, group.group));
+        var grid = el('div', { class: 'syn-ds-grid' });
+        items.forEach(function (it) {
+          shown++;
+          var st = sel.get(it.id);
+          var on = !!st;
+          var card = el('div', { class: 'syn-ds' + (on ? ' on' : '') + (it.locked ? ' locked' : '') }, [
+            el('span', { class: 'syn-ds__ic' }, it.icon || '◆'),
+            el('span', { class: 'syn-ds__info' }, [
+              el('span', { class: 'syn-ds__name' }, it.label + (it.isNew ? ' •' : '')),
+              el('span', { class: 'syn-ds__meta' }, (function () {
+                if (!(on && it.leveled)) return it.meta || '';
+                var total = (it.levels || []).length;
+                return st.levels.size >= total
+                  ? L({ gr: 'όλα τα επίπεδα', en: 'all levels' })
+                  : (st.levels.size + ' / ' + total + ' ' + L({ gr: 'επίπεδα', en: 'levels' }));
+              })()),
+            ]),
+            it.locked
+              ? el('span', { class: 'syn-ds__flag' }, '🔒 Pro')
+              : el('button', { class: 'syn-ds__mix' + (on ? ' on' : ''), onclick: function () {
+                  if (sel.has(it.id)) sel.delete(it.id);
+                  else sel.set(it.id, { levels: new Set((it.levels || []).map(function (l) { return l.id; })), item: it });
+                  paintList(); updateBar();
+                } }, on ? ('✓ ' + L({ gr: 'Στη μείξη', en: 'In mix' })) : ('+ MIX')),
+          ]);
+          grid.appendChild(card);
+          if (on && it.leveled && it.levels && it.levels.length) grid.appendChild(levelPanel(it, st));
+        });
+        listWrap.appendChild(grid);
+      });
+      if (!shown) listWrap.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Καμία ύλη δεν ταιριάζει.', en: 'No content matches.' })));
+    }
+
+    var bar = el('div', { class: 'syn-mix__bar' });
+    var count = el('span', { class: 'syn-mix__count' });
+    var startBtn = el('button', { class: 'syn-mix__start', onclick: function () {
+      if (!sel.size || !window.SymMix || typeof window.SymMix.bankMulti !== 'function') return;
+      var picks = Array.from(sel.entries()).map(function (e) { return { id: e[0], levelIds: Array.from(e[1].levels) }; });
+      startBtn.disabled = true;
+      var old = startBtn.textContent;
+      startBtn.textContent = L({ gr: 'Φόρτωση…', en: 'Loading…' });
+      window.SymMix.bankMulti(picks).then(function (arr) {
+        var items = (arr || []).map(function (it) { return { q: (it.q && (it.q.gr || it.q.en)) || it.q, a: it.a, c: it.c }; });
+        try {
+          if (items.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(items));
+          else localStorage.removeItem('SYM_QUESTIONS_SELECTION');
+        } catch (_e) {}
+        if (typeof window.launchPvPArena === 'function') window.launchPvPArena();
+        startBtn.disabled = false; startBtn.textContent = old;
+      }).catch(function () { startBtn.disabled = false; startBtn.textContent = old; });
+    } });
+    bar.appendChild(count);
+    bar.appendChild(el('span', { class: 'syn-mix__sp' }));
+    bar.appendChild(startBtn);
+
+    function updateBar() {
+      var n = sel.size;
+      count.textContent = n + ' ' + L({ gr: 'πηγές', en: 'sources' });
+      startBtn.disabled = n === 0;
+      startBtn.classList.toggle('is-off', n === 0);
+      startBtn.textContent = n
+        ? L({ gr: 'Έναρξη Αγώνα', en: 'Start the Agon' })
+        : L({ gr: 'Διάλεξε ύλη', en: 'Choose content' });
+    }
+
+    wrap.appendChild(bar);
+    body.appendChild(wrap);
+    paintTags(); paintList(); updateBar();
+
+    // Merge Firestore published packs, then refresh the catalog (call once on open).
+    if (window.GP_CONTENT && typeof window.GP_CONTENT.loadCloud === 'function') {
+      Promise.resolve(window.GP_CONTENT.loadCloud()).then(function () {
+        if (window.SymMix && window.SymMix.catalog) { _pvpCat = window.SymMix.catalog() || []; paintTags(); paintList(); }
+      }).catch(function () {});
+    }
+  }
+
   function render(home) {
+    if (_pvp) { renderPvp(home); return; }
     var P = window.synPage;
     var body = P(home, _pvp ? {
       back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
@@ -211,6 +396,10 @@
   // opens it to pick duel content (same picker, different leaf action).
   window.SymCurriculum = {
     openPanel: function () { _pvp = false; window.symGo('curriculum'); },
-    openForPvp: function () { _pvp = true; window.symGo('curriculum'); },
+    openForPvp: function () {
+      _pvp = true;
+      _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
+      window.symGo('curriculum');
+    },
   };
 })();
