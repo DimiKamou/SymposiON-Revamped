@@ -575,23 +575,40 @@
 
     function levelPanel(it, st){
       const panel = el('div',{class:'syn-ds-levels'});
-      panel.appendChild(el('button',{class:'syn-lvpill syn-lvpill--all'+(st.all?' on':''),
-        onclick:()=>{ st.all=true; st.levels.clear(); paintList(); updateBar(); }},
-        L({gr:'Όλα τα επίπεδα',en:'All levels'})));
+      const allIds = (it.levels||[]).map(lv=>lv.id);
+      const allOn  = allIds.length>0 && allIds.every(id=>st.levels.has(id));
+      // mass select-all / clear (selects EVERY level pill, ticking them all)
+      panel.appendChild(el('button',{class:'syn-lvpill--all'+(allOn?' on':''),
+        onclick:()=>{ if(allOn) st.levels.clear(); else allIds.forEach(id=>st.levels.add(id)); paintList(); updateBar(); }},
+        allOn ? ('✓ '+L({gr:'Όλα επιλεγμένα — καθάρισε',en:'All selected — clear'}))
+              : L({gr:'Επιλογή όλων των επιπέδων',en:'Select all levels'})));
       const order=[], byG={};
       (it.levels||[]).forEach(lv=>{ const g=lv.group||''; if(!byG[g]){byG[g]=[];order.push(g);} byG[g].push(lv); });
+      let n=0;
       order.forEach(g=>{
-        if(g) panel.appendChild(el('span',{class:'syn-lvgrp'}, g));
-        byG[g].forEach((lv,i)=>{
-          const lon = !st.all && st.levels.has(lv.id);
-          panel.appendChild(el('button',{class:'syn-lvpill'+(lon?' on':'')+(lv.color?' syn-lvpill--'+lv.color:''),
-            title: lv.desc||('Επίπεδο '+lv.id),
+        const rows = byG[g];
+        const gOn  = rows.length>0 && rows.every(lv=>st.levels.has(lv.id));
+        panel.appendChild(el('div',{class:'syn-lvgrp-row'},[
+          el('span',{class:'syn-lvgrp'}, g||L({gr:'Επίπεδα',en:'Levels'})),
+          el('button',{class:'syn-lvgrp-all'+(gOn?' on':''), onclick:()=>{
+            const turnOn = !gOn;
+            rows.forEach(lv=>{ if(turnOn) st.levels.add(lv.id); else st.levels.delete(lv.id); });
+            paintList(); updateBar();
+          }}, gOn ? L({gr:'Καμία',en:'None'}) : L({gr:'Όλα',en:'All'})),
+        ]));
+        rows.forEach((lv)=>{
+          n++;
+          const lon = st.levels.has(lv.id);
+          panel.appendChild(el('button',{class:'syn-lvrowpill'+(lon?' on':'')+(lv.color?' syn-lvpill--'+lv.color:''),
             onclick:()=>{
-              st.all=false;
               if(st.levels.has(lv.id)) st.levels.delete(lv.id); else st.levels.add(lv.id);
-              if(!st.levels.size) st.all=true;
               paintList(); updateBar();
-            }}, String(i+1).padStart(2,'0')));
+            }}, [
+            el('span',{class:'syn-lvpill__box'}, lon?'✓':''),
+            el('span',{class:'syn-lvpill__n'}, String(n).padStart(2,'0')),
+            el('span',{class:'syn-lvpill__t'},[
+              lv.section ? el('span',{class:'syn-lvpill__sec'}, lv.section+' · ') : null,
+              lv.desc || ('Επίπεδο '+lv.id) ]) ]));
         });
       });
       return panel;
@@ -616,15 +633,20 @@
             el('span',{class:'syn-ds__ic'}, it.icon||'◆'),
             el('span',{class:'syn-ds__info'},[
               el('span',{class:'syn-ds__name'}, it.label + (it.isNew?' •':'')),
-              el('span',{class:'syn-ds__meta'}, on && it.leveled
-                ? (st.all ? L({gr:'όλα τα επίπεδα',en:'all levels'}) : (st.levels.size+' '+L({gr:'επίπεδα',en:'levels'})))
-                : (it.meta||'')),
+              el('span',{class:'syn-ds__meta'}, (function(){
+                if(!(on && it.leveled)) return it.meta||'';
+                const total = (it.levels||[]).length;
+                return st.levels.size >= total
+                  ? L({gr:'όλα τα επίπεδα',en:'all levels'})
+                  : (st.levels.size + ' / ' + total + ' ' + L({gr:'επίπεδα',en:'levels'}));
+              })()),
             ]),
             it.locked
               ? el('span',{class:'syn-ds__flag'}, '🔒 Pro')
               : el('button',{class:'syn-ds__mix'+(on?' on':''), onclick:()=>{
                   if(sel.has(it.id)) sel.delete(it.id);
-                  else sel.set(it.id, { all:true, levels:new Set(), item:it });
+                  // default: ALL levels of this source selected (works out of the box)
+                  else sel.set(it.id, { levels:new Set((it.levels||[]).map(l=>l.id)), item:it });
                   paintList(); updateBar();
                 }}, on ? ('✓ '+L({gr:'Στη μείξη',en:'In mix'})) : ('+ MIX')),
           ]);
@@ -642,7 +664,7 @@
     const count = el('span',{class:'syn-mix__count'});
     const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
       if(!sel.size || !(window.SymMix && SymMix.bankMulti)) return;
-      const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: st.all ? [] : Array.from(st.levels) }));
+      const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: Array.from(st.levels) }));
       startBtn.disabled = true;
       const old = startBtn.textContent;
       startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
