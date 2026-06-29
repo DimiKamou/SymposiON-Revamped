@@ -724,6 +724,12 @@ const LiveArena = (() => {
   }
 
   function _showDatasetPicker() {
+    // Make the overlay visible. pickDataset() is reachable DIRECTLY from the
+    // home "Φιλοξένησε/Host" button (openLiveArena({host:true})), not only from
+    // the already-open la-picker screen — without this the host content picker
+    // renders into a display:none overlay and the user just sees the loader
+    // spin then "nothing happens".
+    _showOverlay();
     _laNav = { level: 'root', sectionKey: null, gradeKey: null };
     _laSel = [];
     _showScreen('la-host-dataset');
@@ -743,6 +749,24 @@ const LiveArena = (() => {
     }
   }
 
+  // Curriculum adapter. The host picker was written against a `GRADES` global
+  // that does NOT exist in this codebase — the real curriculum lives in the
+  // `CLASSES` grade list + `SUBJECTS` (grade-key → subject[]) map (mirrored onto
+  // SYM.CLASSES/SYM.SUBJECTS, which carry live admin-catalog edits). Without this
+  // every section/grade drill-down looked up GRADES[key] → undefined → rendered
+  // an empty list. Returns { title, titleEn, subjects } or null.
+  function _laGrade(gradeKey) {
+    const subjMap = (typeof SYM !== 'undefined' && SYM.SUBJECTS) ? SYM.SUBJECTS
+                  : (typeof SUBJECTS !== 'undefined' ? SUBJECTS : null);
+    if (!subjMap) return null;
+    const subs = subjMap[gradeKey];
+    if (!Array.isArray(subs)) return null;
+    const clsList = (typeof SYM !== 'undefined' && SYM.CLASSES) ? SYM.CLASSES
+                  : (typeof CLASSES !== 'undefined' ? CLASSES : null);
+    const cls = clsList ? clsList.find(c => c.id === gradeKey) : null;
+    return { title: cls ? cls.gr : gradeKey, titleEn: cls ? (cls.en || cls.gr) : gradeKey, subjects: subs };
+  }
+
   function _laNavRender() {
     const list  = document.getElementById('la-dataset-list');
     const title = document.getElementById('la-ds-title');
@@ -759,8 +783,8 @@ const LiveArena = (() => {
         const sec = _LA_SECTIONS.find(s => s.key === sectionKey);
         title.textContent = sec ? t(sec.labelGr, sec.labelEn) : t('Επίλεξε Βαθμίδα', 'Choose Level');
       } else if (level === 'grade') {
-        const g = (typeof GRADES !== 'undefined') ? GRADES[gradeKey] : null;
-        title.textContent = g ? t(g.title, g.titleEn || g.title) : t('Επίλεξε Ύλη', 'Choose Content');
+        const g = _laGrade(gradeKey);
+        title.textContent = g ? t(g.title, g.titleEn) : t('Επίλεξε Ύλη', 'Choose Content');
       }
     }
 
@@ -840,11 +864,13 @@ const LiveArena = (() => {
       return;
     }
 
+    let any = false;
     sec.grades.forEach(gradeKey => {
-      const g = (typeof GRADES !== 'undefined') ? GRADES[gradeKey] : null;
+      const g = _laGrade(gradeKey);
       if (!g) return;
-      const title  = t(g.title, g.titleEn || g.title);
-      const sub    = g.subjects ? `${g.subjects.length} ${t('μαθήματα', 'subjects')}` : '';
+      any = true;
+      const title  = t(g.title, g.titleEn);
+      const sub    = `${g.subjects.length} ${t('μαθήματα', 'subjects')}`;
       const tier   = (typeof _siteAccess !== 'undefined') ? (_siteAccess[gradeKey] || 'student') : 'student';
       const locked = !_laCanAccess(tier);
       list.appendChild(_laItem(
@@ -853,77 +879,120 @@ const LiveArena = (() => {
         () => { _laNav = { level: 'grade', sectionKey, gradeKey }; _laNavRender(); }
       ));
     });
+    if (!any) list.innerHTML = `<p class="la-ds-empty">${t('Δεν φορτώθηκε η ύλη.', 'Curriculum not loaded.')}</p>`;
   }
 
   function _laNavRenderGrade(list, gradeKey) {
-    const g = (typeof GRADES !== 'undefined') ? GRADES[gradeKey] : null;
-    if (!g) return;
+    const g = _laGrade(gradeKey);
+    if (!g) { list.innerHTML = `<p class="la-ds-empty">${t('Δεν φορτώθηκε η ύλη.', 'Curriculum not loaded.')}</p>`; return; }
 
-    const subjects = g.subjects || [];
-    if (g.tracks) g.tracks.forEach(tr => subjects.push(...tr.subjects));
-
-    subjects.forEach(subj => {
-      const subTitle = t(subj.title, subj.en?.title || subj.title);
+    g.subjects.forEach(subj => {
+      const subTitle = t(subj.gr, subj.en || subj.gr);
+      const summary  = subj.summary ? t(subj.summary.gr || '', subj.summary.en || subj.summary.gr || '') : '';
       list.appendChild(_laItem(
-        subj.icon || '📚', subTitle,
-        subj.desc ? (t(subj.desc, subj.en?.desc || subj.desc)).slice(0, 60) + '…' : '',
+        subj.illu ? '📚' : (subj.icon || '📚'), subTitle,
+        summary ? summary.slice(0, 60) + (summary.length > 60 ? '…' : '') : '',
         false,
         () => _laLoadSubjectQuestions(gradeKey, subj)
       ));
     });
   }
 
-  // Load questions for a subject and launch hosting
+  // List every hostable question source for a subject as toggle leaves (pick
+  // several here and/or across subjects, then "Combine & Start"). Sources, in
+  // priority order: (1) admin-authored Site-Studio template content for this
+  // subject's games — the "files from the admin panel template" the teacher
+  // wants; (2) grammar/vocabulary GP_DATASETS; (3) a built-in trivia set keyed
+  // by subject id. Maps every authored question to the LA shape {q,opts,ans}.
   async function _laLoadSubjectQuestions(gradeKey, subj) {
     const list = document.getElementById('la-dataset-list');
     if (list) list.innerHTML = `<p class="la-ds-empty" style="color:#C9A44A">⏳ ${t('Φόρτωση…','Loading…')}</p>`;
+    let added = 0;
+    const clear = () => { if (list && added === 0) list.innerHTML = ''; };
 
-    const gameName = t(subj.title, subj.en?.title || subj.title);
+    // ── 1. Admin-authored template content (trivia/quiz authored in Site Studio) ──
+    try {
+      if (window.ContentSource && typeof ContentSource.loadCatalog === 'function') {
+        const cat   = await ContentSource.loadCatalog();
+        const gNode = ((cat && cat.grades) || []).find(x => x.key === gradeKey);
+        const sNode = gNode && (gNode.subjects || []).find(x => x.id === subj.id);
+        const cGames = (sNode && sNode.games || []).filter(gm => gm && gm.content);
+        for (const gm of cGames) {
+          let authored = false;
+          try { authored = await ContentSource.hasAuthored(gm.content); } catch (_) {}
+          if (!authored) continue;
+          clear();
+          const label = (gm.label && typeof gm.label === 'object')
+            ? t(gm.label.gr || gm.label, gm.label.en || gm.label)
+            : (gm.label || gm.type || 'Quiz');
+          list.appendChild(_laToggleItem(
+            gm.ic || '📝', label, t('Πρότυπο καθηγητή', 'Teacher template'),
+            false,
+            { key: 'authored:' + gm.content, label, get: async () => {
+              const doc = await ContentSource.loadGameContent(gm.content);
+              const u = doc || {};
+              return (u.questions || u.items || []).map(q => {
+                const opts = q.opts || q.o || q.a || [];
+                return { q: q.q, opts: (opts.slice ? opts.slice() : opts),
+                         ans: (typeof q.ans === 'number' ? q.ans : (typeof q.c === 'number' ? q.c : 0)) };
+              }).filter(x => x.q && x.opts && x.opts.length >= 2);
+            } }
+          ));
+          added++;
+        }
+      }
+    } catch (e) { try { console.warn('[la] authored content load failed', e); } catch (_) {} }
 
-    // Try GP_DATASETS first (grammar/vocabulary subjects)
+    // ── 2. Grammar / vocabulary datasets (GP_DATASETS) ──
     const gpDs = (typeof GP_DATASETS !== 'undefined')
       ? GP_DATASETS.filter(d => d.subject === subj.id || d.classKey === gradeKey)
       : [];
-
     if (gpDs.length > 0 && typeof gpLoadQuestions === 'function') {
-      // Render every dataset as a toggle leaf — pick several here and/or
-      // across other subjects, then hit "Combine & Start".
-      if (list) {
-        list.innerHTML = '';
-        gpDs.forEach(ds => {
-          const tier   = ds.tier || 'free';
-          const locked = !_laCanAccess(tier);
-          list.appendChild(_laToggleItem(
-            '📚', ds.label, ds.meta || '',
-            locked,
-            { key: 'gp:' + ds.id, label: ds.label, get: async () => {
-              const loaded = await gpLoadQuestions(ds.id, {});
-              return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
-            } }
-          ));
-        });
-      }
-      return;
+      clear();
+      gpDs.forEach(ds => {
+        const tier   = ds.tier || 'free';
+        const locked = !_laCanAccess(tier);
+        list.appendChild(_laToggleItem(
+          '📚', ds.label, ds.meta || '',
+          locked,
+          { key: 'gp:' + ds.id, label: ds.label, get: async () => {
+            const loaded = await gpLoadQuestions(ds.id, {});
+            return (loaded && !loaded.denied) ? (loaded.questions || []).filter(q => q && q.opts) : [];
+          } }
+        ));
+        added++;
+      });
     }
 
-    // Fallback: try matching built-in dataset by subject id (as a toggle)
-    const builtIn = _DATASETS.find(d => d.id === subj.id || d.id === subj.id + '-trivia');
+    // ── 3. Built-in trivia dataset matched by subject id ──
+    const builtIn = (typeof _DATASETS !== 'undefined')
+      ? _DATASETS.find(d => d.id === subj.id || d.id === subj.id + '-trivia')
+      : null;
     if (builtIn) {
       const qs = builtIn.getQuestions();
-      if (qs && qs.length && list) {
-        list.innerHTML = '';
+      if (qs && qs.length) {
+        clear();
         const blabel = typeof builtIn.label === 'object' ? t(builtIn.label.gr, builtIn.label.en) : builtIn.label;
         list.appendChild(_laToggleItem(
           builtIn.icon, blabel, `${qs.length} ${t('ερωτήσεις', 'questions')}`,
           false,
           { key: 'ds:' + builtIn.id, label: blabel, get: () => builtIn.getQuestions() }
         ));
-        return;
+        added++;
       }
     }
 
-    // Nothing found
-    if (list) list.innerHTML = `<p class="la-ds-empty">${t('Δεν υπάρχει διαθέσιμη ύλη για αυτό το μάθημα.','No content available for this subject.')}</p>`;
+    // ── Nothing hostable for this subject ──
+    if (added === 0 && list) {
+      const canUpload = (typeof isAdmin !== 'undefined' && isAdmin)
+        || (Array.isArray(window.teacherFeatures) && window.teacherFeatures.includes('custom_quiz'));
+      list.innerHTML =
+        `<p class="la-ds-empty">${t('Δεν υπάρχει ακόμη ύλη από τα Πρότυπα για αυτό το μάθημα.', 'No template content yet for this subject.')}</p>` +
+        (canUpload
+          ? `<p class="la-ds-empty" style="color:#C9A44A">${t('Δημιούργησέ την: Διαχείριση → Πρότυπα.', 'Create it: Admin → Templates.')}</p>`
+          : '');
+    }
+    _laUpdateCombineBtn();
   }
 
   function _laNavRenderGrammarDatasets(list) {
