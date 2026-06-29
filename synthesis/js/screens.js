@@ -541,114 +541,115 @@
   function engineSetup(body, game, fn, inj, mats, accent){
     const wrap = el('div',{class:'syn-mix sc-stagger has-accent', style:`--ca:${accent}`});
 
-    // selection state
-    let ds = mats[0].id;          // chosen material (dataset id)
-    const selected = new Set();   // selected level ids (for the chosen material)
+    // ── universal "Διάλεξε ύλη" picker (Ver1 ecx) ──
+    // Multi-select ANY admin-uploaded ύλη from the universal catalog (grammar +
+    // class content + published packs), "+ MIX" to combine, then launch the
+    // engine with the merged bank. Tier-locked items show a Pro badge.
+    const sel = new Set();        // selected dataset ids (the mix)
+    let search = '';
+    let cat = (window.SymMix && SymMix.catalog) ? SymMix.catalog() : [];
 
-    // ── material picker (chips) ──
-    const matBar = el('div',{class:'syn-mix__mats'});
-    function paintMats(){
-      matBar.innerHTML='';
-      mats.forEach(m=>{
-        matBar.appendChild(el('button',{class:'syn-mat'+(m.id===ds?' active':''),
-          onclick:()=>{ if(ds===m.id) return; ds=m.id; selected.clear(); paintMats(); paintLevels(); updateBar(); }},
-          [ el('span',{class:'syn-mat__t'}, m.label) ]));
-      });
-    }
-    wrap.appendChild(el('div',{class:'syn-mix__lbl'}, L({gr:'Διάλεξε ύλη',en:'Pick material'})));
-    wrap.appendChild(matBar);
+    wrap.appendChild(el('div',{class:'syn-mix__lbl', style:'margin-top:0'}, L({gr:'Διάλεξε ύλη',en:'Choose content'})));
+    wrap.appendChild(el('p',{class:'sc-cap', style:'margin:0 0 6px;opacity:.8'},
+      L({gr:'Αυτόματη λίστα: γραμματική + ύλη τάξεων + δημοσιευμένα πακέτα.',en:'Auto-listed: grammar + class content + published packs.'})));
 
-    // ── level multi-select (grouped, checkbox rows + per-group select-all) ──
-    wrap.appendChild(el('div',{class:'syn-mix__lbl'}, L({gr:'Διάλεξε επίπεδα',en:'Pick levels'})+' '
-      + L({gr:'(πολλαπλή επιλογή)',en:'(multi-select)'})));
-    const levelsWrap = el('div',{class:'syn-mix__levels'});
-    wrap.appendChild(levelsWrap);
+    const searchInput = el('input',{class:'syn-mix__search', type:'text',
+      placeholder:L({gr:'Αναζήτηση ύλης…',en:'Search content…'}),
+      oninput:(e)=>{ search=(e.target.value||'').toLowerCase(); paintList(); }});
+    wrap.appendChild(searchInput);
 
-    function provLevels(){
-      const p = window.GP_LEVEL_PROVIDERS && window.GP_LEVEL_PROVIDERS[ds];
-      return (p && p.levels) || [];
-    }
-    function paintLevels(){
-      levelsWrap.innerHTML='';
-      const levels = provLevels();
-      const order=[], byGroup={};
-      levels.forEach(lv=>{ const g=lv.group||L({gr:'Επίπεδα',en:'Levels'}); if(!byGroup[g]){byGroup[g]=[];order.push(g);} byGroup[g].push(lv); });
-      order.forEach(g=>{
-        const rows = byGroup[g];
-        const cat = el('div',{class:'syn-cat'});
-        const allOn = rows.every(lv=>selected.has(lv.id));
-        const head = el('div',{class:'syn-cat__hd'},[
-          el('span',{class:'syn-cat__t'}, g),
-          el('button',{class:'syn-cat__all'+(allOn?' on':''), onclick:()=>{
-            const on = !rows.every(lv=>selected.has(lv.id));
-            rows.forEach(lv=>{ if(on) selected.add(lv.id); else selected.delete(lv.id); });
-            paintLevels(); updateBar();
-          }}, allOn ? L({gr:'Καμία',en:'None'}) : L({gr:'Όλα',en:'All'})),
-        ]);
-        cat.appendChild(head);
-        rows.forEach(lv=>{
-          const on = selected.has(lv.id);
-          cat.appendChild(el('button',{class:'syn-lvrow'+(on?' on':'')+(lv.color?' syn-lvrow--'+lv.color:''),
-            onclick:()=>{ if(selected.has(lv.id)) selected.delete(lv.id); else selected.add(lv.id); paintLevels(); updateBar(); }},[
-            el('span',{class:'syn-lvrow__chk'}, on?'✓':''),
-            el('span',{class:'syn-lvrow__t'},[
-              lv.section ? el('span',{class:'syn-lvrow__sec'}, lv.section+' · ') : null,
-              lv.desc || (L({gr:'Επίπεδο',en:'Level'})+' '+lv.id) ]),
-          ]));
+    const listWrap = el('div',{class:'syn-mix__cats'});
+    wrap.appendChild(listWrap);
+
+    function paintList(){
+      listWrap.innerHTML='';
+      let shown=0;
+      cat.forEach(group=>{
+        const items = (group.items||[]).filter(i=> !search
+          || (i.label||'').toLowerCase().includes(search)
+          || (i.meta||'').toLowerCase().includes(search));
+        if(!items.length) return;
+        listWrap.appendChild(el('div',{class:'syn-ds-cat'}, group.group));
+        const grid = el('div',{class:'syn-ds-grid'});
+        items.forEach(it=>{
+          shown++;
+          const on = sel.has(it.id);
+          const card = el('div',{class:'syn-ds'+(on?' on':'')+(it.locked?' locked':'')},[
+            el('span',{class:'syn-ds__ic'}, it.icon||'◆'),
+            el('span',{class:'syn-ds__info'},[
+              el('span',{class:'syn-ds__name'}, it.label + (it.isNew?' •':'')),
+              el('span',{class:'syn-ds__meta'}, it.meta||''),
+            ]),
+            it.locked
+              ? el('span',{class:'syn-ds__flag'}, '🔒 Pro')
+              : el('button',{class:'syn-ds__mix'+(on?' on':''), onclick:()=>{
+                  if(sel.has(it.id)) sel.delete(it.id); else sel.add(it.id);
+                  paintList(); updateBar();
+                }}, on ? ('✓ '+L({gr:'Στη μείξη',en:'In mix'})) : ('+ MIX')),
+          ]);
+          grid.appendChild(card);
         });
-        levelsWrap.appendChild(cat);
+        listWrap.appendChild(grid);
       });
+      if(!shown) listWrap.appendChild(el('p',{class:'sc-hint'}, L({gr:'Καμία ύλη δεν ταιριάζει.',en:'No content matches.'})));
     }
 
-    // ── sticky "N selected" bar + Mix-all + Start + Share ──
+    // ── sticky "N sources" bar + Start ──
     const bar = el('div',{class:'syn-mix__bar'});
     const count = el('span',{class:'syn-mix__count'});
-    const mixAll = el('button',{class:'syn-mix__allbtn', onclick:()=>{
-      provLevels().forEach(lv=>selected.add(lv.id)); paintLevels(); updateBar();
-    }}, L({gr:'Μείξη όλων',en:'Mix all'}));
     const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
-      if(!selected.size) return;
-      const ids = Array.from(selected);
+      if(!sel.size || !(window.SymMix && SymMix.bankMulti)) return;
+      const ids = Array.from(sel);
       startBtn.disabled = true;
       const old = startBtn.textContent;
       startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
-      window.launchEngineWithBank(fn, inj, ds, ids, L(gName(game))).then(()=>{
-        startBtn.disabled = false; startBtn.textContent = old;
-      }).catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
+      SymMix.bankMulti(ids.map(id=>({ id:id }))).then(qs=>{
+        const title = (ids.length===1)
+          ? L(gName(game)) // single source — keep clean
+          : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
+        return injectBankAndLaunch(fn, inj, qs, title);
+      }).then(()=>{ startBtn.disabled=false; startBtn.textContent=old; })
+        .catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
     }});
-    const shareBtn = el('button',{class:'syn-mix__share', title:L({gr:'Μοιράσου στην τάξη',en:'Share to class'}), onclick:()=>{
-      if(!selected.size || !window.showQR) return;
-      window.showQR(L(gName(game)), { game: fn, ds: ds, levels: Array.from(selected).join(',') });
-    }}, [ el('span',{html:'&#9783;'}), ' ', L({gr:'QR',en:'QR'}) ]);
     bar.appendChild(count);
     bar.appendChild(el('span',{class:'syn-mix__sp'}));
-    bar.appendChild(mixAll);
-    bar.appendChild(shareBtn);
     bar.appendChild(startBtn);
 
     function updateBar(){
-      const n = selected.size;
-      count.textContent = n+' '+L({gr:'επιλεγμένα',en:'selected'});
+      const n = sel.size;
+      count.textContent = n+' '+L({gr:'πηγές',en:'sources'});
       startBtn.disabled = n===0;
       startBtn.classList.toggle('is-off', n===0);
       startBtn.textContent = n
-        ? L({gr:'Ξεκίνα με '+n+' επίπεδα',en:'Start with '+n+' levels'})
-        : L({gr:'Διάλεξε επίπεδα',en:'Pick levels'});
-      shareBtn.disabled = n===0;
+        ? L({gr:'Ξεκίνα με '+n+(n===1?' πηγή':' πηγές'),en:'Start with '+n})
+        : L({gr:'Διάλεξε ύλη',en:'Choose content'});
     }
 
     wrap.appendChild(bar);
     body.appendChild(wrap);
-    paintMats(); paintLevels(); updateBar();
+    paintList(); updateBar();
+
+    // Merge Firestore published packs (config/datasets + custom_games), then refresh.
+    if (window.GP_CONTENT && typeof GP_CONTENT.loadCloud === 'function'){
+      Promise.resolve(GP_CONTENT.loadCloud()).then(()=>{
+        if (window.SymMix && SymMix.catalog){ cat = SymMix.catalog(); paintList(); }
+      }).catch(()=>{});
+    }
   }
 
   /* Build the combined bank for (ds, ids) and launch the engine with it,
      per the engine's injection mode. Returns a Promise (resolves after the
      opener is invoked). Reused by the boot deep-link handler in app.js. */
   function launchEngineWithBank(fn, inj, ds, ids, title){
-    inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
     if (!(window.SymMix && typeof SymMix.bank === 'function')) return Promise.resolve();
-    return SymMix.bank(ds, ids).then(function(qs){
+    return SymMix.bank(ds, ids).then(function(qs){ return injectBankAndLaunch(fn, inj, qs, title); });
+  }
+
+  /* Inject a PREBUILT bank (e.g. from SymMix.bankMulti — the universal picker)
+     into an engine and launch it, per the engine's injection mode. */
+  function injectBankAndLaunch(fn, inj, qs, title){
+    inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
+    return Promise.resolve().then(function(){
       qs = qs || [];
       if (inj.mode === 'config'){
         // Engine takes a config arg (Agora Surfers reads config.questions).
@@ -684,6 +685,7 @@
     });
   }
   window.launchEngineWithBank = launchEngineWithBank;
+  window.injectBankAndLaunch = injectBankAndLaunch;
 
   /* ══ 4 · GAME PANEL ══ (all engines · display modes · favorites · admin edit) */
   S.gamepanel = function(home, ctx){
