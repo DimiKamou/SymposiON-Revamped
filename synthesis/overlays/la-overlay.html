@@ -109,16 +109,10 @@
       </div>
     </div>
 
-    <!-- Sec 3: "while you wait" mini-game, as its own column -->
-    <div class="la-wait-col">
-      <div class="la-wait-header">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-        <span class="la-wait-title" data-gr="Όσο περιμένεις" data-en="While you wait">Όσο περιμένεις</span>
-      </div>
-      <div class="la-flappy-slot" id="la-flappy-host"></div>
-    </div>
-
   </div>
+
+  <!-- "while you wait" mini-game — floating centered popup over the lobby -->
+  <div class="la-flappy-slot la-flappy-popup" id="la-flappy-host"></div>
 
   <!-- footer: match-config summary (set on the setup screen) + start -->
   <div class="la-lobby-footer">
@@ -197,8 +191,8 @@
           <div class="la-sl-status" data-gr="Αναμονή εκκίνησης…" data-en="Waiting for host…">Αναμονή εκκίνησης…</div>
         </div>
         <div class="la-greek-key"></div>
-        <!-- "while you wait" mini-game (student lobby) -->
-        <div class="la-flappy-slot" id="la-flappy-student"></div>
+        <!-- "while you wait" mini-game — floating centered popup -->
+        <div class="la-flappy-slot la-flappy-popup" id="la-flappy-student"></div>
       </div>
     </div>
 
