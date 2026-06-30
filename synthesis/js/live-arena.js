@@ -30,7 +30,13 @@
 */
 const LiveArena = (() => {
 
-  const Q_DURATION = 25; // seconds per question
+  const Q_DURATION = 25; // default seconds per question (host setup can override)
+  // Per-question duration: the host setup screen passes config.timePerQ (5–30);
+  // fall back to the default. Clamped so a bad value can't break the timer.
+  function _qDur() {
+    const v = _cfg && _cfg.config && +_cfg.config.timePerQ;
+    return (v && v >= 3 && v <= 120) ? v : Q_DURATION;
+  }
   const MEDALS     = ['🥇', '🥈', '🥉', '4.', '5.'];
 
   /* ── Dataset registry ───────────────────────────────────
@@ -302,7 +308,7 @@ const LiveArena = (() => {
     const q = _cfg.questions[idx];
     if (!q) { await _endArena(); return; }
 
-    const timerEnd = Date.now() + Q_DURATION * 1000;
+    const timerEnd = Date.now() + _qDur() * 1000;
 
     await arenaRef(_pin).update({
       status:           'question',
@@ -362,9 +368,10 @@ const LiveArena = (() => {
       const rem = Math.max(0, (timerEnd - Date.now()) / 1000);
       if (numEl) numEl.textContent = Math.ceil(rem);
       if (arcEl) {
-        arcEl.style.strokeDashoffset = circumference * (1 - rem / Q_DURATION);
-        arcEl.style.stroke = rem > Q_DURATION * 0.5 ? '#4a9e5c'
-                           : rem > Q_DURATION * 0.25 ? '#c9a44a'
+        const dur = _qDur();
+        arcEl.style.strokeDashoffset = circumference * (1 - rem / dur);
+        arcEl.style.stroke = rem > dur * 0.5 ? '#4a9e5c'
+                           : rem > dur * 0.25 ? '#c9a44a'
                            : '#c0392b';
       }
       if (rem <= 0) { _stopTimer(); _showHostResults(correctAns, qIdx); }

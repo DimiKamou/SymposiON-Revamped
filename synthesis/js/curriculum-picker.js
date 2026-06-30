@@ -31,6 +31,10 @@
   var _authored = {};           // subId → { contentId: bool } (resolved once per subject)
   var _pvp = false;             // true when the picker is choosing PvP material
   var _live = false;            // true when the picker is choosing Live-Arena host material
+  var _liveStep = 'content';    // 'content' (ύλη) → 'setup' (mode + match config)
+  var _liveBank = null;         // the chosen live-shaped questions, carried into setup
+  var _liveMode = 'krypteia';   // chosen game mode id (PVP_MODES)
+  var _liveCfg  = { timePerQ: 25, winBy: 'time', targetScore: 1000, rounds: 12, shuffle: true, locked: false };
 
   // PvP: build the duel question bank from a catalog game's authored content,
   // store it as SYM_QUESTIONS_SELECTION, then open the standalone Arena.
@@ -232,15 +236,13 @@
       startBtn.textContent = L({ gr: 'Φόρτωση…', en: 'Loading…' });
       window.SymMix.bankMulti(picks).then(function (arr) {
         if (_live) {
-          // Live Arena host: feed the merged bank straight into launchHost, which
-          // opens the (dark, handoff-styled) lobby. SymMix items are {q,a,c}; the
+          // Live Arena host: content chosen → go to the match SETUP step (mode +
+          // config) instead of launching directly. SymMix items are {q,a,c}; the
           // live engine wants {q:<text>, opts, ans}.
           var liveQs = (arr || []).map(function (it) {
             return { q: (it.q && (it.q.gr || it.q.en)) || it.q, opts: it.a, ans: it.c };
           }).filter(function (x) { return x.q && x.opts && x.opts.length >= 2; });
-          if (liveQs.length && window.synLaunch) {
-            window.synLaunch('openLiveArena', { questions: liveQs, gameName: L({ gr: 'Ζωντανή Μάχη', en: 'Live Arena' }) });
-          }
+          if (liveQs.length) { _liveBank = liveQs; _liveStep = 'setup'; window.symGo('curriculum'); }
         } else {
           var items = (arr || []).map(function (it) { return { q: (it.q && (it.q.gr || it.q.en)) || it.q, a: it.a, c: it.c }; });
           try {
@@ -278,7 +280,105 @@
     }
   }
 
+  // ── Live Arena match SETUP: game-mode picker (2 categories) + match config ──
+  function renderLiveSetup(home) {
+    var body = window.synPage(home, {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Ζωντανή Μάχη · Στήσιμο', en: 'Live Arena · Setup' }),
+      title: L({ gr: 'Στήσε τη Μάχη', en: 'Set up the match' }),
+      sub: L({ gr: 'Διάλεξε παιχνίδι και ρύθμισε χρόνο / σκορ / γύρους — μετά ανοίγει η αίθουσα.', en: 'Pick a game and set time / score / rounds — then the lobby opens.' }),
+    });
+    var wrap = el('div', { class: 'syn-mix sc-stagger has-accent', style: '--ca:#C5572F' });
+
+    // change-ύλη shortcut + question count
+    wrap.appendChild(el('button', { class: 'syn-setup-back', onclick: function () { _liveStep = 'content'; window.symRender ? window.symRender() : go('curriculum'); } },
+      '← ' + L({ gr: 'Άλλαξε ύλη', en: 'Change content' }) + ' · ' + ((_liveBank || []).length) + ' ' + L({ gr: 'ερωτήσεις', en: 'questions' })));
+
+    // ── mode grid ──
+    function modeCard(m, selectable) {
+      var on = selectable && _liveMode === m.id;
+      return el('button', { class: 'syn-modecard' + (on ? ' on' : '') + (selectable ? '' : ' soon'), style: '--mc:' + (m.accent || '#C5572F'),
+        onclick: selectable ? function () { _liveMode = m.id; paintModes(); } : null }, [
+        el('span', { class: 'syn-modecard__g' }, m.glyph || '◆'),
+        el('span', { class: 'syn-modecard__b' }, [
+          el('span', { class: 'syn-modecard__t' }, m.gr),
+          el('span', { class: 'syn-modecard__d' }, (m.blurb && (m.blurb.gr || m.blurb.en)) || m.en || ''),
+        ]),
+        selectable ? el('span', { class: 'syn-modecard__chk' }, on ? '✓' : '') : el('span', { class: 'syn-modecard__soon' }, L({ gr: 'Σύντομα', en: 'Soon' })),
+      ]);
+    }
+    var modeWrap = el('div', {});
+    wrap.appendChild(modeWrap);
+    function paintModes() {
+      modeWrap.innerHTML = '';
+      var MODES = window.PVP_MODES || [], DUELS = window.PVP_DUEL_MODES || [];
+      modeWrap.appendChild(el('div', { class: 'syn-mix__lbl', style: 'margin-top:4px' }, L({ gr: 'Ομαδικά · Σύγκριση σκορ', en: 'Team · score-compared' })));
+      var g1 = el('div', { class: 'syn-modegrid' });
+      MODES.forEach(function (m) { g1.appendChild(modeCard(m, m.live !== false)); });
+      modeWrap.appendChild(g1);
+      modeWrap.appendChild(el('div', { class: 'syn-mix__lbl' }, L({ gr: 'Μονομαχία · 1v1', en: 'Duel · 1v1' })));
+      var g2 = el('div', { class: 'syn-modegrid' });
+      DUELS.forEach(function (m) { g2.appendChild(modeCard(m, false)); });
+      modeWrap.appendChild(g2);
+    }
+    paintModes();
+
+    // ── match config ──
+    wrap.appendChild(el('div', { class: 'syn-mix__lbl' }, L({ gr: 'Ρυθμίσεις μάχης', en: 'Match settings' })));
+    var cfgWrap = el('div', { class: 'syn-cfg' });
+    wrap.appendChild(cfgWrap);
+    function paintCfg() {
+      cfgWrap.innerHTML = '';
+      // win-condition segmented
+      var seg = el('div', { class: 'syn-seg' });
+      [['time', L({ gr: 'Με χρόνο', en: 'Timed' })], ['score', L({ gr: 'Με σκορ', en: 'To a score' })], ['rounds', L({ gr: 'Με γύρους', en: 'By rounds' })]]
+        .forEach(function (o) { seg.appendChild(el('button', { class: 'syn-seg__b' + (_liveCfg.winBy === o[0] ? ' on' : ''), onclick: function () { _liveCfg.winBy = o[0]; paintCfg(); } }, o[1])); });
+      cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Νίκη', en: 'Win by' })), seg]));
+
+      // time-per-question slider (always)
+      var tval = el('span', { class: 'syn-cfg__val' }, _liveCfg.timePerQ + 'ς');
+      var slider = el('input', { type: 'range', min: '5', max: '30', step: '1', value: String(_liveCfg.timePerQ), class: 'syn-slider',
+        oninput: function (e) { _liveCfg.timePerQ = parseInt(e.target.value, 10) || 25; tval.textContent = _liveCfg.timePerQ + 'ς'; } });
+      cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Χρόνος / ερώτηση', en: 'Time / question' })), slider, tval]));
+
+      if (_liveCfg.winBy === 'score') {
+        cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Σκορ-στόχος', en: 'Target score' })),
+          el('input', { type: 'number', min: '100', step: '100', value: String(_liveCfg.targetScore), class: 'syn-cfg__num', oninput: function (e) { _liveCfg.targetScore = parseInt(e.target.value, 10) || 1000; } })]));
+      }
+      if (_liveCfg.winBy === 'rounds') {
+        var maxR = (_liveBank || []).length || 50;
+        cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Γύροι (ερωτήσεις)', en: 'Rounds (questions)' })),
+          el('input', { type: 'number', min: '1', max: String(maxR), step: '1', value: String(Math.min(_liveCfg.rounds, maxR)), class: 'syn-cfg__num', oninput: function (e) { _liveCfg.rounds = Math.min(parseInt(e.target.value, 10) || 12, maxR); } })]));
+      }
+      // toggles
+      var tgl = el('div', { class: 'syn-cfg__toggles' }, [
+        el('button', { class: 'syn-tagchip' + (_liveCfg.shuffle ? ' on' : ''), onclick: function () { _liveCfg.shuffle = !_liveCfg.shuffle; paintCfg(); } }, L({ gr: '🔀 Ανάμειξη', en: '🔀 Shuffle' })),
+        el('button', { class: 'syn-tagchip' + (_liveCfg.locked ? ' on' : ''), onclick: function () { _liveCfg.locked = !_liveCfg.locked; paintCfg(); } }, _liveCfg.locked ? L({ gr: '🔒 Κλειδωμένο', en: '🔒 Locked' }) : L({ gr: '🔓 Ανοιχτό', en: '🔓 Open' })),
+      ]);
+      cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Επιλογές', en: 'Options' })), tgl]));
+    }
+    paintCfg();
+
+    // ── launch ──
+    var bar = el('div', { class: 'syn-mix__bar' });
+    bar.appendChild(el('span', { class: 'syn-mix__count' }, ((_liveBank || []).length) + ' ' + L({ gr: 'ερωτήσεις', en: 'questions' })));
+    bar.appendChild(el('span', { class: 'syn-mix__sp' }));
+    bar.appendChild(el('button', { class: 'syn-mix__start', onclick: function () {
+      if (!(_liveBank && _liveBank.length) || !window.synLaunch) return;
+      var modeObj = (window.PVP_MODES || []).filter(function (m) { return m.id === _liveMode; })[0] || { gr: 'Ζωντανή Μάχη' };
+      var bank = _liveCfg.shuffle ? _shuffle(_liveBank.slice()) : _liveBank.slice();
+      if (_liveCfg.winBy === 'rounds') bank = bank.slice(0, _liveCfg.rounds);
+      window.synLaunch('openLiveArena', { questions: bank, gameName: modeObj.gr, mode: _liveMode, config: {
+        timePerQ: _liveCfg.timePerQ, winBy: _liveCfg.winBy, targetScore: _liveCfg.targetScore, rounds: _liveCfg.rounds, shuffle: _liveCfg.shuffle, locked: _liveCfg.locked
+      } });
+    } }, L({ gr: 'Άνοιξε την Αίθουσα →', en: 'Open the lobby →' })));
+    wrap.appendChild(bar);
+    body.appendChild(wrap);
+  }
+  function _shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0; var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
   function render(home) {
+    if (_live && _liveStep === 'setup') { renderLiveSetup(home); return; }
     if (_pvp || _live) { renderPvp(home); return; }
     var P = window.synPage;
     var body = P(home, _pvp ? {
@@ -422,7 +522,7 @@
     // Live Arena host content selection — same universal (light) picker; on start
     // it feeds the merged bank into the host lobby instead of the PvP arena.
     openForLiveHost: function () {
-      _live = true; _pvp = false;
+      _live = true; _pvp = false; _liveStep = 'content'; _liveBank = null;
       _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
       window.symGo('curriculum');
     },
