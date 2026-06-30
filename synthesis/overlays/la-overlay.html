@@ -29,6 +29,16 @@
     <button class="la-icon-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
   </div>
 
+  <!-- mode header (ported from PvP .pvp-modebar) -->
+  <div class="la-modebar" id="la-modebar" style="--accent: var(--la-gold)">
+    <div class="la-mb-glyph" id="la-mb-glyph">Λ</div>
+    <div class="la-mb-text">
+      <div class="la-mb-kicker" id="la-mb-kicker">LIVE MATCH</div>
+      <h2><span id="la-mb-title">ΖΩΝΤΑΝΗ ΜΑΧΗ</span><small id="la-mb-sub"></small></h2>
+    </div>
+    <div class="la-mb-fmt" id="la-mb-fmt">ΣΤΑΘΕΡΟΣ ΧΡΟΝΟΣ<br><b>25″</b> · ΠΕΡΙΣΣΟΤΕΡΟΙ ΠΟΝΤΟΙ</div>
+  </div>
+
   <!-- split: join (left) · players (right) -->
   <div class="la-lobby-grid">
 
@@ -104,21 +114,14 @@
   <!-- "while you wait" mini-game (host lobby) -->
   <div class="la-flappy-slot" id="la-flappy-host"></div>
 
-  <!-- footer: settings + start -->
+  <!-- footer: match-config summary (set on the setup screen) + start -->
   <div class="la-lobby-footer">
-    <div class="la-settings">
-      <button class="la-pill" id="la-set-timer" onclick="LAX.cycleTimer()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
-        <span data-gr="Χρόνος" data-en="Timer">Χρόνος</span> <span class="la-pill-val" id="la-set-timer-val">25ς</span>
-      </button>
-      <button class="la-pill la-pill-on" id="la-set-shuffle" onclick="LAX.toggleShuffle()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>
-        <span data-gr="Ανάμειξη" data-en="Shuffle">Ανάμειξη</span>
-      </button>
-      <button class="la-pill" id="la-set-lock" onclick="LAX.toggleLock()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-        <span id="la-set-lock-lbl" data-gr="Ανοιχτό" data-en="Open">Ανοιχτό</span>
-      </button>
+    <div class="la-cfg-summary" id="la-cfg-summary">
+      <span class="la-cfg-mode" id="la-cfg-mode">—</span>
+      <span class="la-cfg-dot">·</span>
+      <span class="la-cfg-item" id="la-cfg-qtime">25ς / ερώτηση</span>
+      <span class="la-cfg-dot">·</span>
+      <span class="la-cfg-item" id="la-cfg-win">—</span>
     </div>
     <button class="la-start-btn" id="la-start-btn" onclick="LiveArena.startBattle()" data-gr="🚀 Έναρξη Μάχης" data-en="🚀 Start Battle">🚀 Έναρξη Μάχης</button>
   </div>

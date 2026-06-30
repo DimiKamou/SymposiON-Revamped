@@ -34,7 +34,7 @@
   var _liveStep = 'content';    // 'content' (ύλη) → 'setup' (mode + match config)
   var _liveBank = null;         // the chosen live-shaped questions, carried into setup
   var _liveMode = 'krypteia';   // chosen game mode id (PVP_MODES)
-  var _liveCfg  = { timePerQ: 25, winBy: 'time', targetScore: 1000, rounds: 12, shuffle: true, locked: false };
+  var _liveCfg  = { timePerQ: 25, winBy: 'time', targetScore: 1000, rounds: 12, gameDurationMin: 8, shuffle: true, locked: false };
 
   // PvP: build the duel question bank from a catalog game's authored content,
   // store it as SYM_QUESTIONS_SELECTION, then open the standalone Arena.
@@ -91,6 +91,10 @@
   var _pvpSearch = '';
   var _pvpTag = null;
   var _pvpCat = [];
+  // Level-list collapse memory — keyed by dataset id (survives paintList re-renders).
+  // Universal: the same levelPanel() renders in the game-panel, Live host & PvP pickers.
+  var _lvHidden = {};        // dsId → true: the whole level list is collapsed to its header
+  var _lvFoldG  = {};        // 'dsId::group' → true: that one category's rows are collapsed
 
   function renderPvp(home) {
     var body = window.synPage(home, _live ? {
@@ -145,6 +149,24 @@
       var panel = el('div', { class: 'syn-ds-levels' });
       var allIds = (it.levels || []).map(function (lv) { return lv.id; });
       var allOn = allIds.length > 0 && allIds.every(function (id) { return st.levels.has(id); });
+      var selN = allIds.filter(function (id) { return st.levels.has(id); }).length;
+      var hidden = !!_lvHidden[it.id];
+
+      // ── Header: title + selected-count + a hide/unhide (collapse) toggle ──
+      panel.appendChild(el('div', { class: 'syn-lv-head' }, [
+        el('span', { class: 'syn-lv-head__t' }, [
+          L({ gr: 'Επίπεδα', en: 'Levels' }),
+          el('span', { class: 'syn-lv-head__c' + (selN ? ' on' : '') }, selN + '/' + allIds.length),
+        ]),
+        el('button', { class: 'syn-lv-fold' + (hidden ? ' folded' : ''),
+          title: hidden ? L({ gr: 'Δείξε τα επίπεδα', en: 'Show levels' }) : L({ gr: 'Κρύψε τα επίπεδα', en: 'Hide levels' }),
+          onclick: function () { _lvHidden[it.id] = !hidden; paintList(); } }, [
+          el('span', { class: 'syn-lv-fold__lbl' }, hidden ? L({ gr: 'Δείξε', en: 'Show' }) : L({ gr: 'Κρύψε', en: 'Hide' })),
+          el('span', { class: 'syn-lv-fold__chev' }, '▾'),
+        ]),
+      ]));
+      if (hidden) return panel;   // collapsed — header only
+
       panel.appendChild(el('button', { class: 'syn-lvpill--all' + (allOn ? ' on' : ''),
         onclick: function () { if (allOn) st.levels.clear(); else allIds.forEach(function (id) { st.levels.add(id); }); paintList(); updateBar(); } },
         allOn ? ('✓ ' + L({ gr: 'Όλα επιλεγμένα — καθάρισε', en: 'All selected — clear' }))
@@ -155,7 +177,11 @@
       order.forEach(function (g) {
         var rows = byG[g];
         var gOn = rows.length > 0 && rows.every(function (lv) { return st.levels.has(lv.id); });
-        panel.appendChild(el('div', { class: 'syn-lvgrp-row' }, [
+        var gKey = it.id + '::' + g;
+        var gFold = !!_lvFoldG[gKey];
+        panel.appendChild(el('div', { class: 'syn-lvgrp-row' + (gFold ? ' folded' : '') }, [
+          el('button', { class: 'syn-lvgrp-fold', title: gFold ? L({ gr: 'Δείξε', en: 'Show' }) : L({ gr: 'Κρύψε', en: 'Hide' }),
+            onclick: function () { _lvFoldG[gKey] = !gFold; paintList(); } }, '▾'),
           el('span', { class: 'syn-lvgrp' }, g || L({ gr: 'Επίπεδα', en: 'Levels' })),
           el('button', { class: 'syn-lvgrp-all' + (gOn ? ' on' : ''), onclick: function () {
             var turnOn = !gOn;
@@ -165,6 +191,7 @@
         ]));
         rows.forEach(function (lv) {
           n++;
+          if (gFold) return;   // category collapsed — keep numbering stable, skip the row
           var lon = st.levels.has(lv.id);
           panel.appendChild(el('button', { class: 'syn-lvrowpill' + (lon ? ' on' : '') + (lv.color ? ' syn-lvpill--' + lv.color : ''),
             onclick: function () {
@@ -341,6 +368,14 @@
         oninput: function (e) { _liveCfg.timePerQ = parseInt(e.target.value, 10) || 25; tval.textContent = _liveCfg.timePerQ + 'ς'; } });
       cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Χρόνος / ερώτηση', en: 'Time / question' })), slider, tval]));
 
+      // total match duration — only meaningful (and shown) when the match ends "Με χρόνο"
+      if (_liveCfg.winBy === 'time') {
+        var dval = el('span', { class: 'syn-cfg__val' }, _liveCfg.gameDurationMin + '′');
+        var dSlider = el('input', { type: 'range', min: '2', max: '20', step: '1', value: String(_liveCfg.gameDurationMin), class: 'syn-slider',
+          oninput: function (e) { _liveCfg.gameDurationMin = parseInt(e.target.value, 10) || 8; dval.textContent = _liveCfg.gameDurationMin + '′'; } });
+        cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Διάρκεια παιχνιδιού', en: 'Game duration' })), dSlider, dval]));
+      }
+
       if (_liveCfg.winBy === 'score') {
         cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Σκορ-στόχος', en: 'Target score' })),
           el('input', { type: 'number', min: '100', step: '100', value: String(_liveCfg.targetScore), class: 'syn-cfg__num', oninput: function (e) { _liveCfg.targetScore = parseInt(e.target.value, 10) || 1000; } })]));
@@ -369,7 +404,7 @@
       var bank = _liveCfg.shuffle ? _shuffle(_liveBank.slice()) : _liveBank.slice();
       if (_liveCfg.winBy === 'rounds') bank = bank.slice(0, _liveCfg.rounds);
       window.synLaunch('openLiveArena', { questions: bank, gameName: modeObj.gr, mode: _liveMode, config: {
-        timePerQ: _liveCfg.timePerQ, winBy: _liveCfg.winBy, targetScore: _liveCfg.targetScore, rounds: _liveCfg.rounds, shuffle: _liveCfg.shuffle, locked: _liveCfg.locked
+        timePerQ: _liveCfg.timePerQ, winBy: _liveCfg.winBy, targetScore: _liveCfg.targetScore, rounds: _liveCfg.rounds, gameDurationMin: _liveCfg.gameDurationMin, shuffle: _liveCfg.shuffle, locked: _liveCfg.locked
       } });
     } }, L({ gr: 'Άνοιξε την Αίθουσα →', en: 'Open the lobby →' })));
     wrap.appendChild(bar);

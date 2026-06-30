@@ -86,6 +86,8 @@ const LiveArena = (() => {
   let _uid          = null;
   let _totalPlayers = 0;
   let _timerInt     = null;
+  let _matchInt     = null;   // match-level wall-clock interval (total game duration)
+  let _matchEnd     = 0;      // epoch ms when the match must end (winBy==='time')
   let _listeners    = [];    // [ unsubscribeFn, ... ]
   let _ansUnsub     = null;  // isolated answer-count listener slot
 
@@ -178,7 +180,27 @@ const LiveArena = (() => {
     const btn = document.getElementById('la-start-btn');
     if (btn) { btn.disabled = true; btn.textContent = t('Εκκίνηση…', 'Starting…'); }
     _qIdx = 0;
+    _startMatchClock();
     await _pushQuestion(0);
+  }
+
+  // Total game-duration match-end (only when win-by = "Με χρόνο"). A single
+  // low-frequency interval; on expiry the match ends after the current
+  // question resolves (also guarded in _pushQuestion / _showHostResults).
+  function _startMatchClock() {
+    _stopMatchClock();
+    const cfg = (_cfg && _cfg.config) || {};
+    if (cfg.winBy !== 'time') return;
+    const mins = +cfg.gameDurationMin;
+    if (!(mins > 0)) return;
+    _matchEnd = Date.now() + mins * 60 * 1000;
+    _matchInt = setInterval(() => {
+      if (Date.now() >= _matchEnd) { _stopMatchClock(); _endArena(); }
+    }, 1000);
+  }
+  function _stopMatchClock() {
+    if (_matchInt) { clearInterval(_matchInt); _matchInt = null; }
+    _matchEnd = 0;
   }
 
   async function submitJoin() {
@@ -245,6 +267,7 @@ const LiveArena = (() => {
     _setEl('la-game-title',    _cfg.gameName);
     _setEl('la-player-count',  '0');
     _setEl('la-lobby-q-count', _cfg.questions.length + ' ' + t('ερωτήσεις', 'questions'));
+    _paintLobbyConfig();
 
     try {
       await arenaRef(_pin).set({
@@ -286,12 +309,13 @@ const LiveArena = (() => {
           if (existing.has(doc.id)) return;
           const name = doc.data().name || t('Παίκτης', 'Player');
           const chip = document.createElement('div');
-          chip.className   = 'la-player-chip';
+          chip.className   = 'la-player-chip la-seat';
           chip.dataset.uid = doc.id;
           chip.innerHTML =
-            `<span class="la-player-av" style="background:${_laColorFor(name)}">${_esc(_laInitials(name))}</span>` +
-            `<span class="la-player-name">${_esc(name)}</span>` +
-            `<button class="la-player-kick" title="${t('Αφαίρεση', 'Remove')}" aria-label="${t('Αφαίρεση', 'Remove')}">✕</button>`;
+            `<button class="la-player-kick" title="${t('Αφαίρεση', 'Remove')}" aria-label="${t('Αφαίρεση', 'Remove')}">✕</button>` +
+            `<span class="la-player-av la-seat-av" style="background:${_laColorFor(name)}">${_esc(_laInitials(name))}</span>` +
+            `<span class="la-player-name la-seat-name">${_esc(name)}</span>` +
+            `<span class="la-seat-sub">${t('μπήκε', 'joined')}</span>`;
           const kb = chip.querySelector('.la-player-kick');
           if (kb) kb.onclick = () => _kickPlayer(doc.id, chip);
           grid.appendChild(chip);
@@ -305,6 +329,11 @@ const LiveArena = (() => {
   }
 
   async function _pushQuestion(idx) {
+    const cfg = (_cfg && _cfg.config) || {};
+    // total-duration match-end: if the wall-clock has run out, stop here.
+    if (cfg.winBy === 'time' && _matchEnd && Date.now() >= _matchEnd) { await _endArena(); return; }
+    // rounds match-end: make the engine authoritative (picker also pre-slices).
+    if (cfg.winBy === 'rounds' && cfg.rounds && idx >= cfg.rounds) { await _endArena(); return; }
     const q = _cfg.questions[idx];
     if (!q) { await _endArena(); return; }
 
@@ -400,9 +429,17 @@ const LiveArena = (() => {
       _renderBarChart([0, 0, 0, 0], correctAns, _cfg.questions[qIdx]);
     }
 
-    await _renderLeaderboard();
+    const topScore = await _renderLeaderboard();
 
-    const isLast = qIdx >= _cfg.questions.length - 1;
+    const cfg = (_cfg && _cfg.config) || {};
+    let isLast = qIdx >= _cfg.questions.length - 1;
+    // rounds: end on the configured round even if more questions remain.
+    if (cfg.winBy === 'rounds' && cfg.rounds) isLast = isLast || (qIdx >= cfg.rounds - 1);
+    // target-score: end as soon as the leader reaches it.
+    if (cfg.winBy === 'score' && cfg.targetScore && topScore >= cfg.targetScore) isLast = true;
+    // total duration: if the match wall-clock has expired, this is the last screen.
+    if (cfg.winBy === 'time' && _matchEnd && Date.now() >= _matchEnd) isLast = true;
+
     const nextBtn = document.getElementById('la-hr-next-btn');
     if (nextBtn) {
       nextBtn.textContent = isLast
@@ -441,7 +478,7 @@ const LiveArena = (() => {
 
   async function _renderLeaderboard() {
     const wrap = document.getElementById('la-hr-lb');
-    if (!wrap) return;
+    if (!wrap) return 0;
     try {
       const snap    = await playersCol(_pin).get();
       const players = snap.docs
@@ -458,8 +495,10 @@ const LiveArena = (() => {
             `<span class="la-lb-score">${p.score || 0}</span>` +
           `</div>`
         ).join('');
+      return players.length ? (players[0].score || 0) : 0;
     } catch (err) {
       console.error('[LiveArena] leaderboard:', err);
+      return 0;
     }
   }
 
@@ -1473,6 +1512,35 @@ const LiveArena = (() => {
     setTimeout(() => { if (chip && chip.parentNode) chip.remove(); _laUpdatePlayersEmpty(); }, 220);
   }
 
+  // Paint the mode header (modebar) + footer config summary from _cfg.
+  // Pure presentation; reads _cfg.config + the chosen mode (window.PVP_MODES).
+  function _paintLobbyConfig() {
+    const cfg  = (_cfg && _cfg.config) || {};
+    const mode = ((window.PVP_MODES || []).filter(m => m.id === _cfg.mode)[0]) || null;
+    const qd   = _qDur();
+
+    // win-condition readout (label + headline value), shared by modebar + footer.
+    let winTop, winVal;
+    if (cfg.winBy === 'score')       { winTop = t('ΣΚΟΡ-ΣΤΟΧΟΣ', 'TARGET SCORE'); winVal = String(cfg.targetScore || 1000); }
+    else if (cfg.winBy === 'rounds') { winTop = t('ΓΥΡΟΙ', 'ROUNDS');            winVal = String(cfg.rounds || _cfg.questions.length); }
+    else                             { winTop = t('ΣΤΑΘΕΡΟΣ ΧΡΟΝΟΣ', 'FIXED TIME'); winVal = (cfg.gameDurationMin || 8) + '′'; }
+
+    // ── modebar ──
+    const bar = document.getElementById('la-modebar');
+    if (bar) bar.style.setProperty('--accent', (mode && mode.accent) || 'var(--la-gold)');
+    _setEl('la-mb-glyph',  (mode && mode.glyph) || 'Λ');
+    _setEl('la-mb-kicker', t('ΖΩΝΤΑΝΗ ΜΑΧΗ', 'LIVE MATCH'));
+    _setEl('la-mb-title',  (mode && mode.gr) || _cfg.gameName || t('ΖΩΝΤΑΝΗ ΜΑΧΗ', 'LIVE MATCH'));
+    _setEl('la-mb-sub',    (mode && mode.en) || '');
+    const fmt = document.getElementById('la-mb-fmt');
+    if (fmt) fmt.innerHTML = `${_esc(winTop)}<br><b>${_esc(winVal)}</b> · ${qd}${t('ς/ερώτηση', 's/q')}`;
+
+    // ── footer summary ──
+    _setEl('la-cfg-mode',  (mode && mode.gr) || _cfg.gameName || '—');
+    _setEl('la-cfg-qtime', qd + 'ς / ' + t('ερώτηση', 'question'));
+    _setEl('la-cfg-win',   winTop + ' ' + winVal);
+  }
+
   function _stopTimer() {
     if (_timerInt) { clearInterval(_timerInt); _timerInt = null; }
   }
@@ -1482,6 +1550,7 @@ const LiveArena = (() => {
     _listeners = [];
     if (_ansUnsub) { try { _ansUnsub(); } catch (_) {} _ansUnsub = null; }
     _stopTimer();
+    _stopMatchClock();
     const canvas = document.getElementById('la-particles');
     if (canvas && canvas._raf) { cancelAnimationFrame(canvas._raf); canvas._raf = null; }
   }
