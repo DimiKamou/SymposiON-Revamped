@@ -68,6 +68,8 @@
 #la-host-lobby .la-icon-btn:hover { color: var(--la-text); border-color: var(--la-gold-dim); background: rgba(201,164,74,0.06); }
 
 /* ---- Main split grid ---- */
+/* Two sections side by side: Join (left) · Players (right). The "while you
+   wait" mini-game floats as a centered popup over the top (see .la-flappy-popup). */
 #la-host-lobby .la-lobby-grid {
   flex: 1; min-height: 0; display: grid;
   grid-template-columns: minmax(430px, 0.92fr) 1.08fr; position: relative;
@@ -261,20 +263,107 @@
   display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
   padding: 16px 38px; border-top: 1px solid var(--la-border); flex-shrink: 0; margin: 0;
 }
-#la-host-lobby .la-settings { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-#la-host-lobby .la-pill {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
-  font-family: 'Raleway',sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .4px; color: var(--la-text);
-  background: rgba(255,255,255,0.03); border: 1px solid var(--la-border); border-radius: 999px; padding: 8px 14px;
-  transition: background .18s, border-color .18s, color .18s;
+/* read-only match-config summary (configured on the setup screen) */
+#la-host-lobby .la-cfg-summary {
+  display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0;
+  font-family: 'Raleway',sans-serif; font-size: 11px; letter-spacing: .6px; color: var(--la-muted);
 }
-#la-host-lobby .la-pill svg { width: 15px; height: 15px; color: var(--la-gold); }
-#la-host-lobby .la-pill .la-pill-val { color: var(--la-gold); }
-#la-host-lobby .la-pill:hover { background: rgba(201,164,74,0.07); border-color: var(--la-gold-dim); }
-#la-host-lobby .la-pill.la-pill-on { background: rgba(201,164,74,0.12); border-color: var(--la-gold-dim); }
+#la-host-lobby .la-cfg-mode {
+  font-family: 'Cinzel',serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--la-gold);
+}
+#la-host-lobby .la-cfg-item { color: var(--la-text); white-space: nowrap; }
+#la-host-lobby .la-cfg-dot { color: var(--la-gold-dim); }
 
 /* Start button keeps original .la-start-btn look but reset margin for footer */
 #la-host-lobby .la-lobby-footer .la-start-btn { margin: 0; padding: 15px 44px; }
+
+/* ---- Mode header (ported from PvP .pvp-modebar) ---- */
+#la-host-lobby .la-modebar {
+  display: flex; align-items: center; gap: 18px;
+  margin: 16px 26px 0; padding: 16px 22px; border-radius: 8px; position: relative; overflow: hidden;
+  --accent: var(--la-gold);
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--la-border));
+  background: linear-gradient(100deg, color-mix(in oklab, var(--accent) 16%, var(--la-panel)), var(--la-panel));
+}
+#la-host-lobby .la-mb-glyph {
+  width: 52px; height: 52px; border-radius: 11px; flex-shrink: 0; display: grid; place-items: center;
+  font-family: 'Cinzel',serif; font-size: 28px; color: #1a1206;
+  background: radial-gradient(circle at 38% 30%, color-mix(in oklab, var(--accent) 80%, white), var(--accent));
+}
+#la-host-lobby .la-mb-text { flex: 1; min-width: 0; }
+#la-host-lobby .la-mb-kicker {
+  font-family: 'Raleway',sans-serif; font-weight: 700; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--accent);
+}
+#la-host-lobby .la-mb-text h2 {
+  font-family: 'Cinzel',serif; font-weight: 600; font-size: 23px; letter-spacing: .01em;
+  text-transform: uppercase; margin: 2px 0 0; color: var(--la-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#la-host-lobby .la-mb-text h2 small {
+  font-family: 'Cormorant Garamond',serif; font-style: italic; font-weight: 500; font-size: 14px;
+  color: var(--la-muted); text-transform: none; letter-spacing: 0; margin-left: 8px;
+}
+#la-host-lobby .la-mb-fmt {
+  text-align: right; font-family: 'Inter',monospace; font-size: 11px; color: var(--la-muted); line-height: 1.5; flex-shrink: 0;
+}
+#la-host-lobby .la-mb-fmt b { color: var(--la-text); }
+
+/* ---- Player roster as PvP-style seat cards (overrides the pill chip above) ---- */
+#la-host-lobby .la-player-grid {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 11px; align-content: flex-start; padding-right: 4px;
+}
+#la-host-lobby .la-player-chip.la-seat {
+  position: relative; border-radius: 8px; padding: 16px 12px 13px; min-height: 124px; overflow: hidden;
+  border: 1px solid var(--la-border);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.2)), var(--la-panel-2);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+  transition: border-color .25s, transform .25s, background .2s;
+}
+#la-host-lobby .la-player-chip.la-seat:hover {
+  background: linear-gradient(180deg, rgba(201,164,74,.05), rgba(0,0,0,.2)), var(--la-panel-2);
+  border-color: var(--la-gold-dim);
+}
+#la-host-lobby .la-player-chip.la-seat.la-chip-pop { animation: la-seat-pop .42s cubic-bezier(.2,1.4,.4,1); }
+@keyframes la-seat-pop { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+#la-host-lobby .la-seat .la-seat-av {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center;
+  font-family: 'Cormorant Garamond',serif; font-weight: 700; font-size: 21px; color: #1a1206;
+}
+#la-host-lobby .la-seat .la-seat-name {
+  flex: 0 0 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: 'Raleway',sans-serif; font-weight: 700; font-size: 12px; letter-spacing: .3px; color: var(--la-text);
+}
+#la-host-lobby .la-seat .la-seat-sub {
+  margin-top: auto; font-family: 'Inter',monospace; font-size: 9px; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--la-muted); display: flex; align-items: center; gap: 4px;
+}
+#la-host-lobby .la-seat .la-player-kick {
+  position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; opacity: 0;
+}
+#la-host-lobby .la-player-chip.la-seat:hover .la-player-kick { opacity: 1; }
+
+/* ---- "While you wait" mini-game: floating centered popup over the lobby ----
+   Shown on BOTH the host lobby and the student waiting lobby, until the match
+   starts (the engine unmounts SymFlappy on every non-lobby screen). The wrapper
+   is click-through so the PIN/players/Start underneath stay usable; only the
+   game card itself captures input. The card's own header collapses it.        */
+#la-overlay .la-flappy-popup {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center;
+  pointer-events: none;
+}
+#la-overlay .la-flappy-popup:empty { display: none; }
+#la-overlay .la-flappy-popup .sym-flappy-card {
+  pointer-events: auto; margin: 0;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.07);
+  animation: la-flappy-pop .34s cubic-bezier(.2,1.3,.4,1);
+}
+@keyframes la-flappy-pop { from { transform: scale(.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* ---- Responsive ---- */
 @media (max-width: 880px) {
