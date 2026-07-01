@@ -505,7 +505,8 @@ function fit(){ const vp=document.querySelector('.viewport'); const s=Math.min(v
 
 /* ---------- boot ---------- */
 function boot(){
-  var _ib=document.getElementById('ia-boot'); if(_ib){ _ib.classList.add('gone'); setTimeout(function(){ if(_ib&&_ib.remove) _ib.remove(); }, 380); }
+  var _ib=document.getElementById('ia-boot');
+  try {
   canvas=document.getElementById('game'); canvas.width=W; canvas.height=H; ctx=canvas.getContext('2d');
   hud=document.getElementById('hud'); bindInput();
   bindJoystick();
@@ -553,6 +554,16 @@ function boot(){
   addEventListener('resize',fit); addEventListener('load',fit);
   const vp=document.querySelector('.viewport'); if(window.ResizeObserver) new ResizeObserver(fit).observe(vp); fit();
   requestAnimationFrame(frame);
+  // Success → dismiss the loader. Moved here (was the first line of boot) so that
+  // if anything above throws, the error is SHOWN in #ia-boot instead of leaving
+  // the game hung on «Φόρτωση…» forever.
+  if(_ib){ _ib.classList.add('gone'); setTimeout(function(){ if(_ib&&_ib.remove) _ib.remove(); }, 380); }
+  } catch(err){
+    window.__bootErr=(err&&err.stack)||String(err);
+    if(_ib){ _ib.classList.remove('gone');
+      _ib.innerHTML='<div style="color:#E8C96A;font:600 13px system-ui,sans-serif;padding:24px;text-align:center;max-width:92vw;margin:auto">Σφάλμα φόρτωσης παιχνιδιού.'+
+        '<div style="margin-top:10px;color:#e0a0a0;font:400 11px ui-monospace,monospace;white-space:pre-wrap;word-break:break-word">'+String(window.__bootErr).slice(0,400)+'</div></div>'; }
+  }
 }
 function buildRhapBar(){ const bar=document.getElementById('rhapBar'); bar.innerHTML='';
   window.RHAP_ORDER[campaignKey].forEach(k=>{ const r=window.GAME_DATA[campaignKey].rhaps[k];
@@ -564,7 +575,14 @@ function applyWeaponLabel(){ hud.querySelector('#btnRanged .lbl').textContent=C.
   hud.querySelector('#btnUlt .lbl').textContent=C.ult.name; hud.querySelector('#ultName').textContent=C.ult.name;
   hud.querySelector('#portrait').textContent=C.portrait; hud.querySelector('#heroName').textContent=C.heroName; }
 
-if(document.readyState!=='loading') boot(); else addEventListener('DOMContentLoaded',boot);
+// Every script in index.html uses `defer`, so the DOM is fully parsed before this
+// runs (readyState is already 'interactive'). The old guard therefore took the
+// inline branch and called boot() exactly once with NO DOMContentLoaded fallback —
+// if that single call ever failed the loader stayed up forever. bootOnce() makes
+// it idempotent and correct under both synchronous and deferred loading.
+function bootOnce(){ if(window.__iaBooted) return; window.__iaBooted=true; boot(); }
+if(document.readyState==='loading') addEventListener('DOMContentLoaded',bootOnce);
+else bootOnce();
 window.__dbg={ boss(){ enemies=enemies.filter(e=>e.boss); spawnQueue=[]; wave=waveDefs.length-1; spawnEnemy('boss',1); },
   champ(){ spawnEnemy('champion',1); }, ult(){ player.ult=100; }, hero(x){ if(x!=null) player.x=x; },
   win(){ if(boss){ boss.hp=1; damage(boss,5);} },
