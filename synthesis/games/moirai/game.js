@@ -7,6 +7,23 @@
 const Moirai = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -155,7 +172,7 @@ const Moirai = (() => {
       const k=el.getAttribute('data-i18n'); if(I18N[k]) el.innerHTML=I18N[k][L()];
     });
     if (st && st.cur && document.getElementById('mo-screen-game').classList.contains('active')) {
-      document.getElementById('mo-qtext').textContent = st.cur.q[L()];
+      document.getElementById('mo-qtext').textContent = QT(st.cur.q);
       renderTop(); renderBoard();
     }
   }
@@ -195,7 +212,7 @@ const Moirai = (() => {
   function nextQ() {
     if (st.round>=ROUNDS) return end();
     st.answered=false; st.cur=getQ(); st.round++;
-    document.getElementById('mo-qtext').textContent = st.cur.q[L()];
+    document.getElementById('mo-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('mo-feedback'); fb.textContent=''; fb.className='mo-feedback';
     const wrap=document.getElementById('mo-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];

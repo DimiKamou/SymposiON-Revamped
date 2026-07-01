@@ -10,6 +10,23 @@
 const Toxotes = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -299,7 +316,7 @@ const Toxotes = (() => {
   function renderTrueQuestion(translateOnly) {
     const bar=document.getElementById('tx-qbar');
     bar.className='tx-qbar';
-    bar.innerHTML = `<span class="tx-q-tag">${T('ΤΟΞΕΥΣΕ ΤΗ ΣΩΣΤΗ','SHOOT THE CORRECT')}</span><span class="tx-q-text">${st.cur.q[L()]}</span>`;
+    bar.innerHTML = `<span class="tx-q-tag">${T('ΤΟΞΕΥΣΕ ΤΗ ΣΩΣΤΗ','SHOOT THE CORRECT')}</span><span class="tx-q-text">${QT(st.cur.q)}</span>`;
     document.getElementById('tx-answers').innerHTML='';
     if (!translateOnly) { /* labels already rebuilt via spawn on fresh round */ }
     else {
@@ -355,7 +372,7 @@ const Toxotes = (() => {
   }
   function renderVolleyQuestion(translateOnly) {
     const bar=document.getElementById('tx-qbar'); bar.className='tx-qbar';
-    bar.innerHTML = `<span class="tx-q-tag">${T('ΑΠΑΝΤΗΣΕ ΣΩΣΤΑ','ANSWER CORRECTLY')}</span><span class="tx-q-text">${st.cur.q[L()]}</span>`;
+    bar.innerHTML = `<span class="tx-q-tag">${T('ΑΠΑΝΤΗΣΕ ΣΩΣΤΑ','ANSWER CORRECTLY')}</span><span class="tx-q-text">${QT(st.cur.q)}</span>`;
     const wrap=document.getElementById('tx-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
     st.cur.a.forEach((opt,i)=>{

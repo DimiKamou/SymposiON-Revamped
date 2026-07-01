@@ -22,6 +22,23 @@
 const Heptapylos = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _pool = () => {
@@ -223,7 +240,7 @@ const Heptapylos = (() => {
     renderChamps();
     renderSetup();
     if (st && st.cur && document.getElementById('hep-screen-game').classList.contains('active')) {
-      document.getElementById('hep-qtext').textContent = st.cur.q[L()];
+      document.getElementById('hep-qtext').textContent = QT(st.cur.q);
       renderPowerbar(); renderHUD();
     }
   }
@@ -478,7 +495,7 @@ const Heptapylos = (() => {
     document.getElementById('hep-qbody').style.display = '';
     document.getElementById('hep-qcount').textContent = T('ΕΡΩΤΗΣΗ ', 'QUESTION ') + st.qNum;
     renderStreak();
-    document.getElementById('hep-qtext').textContent = st.cur.q[L()];
+    document.getElementById('hep-qtext').textContent = QT(st.cur.q);
     const fb = document.getElementById('hep-feedback'); fb.textContent = ''; fb.className = 'hep-feedback';
     const wrap = document.getElementById('hep-answers'); wrap.innerHTML = '';
     st.cur.a.forEach((opt, i) => {
