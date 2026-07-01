@@ -177,6 +177,16 @@ service cloud.firestore {
       allow write: if can('content');
     }
 
+    // Theory lesson OVERRIDES (ISSUE 8). A content-admin edits a theory
+    // prototype's pedagogical chrome (intro/badges/example/cards) via the
+    // "Πρότυπα Θεωρίας" editor; the patch is stored here and merged over the
+    // dataset-sourced lesson (theory-data.js applyTheoryOverride). World-readable
+    // so every student sees the corrected lesson; content-admin write only.
+    match /lesson_overrides/{lessonId} {
+      allow read:  if true;
+      allow write: if can('content');
+    }
+
     match /banners/{bannerId} {
       allow read:  if true;
       allow write: if can('content');
@@ -285,6 +295,22 @@ service cloud.firestore {
       allow write: if can('users');
     }
 
+    // Kleos grants written by the admin "Grant Kleos" panel (ISSUE 5b). The doc
+    // id is the target student's lowercased email; `pending` accumulates via
+    // FieldValue.increment. Admins (can('users')) write freely. The target
+    // student may READ their own doc and may only zero `pending` after they
+    // claim it (they cannot self-credit — the amount is set by the admin).
+    match /kleosGrants/{email} {
+      allow read:  if can('users')
+                || (request.auth != null && request.auth.token.email == email);
+      allow write: if can('users');
+      // Self-claim: the student may only set pending to 0, changing nothing else.
+      allow update: if request.auth != null
+                 && request.auth.token.email == email
+                 && request.resource.data.pending == 0
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending']);
+    }
+
 
     // ══════════════════════════════════════════════════════════
     //  LEADERBOARDS & LIVE GAMES
@@ -357,6 +383,48 @@ service cloud.firestore {
                    && request.resource.data.uid == request.auth.uid
                    && answerId == (request.auth.uid + '_q' + request.resource.data.questionIndex);
         allow update: if false;
+        allow delete: if isSuper();
+      }
+    }
+
+    // Friendly Battle · 1v1 duel room (parallel to live_arenas, capacity 2).
+    // Host mints the PIN + seeds the shared bank; one guest claims the empty
+    // seat via the ?join=PIN&duel=1 invite. Each player is self-paced through
+    // the same bank and writes only their own player doc (friendly, low-stakes
+    // → no per-write score cap, unlike the class arena).
+    match /duels/{pin} {
+      function isDuelHost() {
+        return request.auth != null && resource.data.hostUid == request.auth.uid;
+      }
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                 && request.resource.data.status  == 'lobby'
+                 && request.resource.data.hostUid == request.auth.uid;
+      allow update: if request.auth != null
+                 && (
+                   isDuelHost()
+                   // guest claims the still-empty seat (only sets guestUid to self)
+                   || (resource.data.get('guestUid', null) == null
+                       && request.resource.data.guestUid == request.auth.uid
+                       && request.resource.data.hostUid   == resource.data.hostUid)
+                   // the seated guest may keep writing but can't steal the host seat
+                   || (resource.data.get('guestUid', null) == request.auth.uid
+                       && request.resource.data.hostUid    == resource.data.hostUid)
+                 );
+      allow delete: if isSuper();
+
+      match /players/{uid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                   && uid                         == request.auth.uid
+                   && request.resource.data.uid   == request.auth.uid
+                   && request.resource.data.score == 0;
+        // A player writes only their OWN self-paced doc; the host may write freely.
+        allow update: if request.auth != null
+                   && (
+                     uid == request.auth.uid
+                     || get(/databases/$(database)/documents/duels/$(pin)).data.hostUid == request.auth.uid
+                   );
         allow delete: if isSuper();
       }
     }

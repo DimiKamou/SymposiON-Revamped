@@ -212,9 +212,8 @@
     }
     function buy(a){
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(x=>x.owned).map(x=>x.id));
-      const k = SymStore.get('kleos', 0);
-      if(k>=a.cost){ SymStore.set('kleos', k-a.cost); const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned', o); SymStore.set('acro_equipped', a.id);
-        const kEl=document.getElementById('acroKleos'); if(kEl) kEl.textContent=(k-a.cost).toLocaleString('en-US');
+      if(window.symSpendKleos ? symSpendKleos(a.cost) : ((k)=>{ if(k>=a.cost){ SymStore.set('kleos', k-a.cost); return true; } return false; })(SymStore.get('kleos',0))){ const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned', o); SymStore.set('acro_equipped', a.id);
+        const kEl=document.getElementById('acroKleos'); if(kEl) kEl.textContent=(window.symKleosLabel?symKleosLabel():SymStore.get('kleos',0).toLocaleString('en-US'));
         if(window.gsap){ for(let i=0;i<14;i++){const sp=document.createElement('span');const r=detail.getBoundingClientRect();sp.style.cssText=`position:fixed;left:${r.left+50}px;top:${r.top+40}px;width:6px;height:6px;border-radius:50%;background:var(--gold,#E0B24C);z-index:9999;pointer-events:none`;document.body.appendChild(sp);const ang=Math.random()*6.28,d=24+Math.random()*46;gsap.to(sp,{x:Math.cos(ang)*d,y:Math.sin(ang)*d,opacity:0,duration:.7,onComplete:()=>sp.remove()});} }
         paintGrid(); showDetail(a); symRender(); }
       else { detail.classList.add('shake'); setTimeout(()=>detail.classList.remove('shake'),400); }
@@ -234,7 +233,7 @@
         ]);
         if(!isOwned){
           // unlock straight from the grid if you can afford it
-          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=SymStore.get('kleos',0); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
+          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=(window.symKleos?symKleos():SymStore.get('kleos',0)); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
         }
         grid.appendChild(card);
       });

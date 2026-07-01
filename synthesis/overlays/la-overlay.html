@@ -1,5 +1,77 @@
 <div id="la-overlay" style="display:none;">
   <button class="la-close-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
+  <style id="la-duel-style">
+    /* Friendly Battle · 1v1 — scoped styles (game.css owns the rest). Reuses
+       --la-* tokens; --accent is set per mode from JS (mode.accent). */
+    #la-duel-lobby, #la-duel-match, #la-duel-wait, #la-duel-result {
+      background:
+        radial-gradient(ellipse at 70% 20%, color-mix(in srgb, var(--accent, #c9a44a) 12%, transparent) 0%, transparent 55%),
+        radial-gradient(ellipse at 25% 85%, rgba(61,36,16,0.24) 0%, transparent 50%),
+        var(--la-base, #0d0a06);
+      color: var(--la-ink, #eadfce);
+    }
+    .la-duel-lobby-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px; }
+    .la-duel-seats { display:flex; align-items:center; gap:20px; flex-wrap:wrap; justify-content:center; }
+    .la-duel-seat { display:flex; flex-direction:column; align-items:center; gap:8px; min-width:130px;
+      padding:18px 16px; border:1px solid var(--la-gold-dim, rgba(201,164,74,.38)); border-radius:16px;
+      background:rgba(255,255,255,.03); }
+    .la-duel-seat--wait { border-style:dashed; opacity:.72; }
+    .la-duel-seat__av { width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
+      font:800 20px/1 Inter,sans-serif; color:#12100a; }
+    .la-duel-seat__name { font:700 15px/1.2 Inter,sans-serif; text-align:center; max-width:150px; }
+    .la-duel-seat__role { font:600 10px/1 Inter,sans-serif; letter-spacing:.12em; text-transform:uppercase; opacity:.6; }
+    .la-duel-vs { font:900 22px/1 'Cinzel',serif; color:var(--accent, var(--la-gold)); letter-spacing:.1em; }
+    .la-duel-invite { align-items:center; }
+    .la-duel-footer { flex-direction:column; gap:10px; }
+    .la-duel-guest-hint { font:600 13px/1.4 Inter,sans-serif; opacity:.75; text-align:center; }
+
+    /* match */
+    #la-duel-match { align-items:stretch; }
+    .la-duel-scorebar { display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px 18px; border-bottom:1px solid var(--la-gold-dim, rgba(201,164,74,.38));
+      background:rgba(0,0,0,.28); }
+    .la-duel-scoreseat { display:flex; align-items:center; gap:10px; }
+    .la-duel-scoreseat--opp { flex-direction:row; }
+    .la-duel-scoreseat__av { width:38px; height:38px; border-radius:50%; display:grid; place-items:center;
+      font:800 15px/1 Inter,sans-serif; color:#12100a; }
+    .la-duel-scoreseat__name { font:700 14px/1 Inter,sans-serif; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .la-duel-scoreseat__score { font:900 22px/1 Inter,sans-serif; color:var(--accent, var(--la-gold)); min-width:34px; text-align:center; }
+    .la-duel-scoreseat__vs { flex:none; display:grid; place-items:center; }
+    .la-duel-mq-glyph { font-size:26px; color:var(--accent, var(--la-gold)); }
+    .la-duel-match-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:24px; text-align:center; }
+    .la-duel-mq-qnum { font:700 11px/1 Inter,sans-serif; letter-spacing:.14em; text-transform:uppercase; opacity:.6; }
+    .la-duel-mq-text { font:700 clamp(20px,3.2vw,30px)/1.3 'Cinzel',serif; max-width:760px; }
+    .la-duel-mq-opts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:min(640px,92vw); }
+    @media (max-width:560px){ .la-duel-mq-opts{ grid-template-columns:1fr; } }
+    .la-duel-opt { display:flex; align-items:center; gap:12px; text-align:left; padding:16px 18px;
+      border:1px solid var(--la-gold-dim, rgba(201,164,74,.38)); border-radius:14px; cursor:pointer;
+      background:var(--la-btn-bg, rgba(255,255,255,.05)); color:#fff; font:700 16px/1.3 Inter,sans-serif;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
+    .la-duel-opt:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.4); }
+    .la-duel-opt:disabled{ cursor:default; }
+    .la-duel-opt__ltr { flex:none; width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+      background:rgba(0,0,0,.35); font:900 15px/1 Inter,sans-serif; }
+    .la-duel-opt--right { box-shadow:0 0 0 2px #4a9e5c inset, 0 8px 22px rgba(0,0,0,.4); }
+    .la-duel-opt--wrong { box-shadow:0 0 0 2px #c0392b inset; opacity:.8; }
+    .la-duel-fb { min-height:24px; font:800 16px/1 Inter,sans-serif; }
+    .la-duel-fb--good { color:#7fd8a0; }
+    .la-duel-fb--bad  { color:#e8917f; }
+
+    /* result */
+    #la-duel-result { align-items:center; justify-content:center; }
+    .la-duel-res-inner { display:flex; flex-direction:column; align-items:center; gap:16px; padding:28px; text-align:center; z-index:2; }
+    .la-duel-res-icon { font-size:64px; }
+    .la-duel-res-title { font:900 clamp(28px,5vw,44px)/1 'Cinzel',serif; letter-spacing:.04em; }
+    .la-duel-win  .la-duel-res-title { color:#c9a44a; }
+    .la-duel-lose .la-duel-res-title { color:#c47f7f; }
+    .la-duel-tie  .la-duel-res-title { color:#bcb28e; }
+    .la-duel-res-tally { display:flex; align-items:center; gap:22px; margin-top:6px; }
+    .la-duel-res-side { display:flex; flex-direction:column; gap:4px; min-width:110px; }
+    .la-duel-res-name { font:700 14px/1.2 Inter,sans-serif; opacity:.85; }
+    .la-duel-res-score { font:900 34px/1 Inter,sans-serif; color:var(--la-gold,#c9a44a); }
+    .la-duel-res-vs { font:800 18px/1 Inter,sans-serif; opacity:.5; }
+    .la-duel-res-btn { margin-top:10px; max-width:220px; }
+  </style>
   <div id="la-wrap">
 
     <!-- ── HOST: LOBBY ──────────────────────────────── -->
@@ -226,6 +298,123 @@
         <div class="la-sr-icon"  id="la-sr-icon"></div>
         <div class="la-sr-label" id="la-sr-label"></div>
         <div class="la-sr-pts"   id="la-sr-pts"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         FRIENDLY BATTLE · 1v1 (duel) — 2-seat room screens.
+         Shared quiz-duel UI themed by mode.accent/mode.glyph.
+    ══════════════════════════════════════════════════════════════ -->
+
+    <!-- ── DUEL: LOBBY (2 seats + invite + host start) ── -->
+    <div id="la-duel-lobby" class="la-screen">
+      <div class="la-topbar">
+        <div class="la-brand">
+          <button class="la-icon-btn" onclick="LiveArena.close()" title="Πίσω">←</button>
+          <div class="la-brand-text">
+            <div class="la-brand-name">Symposi<span>ON</span></div>
+            <div class="la-brand-sub">Φιλική Μάχη · 1v1</div>
+          </div>
+        </div>
+        <div class="la-topbar-mid">
+          <div class="la-topbar-game" id="la-duel-game-title"></div>
+        </div>
+        <button class="la-icon-btn" onclick="LiveArena.close()" title="Κλείσιμο">✕</button>
+      </div>
+
+      <div class="la-modebar" id="la-duel-modebar" style="--accent: var(--la-gold)">
+        <div class="la-mb-glyph" id="la-duel-mb-glyph">⚔</div>
+        <div class="la-mb-text">
+          <div class="la-mb-kicker">ΜΟΝΟΜΑΧΙΑ · 1v1</div>
+          <h2><span id="la-duel-mb-title">ΜΟΝΟΜΑΧΙΑ</span><small id="la-duel-mb-sub"></small></h2>
+        </div>
+        <div class="la-mb-fmt"><span id="la-duel-mb-fmt-top">ΓΥΡΟΙ</span><br><b id="la-duel-mb-fmt-val">—</b></div>
+      </div>
+
+      <div class="la-duel-lobby-body">
+        <!-- 2 seats -->
+        <div class="la-duel-seats" id="la-duel-seats"></div>
+
+        <!-- invite cluster -->
+        <div class="la-pin-cluster la-duel-invite">
+          <div class="la-pin-label" data-gr="PIN ΜΟΝΟΜΑΧΙΑΣ" data-en="DUEL PIN">PIN ΜΟΝΟΜΑΧΙΑΣ</div>
+          <div class="la-pin-display" id="la-duel-pin-display">------</div>
+          <div class="la-pin-share">
+            <button class="la-share-btn" onclick="LiveArena.copyInviteLink()" title="Copy link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span data-gr="Σύνδεσμος" data-en="Link">Σύνδεσμος</span>
+            </button>
+            <button class="la-share-btn" onclick="LiveArena.copyPIN()" title="Copy PIN">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              <span>PIN</span>
+            </button>
+            <button class="la-share-btn" onclick="LiveArena.showInviteQR()" title="QR">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM21 14v7M17 21h4"/></svg>
+              <span>QR</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="la-lobby-footer la-duel-footer">
+        <div class="la-duel-guest-hint" id="la-duel-guest-hint" data-gr="Ο οικοδεσπότης θα ξεκινήσει τη μονομαχία…" data-en="The host will start the duel…">Ο οικοδεσπότης θα ξεκινήσει τη μονομαχία…</div>
+        <button class="la-start-btn" id="la-duel-start-btn" onclick="LiveArena.startDuel()" disabled>Αναμονή φίλου…</button>
+      </div>
+    </div>
+
+    <!-- ── DUEL: MATCH (question + live 2-seat score bar) ── -->
+    <div id="la-duel-match" class="la-screen" style="--accent: var(--la-gold)">
+      <!-- live 2-seat score bar -->
+      <div class="la-duel-scorebar">
+        <div class="la-duel-scoreseat la-duel-scoreseat--me">
+          <span class="la-duel-scoreseat__av" id="la-duel-me-av">•</span>
+          <span class="la-duel-scoreseat__name" id="la-duel-me-name">Εσύ</span>
+          <span class="la-duel-scoreseat__score" id="la-duel-me-score">0</span>
+        </div>
+        <div class="la-duel-scoreseat__vs">
+          <span class="la-mb-glyph la-duel-mq-glyph" id="la-duel-mq-glyph">⚔</span>
+        </div>
+        <div class="la-duel-scoreseat la-duel-scoreseat--opp">
+          <span class="la-duel-scoreseat__score" id="la-duel-opp-score">0</span>
+          <span class="la-duel-scoreseat__name" id="la-duel-opp-name">Αντίπαλος</span>
+          <span class="la-duel-scoreseat__av" id="la-duel-opp-av">•</span>
+        </div>
+      </div>
+
+      <div class="la-duel-match-body">
+        <div class="la-duel-mq-qnum" id="la-duel-mq-qnum"></div>
+        <div class="la-duel-mq-text" id="la-duel-mq-text"></div>
+        <div class="la-duel-mq-opts" id="la-duel-mq-opts"></div>
+        <div class="la-duel-fb" id="la-duel-mq-fb"></div>
+      </div>
+    </div>
+
+    <!-- ── DUEL: WAIT (finished my side, waiting for rival) ── -->
+    <div id="la-duel-wait" class="la-screen">
+      <div class="la-sw-inner">
+        <div class="la-sw-dots"><div class="la-sw-dot"></div><div class="la-sw-dot"></div><div class="la-sw-dot"></div></div>
+        <div class="la-sw-msg" id="la-duel-wait-msg" data-gr="Αναμονή αντιπάλου…" data-en="Waiting for your rival…">Αναμονή αντιπάλου…</div>
+      </div>
+    </div>
+
+    <!-- ── DUEL: RESULT (winner / loser) ── -->
+    <div id="la-duel-result" class="la-screen">
+      <canvas id="la-duel-particles" class="la-particles-canvas"></canvas>
+      <div class="la-duel-res-inner">
+        <div class="la-duel-res-icon"  id="la-duel-res-icon">🏆</div>
+        <div class="la-duel-res-title" id="la-duel-res-title"></div>
+        <div class="la-duel-res-tally">
+          <div class="la-duel-res-side">
+            <div class="la-duel-res-name"  id="la-duel-res-me-name">Εσύ</div>
+            <div class="la-duel-res-score" id="la-duel-res-me-score">0</div>
+          </div>
+          <div class="la-duel-res-vs">—</div>
+          <div class="la-duel-res-side">
+            <div class="la-duel-res-name"  id="la-duel-res-opp-name">Αντίπαλος</div>
+            <div class="la-duel-res-score" id="la-duel-res-opp-score">0</div>
+          </div>
+        </div>
+        <button class="la-join-btn la-duel-res-btn" onclick="LiveArena.close()" data-gr="Τέλος" data-en="Done">Τέλος</button>
       </div>
     </div>
 

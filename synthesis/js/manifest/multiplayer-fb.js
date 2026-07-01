@@ -27,6 +27,9 @@
       //   picker (la-host-dataset, the section→grade→subject multi-select), not
       //   the teacher-gated Host/Join chooser that fell to the student PIN screen;
       // otherwise open the picker/lobby (host chooser or ?join= student flow).
+      // cfg.duel → Friendly Battle (real 2-seat 1v1 room). Must be checked BEFORE
+      // the generic questions branch, since a duel also carries a question bank.
+      if (cfg && cfg.duel && typeof LiveArena.launchDuelHost === 'function') return LiveArena.launchDuelHost(cfg);
       if (cfg && cfg.questions) return LiveArena.launchHost(cfg);
       if (cfg && cfg.host && typeof LiveArena.pickDataset === 'function') return LiveArena.pickDataset();
       return LiveArena.launchPicker();

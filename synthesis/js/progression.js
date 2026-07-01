@@ -210,6 +210,20 @@ function _attachProgListener(uid) {
 function _hjLevel(xp)  { return Math.floor(Math.sqrt(xp / 100)); }
 function _hjXpFor(lvl) { return lvl * lvl * 100; }
 
+// ── ADMIN INFINITE-FUNDS SHIM (Drachmas) ──────────────────────
+// Admins have unlimited Drachmas so they can unlock every Agora item.
+// Delegates the admin check to the shared predicate in js/sym-kleos.js.
+function _hjIsInfiniteAdmin() {
+  return !!(window.symKleosIsAdmin && window.symKleosIsAdmin());
+}
+// Effective spendable balance: Infinity for admins, else the real Firestore value.
+function _hjDrachmas() {
+  return _hjIsInfiniteAdmin() ? Infinity : (_prog ? (_prog.drachmas || 0) : 0);
+}
+function _hjDrachmasLabel() {
+  return _hjIsInfiniteAdmin() ? '∞' : (((_prog && _prog.drachmas) || 0).toLocaleString('el-GR'));
+}
+
 // ── FIRESTORE REFERENCE ───────────────────────────────────────
 function _progRef(uid) {
   return firebase.firestore().doc(`users/${uid}/progression/data`);
@@ -334,13 +348,16 @@ async function purchaseItem(type, id) {
 
   const ownedList = type === 'title' ? _prog.unlockedTitles : _prog.unlockedAvatars;
   if (ownedList.includes(id)) return { ok: false, reason: 'already-owned' };
-  if (_prog.drachmas < item.cost) return { ok: false, reason: 'insufficient-drachmas' };
+  if (_hjDrachmas() < item.cost) return { ok: false, reason: 'insufficient-drachmas' };
 
-  _prog.drachmas -= item.cost;
   ownedList.push(id);
 
-  const update = { drachmas: _prog.drachmas };
+  const update = {};
   update[type === 'title' ? 'unlockedTitles' : 'unlockedAvatars'] = ownedList;
+  if (!_hjIsInfiniteAdmin()) {           // admins keep their (untouched) balance
+    _prog.drachmas -= item.cost;
+    update.drachmas = _prog.drachmas;
+  }
 
   try {
     await _progRef(currentUser.uid).update(update);
@@ -481,7 +498,7 @@ function renderProfilePage() {
 
       <div class="hj-drachma-block">
         <div class="hj-drachma-icon">⌾</div>
-        <div class="hj-drachma-amount">${p.drachmas.toLocaleString('el-GR')}</div>
+        <div class="hj-drachma-amount">${_hjDrachmasLabel()}</div>
         <div class="hj-drachma-label">${lang === 'en' ? 'Drachmas' : 'Δραχμές'}</div>
       </div>
     </div>
@@ -763,7 +780,7 @@ function _hjRenderTitles() {
     } else if (t.levelReq > 0 && _prog.level < t.levelReq) {
       cls = 'hj-item-locked';
       stateText = (lang === 'en' ? 'Level ' : 'Επ. ') + t.levelReq;
-    } else if (t.cost > 0 && _prog.drachmas >= t.cost) {
+    } else if (t.cost > 0 && _hjDrachmas() >= t.cost) {
       cls = 'hj-item-buyable';
       stateText = `⌾ ${t.cost}`;
       clickAttr = `onclick="_hjConfirmPurchase('title','${t.id}')"`;
@@ -815,7 +832,7 @@ function _hjRenderAvatars() {
       cls = 'hj-item-owned';
       stateText = lang === 'en' ? 'Equip' : 'Εξόπλισε';
       clickAttr = `onclick="equipItem('avatar','${a.id}').then(()=>renderProfilePage())"`;
-    } else if (_prog.drachmas >= a.cost) {
+    } else if (_hjDrachmas() >= a.cost) {
       cls = 'hj-item-buyable';
       stateText = `⌾ ${a.cost}`;
       clickAttr = `onclick="_hjConfirmPurchase('avatar','${a.id}')"`;
@@ -873,7 +890,7 @@ function _hjConfirmPurchase(type, id) {
           : `Δαπάνη <strong>${item.cost} Δραχμές</strong> για να αποκτήσεις αυτόν τον ${typeLabel};`}
       </div>
       <div class="hj-modal-balance">
-        ${lang === 'en' ? 'Your balance:' : 'Υπόλοιπο:'} ${_prog.drachmas} ${lang === 'en' ? 'Drachmas' : 'Δρχ.'}
+        ${lang === 'en' ? 'Your balance:' : 'Υπόλοιπο:'} ${_hjDrachmasLabel()} ${lang === 'en' ? 'Drachmas' : 'Δρχ.'}
       </div>
       <div class="hj-modal-actions">
         <button class="hj-modal-cancel"
