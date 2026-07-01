@@ -177,6 +177,16 @@ service cloud.firestore {
       allow write: if can('content');
     }
 
+    // Theory lesson OVERRIDES (ISSUE 8). A content-admin edits a theory
+    // prototype's pedagogical chrome (intro/badges/example/cards) via the
+    // "Πρότυπα Θεωρίας" editor; the patch is stored here and merged over the
+    // dataset-sourced lesson (theory-data.js applyTheoryOverride). World-readable
+    // so every student sees the corrected lesson; content-admin write only.
+    match /lesson_overrides/{lessonId} {
+      allow read:  if true;
+      allow write: if can('content');
+    }
+
     match /banners/{bannerId} {
       allow read:  if true;
       allow write: if can('content');
@@ -283,6 +293,22 @@ service cloud.firestore {
     match /accessGrants/{docId} {
       allow read:  if can('users');
       allow write: if can('users');
+    }
+
+    // Kleos grants written by the admin "Grant Kleos" panel (ISSUE 5b). The doc
+    // id is the target student's lowercased email; `pending` accumulates via
+    // FieldValue.increment. Admins (can('users')) write freely. The target
+    // student may READ their own doc and may only zero `pending` after they
+    // claim it (they cannot self-credit — the amount is set by the admin).
+    match /kleosGrants/{email} {
+      allow read:  if can('users')
+                || (request.auth != null && request.auth.token.email == email);
+      allow write: if can('users');
+      // Self-claim: the student may only set pending to 0, changing nothing else.
+      allow update: if request.auth != null
+                 && request.auth.token.email == email
+                 && request.resource.data.pending == 0
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending']);
     }
 
 

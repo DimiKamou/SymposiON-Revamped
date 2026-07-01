@@ -26,14 +26,18 @@
     var launch;
     if (a.type === 'history') {
       launch = { fn: 'openIstoria', args: [a.course || 'g3'] };
+    } else if (a.type === 'theory') {
+      // ISSUE 8: theory prototypes launch the three-mode theory lesson view
+      // (theory-lesson.js) for the assigned dataset id.
+      launch = { fn: 'openTheoryLesson', args: [a.datasetId || a.preset || a.subjectId] };
     } else {
       launch = { fn: 'openTriviaPanel', args: [a.preset || a.subjectId || 'iliada'] };
     }
     return {
       gr: (a.label && a.label.gr) || a.label || 'Πρότυπο',
       en: (a.label && a.label.en) || (a.label && a.label.gr) || 'Template',
-      meta: a.meta || (a.type === 'history' ? 'Ιστορία' : 'Trivia'),
-      illu: a.illu || (a.type === 'history' ? 'scroll' : 'amphora'),
+      meta: a.meta || (a.type === 'history' ? 'Ιστορία' : (a.type === 'theory' ? 'Θεωρία' : 'Trivia')),
+      illu: a.illu || (a.type === 'history' ? 'scroll' : (a.type === 'theory' ? 'column' : 'amphora')),
       launch: launch,
     };
   }

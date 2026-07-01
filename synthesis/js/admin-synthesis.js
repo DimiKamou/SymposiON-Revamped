@@ -644,6 +644,7 @@
     var sections = [
       ['overview', '◷', { gr: 'Επισκόπηση', en: 'Overview' }],
       ['grant', '✦', { gr: 'Χορήγηση Πρόσβασης', en: 'Grant Access' }],
+      ['kleos', '✧', { gr: 'Χορήγηση Kleos', en: 'Grant Kleos' }],
       ['users', '◆', { gr: 'Χρήστες', en: 'Users' }],
       ['access', '◫', { gr: 'Έλεγχος Πρόσβασης', en: 'Access Control' }],
       ['pricing', '€', { gr: 'Τιμολόγηση', en: 'Pricing' }],
@@ -683,12 +684,10 @@
       rail.appendChild(railBtn(s.id, '◦', { gr: s.nm, en: s.nm }));
     });
     rail.appendChild(el('div', { class: 'sc-admin2__railfoot' }, [
-      el('button', {
-        class: 'sc-admin2__add', onclick: function () {
-          var nm = prompt(L({ gr: 'Όνομα νέας ενότητας:', en: 'New section name:' }), L({ gr: 'Νέα ενότητα', en: 'New section' }));
-          if (nm && SymStore) { var cur = SymStore.get('admin_custom_secs', []); var id = 'custom_' + Date.now(); cur.push({ id: id, nm: nm }); SymStore.set('admin_custom_secs', cur); window.__adminSec = id; symRender(); }
-        }
-      }, [el('span', { class: 'sc-admin2__ic' }, '＋'), L({ gr: 'Νέα ενότητα', en: 'Add section' })]),
+      // ISSUE 7: the "＋ Νέα ενότητα / Add section" creator was removed — it only
+      // ever produced an EMPTY placeholder section (real sections are added in
+      // code). The rail-edit toggle below is kept, and any custom sections users
+      // already saved still render + are deletable via the ✎ edit "×".
       el('button', {
         class: 'sc-admin2__add', onclick: function () { window.__adminRailEdit = !window.__adminRailEdit; symRender(); }
       }, [el('span', { class: 'sc-admin2__ic' }, '✎'), window.__adminRailEdit ? L({ gr: 'Τέλος', en: 'Done' }) : L({ gr: 'Επεξεργασία', en: 'Edit' })]),
@@ -1116,6 +1115,105 @@
               adminConfirm(L({ gr: 'Διαγραφή πρόσβασης για ' + g.email + ';', en: 'Remove access for ' + g.email + '?' }), function () {
                 var cur = grantsLoad().filter(function (x) { return x.email !== g.email || x.ts !== g.ts; });
                 grantsSave(cur); paint();
+              });
+            } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
+          ]));
+        });
+        pane.appendChild(gtbl);
+      }
+    }
+
+    /* ════════════════ GRANT KLEOS (ISSUE 5b) ═══════════════════════════
+       Kleos lives in each student's LOCAL SymStore('kleos') — there is no
+       server-side per-student balance. So "award kleos to student X" is done
+       exactly like access grants: write a server-side grant record the target
+       student's client drains once on next login (sym-kleos.js →
+       symClaimKleosGrants). Persist to SymStore('kleos_grants') + a guarded
+       Firestore mirror kleosGrants/{email} using a FieldValue.increment so
+       repeated grants accumulate. Reuses field2()/rowSel()/validEmail()/
+       fsReady()/SS() already in this file.
+       NOTE: the bootstrap admin has INFINITE kleos (sym-kleos.js), so test the
+       claim/credit flow signed in as a NON-admin account. */
+    function kleosGrantsLoad() {
+      var arr = SS() ? SS().get('kleos_grants', []) : [];
+      return Array.isArray(arr) ? arr : [];
+    }
+    function kleosGrantsSave(email, amount, reason) {
+      var rec = {
+        email: String(email || '').toLowerCase(),
+        kleos: +amount || 0,
+        reason: reason || '',
+        ts: Date.now()
+      };
+      var arr = kleosGrantsLoad(); arr.unshift(rec);
+      if (SS()) SS().set('kleos_grants', arr);
+      try {
+        if (fsReady()) {
+          firebase.firestore().collection('kleosGrants').doc(rec.email)
+            .set({
+              pending: firebase.firestore.FieldValue.increment(rec.kleos),
+              lastReason: rec.reason,
+              ts: rec.ts
+            }, { merge: true })
+            .catch(function () { /* offline / rules — degrade to local */ });
+        }
+      } catch (_e) { /* no firebase — fine */ }
+      return rec;
+    }
+
+    function renderKleosGrant() {
+      pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Χορήγηση Kleos', en: 'Grant Kleos' })));
+      pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+        gr: 'Πρόσθεσε Kleos σε έναν μαθητή (με email). Το Kleos πιστώνεται στον λογαριασμό του την επόμενη φορά που θα συνδεθεί. Χρειάζεται σύνδεση Firestore για να φτάσει σε άλλη συσκευή· αλλιώς μένει τοπικά.',
+        en: 'Add Kleos to a student (by email). It is credited to their account the next time they sign in. A Firestore connection is required to reach another device; otherwise it stays local.'
+      })));
+
+      var fsOk = fsReady();
+      pane.appendChild(el('div', { class: 'sc-ac__status' }, [
+        el('span', { class: 'sc-ac__dot' + (fsOk ? ' on' : '') }),
+        L(fsOk ? { gr: 'Συγχρονισμός Firestore ενεργός', en: 'Firestore sync active' } : { gr: 'Τοπική αποθήκευση (χωρίς firebase εδώ)', en: 'Local-only (no firebase here)' }),
+      ]));
+
+      var emailFld = field2(L({ gr: 'Email μαθητή', en: 'Student email' }), 'student@example.com');
+      var amountFld = field2(L({ gr: 'Ποσό Kleos', en: 'Kleos amount' }), '100');
+      try { amountFld.querySelector('input').type = 'number'; amountFld.querySelector('input').min = '1'; } catch (_e) {}
+      var reasonFld = field2(L({ gr: 'Αιτιολογία (προαιρετικό)', en: 'Reason (optional)' }), L({ gr: 'π.χ. βραβείο διαγωνισμού', en: 'e.g. contest prize' }));
+
+      pane.appendChild(el('div', { class: 'sc-form' }, [
+        emailFld, amountFld, reasonFld,
+        el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:6px', onclick: function (e) {
+          var email = ((emailFld.querySelector('input') || {}).value || '').trim();
+          if (!validEmail(email)) { emailFld.querySelector('input').focus(); return; }
+          var amount = +(((amountFld.querySelector('input') || {}).value) || 0);
+          if (!(amount > 0)) { amountFld.querySelector('input').focus(); return; }
+          var reason = ((reasonFld.querySelector('input') || {}).value || '').trim();
+          kleosGrantsSave(email, amount, reason);
+          emailFld.querySelector('input').value = '';
+          amountFld.querySelector('input').value = '';
+          reasonFld.querySelector('input').value = '';
+          e.currentTarget.textContent = '✓ ' + L({ gr: 'Χορηγήθηκε', en: 'Granted' });
+          setTimeout(function () { paint(); }, 700);
+        } }, L({ gr: 'Χορήγηση Kleos', en: 'Grant Kleos' })),
+      ]));
+
+      // ── existing kleos grants list ────────────────────────────────────
+      var grants = kleosGrantsLoad();
+      if (grants.length) {
+        pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:20px 0 8px' }, L({ gr: 'Χορηγήσεις Kleos', en: 'Kleos grants' }) + ' (' + grants.length + ')'));
+        var gtbl = el('div', { class: 'sc-table' });
+        gtbl.appendChild(el('div', { class: 'sc-tr sc-tr--h' }, [
+          el('span', {}, 'Email'), el('span', {}, 'Kleos'),
+          el('span', {}, L({ gr: 'Αιτιολογία', en: 'Reason' })), el('span', {}, ''),
+        ]));
+        grants.forEach(function (g) {
+          gtbl.appendChild(el('div', { class: 'sc-tr' }, [
+            el('span', { class: 'sc-tr__task' }, g.email),
+            el('span', {}, el('em', { class: 'sc-badge2 sc-badge2--done' }, '+' + (g.kleos || 0))),
+            el('span', {}, g.reason || '—'),
+            el('span', { class: 'sc-tr__acts' }, [el('button', { class: 'sc-mini', onclick: function () {
+              adminConfirm(L({ gr: 'Αφαίρεση εγγραφής για ' + g.email + ' (δεν αναιρεί ήδη πιστωμένο Kleos);', en: 'Remove record for ' + g.email + ' (does not undo already-credited Kleos)?' }), function () {
+                var cur = kleosGrantsLoad().filter(function (x) { return x.email !== g.email || x.ts !== g.ts; });
+                if (SS()) SS().set('kleos_grants', cur); paint();
               });
             } }, L({ gr: 'Διαγραφή', en: 'Delete' }))]),
           ]));
@@ -2291,8 +2389,12 @@
             subjS.appendChild(el('option', { value: '' }, L({ gr: '— μάθημα —', en: '— subject —' })));
             acSubjects(aClass).forEach(function (s) { subjS.appendChild(el('option', { value: s.id }, L(s))); });
           }
+          // ISSUE 6: use acScopeList() (6 grade classes + grammar/theory banks)
+          // instead of SYM().CLASSES, so every keyed SUBJECTS scope is
+          // assignable — grammar-track subjects (Ρήματα, Ονόματα, Συντακτικό…)
+          // were previously unreachable because only CLASSES was iterated.
           var classS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { aClass = e.target.value; fillSubj(); } },
-            [el('option', { value: '' }, L({ gr: '— τάξη —', en: '— class —' }))].concat((SYM().CLASSES || []).map(function (c) { return el('option', { value: c.id }, L(c)); })));
+            [el('option', { value: '' }, L({ gr: '— τάξη —', en: '— class —' }))].concat(acScopeList().map(function (c) { return el('option', { value: c.id }, L(c.label)); })));
           var labGr = el('input', { class: 'sc-field__i', placeholder: L({ gr: 'Τίτλος (π.χ. Trivia Λογοτεχνίας)', en: 'Title (gr)' }) });
           var labEn = el('input', { class: 'sc-field__i', placeholder: 'Title (en)' });
           fillSubj();
@@ -2325,6 +2427,77 @@
               ]));
             });
             pane.appendChild(lw);
+          }
+        })();
+
+        // ── ΠΡΟΤΥΠΑ ΘΕΩΡΙΑΣ (ISSUE 8) ─────────────────────────────────────
+        // List every registered theory lesson (window.THEORY_META) and open the
+        // override editor for it; plus assign a theory lesson to a class/subject
+        // so it renders as a student tile (type:'theory' + datasetId → launches
+        // openTheoryLesson via syn-assignments.js).
+        (function () {
+          var META = window.THEORY_META || {};
+          var ids = Object.keys(META);
+          pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Πρότυπα Θεωρίας', en: 'Theory Prototypes' })));
+          pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({
+            gr: 'Επεξεργάσου το πρότυπο κάθε μαθήματος θεωρίας (εισαγωγή, badges, παράδειγμα, κάρτες). Οι αλλαγές αποθηκεύονται ως override (lesson_overrides) και υπερισχύουν του προεπιλεγμένου. Οι πίνακες κλίσης προέρχονται από το dataset και δεν αλλάζουν εδώ.',
+            en: 'Edit each theory lesson prototype (intro, badges, example, cards). Changes save as an override (lesson_overrides) and win over the default. Declension tables come from the dataset and are not edited here.'
+          })));
+          if (!ids.length) {
+            pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Δεν φορτώθηκαν πρότυπα θεωρίας (theory-data.js).', en: 'No theory prototypes loaded (theory-data.js).' })));
+          } else {
+            var tw = el('div', { class: 'sc-voyadmin', style: 'margin:0 0 22px' });
+            ids.forEach(function (id) {
+              var m = META[id] || {};
+              tw.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+                el('span', { class: 'sc-voyadmin__ic', style: 'display:flex;align-items:center;justify-content:center;font-size:18px' }, '📖'),
+                el('div', { class: 'sc-voyadmin__b' }, [
+                  el('div', { class: 'sc-voyadmin__nm' }, id + (m.posLabel ? ' · ' + m.posLabel : '')),
+                  el('div', { class: 'sc-voyadmin__m' }, (m.level || '') + (m.meaning ? ' · ' + m.meaning : '')),
+                ]),
+                el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: (function (lid) { return function () {
+                  var lesson = (typeof window.buildLessonFromDataset === 'function') ? window.buildLessonFromDataset(lid) : null;
+                  if (!lesson) { lesson = { id: lid, title: lid, posLabel: (META[lid] || {}).posLabel, level: (META[lid] || {}).level, meaning: (META[lid] || {}).meaning, intro: (META[lid] || {}).intro, badges: (META[lid] || {}).badges, example: (META[lid] || {}).example, cards: (META[lid] || {}).cards }; }
+                  if (typeof window.openTheoryEditor === 'function') window.openTheoryEditor(lesson, function () { paint(); });
+                  else adminConfirm(L({ gr: 'Ο επεξεργαστής θεωρίας δεν φορτώθηκε.', en: 'Theory editor not loaded.' }), function () {});
+                }; })(id) }, L({ gr: '✎ Επεξεργασία', en: '✎ Edit' })),
+              ]));
+            });
+            pane.appendChild(tw);
+
+            // ── assign a theory lesson to a class + subject ──────────────
+            pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:0 0 8px' }, L({ gr: 'Ανάθεση θεωρίας σε τάξη / μάθημα', en: 'Assign theory to class / subject' })));
+            (function () {
+              var thClass = '', thSubj = '', thId = ids[0] || '';
+              var thIdS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { thId = e.target.value; } },
+                ids.map(function (id) { return el('option', { value: id }, id); }));
+              var thSubjS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { thSubj = e.target.value; } }, []);
+              function thFill() {
+                thSubjS.innerHTML = ''; thSubj = '';
+                thSubjS.appendChild(el('option', { value: '' }, L({ gr: '— μάθημα —', en: '— subject —' })));
+                acSubjects(thClass).forEach(function (s) { thSubjS.appendChild(el('option', { value: s.id }, L(s))); });
+              }
+              var thClassS = el('select', { class: 'sc-field__i sc-select', onchange: function (e) { thClass = e.target.value; thFill(); } },
+                [el('option', { value: '' }, L({ gr: '— τάξη —', en: '— class —' }))].concat(acScopeList().map(function (c) { return el('option', { value: c.id }, L(c.label)); })));
+              var thLabGr = el('input', { class: 'sc-field__i', placeholder: L({ gr: 'Τίτλος πλακιδίου', en: 'Tile title (gr)' }) });
+              var thLabEn = el('input', { class: 'sc-field__i', placeholder: 'Title (en)' });
+              thFill();
+              pane.appendChild(el('div', { class: 'sc-voyadmin', style: 'gap:8px' }, [
+                el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα θεωρίας', en: 'Theory lesson' })), thIdS]),
+                el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τάξη', en: 'Class' })), thClassS]),
+                el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Μάθημα', en: 'Subject' })), thSubjS]),
+                el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, L({ gr: 'Τίτλος', en: 'Title' })), thLabGr]),
+                el('label', { class: 'sc-field' }, [el('span', { class: 'sc-field__l' }, 'EN'), thLabEn]),
+                el('button', {
+                  class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: function () {
+                    if (!thClass || !thSubj || !thId || !thLabGr.value.trim()) return;
+                    var arr = taLoad();
+                    arr.push({ id: 'ta-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), classId: thClass, subjectId: thSubj, type: 'theory', datasetId: thId, label: { gr: thLabGr.value.trim(), en: thLabEn.value.trim() || thLabGr.value.trim() }, meta: 'Θεωρία', illu: 'column', ts: Date.now() });
+                    taSave(arr); paint();
+                  }
+                }, L({ gr: '＋ Ανάθεση θεωρίας', en: '＋ Assign theory' })),
+              ]));
+            })();
           }
         })();
 
@@ -2609,6 +2782,9 @@
         pane.appendChild(tlist);
         pane.appendChild(el('div', { style: 'height:1px;background:color-mix(in srgb,var(--sym-fg,#1E1810) 9%,transparent);margin:16px 0' }));
         renderGrant();
+      }
+      else if (activeSec === 'kleos') {
+        renderKleosGrant();
       }
       else if (activeSec === 'aisources') {
         renderAiSources();

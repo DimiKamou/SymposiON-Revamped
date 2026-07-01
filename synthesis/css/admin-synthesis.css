@@ -12,6 +12,39 @@
    No external assets, no CDNs.
    ════════════════════════════════════════════════════════════════════ */
 
+/* ── FULL-WIDTH ADMIN (ISSUE 5a) ──────────────────────────────────────
+   The admin is a PC/laptop-only, data-dense console — let it use the full
+   viewport instead of sitting in a floating card. Two problems are fixed,
+   both additively (no edits to the marketing --pad token itself):
+     1. The marketing `--pad` (up to 78px/side) is neutralised ONLY on the
+        admin page via `:has(.sc-admin2)`, so hero/marketing pages keep it.
+     2. Inner views (`.sc-form` / `.sc-cfg` / `.sc-anodos`) hard-cap their
+        width to 380–680px inside the wide pane — uncap them so tables and
+        forms breathe, and lay the grant form out as a responsive row. */
+.dir-synthesis .sc-page:has(.sc-admin2) {
+  padding-left:  clamp(16px, 2vw, 28px);
+  padding-right: clamp(16px, 2vw, 28px);
+}
+/* Wider rail on real screens; keep screens.css's single-column fallback
+   under 820px (this admin-synthesis.css loads AFTER screens.css, so scope
+   the override to >820px or it would clobber the mobile stack). */
+@media (min-width:821px){
+  .sc-admin2 { grid-template-columns: 240px 1fr; gap: 22px; }
+}
+
+.sc-admin2__pane .sc-form,
+.sc-admin2__pane .sc-cfg,
+.sc-admin2__pane .sc-anodos { max-width: none; }
+
+/* The single-grant form (Grant Access / Grant Kleos) becomes a responsive
+   auto-fit grid instead of a narrow vertical stack. */
+.sc-admin2__pane .sc-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
 /* ── Classic Command Center link strip ────────────────────────────── */
 .sc-adminx__bar { display:flex; justify-content:flex-end; gap:8px; margin:-2px 0 18px; }
 .sc-adminx__bar .sc-gl { width:15px; height:15px; display:inline-flex; margin-right:6px; }

@@ -43,7 +43,7 @@
      css/admin-synthesis.css styles the sc-admin2 light admin + the real
      Access-Control matrix rendered by js/admin-synthesis.js (loaded below,
      after syn-admin.js, so it wins SYM_SCREENS.admin). -->
-<link rel="stylesheet" href="css/admin-synthesis.css?v=2"/>
+<link rel="stylesheet" href="css/admin-synthesis.css?v=3"/>
 <!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
      anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
      The trivia-panel's own chrome (games/trivia-panel/panel.css) is
@@ -198,7 +198,7 @@
 <script src="js/store.js"></script>
 <!-- Effective Kleos + admin (dimikamou) infinite-Kleos override (items still
      show locked so the admin can exercise the unlock flow). -->
-<script src="js/sym-kleos.js?v=1"></script>
+<script src="js/sym-kleos.js?v=2"></script>
 <script src="js/seasons.js"></script>
 <script src="js/data.js?v=2"></script>
 <script src="js/previews.js"></script>
@@ -215,7 +215,7 @@
 <script src="js/screens-learn.js?v=2"></script>
 <!-- Admin-assigned template tiles: window.synAssignedTiles(class,subject), merged
      into subject grids by screens-learn.js. Read-only consumer of SymStore. -->
-<script src="js/syn-assignments.js?v=2"></script>
+<script src="js/syn-assignments.js?v=3"></script>
 <!-- Student-facing AI tutor (Q&A grounded in admin-uploaded books).
      Registers window.SYM_SCREENS.tutor; talks to the askTutor callable. -->
 <script src="js/ai-tutor.js?v=1"></script>
@@ -315,7 +315,7 @@
 <!-- Access-tier registry (Free/Student/Teacher/Pro + admin-created custom tiers).
      Single source the admin grant / access / pricing surfaces read from. -->
 <script src="js/syn-tiers.js?v=2"></script>
-<script src="js/admin-synthesis.js?v=2"></script>
+<script src="js/admin-synthesis.js?v=3"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
      Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
@@ -331,6 +331,10 @@
      first (provides window.TheoryEd); theory-data before codex/lesson. -->
 <script src="js/theory-edit-shared.js"></script>
 <script src="js/theory-data.js"></script>
+<!-- ISSUE 8: defines the previously-missing theory override hooks
+     (theoryIsCurator / loadTheoryOverride / saveTheoryOverride /
+     clearTheoryOverride / openTheoryEditor). After theory-data + edit-shared. -->
+<script src="js/theory-editor.js?v=1"></script>
 <script src="js/theory-codex.js"></script>
 <script src="js/theory-lesson.js"></script>
 <script src="js/theory-text.js"></script>
