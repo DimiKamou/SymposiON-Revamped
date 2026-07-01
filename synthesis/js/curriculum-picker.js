@@ -31,6 +31,8 @@
   var _authored = {};           // subId → { contentId: bool } (resolved once per subject)
   var _pvp = false;             // true when the picker is choosing PvP material
   var _live = false;            // true when the picker is choosing Live-Arena host material
+  var _duel = false;            // true when the picker is choosing FRIENDLY-BATTLE (1v1) material
+                                //   — reuses the _live picker + setup but launches a duel room.
   var _liveStep = 'content';    // 'content' (ύλη) → 'setup' (mode + match config)
   var _liveBank = null;         // the chosen live-shaped questions, carried into setup
   var _liveMode = 'krypteia';   // chosen game mode id (PVP_MODES)
@@ -97,7 +99,12 @@
   var _lvFoldG  = {};        // 'dsId::group' → true: that one category's rows are collapsed
 
   function renderPvp(home) {
-    var body = window.synPage(home, _live ? {
+    var body = window.synPage(home, _duel ? {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Φιλική Μάχη · 1v1', en: 'Friendly Battle · 1v1' }),
+      title: L({ gr: 'Διάλεξε ύλη για τη Μονομαχία', en: 'Pick content for the duel' }),
+      sub: L({ gr: 'Διάλεξε ύλη (και επίπεδα) — μετά στήνεις τη μονομαχία και καλείς έναν φίλο.', en: 'Pick content (and levels) — then set up the duel and invite a friend.' }),
+    } : _live ? {
       back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
       eyebrow: L({ gr: 'Ζωντανή Μάχη · Φιλοξενία', en: 'Live Arena · Host' }),
       title: L({ gr: 'Διάλεξε ύλη για τη Ζωντανή Μάχη', en: 'Pick content for the Live Arena' }),
@@ -291,7 +298,8 @@
       startBtn.disabled = n === 0;
       startBtn.classList.toggle('is-off', n === 0);
       startBtn.textContent = n
-        ? (_live ? L({ gr: 'Ξεκίνα τη Ζωντανή Μάχη', en: 'Start the Live Arena' }) : L({ gr: 'Έναρξη Αγώνα', en: 'Start the Agon' }))
+        ? (_duel ? L({ gr: 'Στήσε τη Μονομαχία →', en: 'Set up the duel →' })
+                 : (_live ? L({ gr: 'Ξεκίνα τη Ζωντανή Μάχη', en: 'Start the Live Arena' }) : L({ gr: 'Έναρξη Αγώνα', en: 'Start the Agon' })))
         : L({ gr: 'Διάλεξε ύλη', en: 'Choose content' });
     }
 
@@ -309,7 +317,12 @@
 
   // ── Live Arena match SETUP: game-mode picker (2 categories) + match config ──
   function renderLiveSetup(home) {
-    var body = window.synPage(home, {
+    var body = window.synPage(home, _duel ? {
+      back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
+      eyebrow: L({ gr: 'Φιλική Μάχη · Στήσιμο', en: 'Friendly Battle · Setup' }),
+      title: L({ gr: 'Στήσε τη Μονομαχία', en: 'Set up the duel' }),
+      sub: L({ gr: 'Διάλεξε παιχνίδι και ρύθμισε γύρους ή σκορ — μετά κάλεσε τον φίλο σου.', en: 'Pick a game and set rounds or target score — then invite your friend.' }),
+    } : {
       back: 'live', backLabel: L({ gr: 'Live', en: 'Live' }), accent: '#C5572F',
       eyebrow: L({ gr: 'Ζωντανή Μάχη · Στήσιμο', en: 'Live Arena · Setup' }),
       title: L({ gr: 'Στήσε τη Μάχη', en: 'Set up the match' }),
@@ -339,6 +352,21 @@
     function paintModes() {
       modeWrap.innerHTML = '';
       var MODES = window.PVP_MODES || [], DUELS = window.PVP_DUEL_MODES || [];
+      if (_duel) {
+        // Friendly Battle: ONLY the 1v1 duels — and, in Phase-1, only the
+        // quiz-engine ones are actually networked. The realtime board/physics
+        // duels (chess/petteia/tug/erinyes) stay badged "Σύντομα".
+        // Guard: if a leftover team-mode id is selected, snap to a quiz duel.
+        if (!DUELS.some(function (m) { return m.id === _liveMode && m.engine === 'quiz'; })) {
+          var firstQuiz = DUELS.filter(function (m) { return m.engine === 'quiz'; })[0];
+          if (firstQuiz) _liveMode = firstQuiz.id;
+        }
+        modeWrap.appendChild(el('div', { class: 'syn-mix__lbl', style: 'margin-top:4px' }, L({ gr: 'Μονομαχία · 1v1', en: 'Duel · 1v1' })));
+        var gd = el('div', { class: 'syn-modegrid' });
+        DUELS.forEach(function (m) { gd.appendChild(modeCard(m, m.engine === 'quiz')); });
+        modeWrap.appendChild(gd);
+        return;
+      }
       modeWrap.appendChild(el('div', { class: 'syn-mix__lbl', style: 'margin-top:4px' }, L({ gr: 'Ομαδικά · Σύγκριση σκορ', en: 'Team · score-compared' })));
       var g1 = el('div', { class: 'syn-modegrid' });
       MODES.forEach(function (m) { g1.appendChild(modeCard(m, m.live !== false)); });
@@ -356,10 +384,14 @@
     wrap.appendChild(cfgWrap);
     function paintCfg() {
       cfgWrap.innerHTML = '';
-      // win-condition segmented
+      // win-condition segmented. A 1v1 duel is best-of-rounds or first-to-score;
+      // the class-only "Timed" (total wall-clock) mode is dropped for duels.
+      var WINS = _duel
+        ? [['rounds', L({ gr: 'Με γύρους', en: 'By rounds' })], ['score', L({ gr: 'Με σκορ', en: 'To a score' })]]
+        : [['time', L({ gr: 'Με χρόνο', en: 'Timed' })], ['score', L({ gr: 'Με σκορ', en: 'To a score' })], ['rounds', L({ gr: 'Με γύρους', en: 'By rounds' })]];
+      if (_duel && _liveCfg.winBy === 'time') _liveCfg.winBy = 'rounds';
       var seg = el('div', { class: 'syn-seg' });
-      [['time', L({ gr: 'Με χρόνο', en: 'Timed' })], ['score', L({ gr: 'Με σκορ', en: 'To a score' })], ['rounds', L({ gr: 'Με γύρους', en: 'By rounds' })]]
-        .forEach(function (o) { seg.appendChild(el('button', { class: 'syn-seg__b' + (_liveCfg.winBy === o[0] ? ' on' : ''), onclick: function () { _liveCfg.winBy = o[0]; paintCfg(); } }, o[1])); });
+      WINS.forEach(function (o) { seg.appendChild(el('button', { class: 'syn-seg__b' + (_liveCfg.winBy === o[0] ? ' on' : ''), onclick: function () { _liveCfg.winBy = o[0]; paintCfg(); } }, o[1])); });
       cfgWrap.appendChild(el('div', { class: 'syn-cfg__row' }, [el('span', { class: 'syn-cfg__lbl' }, L({ gr: 'Νίκη', en: 'Win by' })), seg]));
 
       // time-per-question slider (always)
@@ -400,13 +432,20 @@
     bar.appendChild(el('span', { class: 'syn-mix__sp' }));
     bar.appendChild(el('button', { class: 'syn-mix__start', onclick: function () {
       if (!(_liveBank && _liveBank.length) || !window.synLaunch) return;
-      var modeObj = (window.PVP_MODES || []).filter(function (m) { return m.id === _liveMode; })[0] || { gr: 'Ζωντανή Μάχη' };
+      var POOL = _duel ? (window.PVP_DUEL_MODES || []) : (window.PVP_MODES || []);
+      var modeObj = POOL.filter(function (m) { return m.id === _liveMode; })[0] || { gr: _duel ? 'Μονομαχία' : 'Ζωντανή Μάχη' };
       var bank = _liveCfg.shuffle ? _shuffle(_liveBank.slice()) : _liveBank.slice();
       if (_liveCfg.winBy === 'rounds') bank = bank.slice(0, _liveCfg.rounds);
-      window.synLaunch('openLiveArena', { questions: bank, gameName: modeObj.gr, mode: _liveMode, config: {
+      var config = {
         timePerQ: _liveCfg.timePerQ, winBy: _liveCfg.winBy, targetScore: _liveCfg.targetScore, rounds: _liveCfg.rounds, gameDurationMin: _liveCfg.gameDurationMin, shuffle: _liveCfg.shuffle, locked: _liveCfg.locked
-      } });
-    } }, L({ gr: 'Άνοιξε την Αίθουσα →', en: 'Open the lobby →' })));
+      };
+      if (_duel) {
+        // Friendly Battle → real 2-seat duel room (LiveArena.launchDuelHost).
+        window.synLaunch('openLiveArena', { duel: true, questions: bank, gameName: modeObj.gr, mode: _liveMode, config: config });
+      } else {
+        window.synLaunch('openLiveArena', { questions: bank, gameName: modeObj.gr, mode: _liveMode, config: config });
+      }
+    } }, _duel ? L({ gr: 'Κάλεσε φίλο →', en: 'Invite a friend →' }) : L({ gr: 'Άνοιξε την Αίθουσα →', en: 'Open the lobby →' })));
     wrap.appendChild(bar);
     body.appendChild(wrap);
   }
@@ -557,7 +596,18 @@
     // Live Arena host content selection — same universal (light) picker; on start
     // it feeds the merged bank into the host lobby instead of the PvP arena.
     openForLiveHost: function () {
-      _live = true; _pvp = false; _liveStep = 'content'; _liveBank = null;
+      _live = true; _pvp = false; _duel = false; _liveStep = 'content'; _liveBank = null;
+      _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
+      window.symGo('curriculum');
+    },
+    // Friendly Battle (1v1) content selection — mirrors openForLiveHost but sets
+    // _duel so the setup screen offers only the quiz-engine duels and the launch
+    // opens a REAL 2-seat duel room (LiveArena.launchDuelHost) rather than the
+    // class-broadcast lobby.
+    openForFriendlyBattle: function () {
+      _live = true; _pvp = false; _duel = true; _liveStep = 'content'; _liveBank = null;
+      _liveMode = 'pankration';               // default to a quiz duel
+      _liveCfg.winBy = 'rounds';              // 1v1 defaults to best-of-N rounds
       _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
       window.symGo('curriculum');
     },

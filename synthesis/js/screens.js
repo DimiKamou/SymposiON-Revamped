@@ -132,8 +132,17 @@
   // PIN is supplied (student "Join with PIN"), it pre-fills the join screen.
   // Firestore rules require auth for live_arenas — LiveArena.submitJoin already
   // prompts sign-in, but we also surface a friendly prompt up-front for hosting.
-  function openRealLiveArena(pin){
+  function openRealLiveArena(pin, opts){
     const _pin = (pin || '').toString().replace(/\D/g, '').slice(0, 6);
+    // Duel join: a friend followed a ?join=PIN&duel=1 invite. Route into the
+    // 2-seat duel-join flow instead of the class-broadcast student join.
+    const _duel = !!(opts && opts.duel);
+    if (_pin && _duel && window.SYN_GAMES && window.SYN_GAMES.openLiveArena && window.synLaunch) {
+      return Promise.resolve(window.synLaunch('openLiveArena')).then(()=>{
+        if (typeof LiveArena === 'undefined' || typeof LiveArena.joinDuel !== 'function') return;
+        LiveArena.joinDuel(_pin);
+      }).catch((e)=>{ console.warn('[screens] duel join failed', e); });
+    }
     // Host (no PIN) → the light synthesis universal ύλη picker (matches the game
     // panel / PvP). On "start" it builds the bank and opens the host lobby. The
     // student join (PIN) path keeps the live overlay flow below.
@@ -1172,6 +1181,17 @@
         el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'})),
         el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — διάλεξε ύλη & άνοιγμα Αρένας',en:'Student duels — pick content & open the Arena'})),
+      ]));
+      // ── Φιλική Μάχη · 1v1 — a REAL head-to-head duel vs one invited friend
+      //    (Firestore duels/{pin} room, ?join=PIN&duel=1 invite). Unlike the PvP
+      //    card above (standalone simulated arena), this networks two real players
+      //    through the shared quiz bank. Phase-1: quiz-engine duels only.
+      ch.appendChild(el('button',{class:'sc-host sc-host--duel', onclick:()=>{
+        if(window.SymCurriculum && typeof SymCurriculum.openForFriendlyBattle==='function') SymCurriculum.openForFriendlyBattle();
+      }},[
+        el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
+        el('span',{class:'sc-host__t'}, L({gr:'Φιλική Μάχη · 1v1',en:'Friendly Battle · 1v1'})),
+        el('span',{class:'sc-host__d'}, L({gr:'Κάλεσε έναν φίλο και μονομαχήστε',en:'Invite one friend and duel'})),
       ]));
       body.appendChild(ch);
       return;

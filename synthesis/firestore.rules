@@ -387,6 +387,48 @@ service cloud.firestore {
       }
     }
 
+    // Friendly Battle · 1v1 duel room (parallel to live_arenas, capacity 2).
+    // Host mints the PIN + seeds the shared bank; one guest claims the empty
+    // seat via the ?join=PIN&duel=1 invite. Each player is self-paced through
+    // the same bank and writes only their own player doc (friendly, low-stakes
+    // → no per-write score cap, unlike the class arena).
+    match /duels/{pin} {
+      function isDuelHost() {
+        return request.auth != null && resource.data.hostUid == request.auth.uid;
+      }
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                 && request.resource.data.status  == 'lobby'
+                 && request.resource.data.hostUid == request.auth.uid;
+      allow update: if request.auth != null
+                 && (
+                   isDuelHost()
+                   // guest claims the still-empty seat (only sets guestUid to self)
+                   || (resource.data.get('guestUid', null) == null
+                       && request.resource.data.guestUid == request.auth.uid
+                       && request.resource.data.hostUid   == resource.data.hostUid)
+                   // the seated guest may keep writing but can't steal the host seat
+                   || (resource.data.get('guestUid', null) == request.auth.uid
+                       && request.resource.data.hostUid    == resource.data.hostUid)
+                 );
+      allow delete: if isSuper();
+
+      match /players/{uid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                   && uid                         == request.auth.uid
+                   && request.resource.data.uid   == request.auth.uid
+                   && request.resource.data.score == 0;
+        // A player writes only their OWN self-paced doc; the host may write freely.
+        allow update: if request.auth != null
+                   && (
+                     uid == request.auth.uid
+                     || get(/databases/$(database)/documents/duels/$(pin)).data.hostUid == request.auth.uid
+                   );
+        allow delete: if isSuper();
+      }
+    }
+
     match /naumachia_matches/{matchId} {
       // Require auth throughout — read was world-open (leaking live player ids)
       // and update had no auth check, so anonymous clients could mutate matches.

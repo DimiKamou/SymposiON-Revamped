@@ -91,6 +91,22 @@ const LiveArena = (() => {
   let _listeners    = [];    // [ unsubscribeFn, ... ]
   let _ansUnsub     = null;  // isolated answer-count listener slot
 
+  /* ── DUEL (Friendly Battle · 1v1) state ─────────────────────
+     A parallel, 2-seat real-time room (Firestore duels/{pin}). Head-to-head:
+     both players answer the SAME shared bank at their own pace; the room ends
+     by rounds (best-of-N questions) or target score. Reuses PIN mint, invite
+     links (?join=PIN&duel=1) and reward/mistake hooks; scoring mirrors
+     pvp.js answer() (streak × 100, capped ×5). */
+  let _isDuel     = false;   // true when this session is a duel (not a class arena)
+  let _duelSeat   = null;    // 'host' | 'guest'
+  let _duelState  = {};      // mirror of the last duel doc snapshot
+  let _duelStarted= false;   // guards double-start when status flips to 'active'
+  let _duelScore  = 0;       // my running score
+  let _duelStreak = 0;       // my running streak (drives the ×multiplier)
+  let _duelDone   = false;   // I have finished my side of the bank / hit a limit
+  let _duelMode   = null;    // the chosen PVP_DUEL_MODES entry (accent/glyph theming)
+  let _duelOppUnsub = null;  // onSnapshot of the opponent's player doc
+
   /* ── Firestore helpers ──────────────────────────────────── */
   const db         = () => firebase.firestore();
   const arenaRef   = (pin) => db().collection('live_arenas').doc(String(pin));
@@ -98,6 +114,11 @@ const LiveArena = (() => {
   const answersCol = (pin) => arenaRef(pin).collection('answers');
   const playerRef  = (pin, uid) => playersCol(pin).doc(uid);
   const answerRef  = (pin, uid, q) => answersCol(pin).doc(`${uid}_q${q}`);
+
+  /* ── Duel Firestore helpers (parallel collection: duels/{pin}) ── */
+  const duelRef       = (pin) => db().collection('duels').doc(String(pin));
+  const duelPlayersCol= (pin) => duelRef(pin).collection('players');
+  const duelPlayerRef = (pin, uid) => duelPlayersCol(pin).doc(uid);
 
   /* ════════════════════════════════════════════════════════
      PUBLIC API
@@ -1366,8 +1387,8 @@ const LiveArena = (() => {
      PARTICLE ENGINE (correct answer celebration)
   ════════════════════════════════════════════════════════ */
 
-  function _launchParticles() {
-    const canvas = document.getElementById('la-particles');
+  function _launchParticles(canvasId) {
+    const canvas = document.getElementById(canvasId || 'la-particles');
     if (!canvas) return;
 
     canvas.width  = canvas.offsetWidth  || 360;
@@ -1549,10 +1570,13 @@ const LiveArena = (() => {
     _listeners.forEach(fn => { try { fn(); } catch (_) {} });
     _listeners = [];
     if (_ansUnsub) { try { _ansUnsub(); } catch (_) {} _ansUnsub = null; }
+    if (_duelOppUnsub) { try { _duelOppUnsub(); } catch (_) {} _duelOppUnsub = null; }
     _stopTimer();
     _stopMatchClock();
-    const canvas = document.getElementById('la-particles');
-    if (canvas && canvas._raf) { cancelAnimationFrame(canvas._raf); canvas._raf = null; }
+    ['la-particles', 'la-duel-particles'].forEach(id => {
+      const canvas = document.getElementById(id);
+      if (canvas && canvas._raf) { cancelAnimationFrame(canvas._raf); canvas._raf = null; }
+    });
   }
 
   function _reset() {
@@ -1566,12 +1590,405 @@ const LiveArena = (() => {
     _uid          = null;
     _totalPlayers = 0;
     _laSel        = [];
+    _isDuel       = false;
+    _duelSeat     = null;
+    _duelState    = {};
+    _duelStarted  = false;
+    _duelScore    = 0;
+    _duelStreak   = 0;
+    _duelDone     = false;
+    _duelMode     = null;
+  }
+
+  /* ════════════════════════════════════════════════════════
+     DUEL FLOW — Friendly Battle · 1v1 (duels/{pin})
+     A 2-seat real-time room. Both players answer the SAME shared bank at
+     their own pace; head-to-head by rounds (best-of-N) or target score.
+  ════════════════════════════════════════════════════════ */
+
+  // Resolve the current user's uid + display name (mirrors submitJoin).
+  function _duelIdentity() {
+    const u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : null;
+    return {
+      uid:  u ? u.uid : ('anon_' + Math.random().toString(36).slice(2, 9)),
+      name: u ? (u.displayName || u.email || t('Παίκτης', 'Player')) : t('Παίκτης', 'Player'),
+    };
+  }
+
+  function _duelModeFor(id) {
+    return ((window.PVP_DUEL_MODES || []).filter(m => m.id === id)[0]) || null;
+  }
+
+  // Host: mint a duel room and wait for one friend to join.
+  function launchDuelHost(cfg = {}) {
+    if (typeof currentUser === 'undefined' || !currentUser) {
+      if (typeof showToast === 'function') showToast('Απαιτείται σύνδεση', 'Login required');
+      if (typeof openAuthModal === 'function') openAuthModal('login');
+      return;
+    }
+    _reset();
+    _mode      = 'host';
+    _isDuel    = true;
+    _duelSeat  = 'host';
+    _cfg       = { questions: [], gameName: 'Μονομαχία', ...cfg };
+    _duelMode  = _duelModeFor(_cfg.mode);
+    _showOverlay();
+    _showScreen('la-duel-lobby');
+    _createDuel();
+  }
+
+  async function _createDuel() {
+    _pin = _genPin();
+    const id = _duelIdentity();
+    _uid = id.uid;
+    const accent = (_duelMode && _duelMode.accent) || 'var(--la-gold)';
+    const glyph  = (_duelMode && _duelMode.glyph)  || '⚔';
+
+    // Paint the lobby chrome (PIN, mode header, my seat, invite hints).
+    _setEl('la-duel-pin-display', _pin);
+    _setEl('la-duel-game-title',  _cfg.gameName);
+    _setEl('la-duel-mb-glyph',    glyph);
+    _setEl('la-duel-mb-title',    (_duelMode && _duelMode.gr) || _cfg.gameName);
+    _setEl('la-duel-mb-sub',      (_duelMode && _duelMode.en) || '');
+    const bar = document.getElementById('la-duel-modebar');
+    if (bar) bar.style.setProperty('--accent', accent);
+    _paintDuelWinReadout();
+    _renderDuelSeats(id.name, null);
+    _duelSetStartGate(false);
+
+    try {
+      await duelRef(_pin).set({
+        status:    'lobby',
+        hostUid:   id.uid,
+        guestUid:  null,
+        mode:      _cfg.mode || 'pankration',
+        gameName:  _cfg.gameName,
+        bank:      (_cfg.questions || []).map(q => ({ q: q.q, opts: q.opts, ans: q.ans })),
+        config:    _cfg.config || {},
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      await duelPlayerRef(_pin, id.uid).set({
+        name: id.name, uid: id.uid, seat: 'host',
+        score: 0, streak: 0, qIdx: 0, done: false,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      _listenDuelRoom();      // host listens for guest + status flips
+    } catch (err) {
+      console.error('[LiveArena] duel create:', err);
+      if (typeof showToast === 'function') showToast('Σφάλμα δημιουργίας', 'Failed to create duel');
+    }
+  }
+
+  // Friend: join an existing duel as the guest (2nd seat).
+  async function joinDuel(pin) {
+    pin = String(pin || '').replace(/\D/g, '').slice(0, 6);
+    if (!/^\d{6}$/.test(pin)) return;
+    if (typeof currentUser === 'undefined' || !currentUser) {
+      if (typeof showToast === 'function') showToast('Απαιτείται σύνδεση για συμμετοχή', 'Login required to join');
+      if (typeof openAuthModal === 'function') openAuthModal('login');
+      return;
+    }
+    _reset();
+    _mode     = 'student';
+    _isDuel   = true;
+    _duelSeat = 'guest';
+    _showOverlay();
+    _showScreen('la-duel-lobby');
+
+    try {
+      const snap = await duelRef(pin).get();
+      if (!snap.exists) { if (typeof showToast === 'function') showToast('Η μονομαχία δεν βρέθηκε', 'Duel not found'); close(); return; }
+      const data = snap.data();
+      if (data.status === 'closed')      { if (typeof showToast === 'function') showToast('Η μονομαχία έκλεισε', 'This duel has ended'); close(); return; }
+      if (data.guestUid && data.guestUid !== (currentUser && currentUser.uid)) {
+        if (typeof showToast === 'function') showToast('Η μονομαχία είναι γεμάτη', 'This duel is full'); close(); return;
+      }
+
+      _pin       = pin;
+      _duelState = data;
+      _cfg       = {
+        questions: data.bank || [],
+        gameName:  data.gameName || 'Μονομαχία',
+        mode:      data.mode,
+        config:    data.config || {},
+      };
+      _duelMode  = _duelModeFor(data.mode);
+      const id   = _duelIdentity();
+      _uid = id.uid;
+
+      // Paint lobby chrome from the room doc.
+      _setEl('la-duel-pin-display', _pin);
+      _setEl('la-duel-game-title',  _cfg.gameName);
+      _setEl('la-duel-mb-glyph',    (_duelMode && _duelMode.glyph) || '⚔');
+      _setEl('la-duel-mb-title',    (_duelMode && _duelMode.gr) || _cfg.gameName);
+      _setEl('la-duel-mb-sub',      (_duelMode && _duelMode.en) || '');
+      const bar = document.getElementById('la-duel-modebar');
+      if (bar) bar.style.setProperty('--accent', (_duelMode && _duelMode.accent) || 'var(--la-gold)');
+      _paintDuelWinReadout();
+      _duelSetStartGate(false); // guest never starts; host does
+
+      await duelRef(pin).update({ guestUid: id.uid });
+      await duelPlayerRef(pin, id.uid).set({
+        name: id.name, uid: id.uid, seat: 'guest',
+        score: 0, streak: 0, qIdx: 0, done: false,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      _listenDuelRoom();
+    } catch (err) {
+      console.error('[LiveArena] duel join:', err);
+      if (typeof showToast === 'function') showToast('Σφάλμα σύνδεσης', 'Connection error');
+      close();
+    }
+  }
+
+  // Both seats listen to the room doc + the two player docs. The room doc
+  // drives lobby→active→closed; the player docs drive the live 2-seat score bar.
+  function _listenDuelRoom() {
+    const roomUnsub = duelRef(_pin).onSnapshot(snap => {
+      if (!snap.exists) return;
+      const data = snap.data();
+      _duelState = data;
+      if (data.status === 'active' && !_duelStarted) { _startDuel(); }
+      else if (data.status === 'closed') { /* handled by _showDuelResult when both done */ }
+    }, err => console.error('[LiveArena] duel room:', err));
+    _listeners.push(roomUnsub);
+
+    // Player roster: repaint the 2 seats (names) + live scores + enable Start
+    // once both seats are filled (host only).
+    const rosterUnsub = duelPlayersCol(_pin).onSnapshot(snap => {
+      let me = null, opp = null;
+      snap.forEach(d => {
+        const p = d.data();
+        if (p.uid === _uid) me = p; else opp = p;
+      });
+      _renderDuelSeats(me ? me.name : null, opp ? opp.name : null, me, opp);
+      if (_duelSeat === 'host') _duelSetStartGate(!!opp);
+    }, err => console.error('[LiveArena] duel roster:', err));
+    _listeners.push(rosterUnsub);
+  }
+
+  // Host presses "Έναρξη" → flip room status to active (both clients start).
+  async function startDuel() {
+    if (_duelSeat !== 'host' || !_pin) return;
+    if (!(_duelState && _duelState.guestUid)) return; // need a friend first
+    const btn = document.getElementById('la-duel-start-btn');
+    if (btn) { btn.disabled = true; btn.textContent = t('Εκκίνηση…', 'Starting…'); }
+    try { await duelRef(_pin).update({ status: 'active', startedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+    catch (err) { console.error('[LiveArena] duel start:', err); }
+  }
+
+  function _startDuel() {
+    if (_duelStarted) return;
+    _duelStarted = true;
+    _duelScore = 0; _duelStreak = 0; _duelDone = false; _qIdx = 0;
+    // Live-score listener on the sibling player doc.
+    _duelListenOpponent();
+    _showDuelQuestion(0);
+  }
+
+  function _duelListenOpponent() {
+    if (_duelOppUnsub) { try { _duelOppUnsub(); } catch (_) {} _duelOppUnsub = null; }
+    _duelOppUnsub = duelPlayersCol(_pin).onSnapshot(snap => {
+      let me = null, opp = null;
+      snap.forEach(d => { const p = d.data(); if (p.uid === _uid) me = p; else opp = p; });
+      _paintDuelScoreBar(me, opp);
+      // End when both players are done (or the win condition already tripped).
+      if (me && opp && me.done && opp.done) _showDuelResult(me, opp);
+    }, err => console.error('[LiveArena] duel opp:', err));
+  }
+
+  function _duelBankLen() {
+    const cfg = (_cfg && _cfg.config) || {};
+    const total = (_cfg.questions || []).length;
+    if (cfg.winBy === 'rounds' && cfg.rounds) return Math.min(cfg.rounds, total);
+    return total;
+  }
+
+  function _showDuelQuestion(idx) {
+    const cfg = (_cfg && _cfg.config) || {};
+    const total = _duelBankLen();
+    // Win-by-score: if I already hit the target, I'm done.
+    if (cfg.winBy === 'score' && cfg.targetScore && _duelScore >= cfg.targetScore) { _finishDuelSide(); return; }
+    if (idx >= total) { _finishDuelSide(); return; }
+    const q = _cfg.questions[idx];
+    if (!q) { _finishDuelSide(); return; }
+    _qIdx = idx;
+
+    _showScreen('la-duel-match');
+    const accent = (_duelMode && _duelMode.accent) || 'var(--la-gold)';
+    const wrap = document.getElementById('la-duel-match');
+    if (wrap) wrap.style.setProperty('--accent', accent);
+    _setEl('la-duel-mq-glyph', (_duelMode && _duelMode.glyph) || '⚔');
+    _setEl('la-duel-mq-qnum', t('Ερώτηση', 'Question') + ' ' + (idx + 1) + ' / ' + total);
+    _setEl('la-duel-mq-text', q.q);
+    _setEl('la-duel-mq-fb', '');
+    const fb = document.getElementById('la-duel-mq-fb');
+    if (fb) fb.className = 'la-duel-fb';
+
+    const grid = document.getElementById('la-duel-mq-opts');
+    if (grid) {
+      grid.innerHTML = '';
+      const LABELS = ['A', 'B', 'C', 'D'];
+      const BG = ['#1e4d35', '#1a3a5c', '#5c2010', '#3a1a5c'];
+      (q.opts || []).forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'la-duel-opt';
+        btn.style.setProperty('--la-btn-bg', BG[i % 4]);
+        btn.innerHTML =
+          `<span class="la-duel-opt__ltr">${LABELS[i]}</span>` +
+          `<span class="la-duel-opt__t">${_esc(opt)}</span>`;
+        btn.addEventListener('click', () => _answerDuel(i, q, idx, btn));
+        grid.appendChild(btn);
+      });
+    }
+  }
+
+  async function _answerDuel(choice, q, idx, btn) {
+    const cfg = (_cfg && _cfg.config) || {};
+    // lock the options
+    const btns = document.querySelectorAll('#la-duel-mq-opts .la-duel-opt');
+    btns.forEach(b => { b.disabled = true; });
+    const correct = choice === q.ans;
+    const fb = document.getElementById('la-duel-mq-fb');
+
+    if (correct) {
+      _duelStreak++;
+      const gain = 100 * Math.min(_duelStreak, 5);
+      _duelScore += gain;
+      if (btn) btn.classList.add('la-duel-opt--right');
+      if (fb) { fb.textContent = t('ΣΩΣΤΟ!', 'CORRECT!') + ' +' + gain + (_duelStreak > 1 ? '  ×' + Math.min(_duelStreak, 5) : ''); fb.className = 'la-duel-fb la-duel-fb--good'; }
+      if (typeof awardGameRewards === 'function') awardGameRewards('live-arena', {});
+      else if (typeof awardRewards === 'function') awardRewards(15, 1);
+    } else {
+      _duelStreak = 0;
+      if (btn) btn.classList.add('la-duel-opt--wrong');
+      if (btns[q.ans]) btns[q.ans].classList.add('la-duel-opt--right');
+      if (fb) { fb.textContent = t('ΛΑΘΟΣ', 'WRONG'); fb.className = 'la-duel-fb la-duel-fb--bad'; }
+      // Tartarus mistake capture.
+      if (typeof window.symLogMistake === 'function') {
+        try {
+          const opts = q.opts || [];
+          window.symLogMistake({
+            q: q.q, wrong: opts[choice] || '', right: opts[q.ans] || '',
+            cat: 'Live Arena', gameId: 'live-arena',
+          });
+        } catch (_) {}
+      }
+    }
+
+    // Persist my running score/streak/qIdx so the opponent's client sees it live.
+    try {
+      await duelPlayerRef(_pin, _uid).update({ score: _duelScore, streak: _duelStreak, qIdx: idx + 1 });
+    } catch (_) {}
+
+    // Advance after a short beat. Win-by-score ends the moment the target is hit.
+    setTimeout(() => {
+      if (cfg.winBy === 'score' && cfg.targetScore && _duelScore >= cfg.targetScore) { _finishDuelSide(); return; }
+      _showDuelQuestion(idx + 1);
+    }, 850);
+  }
+
+  // I have finished my side (ran out of rounds, or hit the target score). Mark
+  // done + wait for the opponent; when both are done the result screen shows.
+  async function _finishDuelSide() {
+    if (_duelDone) return;
+    _duelDone = true;
+    _showScreen('la-duel-wait');
+    _setEl('la-duel-wait-msg', t('Ολοκλήρωσες! Αναμονή αντιπάλου…', 'You finished! Waiting for your rival…'));
+    try { await duelPlayerRef(_pin, _uid).update({ done: true, score: _duelScore }); } catch (_) {}
+  }
+
+  // 2-seat score bar during the match (me vs opponent, live scores).
+  function _paintDuelScoreBar(me, opp) {
+    if (me)  { _setEl('la-duel-me-name', me.name || t('Εσύ', 'You')); _setEl('la-duel-me-score', me.score || 0); }
+    if (opp) { _setEl('la-duel-opp-name', opp.name || t('Αντίπαλος', 'Rival')); _setEl('la-duel-opp-score', opp.score || 0); }
+    const meAv = document.getElementById('la-duel-me-av');
+    if (meAv && me) { meAv.textContent = _laInitials(me.name); meAv.style.background = _laColorFor(me.name); }
+    const oppAv = document.getElementById('la-duel-opp-av');
+    if (oppAv && opp) { oppAv.textContent = _laInitials(opp.name); oppAv.style.background = _laColorFor(opp.name); }
+  }
+
+  // Lobby seats (host + guest slot). Also seeds the match score-bar names.
+  function _renderDuelSeats(meName, oppName, me, opp) {
+    const wrap = document.getElementById('la-duel-seats');
+    if (!wrap) return;
+    const seat = (nm, roleGr, roleEn, waiting) => {
+      const av = waiting ? '…' : _esc(_laInitials(nm));
+      const bg = waiting ? 'rgba(255,255,255,.08)' : _laColorFor(nm);
+      return `<div class="la-duel-seat${waiting ? ' la-duel-seat--wait' : ''}">` +
+        `<span class="la-duel-seat__av" style="background:${bg}">${av}</span>` +
+        `<span class="la-duel-seat__name">${waiting ? t('Αναμονή φίλου…', 'Waiting for a friend…') : _esc(nm)}</span>` +
+        `<span class="la-duel-seat__role">${t(roleGr, roleEn)}</span>` +
+      `</div>`;
+    };
+    const hostName  = _duelSeat === 'host'  ? meName : oppName;
+    const guestName = _duelSeat === 'guest' ? meName : oppName;
+    wrap.innerHTML =
+      seat(hostName || t('Οικοδεσπότης', 'Host'), 'Οικοδεσπότης', 'Host', !hostName) +
+      `<div class="la-duel-vs">VS</div>` +
+      seat(guestName, 'Καλεσμένος', 'Guest', !guestName);
+    _paintDuelScoreBar(me, opp); // keep the match bar names in sync if present
+  }
+
+  function _paintDuelWinReadout() {
+    const cfg = (_cfg && _cfg.config) || {};
+    let top, val;
+    if (cfg.winBy === 'score') { top = t('ΣΚΟΡ-ΣΤΟΧΟΣ', 'TARGET SCORE'); val = String(cfg.targetScore || 1000); }
+    else                       { top = t('ΓΥΡΟΙ', 'ROUNDS');           val = String(_duelBankLen()); }
+    _setEl('la-duel-mb-fmt-top', top);
+    _setEl('la-duel-mb-fmt-val', val);
+  }
+
+  // Enable / disable the host's Start button (needs a guest present).
+  // The guest never starts: they see a passive hint instead of the button.
+  function _duelSetStartGate(ready) {
+    const btn  = document.getElementById('la-duel-start-btn');
+    const hint = document.getElementById('la-duel-guest-hint');
+    if (_duelSeat !== 'host') {
+      if (btn)  btn.style.display  = 'none';
+      if (hint) hint.style.display = '';   // guest: show "the host will start…"
+      return;
+    }
+    if (hint) hint.style.display = 'none'; // host: hide the guest hint
+    if (!btn) return;
+    btn.style.display = '';
+    btn.disabled = !ready;
+    btn.textContent = ready
+      ? t('🚀 Έναρξη Μονομαχίας', '🚀 Start Duel')
+      : t('Αναμονή φίλου…', 'Waiting for a friend…');
+  }
+
+  async function _showDuelResult(me, opp) {
+    // Show once (guard: both listeners could fire).
+    if (document.getElementById('la-duel-result') && document.getElementById('la-duel-result').classList.contains('la-active')) return;
+    _showScreen('la-duel-result');
+    const myScore  = (me  && me.score)  || 0;
+    const oppScore = (opp && opp.score) || 0;
+    const iWon  = myScore > oppScore;
+    const tie   = myScore === oppScore;
+
+    const res = document.getElementById('la-duel-result');
+    if (res) res.classList.remove('la-duel-win', 'la-duel-lose', 'la-duel-tie');
+    if (res) res.classList.add(tie ? 'la-duel-tie' : (iWon ? 'la-duel-win' : 'la-duel-lose'));
+
+    _setEl('la-duel-res-title', tie ? t('Ισοπαλία!', 'Draw!') : (iWon ? t('Νίκη!', 'Victory!') : t('Ήττα', 'Defeat')));
+    _setEl('la-duel-res-icon',  tie ? '🤝' : (iWon ? '🏆' : '⚔'));
+    _setEl('la-duel-res-me-name',  (me  && me.name)  || t('Εσύ', 'You'));
+    _setEl('la-duel-res-me-score', myScore);
+    _setEl('la-duel-res-opp-name', (opp && opp.name) || t('Αντίπαλος', 'Rival'));
+    _setEl('la-duel-res-opp-score', oppScore);
+    if (iWon && !tie) { try { _launchParticles('la-duel-particles'); } catch (_) {} }
+
+    // Host tidies the room.
+    if (_duelSeat === 'host') { try { await duelRef(_pin).update({ status: 'closed' }); } catch (_) {} }
   }
 
   /* ── INVITE HELPERS ──────────────────────────────────── */
 
   function _getJoinUrl(pin) {
-    return `${location.origin}/?join=${pin}`;
+    // In a duel, carry &duel=1 so the friend's client routes into the 2-seat
+    // duel-join flow (_checkUrlJoin) instead of the class-broadcast student join.
+    return `${location.origin}/?join=${pin}` + (_isDuel ? '&duel=1' : '');
   }
 
   function copyInviteLink() {
@@ -1603,21 +2020,27 @@ const LiveArena = (() => {
     if (!_pin) return;
     const name = _cfg.gameName || 'Live Arena';
     if (typeof showQR === 'function') {
-      // Pass { join: pin } so showQR builds the correct URL
-      showQR(name, { join: _pin }, _pin);
+      // In a duel, pass a pre-built { url } (carries &duel=1); otherwise the
+      // { join } shape lets showQR build the class-join URL.
+      showQR(name, _isDuel ? { url: _getJoinUrl(_pin) } : { join: _pin }, _pin);
     } else {
       copyInviteLink();
     }
   }
 
-  // Auto-join: if page loaded with ?join=PIN, prefill and open student screen
+  // Auto-join: if page loaded with ?join=PIN, prefill and open student screen.
+  // ?join=PIN&duel=1 routes into the 2-seat Friendly Battle join flow instead.
   function _checkUrlJoin() {
     const params = new URLSearchParams(window.location.search);
     const pin    = params.get('join');
     if (!pin || !/^\d{6}$/.test(pin)) return;
-    // Remove param from URL without reload
+    const isDuel = params.get('duel') === '1';
+    // Remove params from URL without reload
     const clean = window.location.pathname + window.location.hash;
     history.replaceState(null, '', clean);
+
+    if (isDuel) { joinDuel(pin); return; }
+
     // Open join screen with pre-filled PIN
     _reset();
     _mode = 'student';
@@ -1645,6 +2068,8 @@ const LiveArena = (() => {
     launchCombined: _laLaunchCombined,
     // Student flow
     submitJoin,
+    // Duel (Friendly Battle · 1v1)
+    launchDuelHost, joinDuel, startDuel,
     // Invite
     copyInviteLink, copyPIN, showInviteQR,
     // Dataset registry
