@@ -14,6 +14,14 @@
   // back to the game's own {gr,en} when there is no override.
   const gName = (g) => (window.SymTags && SymTags.displayName) ? SymTags.displayName(g) : g;
 
+  // ── Level-list collapse memory for the Game-Panel universal picker
+  //    (engineSetup) — mirrors curriculum-picker.js's _lvHidden/_lvFoldG so the
+  //    same hide/unhide fold behaves identically here as on Live & PvP. Keyed
+  //    by dataset id; module-scoped so it survives the picker's paintList()
+  //    re-renders (and re-opening the picker).
+  const _lvHidden = {};   // dsId → true: the whole level list is collapsed to its header
+  const _lvFoldG  = {};   // 'dsId::group' → true: that one category's rows are collapsed
+
   /* ── shared bits ───────────────────────────────────────────────── */
   function glyph(name, cls){ return el('span', { class:(cls||'sc-gl'), 'data-illu':name }); }
 
@@ -183,6 +191,39 @@
   function gameNeedsLevelPicker(game){
     if (!game || game.soon) return null;
     return (window.SYM && typeof SYM.levelBankFor === 'function') ? SYM.levelBankFor(game) : null;
+  }
+  // ── DEFAULT injection metadata for engines missing a SymMix.ENGINE_INJECTION
+  //    entry, so EVERY Game-Panel engine reaches the universal content picker
+  //    (engineSetup) rather than the bare "Start" card. SymMix.ENGINE_INJECTION
+  //    (syn-mix.js) still wins when present; this only fills the gaps.
+  //    Mode is chosen from how each engine actually consumes its bank:
+  //    • 'sym'    → engine reads window.SYM_QUESTIONS at open (moirai, ekklisia,
+  //                 oracle, parthenon, olympus, hippodrome, erinyes; also the
+  //                 safe universal default — injectBankAndLaunch snapshots/restores
+  //                 SYM_QUESTIONS around launch, harmless for engines that ignore it).
+  //    • 'config' → engine takes cfg.questions (labyrinth → openLabyrinth(cfg.questions)).
+  var _DEFAULT_INJECTION = {
+    openMoirai:      { mode:'sym', closeFn:'closeMoirai' },
+    openEkklisia:    { mode:'sym', closeFn:'closeEkklisia' },
+    openOracle:      { mode:'sym', closeFn:'closeOracle' },
+    openParthenon:   { mode:'sym', closeFn:'closeParthenon' },
+    openOlympus:     { mode:'sym', closeFn:'closeOlympus' },
+    openHippodrome:  { mode:'sym', closeFn:'closeHippodrome' },
+    openErinyes:     { mode:'sym', closeFn:'closeErinyes' },
+    openLabyrinth:   { mode:'config' },
+    openInvaders:    { mode:'sym', closeFn:'closeInvaders' },
+    openMythMemory:  { mode:'sym', closeFn:'closeMythMemory' },
+    openEpicPuzzle:  { mode:'sym', closeFn:'closeEpicPuzzle' }
+  };
+  // Resolve the injection descriptor for an openFn: a real SymMix entry wins,
+  // else the panel default above. Returns null for engines we know nothing about
+  // (self-contained arcades etc.) so they keep the honest bare "Start" card.
+  function synResolveInjection(fn){
+    if (!fn) return null;
+    var sm = (window.SymMix && SymMix.ENGINE_INJECTION) ? SymMix.ENGINE_INJECTION[fn] : null;
+    if (sm) return sm;
+    if (Object.prototype.hasOwnProperty.call(_DEFAULT_INJECTION, fn)) return _DEFAULT_INJECTION[fn];
+    return null;
   }
   // Resolve+launch a tile. Content-bank games → level selector. Self-contained
   // games → launch the real opener immediately. Coming-soon → friendly notice.
@@ -418,9 +459,16 @@
     //    (b) anything else → a single honest direct-launch card (unchanged). ──
     if (!bank) {
       const fn = window.synResolveLaunch && synResolveLaunch(game);
-      const inj = (fn && window.SymMix && SymMix.ENGINE_INJECTION) ? SymMix.ENGINE_INJECTION[fn] : null;
-      const mats = (window.SymMix && SymMix.materials) ? SymMix.materials() : [];
-      if (inj && mats.length) { engineSetup(body, game, fn, inj, mats, accent); return; }
+      // Injection: real SymMix entry, else a panel default so EVERY quiz-style
+      // engine reaches the universal picker (not just the ~17 in ENGINE_INJECTION).
+      const inj = synResolveInjection(fn);
+      // Gate on the picker's ACTUAL source (SymMix.catalog() — grammar + class
+      // content + published packs), NOT grammar materials(): the old materials()
+      // gate wrongly hid the picker whenever grammar generators returned empty,
+      // even though the catalog had plenty of hostable content.
+      const hasCat = !!(window.SymMix && SymMix.catalog &&
+        (SymMix.catalog() || []).some(g => (g.items||[]).length));
+      if (inj && hasCat) { engineSetup(body, game, fn, inj, [], accent); return; }
 
       const card = el('div',{class:'lv-shell sc-stagger has-accent', style:`--ca:${accent}`});
       card.appendChild(el('button',{class:'lv-cat lv-cat--custom', style:'width:100%', onclick:()=>{
@@ -782,10 +830,32 @@
     const listWrap = el('div',{class:'syn-mix__cats'});
     wrap.appendChild(listWrap);
 
+    // Per-source level picker WITH the same hide/unhide collapse as the Live/PvP
+    // picker (curriculum-picker.js): a whole-list fold header (.syn-lv-head /
+    // .syn-lv-fold) plus per-category fold chevrons (.syn-lvgrp-fold). Fold state
+    // lives in the module-scoped _lvHidden / _lvFoldG maps so it survives repaints.
     function levelPanel(it, st){
       const panel = el('div',{class:'syn-ds-levels'});
       const allIds = (it.levels||[]).map(lv=>lv.id);
       const allOn  = allIds.length>0 && allIds.every(id=>st.levels.has(id));
+      const selN   = allIds.filter(id=>st.levels.has(id)).length;
+      const hidden = !!_lvHidden[it.id];
+
+      // ── Header: title + selected-count + a hide/unhide (collapse) toggle ──
+      panel.appendChild(el('div',{class:'syn-lv-head'},[
+        el('span',{class:'syn-lv-head__t'},[
+          L({gr:'Επίπεδα',en:'Levels'}),
+          el('span',{class:'syn-lv-head__c'+(selN?' on':'')}, selN+'/'+allIds.length),
+        ]),
+        el('button',{class:'syn-lv-fold'+(hidden?' folded':''),
+          title: hidden ? L({gr:'Δείξε τα επίπεδα',en:'Show levels'}) : L({gr:'Κρύψε τα επίπεδα',en:'Hide levels'}),
+          onclick:()=>{ _lvHidden[it.id] = !hidden; paintList(); }},[
+          el('span',{class:'syn-lv-fold__lbl'}, hidden ? L({gr:'Δείξε',en:'Show'}) : L({gr:'Κρύψε',en:'Hide'})),
+          el('span',{class:'syn-lv-fold__chev'}, '▾'),
+        ]),
+      ]));
+      if (hidden) return panel;   // collapsed — header only
+
       // mass select-all / clear (selects EVERY level pill, ticking them all)
       panel.appendChild(el('button',{class:'syn-lvpill--all'+(allOn?' on':''),
         onclick:()=>{ if(allOn) st.levels.clear(); else allIds.forEach(id=>st.levels.add(id)); paintList(); updateBar(); }},
@@ -797,7 +867,11 @@
       order.forEach(g=>{
         const rows = byG[g];
         const gOn  = rows.length>0 && rows.every(lv=>st.levels.has(lv.id));
-        panel.appendChild(el('div',{class:'syn-lvgrp-row'},[
+        const gKey = it.id + '::' + g;
+        const gFold = !!_lvFoldG[gKey];
+        panel.appendChild(el('div',{class:'syn-lvgrp-row'+(gFold?' folded':'')},[
+          el('button',{class:'syn-lvgrp-fold', title: gFold ? L({gr:'Δείξε',en:'Show'}) : L({gr:'Κρύψε',en:'Hide'}),
+            onclick:()=>{ _lvFoldG[gKey] = !gFold; paintList(); }}, '▾'),
           el('span',{class:'syn-lvgrp'}, g||L({gr:'Επίπεδα',en:'Levels'})),
           el('button',{class:'syn-lvgrp-all'+(gOn?' on':''), onclick:()=>{
             const turnOn = !gOn;
@@ -807,6 +881,7 @@
         ]));
         rows.forEach((lv)=>{
           n++;
+          if (gFold) return;   // category collapsed — keep numbering stable, skip the row
           const lon = st.levels.has(lv.id);
           panel.appendChild(el('button',{class:'syn-lvrowpill'+(lon?' on':'')+(lv.color?' syn-lvpill--'+lv.color:''),
             onclick:()=>{
