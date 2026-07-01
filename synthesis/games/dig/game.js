@@ -3,6 +3,22 @@
 //  8×8 covered grid · 4 hidden artifacts · Quiz to scan/clean
 // ============================================================
 
+// Language-picking normalizer: the host/picker bank may deliver `q` as a
+// bilingual object ({gr,en}), a bare string, or a {q:{gr,en}} wrapper — resolve
+// it to a string so the card never renders "[object Object]" / "undefined".
+function _digQT(q) {
+  var lg = (typeof siteLang !== 'undefined' && siteLang === 'en') ? 'en' : 'gr';
+  if (q == null) return '';
+  if (typeof q === 'string') return q;
+  if (typeof q === 'object') {
+    var v = q[lg] != null ? q[lg] : (q.gr != null ? q.gr : q.en);
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') return _digQT(v);
+    if (q.q !== undefined) return _digQT(q.q);
+  }
+  return String(q);
+}
+
 /* ── Question bank ── */
 const DG_Q = [
   {q:{gr:'Ποιος ανακάλυψε τις Μυκήνες τον 19ο αιώνα;',en:'Who excavated Mycenae in the 19th century?'},a:['Αρθουρ Έβανς','Ερρίκος Σλήμαν','Πωλ Φαρ','Χάρολντ Άρθουρ'],c:1},
@@ -424,7 +440,7 @@ function _digShowQuiz(type, artId, label) {
     subEl.textContent  = art ? (lang === 'en' ? art.nameEn : art.name) : '';
   }
 
-  document.getElementById('dg-qtxt').textContent = qObj.q[lang] || qObj.q.gr;
+  document.getElementById('dg-qtxt').textContent = _digQT(qObj.q);
   document.getElementById('dg-opts').innerHTML = qObj.a.map((opt, i) =>
     `<button class="dg-opt" onclick="_digAnswer(${i})">${opt}</button>`
   ).join('');

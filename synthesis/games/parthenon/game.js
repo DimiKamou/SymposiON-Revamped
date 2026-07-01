@@ -10,6 +10,23 @@
 const Parthenon = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -140,7 +157,7 @@ const Parthenon = (() => {
     });
     renderLevels();
     if (st && st.cur && document.getElementById('pn-screen-game').classList.contains('active')) {
-      document.getElementById('pn-qtext').textContent = st.cur.q[L()];
+      document.getElementById('pn-qtext').textContent = QT(st.cur.q);
       renderStage(-1); renderBoard(); renderMeta();
     }
   }
@@ -212,7 +229,7 @@ const Parthenon = (() => {
   function nextQ() {
     if (st.done) return;
     st.answered=false; st.cur=getQ(); st.qNum++;
-    document.getElementById('pn-qtext').textContent = st.cur.q[L()];
+    document.getElementById('pn-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('pn-feedback'); fb.textContent=''; fb.className='pn-feedback';
     const wrap=document.getElementById('pn-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];

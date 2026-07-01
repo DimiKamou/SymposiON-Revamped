@@ -8,6 +8,23 @@
 const Olympus = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -146,7 +163,7 @@ const Olympus = (() => {
     });
     renderLevels();
     if (st && st.cur && document.getElementById('ao-screen-game').classList.contains('active')) {
-      document.getElementById('ao-qtext').textContent = st.cur.q[L()];
+      document.getElementById('ao-qtext').textContent = QT(st.cur.q);
       renderLadder(); renderMeta();
     }
   }
@@ -214,7 +231,7 @@ const Olympus = (() => {
   /* ───────── loop ───────── */
   function nextQ() {
     st.answered=false; st.cur=getQ(); st.qNum++; st.fiftyHidden=[];
-    document.getElementById('ao-qtext').textContent = st.cur.q[L()];
+    document.getElementById('ao-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('ao-feedback'); fb.textContent=''; fb.className='ao-feedback';
     const wrap=document.getElementById('ao-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];

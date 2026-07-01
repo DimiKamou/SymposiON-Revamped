@@ -13,6 +13,23 @@
 const Hegemonia = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   // Question source. The Games-Panel bridge fills window.HG_Q with MC items
@@ -170,7 +187,7 @@ const Hegemonia = (() => {
     });
     if (st && st.cur && document.getElementById('hg-screen-game').classList.contains('active')) {
       document.getElementById('hg-qcount').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum;
-      document.getElementById('hg-qtext').textContent = st.cur.q[L()];
+      document.getElementById('hg-qtext').textContent = QT(st.cur.q);
       renderLadder();
       if (st.selecting) showHint();
     }
@@ -278,7 +295,7 @@ const Hegemonia = (() => {
     if (st.qNum>=CAP || unclaimedCount()===0) return end();
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('hg-qcount').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum;
-    document.getElementById('hg-qtext').textContent = st.cur.q[L()];
+    document.getElementById('hg-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('hg-feedback'); fb.textContent=''; fb.className='hg-feedback';
     const wrap=document.getElementById('hg-answers'); wrap.innerHTML='';
     const inks=['#2A140C','#08171A','#2A2208','#0E1808'];

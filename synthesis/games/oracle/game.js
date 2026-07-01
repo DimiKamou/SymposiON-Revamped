@@ -7,6 +7,23 @@
 const Oracle = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -130,7 +147,7 @@ const Oracle = (() => {
       const k=el.getAttribute('data-i18n'); if(I18N[k]) el.innerHTML=I18N[k][L()];
     });
     if (st && st.cur && document.getElementById('or-screen-game').classList.contains('active')) {
-      if (st.staked) document.getElementById('or-qtext').textContent = st.cur.q[L()];
+      if (st.staked) document.getElementById('or-qtext').textContent = QT(st.cur.q);
       else document.getElementById('or-qtext').textContent = T('Η Πυθία ετοιμάζει χρησμό… πόνταρε πρώτα.','The Pythia prepares an oracle… stake first.');
       renderTop(); renderBoard();
       if (!st.staked) renderStakes();
@@ -190,7 +207,7 @@ const Oracle = (() => {
     document.querySelectorAll('.or-stake-btn').forEach(b=>{ b.disabled=true; if(b!==btn) b.classList.add('dim'); });
     btn.classList.add('chosen');
     const qc=document.querySelector('#or-screen-game .or-q-card'); if(qc) qc.classList.remove('veiled');
-    document.getElementById('or-qtext').textContent = st.cur.q[L()];
+    document.getElementById('or-qtext').textContent = QT(st.cur.q);
     if (window.gsap) gsap.fromTo('#or-qtext',{opacity:0,y:10},{opacity:1,y:0,duration:.5,ease:'power3.out'});
     document.getElementById('or-answers').classList.remove('locked');
     if (window.gsap) gsap.fromTo('#or-answers .or-ans',{opacity:0,y:12},{opacity:1,y:0,duration:.4,stagger:.06,ease:'power2.out'});
