@@ -2,12 +2,13 @@
 //  PHALANX · Reimagined — Web Audio SFX kit (window.PhalanxAudio)
 //  No asset files: everything is synthesized.
 //    select()      — pick up one of your units
+//    tick()        — low-timer heartbeat tap (final seconds of a clash)
 //    place()       — set a unit down in placement
 //    move()        — a single-tile march step
 //    charge()      — cavalry 2-tile gallop
-//    clash()       — bronze-on-bronze contact when units meet
-//    correct()     — rising "the line holds" sting
-//    wrong()       — descending buzzer, a unit falls
+//    clash()       — war-drum + bronze-on-bronze contact when units meet
+//    correct()     — deep war-drum + rising "the line holds" sting
+//    wrong()       — doom-drums + descending buzzer, a unit falls
 //    standoff()    — dull bounce, both units survive
 //    general()     — somber horn when a General falls
 //    victory(win)  — triumphal fanfare / defeat dirge
@@ -51,8 +52,24 @@
       src.connect(bp); bp.connect(g); g.connect(ctx.destination);
       src.start(t); src.stop(t + dur + 0.02);
     }
+    // deep war-drum: membrane pitch-drop sine + skin-slap noise
+    _drum(t0, f0, f1, dur, peak) {
+      const ctx = this._ctx, t = t0 == null ? ctx.currentTime : t0;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur * 0.9);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + dur + 0.05);
+      this._noise(0.05, peak * 0.45, 140, 0.8, t);
+    }
 
     select() { if (this.muted || !this._init()) return; this._tone('sine', 520, 720, 0.09, 0.10); }
+    // low-timer heartbeat: a soft drum tap each of the final seconds
+    tick()   { if (this.muted || !this._init()) return; this._drum(this._ctx.currentTime, 210, 88, 0.09, 0.10); this._tone('square', 1240, 1180, 0.04, 0.03); }
     place()  { if (this.muted || !this._init()) return; this._tone('triangle', 220, 110, 0.12, 0.16); this._noise(0.06, 0.10, 320, 0.8); }
     move()   { if (this.muted || !this._init()) return; this._tone('sine', 160, 120, 0.10, 0.10); this._noise(0.05, 0.08, 240, 0.6); }
     charge() {
@@ -64,7 +81,8 @@
     clash() {
       if (this.muted || !this._init()) return;
       const ctx = this._ctx, t = ctx.currentTime;
-      // bright bronze ring + metallic noise burst
+      // war-drum impact under a bright bronze ring + metallic noise burst
+      this._drum(t, 170, 55, 0.30, 0.30);
       this._tone('triangle', 1180, 760, 0.34, 0.16, t);
       this._tone('square',   1760, 1320, 0.22, 0.06, t + 0.004);
       this._noise(0.14, 0.26, 2600, 2.4, t);
@@ -73,17 +91,23 @@
     correct() {
       if (this.muted || !this._init()) return;
       const ctx = this._ctx, t = ctx.currentTime;
-      [523.25, 659.25, 783.99].forEach((f, i) => this._tone('triangle', f, f, 0.30, 0.15, t + i * 0.075));
+      // deep drum of the advancing line, then the rising sting
+      this._drum(t, 150, 50, 0.38, 0.36);
+      [523.25, 659.25, 783.99].forEach((f, i) => this._tone('triangle', f, f, 0.30, 0.15, t + 0.05 + i * 0.075));
     }
     wrong() {
       if (this.muted || !this._init()) return;
       const ctx = this._ctx, t = ctx.currentTime;
-      this._tone('sawtooth', 200, 70, 0.34, 0.20, t);
+      // doom-drums: boom … boom — the line breaks
+      this._drum(t, 130, 42, 0.4, 0.36);
+      this._drum(t + 0.17, 110, 36, 0.5, 0.32);
+      this._tone('sawtooth', 200, 70, 0.34, 0.16, t);
       this._noise(0.22, 0.12, 180, 0.6, t + 0.04);
     }
     standoff() {
       if (this.muted || !this._init()) return;
       const ctx = this._ctx, t = ctx.currentTime;
+      this._drum(t, 120, 60, 0.22, 0.18);
       this._tone('sine', 330, 247, 0.20, 0.13, t);
       this._tone('sine', 247, 196, 0.22, 0.10, t + 0.05);
     }
@@ -95,8 +119,16 @@
     victory(win) {
       if (this.muted || !this._init()) return;
       const ctx = this._ctx, t = ctx.currentTime;
-      const seq = win ? [392, 523.25, 659.25, 783.99, 1046.5] : [330, 294, 247, 196];
-      seq.forEach((f, i) => this._tone('triangle', f, f, win ? 0.55 : 0.7, 0.16, t + i * (win ? 0.13 : 0.2)));
+      if (win) {
+        // accelerating war-drum roll into the fanfare
+        [0, 0.22, 0.40, 0.54, 0.64].forEach((d, i) => this._drum(t + d, 140 + i * 8, 48, 0.3, 0.22 + i * 0.03));
+        [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this._tone('triangle', f, f, 0.55, 0.16, t + 0.35 + i * 0.13));
+      } else {
+        // two slow funeral drums under the dirge
+        this._drum(t, 100, 34, 0.7, 0.34);
+        this._drum(t + 0.55, 88, 30, 0.9, 0.3);
+        [330, 294, 247, 196].forEach((f, i) => this._tone('triangle', f, f, 0.7, 0.16, t + i * 0.2));
+      }
     }
 
     startDrone() {

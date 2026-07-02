@@ -61,9 +61,10 @@ export function buildRunner(sex = 'male') {
   nose.rotation.x = Math.PI / 2;
   headG.add(hair, head, neck, nose);
 
+  let mane = null;
   if (female) {
     const fringe = mesh(box(0.42, 0.13, 0.22), hairMat, 0, 0.16, 0.13);
-    const mane = mesh(cap(0.22, 0.64, 6, 10), hairMat, 0, -0.46, -0.14);
+    mane = mesh(cap(0.22, 0.64, 6, 10), hairMat, 0, -0.46, -0.14);
     mane.scale.set(1.18, 1, 0.5);
     const curl = mesh(new THREE.SphereGeometry(0.21, 12, 10), hairMat, 0, -0.92, -0.10);
     curl.scale.set(1.15, 0.72, 0.6);
@@ -125,7 +126,7 @@ export function buildRunner(sex = 'male') {
 
   root.traverse((o) => { if (o.isMesh && o !== blob) { o.castShadow = true; o.receiveShadow = true; } });
 
-  return { root, rig: { body, torso, headG, armL, armR, legL, legR, blob }, sex };
+  return { root, rig: { body, torso, headG, armL, armR, legL, legR, blob, skirt, mane }, sex };
 }
 
 /* ───────────────────────────────────────────────────────────────

@@ -37,8 +37,10 @@
       this.charge = 0; this.intensity = 0.45; this.overdrive = false;
       this.flash = 0; this.flashColor = PAL.goldHi; this.flashX = 0.5; this.wrongFlash = 0;
       this.shake = 0;
+      // respect prefers-reduced-motion: thinner rain, no screen shake, fewer sparks
+      this.rm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-      this.bolts = []; this.clouds = []; this.rain = []; this.columns = []; this.foam = [];
+      this.bolts = []; this.clouds = []; this.rain = []; this.columns = []; this.foam = []; this.sparks = [];
       this._odTimer = 0;
       this.breakT = rand(0, 1); this.breakX = 0.5; this.breakPeriod = rand(4.5, 7);
       this._onResize = () => this._resize();
@@ -83,7 +85,7 @@
     }
     _seedRain() {
       this.rain = [];
-      const n = Math.floor((this.W * this.H) / 6000);
+      const n = Math.floor((this.W * this.H) / (this.rm ? 18000 : 6000));
       for (let i = 0; i < n; i++) this.rain.push({
         x: Math.random() * this.W, y: Math.random() * this.H,
         len: rand(8, 20), spd: rand(620, 1050), z: rand(0.4, 1),
@@ -190,6 +192,19 @@
       this.foam.forEach(f => { f.life -= dt / f.max; f.vy += 240 * dt; f.x += f.vx * dt; f.y += f.vy * dt; });
       this.foam = this.foam.filter(f => f.life > 0 && f.y < this.H + 8);
 
+      // gold charge motes drift upward as the overdrive charge builds
+      const sparkRate = this.charge * (this.rm ? 0.15 : 0.55) + (this.overdrive ? 0.35 : 0);
+      if (sparkRate > 0.02 && Math.random() < sparkRate) {
+        this.sparks.push({
+          x: rand(0, this.W), y: this.H * rand(0.55, 0.98),
+          vy: -rand(16, 46) * (0.6 + this.charge), r: rand(0.8, 2.1),
+          life: 1, max: rand(0.9, 1.8), ph: rand(0, 6.28),
+        });
+      }
+      this.sparks.forEach(s => { s.life -= dt / s.max; s.y += s.vy * dt; s.x += Math.sin(this.t * 2.4 + s.ph) * 14 * dt; });
+      this.sparks = this.sparks.filter(s => s.life > 0 && s.y > -6);
+      if (this.sparks.length > 80) this.sparks.splice(0, this.sparks.length - 80);
+
       if (this.overdrive) { this._odTimer -= dt; if (this._odTimer <= 0) { this.strike(rand(0.5, 0.9)); this._odTimer = rand(0.28, 0.7); } }
     }
 
@@ -201,7 +216,7 @@
       const ctx = this.ctx, W = this.W, H = this.H, seaTop = this.seaTop;
       ctx.clearRect(0, 0, W, H);
       ctx.save();
-      if (this.shake > 0.3) ctx.translate(rand(-1, 1) * this.shake, rand(-1, 1) * this.shake);
+      if (this.shake > 0.3 && !this.rm) ctx.translate(rand(-1, 1) * this.shake, rand(-1, 1) * this.shake);
 
       // ── SKY ──
       const dark = this.charge * 0.5 + (this.overdrive ? 0.3 : 0);
@@ -220,6 +235,19 @@
         cg.addColorStop(1, rgb(col, 0));
         ctx.fillStyle = cg; ctx.fillRect(0, seaTop - H * 0.3, W, H * 0.3);
       }
+
+      // pale storm moon, veiled by the clouds drawn over it
+      const mx = W * 0.79, my = H * 0.15, mr = Math.max(13, W * 0.026);
+      const mGlow = ctx.createRadialGradient(mx, my, 0, mx, my, mr * 3.4);
+      const ml = 0.12 + this.flash * 0.10;
+      mGlow.addColorStop(0, rgb([236, 226, 198], ml));
+      mGlow.addColorStop(0.35, rgb([236, 226, 198], ml * 0.4));
+      mGlow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = mGlow; ctx.beginPath(); ctx.arc(mx, my, mr * 3.4, 0, 6.283); ctx.fill();
+      ctx.fillStyle = rgb([222, 214, 192], 0.42 + this.flash * 0.25);
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, 6.283); ctx.fill();
+      ctx.fillStyle = rgb([190, 182, 162], 0.10);   // soft crater shade
+      ctx.beginPath(); ctx.arc(mx - mr * 0.3, my + mr * 0.2, mr * 0.55, 0, 6.283); ctx.fill();
 
       // clouds
       this.clouds.forEach(c => {
@@ -255,6 +283,12 @@
       this.foam.forEach(f => {
         ctx.fillStyle = rgb(PAL.foam, Math.min(0.9, f.life) * 0.8);
         ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.6 + f.life * 0.6), 0, 6.283); ctx.fill();
+      });
+
+      // rising gold charge motes
+      this.sparks.forEach(s => {
+        ctx.fillStyle = rgb(PAL.goldHi, s.life * 0.55);
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
       });
 
       // sky flash
@@ -394,8 +428,12 @@
       const stroke = (pts, glowW, coreW, ga) => {
         ctx.strokeStyle = rgb(PAL.gold, ga * 0.4); ctx.lineWidth = glowW;
         ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+        ctx.save();   // hot core with a soft bloom (bolts are few + short-lived)
+        ctx.shadowColor = rgb(PAL.goldHi, Math.min(1, ga));
+        ctx.shadowBlur = 12;
         ctx.strokeStyle = rgb(core, Math.min(1, ga + 0.2)); ctx.lineWidth = coreW;
         ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+        ctx.restore();
       };
       stroke(b.pts, 9 + b.intensity * 8, 2.2, a);
       b.branches.forEach(bp => stroke(bp, 5, 1.2, a * 0.7));

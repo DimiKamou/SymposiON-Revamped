@@ -1,6 +1,10 @@
 // ============================================================
 //  ARCHAEOLOGICAL DIG (Ανασκαφή) — Discovery Grid Game
 //  8×8 covered grid · 4 hidden artifacts · Quiz to scan/clean
+//  Presentation: lantern-lit trench, earth strata, coordinate
+//  rails around the pit, museum-card artifact reveals, and a
+//  typed particle system (dust / rock chips / gold sparks).
+//  Gameplay, rules, scoring and data are unchanged.
 // ============================================================
 
 // Language-picking normalizer: the host/picker bank may deliver `q` as a
@@ -49,7 +53,7 @@ const DG_ARTIFACTS = [
     id: 'mask', name: 'Χρυσή Μάσκα', nameEn: 'Gold Mask',
     icon: '🎭', era: '1600–1100 π.Χ.', eraEn: '1600–1100 BC',
     shape: [[0,0],[0,1]], // 2-tile horizontal
-    color: '#8B6018', colorLight: '#C4922E',
+    color: '#96660F', colorLight: '#D4A431',
     fact: {
       gr: '<strong>Χρυσή Μάσκα του Αγαμέμνονα</strong> — Ανακαλύφθηκε από τον Ερρίκο Σλήμαν στις Μυκήνες το 1876. Αν και ο Σλήμαν πίστευε ότι ανήκε στον βασιλιά Αγαμέμνονα, σύγχρονες έρευνες χρονολογούν τη μάσκα 300 χρόνια νωρίτερα από τον υπολογιζόμενο χρόνο του Αγαμέμνονα. Αποτελεί σύμβολο του Μυκηναϊκού πολιτισμού.',
       en: '<strong>Mask of Agamemnon</strong> — Discovered by Heinrich Schliemann at Mycenae in 1876. Though Schliemann believed it belonged to King Agamemnon, modern dating places it 300 years earlier than the legendary king. It remains a symbol of Mycenaean civilization.',
@@ -59,7 +63,7 @@ const DG_ARTIFACTS = [
     id: 'amphora', name: 'Αμφορέας', nameEn: 'Amphora',
     icon: '🏺', era: '500 π.Χ.', eraEn: '500 BC',
     shape: [[0,0],[1,0],[2,0]], // 3-tile vertical
-    color: '#6B3820', colorLight: '#9B5432',
+    color: '#7A3E1E', colorLight: '#B25E30',
     fact: {
       gr: '<strong>Αμφορέας</strong> — Το βασικό αγγείο αποθήκευσης και μεταφοράς του αρχαίου ελληνικού κόσμου. Χρησιμοποιούνταν για λάδι, κρασί και σιτηρά. Διακοσμημένοι Παναθηναϊκοί αμφορείς γεμάτοι με ελαιόλαδο χρησίμευαν ως βραβεία στους Παναθηναϊκούς Αγώνες (530–410 π.Χ.).',
       en: '<strong>Amphora</strong> — The principal storage and transport vessel of the ancient Greek world, used for oil, wine, and grain. Decorated Panathenaic amphorae filled with olive oil served as prizes at the Panathenaic Games (530–410 BC).',
@@ -69,7 +73,7 @@ const DG_ARTIFACTS = [
     id: 'tablet', name: 'Γραπτή Πλάκα', nameEn: 'Inscribed Tablet',
     icon: '📜', era: '1450 π.Χ.', eraEn: '1450 BC',
     shape: [[0,0],[0,1],[1,0],[1,1]], // 4-tile 2×2
-    color: '#3E4E1A', colorLight: '#607030',
+    color: '#45521E', colorLight: '#6D7A35',
     fact: {
       gr: '<strong>Πλάκα Γραμμικής Β</strong> — Τα αρχαιότερα γραπτά στοιχεία της ελληνικής γλώσσας. Βρέθηκαν στην Κνωσό και τις Μυκήνες (περ. 1450 π.Χ.) και αποκρυπτογραφήθηκαν από τον αρχιτέκτονα <strong>Μάικλ Βέντρις</strong> το 1952. Περιέχουν κυρίως διοικητικές καταγραφές: αποθέματα, φόρους, ζώα.',
       en: '<strong>Linear B Tablet</strong> — The earliest written records of the Greek language, found at Knossos and Mycenae (c. 1450 BC). Deciphered by architect <strong>Michael Ventris</strong> in 1952, they contain mainly administrative records: inventories, taxes, livestock.',
@@ -79,7 +83,7 @@ const DG_ARTIFACTS = [
     id: 'shield', name: 'Χάλκινη Ασπίδα', nameEn: 'Bronze Shield',
     icon: '🛡️', era: '700 π.Χ.', eraEn: '700 BC',
     shape: [[0,0],[0,1],[1,0]], // 3-tile L-shape
-    color: '#4A3C18', colorLight: '#7A6030',
+    color: '#58461C', colorLight: '#8A6F33',
     fact: {
       gr: '<strong>Χάλκινη Ασπίδα</strong> — Η ασπίδα τύπου «Άργος» ήταν ο βασικός αμυντικός εξοπλισμός του Έλληνα οπλίτη. Ζύγιζε περίπου 8 κιλά. Οι Σπαρτιάτισσες μητέρες έλεγαν στους γιους τους: <em>«ἢ τὰν ἢ ἐπὶ τᾶς»</em> — με αυτήν (νικητής) ή επί αυτής (νεκρός).',
       en: '<strong>Bronze Shield</strong> — The Argive round shield was the core defensive equipment of the Greek hoplite, weighing ~8 kg. Spartan mothers famously told their sons: <em>"ἢ τὰν ἢ ἐπὶ τᾶς"</em> — with it (victorious) or on it (carried dead).',
@@ -87,10 +91,21 @@ const DG_ARTIFACTS = [
   },
 ];
 
+/* Column letters for the coordinate rail (archaeological grid notation) */
+const DG_COLS = ['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ'];
+
+/* Per-row soil tones — topsoil lighter, deep clay darker (strata) */
+const DG_SOIL = ['#57391C','#513418','#4B3016','#452C13','#3F2811','#39240F','#33200D','#2D1C0B'];
+
 /* ── State ── */
 let _dig = null;
 let _digDustAF = null;
 let _digDustPts = [];
+
+/* Reduced-motion preference (big ambient effects are gated on this) */
+var _digRMQ = (typeof window !== 'undefined' && window.matchMedia)
+  ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+function _digRM() { return !!(_digRMQ && _digRMQ.matches); }
 
 /* ══════════════════════════════════════════
    PUBLIC API
@@ -100,6 +115,7 @@ function openDig() {
   document.body.style.overflow = 'hidden';
   if (!document.getElementById('dg-menu-scr')) _digBuild();
   _digShowScr('dg-menu-scr');
+  _digStartDust(); // lantern-lit motes drift over the menu too
 }
 
 function closeDig() {
@@ -112,26 +128,61 @@ function closeDig() {
    BUILD HTML (once)
 ══════════════════════════════════════════ */
 function _digBuild() {
-  // Build scan row buttons (0-7)
-  const rowBtns = Array.from({length:8},(_,i) =>
-    `<button class="dg-scan-btn" onclick="_digScanAsk('row',${i})">Γ${i+1}</button>`
+  // Coordinate rails around the pit: columns = Greek letters, rows = numbers
+  const colBtns = DG_COLS.map((L, i) =>
+    `<button class="dg-scan-btn" onclick="_digScanAsk('col',${i})" onmouseenter="_digScanHover('col',${i},1)" onmouseleave="_digScanHover('col',${i},0)" title="Σάρωση στήλης ${L} / Scan column ${L}">${L}</button>`
   ).join('');
-  const colBtns = Array.from({length:8},(_,i) =>
-    `<button class="dg-scan-btn" onclick="_digScanAsk('col',${i})">Σ${i+1}</button>`
+  const rowBtns = Array.from({length:8},(_,i) =>
+    `<button class="dg-scan-btn" onclick="_digScanAsk('row',${i})" onmouseenter="_digScanHover('row',${i},1)" onmouseleave="_digScanHover('row',${i},0)" title="Σάρωση γραμμής ${i+1} / Scan row ${i+1}">${i+1}</button>`
+  ).join('');
+
+  const relicStrip = DG_ARTIFACTS.map(a =>
+    `<div class="dg-relic"><span class="dg-relic-ico">${a.icon}</span><span class="dg-relic-nm">${a.name}</span><span class="dg-relic-era">${a.era}</span></div>`
+  ).join('');
+
+  const foundSlots = DG_ARTIFACTS.map(a =>
+    `<span class="dg-found-slot" data-art="${a.id}" title="${a.name}">${a.icon}</span>`
+  ).join('');
+
+  const gallery = DG_ARTIFACTS.map((a, i) =>
+    `<div class="dg-gal-item" style="--gi:${i}"><span class="dg-gal-ico">${a.icon}</span><span class="dg-gal-nm">${a.name}</span></div>`
   ).join('');
 
   document.getElementById('dig-wrap').innerHTML = `
+<div class="dg-strata" aria-hidden="true"></div>
 <canvas id="dg-dust-cnv" class="dg-canvas-ovl" aria-hidden="true"></canvas>
 
 <!-- MENU -->
 <div id="dg-menu-scr" class="dg-screen active">
+  <svg class="dg-scene" viewBox="0 0 900 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path d="M0 72 Q150 52 300 68 T600 62 T900 74 L900 230 L0 230 Z" fill="#26170A" opacity=".85"/>
+    <path d="M0 118 Q180 98 360 110 T720 106 T900 114 L900 230 L0 230 Z" fill="#1E1207" opacity=".95"/>
+    <path d="M0 162 Q220 146 440 156 T900 158 L900 230 L0 230 Z" fill="#130B04"/>
+    <g fill="#0C0702" opacity=".9">
+      <path d="M652 128 c-20 0 -32 16 -29 40 c3 22 15 36 29 36 c14 0 26 -14 29 -36 c3 -24 -9 -40 -29 -40 z"/>
+      <rect x="642" y="118" width="20" height="12"/>
+      <path d="M640 124 q-12 6 -6 18 l6 2 q-6 -10 4 -16 z"/>
+      <path d="M664 124 q12 6 6 18 l-6 2 q6 -10 -4 -16 z"/>
+      <ellipse cx="230" cy="176" rx="34" ry="8"/>
+      <ellipse cx="230" cy="168" rx="30" ry="7"/>
+      <path d="M430 190 a18 18 0 0 1 36 0 z"/>
+    </g>
+    <g stroke="#3A2712" stroke-width="1" opacity=".5" fill="none">
+      <path d="M0 90 Q200 74 420 84 T900 88"/>
+      <path d="M0 138 Q240 122 480 132 T900 134"/>
+    </g>
+  </svg>
   <div class="dg-menu-wrap">
-    <div class="dg-logo">Ανασκαφή<em>.</em></div>
-    <div class="dg-logo-sub">Archaeological Dig — Ιστορική Αποκάλυψη</div>
-    <div class="dg-rule">
+    <div class="dg-kicker dg-up" style="--d:0">ΑΡΧΑΙΟΛΟΓΙΚΗ ΑΠΟΣΤΟΛΗ · FIELD EXPEDITION</div>
+    <div class="dg-logo dg-up" style="--d:1">Ανασκαφή<em>.</em></div>
+    <div class="dg-logo-sub dg-up" style="--d:2">Archaeological Dig — Ιστορική Αποκάλυψη</div>
+    <div class="dg-meander dg-up" style="--d:3" aria-hidden="true"></div>
+    <div class="dg-rule dg-up" style="--d:4">
+      <div class="dg-rule-hd">ΗΜΕΡΟΛΟΓΙΟ ΑΝΑΣΚΑΦΗΣ · FIELD JOURNAL</div>
       <strong>Κανόνες:</strong> Κάνε κλικ σε τετράγωνα για να σκάψεις. Αν βρεις τμήμα αρχαίου ευρήματος, πρέπει να <strong>απαντήσεις σωστά</strong> για να το καθαρίσεις. Χρησιμοποίησε τα κουμπιά <strong>Σάρωση Γραμμής/Στήλης</strong> για να εντοπίσεις τα κρυμμένα αντικείμενα — αλλά κάθε σάρωση απαιτεί απάντηση ερώτησης! Στόχος: Εντόπισε και καθάρισε <strong>και τα 4 αρχαιολογικά ευρήματα.</strong>
     </div>
-    <button class="dg-btn" onclick="_digStartGame()">ΕΝΑΡΞΗ ΑΝΑΣΚΑΦΗΣ</button>
+    <div class="dg-relics dg-up" style="--d:5">${relicStrip}</div>
+    <button class="dg-btn dg-up" style="--d:6" onclick="_digStartGame()"><span>ΕΝΑΡΞΗ ΑΝΑΣΚΑΦΗΣ</span></button>
   </div>
 </div>
 
@@ -141,28 +192,27 @@ function _digBuild() {
     <div class="dg-hud">
       <div class="dg-hud-item">
         <span class="dg-hud-lbl">ΕΥΡΗΜΑΤΑ</span>
-        <span class="dg-hud-val" id="dg-found-cnt">0/4</span>
+        <span class="dg-hud-found"><span class="dg-found-row" id="dg-found-icons">${foundSlots}</span><span class="dg-hud-val" id="dg-found-cnt">0/4</span></span>
       </div>
-      <div class="dg-hud-item" style="align-items:center;">
+      <div class="dg-hud-item mid">
         <span class="dg-hud-lbl">ΑΝΕΣΚΑΜΜΕΝΑ</span>
         <span class="dg-hud-val" id="dg-dug-cnt">0/64</span>
       </div>
-      <div class="dg-hud-item" style="align-items:flex-end;">
+      <div class="dg-hud-item end">
         <span class="dg-hud-lbl">ΣΑΡΩΣΕΙΣ</span>
         <span class="dg-hud-val" id="dg-scan-cnt">0</span>
       </div>
     </div>
     <div class="dg-status-msg" id="dg-status">Κλικ σε τετράγωνο για να σκάψεις. Σάρωσε γραμμή/στήλη για ανίχνευση.</div>
-    <div class="dg-scan-panel">
-      <span class="dg-scan-lbl">ΣΑΡΩΣΗ ΓΡΑΜΜΗΣ:</span>
-      ${rowBtns}
-      <div class="dg-scan-divider"></div>
-      <span class="dg-scan-lbl">ΣΑΡΩΣΗ ΣΤΗΛΗΣ:</span>
-      ${colBtns}
-    </div>
     <div class="dg-grid-outer">
-      <div class="dg-grid" id="dg-grid"></div>
+      <div class="dg-site">
+        <div class="dg-site-corner" aria-hidden="true">⌖</div>
+        <div class="dg-rail dg-rail-cols">${colBtns}</div>
+        <div class="dg-rail dg-rail-rows">${rowBtns}</div>
+        <div class="dg-pit"><div class="dg-grid" id="dg-grid"></div></div>
+      </div>
     </div>
+    <div class="dg-site-hint">📡 Τα κουμπιά του πλέγματος σαρώνουν γραμμή/στήλη — κάθε σάρωση απαιτεί σωστή απάντηση.</div>
   </div>
 
   <!-- Quiz modal -->
@@ -185,12 +235,17 @@ function _digBuild() {
   <!-- Artifact discovery modal -->
   <div id="dg-art-modal" class="dg-art-modal">
     <div class="dg-art-box">
-      <div class="dg-art-icon" id="dg-art-icon"></div>
+      <div class="dg-art-stamp" aria-hidden="true">ΕΥΡΕΘΗ · RECOVERED</div>
+      <div class="dg-art-spot" aria-hidden="true"></div>
+      <div class="dg-art-stage">
+        <div class="dg-art-icon" id="dg-art-icon"></div>
+        <div class="dg-art-plinth" aria-hidden="true"></div>
+      </div>
       <div class="dg-art-name"  id="dg-art-name"></div>
       <div class="dg-art-era"   id="dg-art-era"></div>
-      <div class="dg-art-divider"></div>
+      <div class="dg-art-divider dg-meander" aria-hidden="true"></div>
       <div class="dg-art-fact"  id="dg-art-fact"></div>
-      <button class="dg-btn" onclick="_digCloseArtModal()">ΣΥΝΕΧΕΙΑ ΑΝΑΣΚΑΦΗΣ →</button>
+      <button class="dg-btn" onclick="_digCloseArtModal()"><span>ΣΥΝΕΧΕΙΑ ΑΝΑΣΚΑΦΗΣ →</span></button>
     </div>
   </div>
 </div>
@@ -198,15 +253,25 @@ function _digBuild() {
 <!-- RESULT -->
 <div id="dg-result-scr" class="dg-screen">
   <div class="dg-result-wrap">
-    <div class="dg-res-title">ΑΝΑΚΑΛΥΨΗ!</div>
-    <div class="dg-res-sub">Η ανασκαφή ολοκληρώθηκε.</div>
-    <div class="dg-res-detail" id="dg-res-detail"></div>
-    <div class="dg-res-btns">
-      <button class="dg-btn"     onclick="_digStartGame()">ΝΕΑ ΑΝΑΣΚΑΦΗ</button>
-      <button class="dg-btn sec" onclick="_digShowScr('dg-menu-scr')">ΜΕΝΟΥ</button>
+    <div class="dg-res-kicker dg-up" style="--d:0">Η ΑΝΑΣΚΑΦΗ ΟΛΟΚΛΗΡΩΘΗΚΕ · EXCAVATION COMPLETE</div>
+    <div class="dg-res-title dg-up" style="--d:1">ΑΝΑΚΑΛΥΨΗ!</div>
+    <div class="dg-res-sub dg-up" style="--d:2">Η ανασκαφή ολοκληρώθηκε.</div>
+    <div class="dg-res-gallery dg-up" style="--d:3">${gallery}</div>
+    <div class="dg-res-stats dg-up" style="--d:4">
+      <div class="dg-res-stat"><span class="dg-res-num" id="dg-res-dug">0</span><span class="dg-res-stat-lbl">ΤΕΤΡΑΓΩΝΑ</span></div>
+      <div class="dg-res-stat-div"></div>
+      <div class="dg-res-stat"><span class="dg-res-num" id="dg-res-scans">0</span><span class="dg-res-stat-lbl">ΣΑΡΩΣΕΙΣ</span></div>
+    </div>
+    <div class="dg-res-detail dg-up" id="dg-res-detail" style="--d:5"></div>
+    <div class="dg-res-btns dg-up" style="--d:6">
+      <button class="dg-btn"     onclick="_digStartGame()"><span>ΝΕΑ ΑΝΑΣΚΑΦΗ</span></button>
+      <button class="dg-btn sec" onclick="_digShowScr('dg-menu-scr')"><span>ΜΕΝΟΥ</span></button>
     </div>
   </div>
-</div>`;
+</div>
+
+<div class="dg-lantern" aria-hidden="true"></div>
+<div class="dg-vignette" aria-hidden="true"></div>`;
 
   _digInitDustCanvas();
 }
@@ -284,25 +349,38 @@ function _digPlaceArtifacts() {
 function _digRenderGrid() {
   const grid = document.getElementById('dg-grid');
   if (!grid) return;
+
+  // Artifacts already fully cleaned show their glyph on the tiles
+  const doneIds = new Set(
+    _dig.artifacts
+      .filter(a => a.cellIndices.every(i => _dig.tiles[i].state === 'artifact-clean'))
+      .map(a => a.id)
+  );
+
   let html = '';
   for (let i = 0; i < 64; i++) {
     const tile = _dig.tiles[i];
+    const r = Math.floor(i / 8);
     let cls = 'dg-cell';
-    let style = '';
+    // Deterministic per-cell jitter for organic soil texture
+    let style = `--soil:${DG_SOIL[r]};--jx:${(i * 37) % 14};--jy:${(i * 53) % 14};--rt:${((i * 29) % 9) - 4}deg;`;
     let inner = '';
 
     if (tile.state === 'covered') {
       cls += ' covered';
     } else if (tile.state === 'empty') {
-      cls += ' empty just-revealed';
+      cls += ' empty';
     } else if (tile.state === 'artifact-dirty') {
       const art = _dig.artifacts.find(a => a.id === tile.artId);
       cls += ' artifact-dirty';
-      if (art) style = `--art-col:${art.color};`;
+      if (art) style += `--art-col:${art.color};--art-lt:${art.colorLight};`;
     } else if (tile.state === 'artifact-clean') {
       const art = _dig.artifacts.find(a => a.id === tile.artId);
       cls += ' artifact-clean';
-      if (art) style = `--art-col:${art.colorLight};`;
+      if (art) {
+        style += `--art-col:${art.color};--art-lt:${art.colorLight};`;
+        if (doneIds.has(art.id)) inner = `<span class="dg-cell-icon">${art.icon}</span>`;
+      }
     }
 
     html += `<div class="${cls}" style="${style}" data-idx="${i}" onclick="_digClickTile(${i})">${inner}</div>`;
@@ -310,18 +388,49 @@ function _digRenderGrid() {
   grid.innerHTML = html;
 }
 
+/* Add a one-shot animation class to a freshly changed cell (post-render) */
+function _digFlashCell(idx, cls) {
+  const grid = document.getElementById('dg-grid');
+  const cell = grid && grid.children[idx];
+  if (cell) cell.classList.add(cls);
+}
+
 function _digUpdateHUD() {
-  const f = document.getElementById('dg-found-cnt');
-  const d = document.getElementById('dg-dug-cnt');
-  const s = document.getElementById('dg-scan-cnt');
-  if (f) f.textContent = `${_dig.foundCount}/4`;
-  if (d) d.textContent = `${_dig.dugCount}/64`;
-  if (s) s.textContent = _dig.scanCount;
+  _digSetVal(document.getElementById('dg-found-cnt'), `${_dig.foundCount}/4`);
+  _digSetVal(document.getElementById('dg-dug-cnt'),   `${_dig.dugCount}/64`);
+  _digSetVal(document.getElementById('dg-scan-cnt'),  String(_dig.scanCount));
+
+  // Ignite the relic glyphs for fully recovered artifacts
+  const row = document.getElementById('dg-found-icons');
+  if (row && _dig) {
+    DG_ARTIFACTS.forEach(def => {
+      const slot = row.querySelector(`[data-art="${def.id}"]`);
+      if (!slot) return;
+      const live = _dig.artifacts.find(a => a.id === def.id);
+      const done = !!(live && live.cellIndices.every(i => _dig.tiles[i].state === 'artifact-clean'));
+      slot.classList.toggle('lit', done);
+    });
+  }
+}
+
+/* Set text + play a small "bump" pop when the value actually changed */
+function _digSetVal(el, txt) {
+  if (!el) return;
+  if (el.textContent !== txt) {
+    el.textContent = txt;
+    el.classList.remove('bump');
+    void el.offsetWidth; // restart animation
+    el.classList.add('bump');
+  }
 }
 
 function _digStatus(msg) {
   const el = document.getElementById('dg-status');
-  if (el) el.textContent = msg;
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('flash');
+  void el.offsetWidth;
+  if (msg) el.classList.add('flash');
 }
 
 /* ══════════════════════════════════════════
@@ -358,6 +467,8 @@ function _digRevealTile(idx) {
   }
 
   _digRenderGrid();
+  _digFlashCell(idx, tile.artId ? 'just-found' : 'just-revealed');
+  if (tile.artId) _digBurstSparksAtCell(idx, 8);
   _digUpdateHUD();
 }
 
@@ -370,8 +481,21 @@ function _digScanAsk(axis, index) {
   const lang = typeof siteLang !== 'undefined' ? siteLang : 'gr';
   const label = axis === 'row'
     ? (lang === 'en' ? `Row ${index + 1}` : `Γραμμή ${index + 1}`)
-    : (lang === 'en' ? `Column ${index + 1}` : `Στήλη ${index + 1}`);
+    : (lang === 'en' ? `Column ${DG_COLS[index]}` : `Στήλη ${DG_COLS[index]}`);
   _digShowQuiz('scan', null, label);
+}
+
+/* Hover preview: outline the row/column a rail button would scan */
+function _digScanHover(axis, index, on) {
+  const grid = document.getElementById('dg-grid');
+  if (!grid) return;
+  for (let i = 0; i < 64; i++) {
+    const r = Math.floor(i / 8), c = i % 8;
+    if ((axis === 'row' && r === index) || (axis === 'col' && c === index)) {
+      const cell = grid.children[i];
+      if (cell) cell.classList.toggle('scan-peek', !!on);
+    }
+  }
 }
 
 function _digDoScan(axis, index) {
@@ -390,21 +514,24 @@ function _digDoScan(axis, index) {
     }
   }
 
-  // Highlight scanned row/col
+  // Radar sweep: staggered ping travelling along the row/col, then a hold
+  // glow — amber when something is buried there, olive when clear.
   const grid = document.getElementById('dg-grid');
   if (grid) {
-    indices.forEach(i => {
+    const stag = _digRM() ? 0 : 45;
+    indices.forEach((i, k) => {
       const cell = grid.children[i];
-      if (cell) {
-        cell.classList.add(axis === 'row' ? 'scan-row' : 'scan-col');
-        setTimeout(() => cell.classList.remove('scan-row', 'scan-col'), 2500);
-      }
+      if (!cell) return;
+      const axisCls = axis === 'row' ? 'scan-row' : 'scan-col';
+      const hitCls  = hasArtifact ? 'scan-hit' : 'scan-clear';
+      setTimeout(() => cell.classList.add(axisCls, hitCls, 'scan-ping'), k * stag);
+      setTimeout(() => cell.classList.remove('scan-row', 'scan-col', 'scan-hit', 'scan-clear', 'scan-ping'), 2500);
     });
   }
 
   const axisLabel = axis === 'row'
     ? (lang === 'en' ? `Row ${index + 1}` : `Γραμμή ${index + 1}`)
-    : (lang === 'en' ? `Column ${index + 1}` : `Στήλη ${index + 1}`);
+    : (lang === 'en' ? `Column ${DG_COLS[index]}` : `Στήλη ${DG_COLS[index]}`);
 
   if (hasArtifact) {
     _digStatus(lang === 'en'
@@ -440,9 +567,10 @@ function _digShowQuiz(type, artId, label) {
     subEl.textContent  = art ? (lang === 'en' ? art.nameEn : art.name) : '';
   }
 
+  const keys = ['α΄','β΄','γ΄','δ΄'];
   document.getElementById('dg-qtxt').textContent = _digQT(qObj.q);
   document.getElementById('dg-opts').innerHTML = qObj.a.map((opt, i) =>
-    `<button class="dg-opt" onclick="_digAnswer(${i})">${opt}</button>`
+    `<button class="dg-opt" style="--oi:${i}" onclick="_digAnswer(${i})"><span class="dg-opt-key">${keys[i] || ''}</span><span class="dg-opt-txt">${opt}</span></button>`
   ).join('');
   document.getElementById('dg-quiz-res').style.display = 'none';
   document.getElementById('dg-quiz-wrap').classList.add('active');
@@ -460,6 +588,18 @@ function _digAnswer(idx) {
     else if (i === idx) btn.classList.add('wrong');
   });
 
+  // Juice: gold sparks on success, a dusty shake on failure
+  const box = document.querySelector('#dg-quiz-wrap .dg-quiz-box');
+  if (box) {
+    if (correct) {
+      _digBurstSparksAtEl(box, 14);
+    } else {
+      box.classList.remove('dg-shake');
+      void box.offsetWidth;
+      box.classList.add('dg-shake');
+    }
+  }
+
   let msg = '';
   if (correct) {
     msg = lang === 'en' ? '<strong>Correct!</strong>' : '<strong>Σωστό!</strong>';
@@ -476,6 +616,7 @@ function _digAnswer(idx) {
 
   const resEl = document.getElementById('dg-quiz-res');
   resEl.innerHTML = msg;
+  resEl.className = 'dg-quiz-result ' + (correct ? 'ok' : 'bad');
   resEl.style.display = 'block';
 
   setTimeout(() => {
@@ -503,7 +644,9 @@ function _digCleanTile(idx) {
   tile.state = 'artifact-clean';
 
   _digSpawnDust(idx, '#C8962A');
+  _digBurstSparksAtCell(idx, 10);
   _digRenderGrid();
+  _digFlashCell(idx, 'just-cleaned');
 
   // Check if full artifact is cleaned
   const artId = tile.artId;
@@ -538,6 +681,10 @@ function _digShowArtModal(artId) {
   document.getElementById('dg-art-era').textContent   = lang === 'en' ? artDef.eraEn  : artDef.era;
   document.getElementById('dg-art-fact').innerHTML    = artDef.fact[lang] || artDef.fact.gr;
   document.getElementById('dg-art-modal').classList.add('active');
+
+  // Celebration burst over the museum card
+  const box = document.querySelector('#dg-art-modal .dg-art-box');
+  if (box) setTimeout(() => _digBurstSparksAtEl(box, 26), 220);
 }
 
 function _digCloseArtModal() {
@@ -557,11 +704,32 @@ function _digEndGame() {
   }
   _digStopDust();
   if(typeof awardGameRewards==='function' && _dig.foundCount > 0){ awardGameRewards('dig', { score: _dig.foundCount, perfect: false }); }
-  setTimeout(() => _digShowScr('dg-result-scr'), 400);
+  setTimeout(() => {
+    _digShowScr('dg-result-scr');
+    _digCountUp('dg-res-dug',   _dig.dugCount);
+    _digCountUp('dg-res-scans', _dig.scanCount);
+  }, 400);
+}
+
+/* Animated numeral count-up for the result plaques */
+function _digCountUp(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  target = Math.max(0, target | 0);
+  if (_digRM() || target === 0) { el.textContent = String(target); return; }
+  const dur = 950;
+  const t0 = performance.now();
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / dur);
+    const e = 1 - Math.pow(1 - p, 3); // easeOutCubic
+    el.textContent = String(Math.round(target * e));
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 /* ══════════════════════════════════════════
-   DUST PARTICLE CANVAS
+   PARTICLES — dust motes · rock chips · gold sparks
 ══════════════════════════════════════════ */
 function _digInitDustCanvas() {
   const wrap = document.getElementById('dig-wrap');
@@ -572,48 +740,112 @@ function _digInitDustCanvas() {
   window.addEventListener('resize', resize);
 }
 
-function _digSpawnDust(tileIdx, color) {
+function _digPushPt(p) {
+  if (_digDustPts.length > 260) return; // hard cap
+  _digDustPts.push(p);
+}
+
+function _digCellCenter(tileIdx) {
   const grid = document.getElementById('dg-grid');
   const wrap = document.getElementById('dig-wrap');
-  if (!grid || !wrap) return;
+  if (!grid || !wrap) return null;
   const cellEl = grid.children[tileIdx];
-  if (!cellEl) return;
+  if (!cellEl) return null;
   const wr = wrap.getBoundingClientRect();
   const cr = cellEl.getBoundingClientRect();
-  const cx = cr.left - wr.left + cr.width  / 2;
-  const cy = cr.top  - wr.top  + cr.height / 2;
-  for (let i = 0; i < 12; i++) {
+  return { x: cr.left - wr.left + cr.width / 2, y: cr.top - wr.top + cr.height / 2 };
+}
+
+function _digElCenter(el) {
+  const wrap = document.getElementById('dig-wrap');
+  if (!el || !wrap) return null;
+  const wr = wrap.getBoundingClientRect();
+  const er = el.getBoundingClientRect();
+  return { x: er.left - wr.left + er.width / 2, y: er.top - wr.top + er.height / 2 };
+}
+
+/* Dig burst: soft dust cloud + a few tumbling rock chips */
+function _digSpawnDust(tileIdx, color) {
+  const c = _digCellCenter(tileIdx);
+  if (!c) return;
+  const rm = _digRM();
+  const nDust = rm ? 4 : 14;
+  const nChip = rm ? 0 : 6;
+  for (let i = 0; i < nDust; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 2.5 + 0.5;
-    _digDustPts.push({
-      x: cx, y: cy,
+    const speed = Math.random() * 2.4 + 0.5;
+    _digPushPt({
+      type: 'dust', x: c.x, y: c.y,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 1.5,
-      life: 1.0,
-      size: Math.random() * 3.5 + 1,
+      vy: Math.sin(angle) * speed - 1.4,
+      age: 0, tot: 46 + Math.random() * 26,
+      size: Math.random() * 3.4 + 1.2,
       color,
+    });
+  }
+  for (let i = 0; i < nChip; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+    const speed = Math.random() * 3.2 + 1.6;
+    _digPushPt({
+      type: 'chip', x: c.x, y: c.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      age: 0, tot: 50 + Math.random() * 30,
+      size: Math.random() * 3 + 2,
+      rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.4,
+      color: Math.random() < 0.5 ? '#2E1D0C' : '#5A3B1B',
     });
   }
 }
 
+function _digBurstSparks(x, y, n) {
+  const count = _digRM() ? Math.min(4, n) : n;
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 2.8 + 0.7;
+    _digPushPt({
+      type: 'spark', x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.8,
+      age: 0, tot: 42 + Math.random() * 34,
+      size: Math.random() * 2 + 0.9,
+      tw: Math.random() * Math.PI * 2,
+      color: Math.random() < 0.5 ? '#FFD98A' : '#E8C96A',
+    });
+  }
+}
+
+function _digBurstSparksAtCell(tileIdx, n) {
+  const c = _digCellCenter(tileIdx);
+  if (c) _digBurstSparks(c.x, c.y, n);
+}
+
+function _digBurstSparksAtEl(el, n) {
+  const c = _digElCenter(el);
+  if (c) _digBurstSparks(c.x, c.y, n);
+}
+
 function _digStartDust() {
-  // Ambient dust
+  if (_digDustAF) { cancelAnimationFrame(_digDustAF); _digDustAF = null; }
   const wrap = document.getElementById('dig-wrap');
   if (!wrap) return;
+  // Ambient lantern motes (skipped entirely under reduced motion)
   const addAmbient = () => {
+    if (_digRM()) return;
     const cnv = document.getElementById('dg-dust-cnv');
-    if (!cnv) return;
-    for (let i = 0; i < 2; i++) {
-      _digDustPts.push({
-        x: Math.random() * cnv.width,
-        y: cnv.height + 5,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -(Math.random() * 0.6 + 0.2),
-        life: 0.5,
-        size: Math.random() * 2 + 0.5,
-        color: '#6B4A28',
-      });
-    }
+    if (!cnv || Math.random() > 0.16) return;
+    const warm = Math.random() < 0.4;
+    _digPushPt({
+      type: 'mote',
+      x: Math.random() * cnv.width,
+      y: cnv.height + 6,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(Math.random() * 0.45 + 0.12),
+      age: 0, tot: 260 + Math.random() * 200,
+      size: Math.random() * 1.8 + 0.5,
+      sw: Math.random() * Math.PI * 2,
+      color: warm ? '#D9A85C' : '#8A6435',
+    });
   };
   _digDustLoop(addAmbient);
 }
@@ -626,17 +858,50 @@ function _digDustLoop(addAmbient) {
 
   if (addAmbient) addAmbient();
 
-  _digDustPts = _digDustPts.filter(p => p.life > 0.01);
+  _digDustPts = _digDustPts.filter(p => p.age < p.tot);
   for (const p of _digDustPts) {
-    ctx.globalAlpha = Math.max(0, p.life * 0.7);
-    ctx.fillStyle   = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
-    p.x    += p.vx;
-    p.y    += p.vy;
-    p.vy   -= 0.02;
-    p.life -= 0.018;
+    const prog  = p.age / p.tot;
+    const env   = Math.sin(Math.PI * Math.min(1, prog)); // fade in + out
+
+    if (p.type === 'spark') {
+      p.tw = (p.tw || 0) + 0.45;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = Math.max(0, env * (0.55 + 0.45 * Math.sin(p.tw)));
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      p.vy += 0.015;
+    } else if (p.type === 'chip') {
+      ctx.globalAlpha = Math.max(0, Math.min(1, (1 - prog) * 1.4));
+      ctx.fillStyle = p.color;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+      p.rot += p.vr;
+      p.vy  += 0.16; // gravity: chips fall
+    } else if (p.type === 'mote') {
+      p.sw = (p.sw || 0) + 0.02;
+      ctx.globalAlpha = env * 0.34;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x + Math.sin(p.sw) * 6, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    } else { // dust
+      ctx.globalAlpha = Math.max(0, env * 0.65);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (1 + prog * 0.9), 0, Math.PI * 2);
+      ctx.fill();
+      p.vy -= 0.02; // dust drifts upward
+    }
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.age++;
   }
   ctx.globalAlpha = 1;
   _digDustAF = requestAnimationFrame(() => _digDustLoop(addAmbient));

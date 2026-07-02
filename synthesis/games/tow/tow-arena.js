@@ -27,6 +27,9 @@
     B: '#D9694A', Bdk: '#9A4428', Blt: '#F0A98C',
   };
 
+  // prefers-reduced-motion: calm the ambient theatrics, keep state changes readable
+  const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
   function lerpC(c1, c2, t) {
     const p = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
     const [r1, g1, b1] = p(c1), [r2, g2, b2] = p(c2);
@@ -92,8 +95,11 @@
       this.emit = 0; this.emitDir = 0; this.emitX = 0;
       this.lurch = 0; this.lurchSide = null;
       this.buzzFlash = { A: 0, B: 0 };
-      this.dust = []; this.confetti = []; this.motes = [];
+      this.dust = []; this.confetti = []; this.motes = []; this.crowd = [];
       this.vEmit = 0; this.vSide = null;
+      this.excite = 0;         // crowd energy 0..~1.6, decays
+      this.flash = 0;          // gold full-frame flash on the winning heave
+      this.winSide = null;     // set on victory → poses (winner digs in, loser stumbles)
 
       this._raf = null; this._lastT = 0; this._alive = false;
       this._resize();
@@ -105,20 +111,29 @@
     setRopePosition(pct) { this.target = Math.max(0, Math.min(1, pct / 100)); }
     triggerPull(side, intensity) {
       intensity = intensity == null ? 0.5 : intensity;
-      this.shake = 16; this.shakeMag = 3 + intensity * 6;
+      this.shake = 16; this.shakeMag = RM ? 0 : 3 + intensity * 6;
       this.emit = 26; this.emitDir = side === 'A' ? -1 : 1;
       this.emitX = this.pos; this._snap = 0.4;
       this.lurch = 14; this.lurchSide = side;
+      this.excite = Math.min(1.3, 0.8 + intensity * 0.5);
       if (window.TowAudio) window.TowAudio.snap(intensity);
     }
-    triggerBuzz(side) { this.buzzFlash[side] = 1; }
+    triggerBuzz(side) { this.buzzFlash[side] = 1; this.excite = Math.max(this.excite, 0.55); }
     triggerDanger(side) {
       this.vignette = Math.max(this.vignette, 0.66);
       this.vignetteSide = side || null;
+      this.excite = Math.max(this.excite, 1);
       if (window.TowAudio) window.TowAudio.danger();
     }
     triggerVictory(side, cb) {
       this.vSide = side; this.vEmit = 90;
+      // decisive winning heave: fast snap, gold flash, dust storm, crowd eruption
+      this.winSide = side;
+      this.excite = 1.6;
+      this.flash = 1;
+      this._snap = 0.5;
+      this.shake = 22; this.shakeMag = RM ? 0 : 7;
+      this.emit = 46; this.emitDir = side === 'A' ? -1 : 1;
       if (window.TowAudio) { window.TowAudio.stopHum(); window.TowAudio.victory(side); }
       if (cb) setTimeout(cb, 1500);
     }
@@ -138,6 +153,7 @@
     reset() {
       this.pos = this.target = 0.5; this._snap = 0; this.phase = 0;
       this.shake = this.vignette = this.emit = this.lurch = this.vEmit = 0;
+      this.excite = this.flash = 0; this.winSide = null;
       this.dust = []; this.confetti = [];
     }
 
@@ -159,8 +175,31 @@
       this.canvas.style.width = W + 'px'; this.canvas.style.height = H + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.W = W; this.H = H;
-      this.motes = []; const n = Math.round(W / 24);
+      this.motes = []; const n = Math.round(W / (RM ? 70 : 24));
       for (let i = 0; i < n; i++) this.motes.push(new Mote(W, H));
+      this._buildCrowd(W, H);
+    }
+
+    // amphitheatre crowd: two tiers of tiny spectators behind the pit
+    _buildCrowd(W, H) {
+      this.crowd = [];
+      const tiers = [
+        { y: H * 0.315, r: 2.6, n: Math.max(10, Math.round(W / 26)), a: 0.30 },
+        { y: H * 0.405, r: 3.3, n: Math.max(9, Math.round(W / 21)), a: 0.44 },
+      ];
+      tiers.forEach((t, ti) => {
+        for (let i = 0; i < t.n; i++) {
+          const x = (i + 0.5 + (ti ? 0.45 : 0)) * (W / t.n) + (Math.random() - 0.5) * 6;
+          const gold = Math.random() < 0.14;
+          const col = gold ? PAL.gold : (x < W / 2 ? PAL.Adk : PAL.Bdk);
+          this.crowd.push({
+            x, y: t.y, r: t.r * (0.85 + Math.random() * 0.3),
+            off: Math.random() * 6.28, sp: 0.6 + Math.random() * 0.9,
+            col, a: t.a * (0.8 + Math.random() * 0.4),
+            arms: ((Math.random() * 3) | 0) === 0,   // some spectators throw arms up when hyped
+          });
+        }
+      });
     }
 
     _groundY() { return this.H * 0.78; }
@@ -177,6 +216,8 @@
       if (this.shake > 0) this.shake = Math.max(0, this.shake - dt);
       if (this.lurch > 0) this.lurch = Math.max(0, this.lurch - dt);
       if (this.vignette > 0) this.vignette = Math.max(0, this.vignette - 0.014 * dt);
+      if (this.excite > 0 && !this.winSide) this.excite = Math.max(0, this.excite - 0.012 * dt);
+      if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.045 * dt);
       for (const s of ['A', 'B']) if (this.buzzFlash[s] > 0) this.buzzFlash[s] = Math.max(0, this.buzzFlash[s] - 0.045 * dt);
 
       // pull dust burst from the knot
@@ -228,7 +269,9 @@
       const tension = Math.abs(this.pos - 0.5) * 2;
 
       this._drawSky(W, H);
+      this._drawCrowd(W, H);
       this._drawColumns(W, H);
+      this._drawTorches(W, H);
       this._drawMotes();
 
       let sx = 0, sy = 0;
@@ -241,6 +284,7 @@
       const gy = this._groundY();
       this._drawStandards(gy, tension);
       this._drawGround(gy, W, tension);
+      this._drawGrass(gy, W);
       this._drawThreshold(W * 0.5, gy);
 
       // figures behind rope on far side, in front on near — draw both ranks then rope then near hands
@@ -253,8 +297,13 @@
 
       ctx.restore();
 
+      this._drawEdgeHeat();
       this._drawBuzzFlares();
       if (this.vignette > 0.004) this._drawVignette(W, H);
+      if (this.flash > 0.01) {
+        ctx.fillStyle = `rgba(240,200,120,${(this.flash * 0.30).toFixed(3)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
     }
 
     _drawSky(W, H) {
@@ -289,6 +338,110 @@
         for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(x + i * w * 0.28, top); ctx.lineTo(x + i * w * 0.28, gy - 5); ctx.stroke(); }
       }
       ctx.restore();
+    }
+
+    // ── amphitheatre crowd (bobbing spectators, arms up when hyped) ──
+    _drawCrowd(W, H) {
+      const ctx = this.ctx;
+      // stone bleacher bands
+      ctx.fillStyle = 'rgba(34,25,16,0.72)';
+      ctx.fillRect(0, H * 0.322, W, H * 0.052);
+      ctx.fillRect(0, H * 0.412, W, H * 0.062);
+      ctx.strokeStyle = 'rgba(201,164,74,0.10)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.322); ctx.lineTo(W, H * 0.322);
+      ctx.moveTo(0, H * 0.412); ctx.lineTo(W, H * 0.412);
+      ctx.stroke();
+      const ex = this.excite;
+      const amp = RM ? 0.5 : (0.9 + ex * 4.5);
+      for (const c of this.crowd) {
+        const hop = Math.abs(Math.sin(this.phase * 2 * c.sp + c.off)) * amp;
+        const y = c.y - hop;
+        ctx.globalAlpha = c.a;
+        ctx.fillStyle = c.col;
+        ctx.fillRect(c.x - c.r * 0.9, y - c.r * 0.8, c.r * 1.8, c.r * 1.9);          // body
+        ctx.beginPath(); ctx.arc(c.x, y - c.r * 1.5, c.r * 0.72, 0, 6.283); ctx.fill(); // head
+        if (ex > 0.85 && c.arms) {                                                    // cheering arms
+          ctx.strokeStyle = c.col; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(c.x - c.r * 0.9, y - c.r * 0.6); ctx.lineTo(c.x - c.r * 1.8, y - c.r * 2.6);
+          ctx.moveTo(c.x + c.r * 0.9, y - c.r * 0.6); ctx.lineTo(c.x + c.r * 1.8, y - c.r * 2.6);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // ── torch flames on the inner columns ────────────────
+    _drawTorches(W, H) {
+      const ctx = this.ctx;
+      const ph = this.phase;
+      for (const fx of [0.2, 0.8]) {
+        const x = fx * W, y = H * 0.16 - 9;
+        const fl = RM ? 0.4 : (0.6 + Math.sin(ph * 7 + x) * 0.25 + Math.sin(ph * 13.7 + x * 2) * 0.15);
+        // warm glow
+        const g = ctx.createRadialGradient(x, y, 2, x, y, 26 + fl * 10);
+        g.addColorStop(0, `rgba(240,180,80,${(0.16 + fl * 0.12).toFixed(2)})`);
+        g.addColorStop(1, 'rgba(240,180,80,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(x, y, 26 + fl * 10, 0, 6.283); ctx.fill();
+        // bowl
+        ctx.fillStyle = 'rgba(70,54,32,0.9)';
+        ctx.fillRect(x - 6, y + 2, 12, 3.5);
+        // flame (teardrop, swaying)
+        const fh = 9 + fl * 6, sway = RM ? 0 : Math.sin(ph * 5 + x) * 2;
+        const fg = ctx.createLinearGradient(x, y + 2, x, y - fh);
+        fg.addColorStop(0, '#e8641e'); fg.addColorStop(0.55, '#f0a030'); fg.addColorStop(1, '#f8d878');
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.moveTo(x - 4, y + 2);
+        ctx.quadraticCurveTo(x - 4, y - fh * 0.4, x + sway, y - fh);
+        ctx.quadraticCurveTo(x + 4, y - fh * 0.4, x + 4, y + 2);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+
+    // ── grass tufts along the pit edge ───────────────────
+    _drawGrass(gy, W) {
+      const ctx = this.ctx;
+      ctx.save(); ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+      const n = Math.round(W / 34);
+      const cols = ['#46512b', '#5a6a31', '#3a4525'];
+      for (let i = 0; i < n; i++) {
+        const s = Math.abs(Math.sin(i * 127.1 + 13.7)) % 1;     // deterministic per-tuft
+        const x = (i + 0.5) * (W / n) + (s - 0.5) * 18;
+        if (Math.abs(x - W * 0.5) < 34) continue;               // keep the threshold clear
+        const h0 = 4 + s * 6;
+        const sway = RM ? 0 : Math.sin(this.phase * 1.3 + i) * (1.1 + s);
+        ctx.globalAlpha = 0.75;
+        for (let b = -1; b <= 1; b++) {
+          ctx.strokeStyle = cols[b + 1];
+          ctx.beginPath();
+          ctx.moveTo(x + b * 2, gy + 1);
+          ctx.quadraticCurveTo(x + b * 2 + sway * 0.5, gy - h0 * 0.6, x + b * 3 + sway, gy - h0 - (b === 0 ? 2 : 0));
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1; ctx.restore();
+    }
+
+    // ── pulsing team-colour heat at the edge a team is about to win ──
+    _drawEdgeHeat() {
+      const { ctx, W, H } = this;
+      const zone = 0.16;
+      const puls = 0.6 + (RM ? 0 : Math.sin(this.phase * 2.4) * 0.25);
+      if (this.pos < zone) {
+        const a = (1 - this.pos / zone) * 0.38 * puls;
+        const g = ctx.createLinearGradient(0, 0, W * 0.16, 0);
+        g.addColorStop(0, `rgba(94,168,216,${a.toFixed(3)})`); g.addColorStop(1, 'rgba(94,168,216,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W * 0.16, H);
+      }
+      if (1 - this.pos < zone) {
+        const a = (1 - (1 - this.pos) / zone) * 0.38 * puls;
+        const g = ctx.createLinearGradient(W, 0, W * 0.84, 0);
+        g.addColorStop(0, `rgba(217,105,74,${a.toFixed(3)})`); g.addColorStop(1, 'rgba(217,105,74,0)');
+        ctx.fillStyle = g; ctx.fillRect(W * 0.84, 0, W * 0.16, H);
+      }
     }
 
     _drawMotes() {
@@ -397,19 +550,23 @@
       const front = (isA ? this._leftAnchorX() : this._rightAnchorX()) + (isA ? -2 : 2);
       const lurchAmt = (this.lurch > 0 && this.lurchSide === side) ? Math.sin((1 - this.lurch / 14) * Math.PI) * 7 : 0;
 
+      // victory poses: winner digs in deep, loser stumbles forward, dragged
+      let leanMul = 1;
+      if (this.winSide) leanMul = (side === this.winSide) ? 1.4 : -0.55;
+
       for (let i = N - 1; i >= 0; i--) {            // back-to-front so front overlaps
         const spread = (isA ? -1 : 1) * i * (this.W * 0.052);
         const x = front + spread + drag - dir * lurchAmt;
         const depth = i;                            // 0 = front
-        this._drawHoplite(x, gy, dir, color, dark, tension, depth, i);
+        this._drawHoplite(x, gy, dir, color, dark, tension, depth, i, leanMul);
       }
     }
 
-    _drawHoplite(footX, gy, dir, color, dark, tension, depth, idx) {
+    _drawHoplite(footX, gy, dir, color, dark, tension, depth, idx, leanMul) {
       const ctx = this.ctx;
       const scale = 1 - depth * 0.1;
       const h = this.H * 0.30 * scale;
-      const lean = (0.32 + tension * 0.34) * dir;     // radians, leaning back away from centre
+      const lean = (0.32 + tension * 0.34) * dir * (leanMul == null ? 1 : leanMul);   // radians; negative = stumbling toward centre
       const bob = Math.sin(this.phase * 2 + idx * 1.3) * tension * 2;
 
       // hip/anchor point
@@ -532,9 +689,24 @@
       rg.addColorStop(0, PAL.goldHi); rg.addColorStop(0.5, '#c97444'); rg.addColorStop(1, '#9a4428');
       ctx.fillStyle = rg; ctx.fill();
       ctx.strokeStyle = PAL.goldHi; ctx.lineWidth = 1.6; ctx.stroke();
-      // ribbon tails
-      ctx.strokeStyle = PAL.gold; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
-      ctx.beginPath(); ctx.moveTo(-3, 6); ctx.lineTo(-9, 16); ctx.moveTo(3, 6); ctx.lineTo(9, 16); ctx.stroke();
+      // the CENTRE FLAG — a crimson pennant fluttering below the knot
+      const seg = 8, len = 2.5, wamp = RM ? 0.6 : 2.6;
+      ctx.beginPath();
+      for (let i = 0; i <= seg; i++) {
+        const yy = 10 + i * len;
+        const wx = Math.sin(this.phase * 3.4 + i * 0.7) * wamp * (i / seg);
+        if (i === 0) ctx.moveTo(-4 + wx, yy); else ctx.lineTo(-4 + wx, yy);
+      }
+      for (let i = seg; i >= 0; i--) {
+        const yy = 10 + i * len;
+        const wx = Math.sin(this.phase * 3.4 + i * 0.7) * wamp * (i / seg);
+        ctx.lineTo(4 + wx, yy);
+      }
+      ctx.closePath();
+      const flagG = ctx.createLinearGradient(0, 10, 0, 10 + seg * len);
+      flagG.addColorStop(0, '#d64535'); flagG.addColorStop(1, '#8e2418');
+      ctx.fillStyle = flagG; ctx.fill();
+      ctx.strokeStyle = 'rgba(240,200,120,0.55)'; ctx.lineWidth = 0.9; ctx.stroke();
       ctx.restore();
     }
 

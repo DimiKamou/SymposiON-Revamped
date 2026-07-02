@@ -147,6 +147,12 @@
       noiseHit(0.25, 0.2, 1200);
     },
     door() { tone('square', 220, 0.14, 0.1, 330); },
+    lowTorch() {  // the torch gutters — a soft, worried sputter
+      const t = ctx ? ctx.currentTime : 0;
+      tone('triangle', 220, 0.14, 0.09, 140, t);
+      tone('triangle', 175, 0.18, 0.08, 110, t + 0.16);
+      noiseHit(0.1, 0.04, 1400);
+    },
     descend() {
       const t = ctx ? ctx.currentTime : 0;
       tone('sine', 330, 0.5, 0.12, 110, t);

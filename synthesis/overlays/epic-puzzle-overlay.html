@@ -4,5 +4,14 @@
     <div class="overlay-title" data-gr="Χρονολόγιο — Βάλε τα Γεγονότα στη Σειρά" data-en="Chronicle — Sequence the Events">Χρονολόγιο — Βάλε τα Γεγονότα στη Σειρά</div>
     <div style="width:80px;"></div>
   </div>
-  <div id="ep-wrap" style="flex:1;overflow-y:auto;background:#0D0A06;display:flex;flex-direction:column;align-items:center;padding:0;"></div>
+  <div id="ep-stage">
+    <div class="ep-ambient" aria-hidden="true">
+      <div class="ep-amb-glow"></div>
+      <div class="ep-amb-cols"></div>
+      <canvas id="ep-dust"></canvas>
+      <div class="ep-amb-vignette"></div>
+    </div>
+    <div id="ep-wrap"></div>
+    <div id="ep-fx" aria-hidden="true"></div>
+  </div>
 </div>

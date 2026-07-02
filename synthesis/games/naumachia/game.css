@@ -1,70 +1,138 @@
 /* ============================================================
    NAUMACHIA — Ναυμαχία  |  game.css
-   Dark earth tones: deep browns, olive greens, dark terracotta.
-   NO beige. Fonts: Raleway (UI) · Cormorant Garamond (display)
+   Art direction: dark Aegean nautical chart. Deep sea-ink blues,
+   bronze/gold instrument accents, terracotta fire, faint chart
+   graticule + compass roses, drifting trireme silhouettes.
+   Fonts (all loaded by the shell): Alegreya (display serif),
+   Montserrat (UI sans), Oswald (chart-stencil labels).
    ============================================================ */
 
-/* ── CSS Variables ──────────────────────────────────────────── */
+/* ── Tokens ─────────────────────────────────────────────────── */
 #naumachia-overlay {
-  --nc:     34px;             /* cell size */
-  --ng:      2px;             /* grid gap */
+  --nc:  34px;              /* cell size  */
+  --ng:   2px;              /* grid gap   */
 
-  /* Chrome derives from the live front-page theme (--sym-*) so the game
-     background + surfaces + gold accent follow the chosen theme. Gameplay
-     colours (water/ship/hit/…) stay fixed below for legibility. */
-  --nau-bg:     var(--sym-bg, #0C0804);
-  --nau-bg2:    color-mix(in srgb, var(--sym-bg, #110A04) 88%, #000 12%);
-  --nau-surf:   var(--sym-bg-card, #1A1108);
-  --nau-sur2:   color-mix(in srgb, var(--sym-bg-card, #22160A) 82%, var(--sym-fg, #fff) 7%);
-  --nau-brd:    color-mix(in srgb, var(--sym-gold, #b47d32) 22%, transparent);
-  --nau-brdh:   color-mix(in srgb, var(--sym-gold, #c89646) 42%, transparent);
+  /* Deep Aegean — fixed for legibility; gold follows the site theme */
+  --nau-ink:    #04121C;
+  --nau-ink2:   #071B29;
+  --nau-ink3:   #0B2436;
+  --nau-surf:   rgba(9, 28, 42, 0.86);
+  --nau-sur2:   rgba(16, 42, 60, 0.9);
 
-  --nau-txt:    var(--sym-fg, #DDD0AA);
-  --nau-txtm:   var(--sym-stone, #7A6A4A);
-  --nau-txts:   color-mix(in srgb, var(--sym-fg, #9A8A64) 64%, transparent);
-
-  --nau-olive:  #3A4D1E;
-  --nau-olivl:  #506831;
-  --nau-terra:  #622415;
-  --nau-terrl:  #833C26;
+  --nau-line:   rgba(140, 200, 224, 0.13);   /* chart graticule    */
+  --nau-lineb:  rgba(140, 200, 224, 0.30);
 
   --nau-gold:   var(--sym-gold, #C9A44A);
-  --nau-goldl:  color-mix(in srgb, var(--nau-gold) 78%, #fff 22%);
-  --nau-goldd:  color-mix(in srgb, var(--nau-gold) 60%, #000 40%);
+  --nau-goldl:  color-mix(in srgb, var(--nau-gold) 70%, #FFF3D0 30%);
+  --nau-goldd:  color-mix(in srgb, var(--nau-gold) 55%, #1A0E02 45%);
+  --nau-brz:    #A66A2E;
 
-  --nau-water:  #0D1D2C;
-  --nau-watl:   #132535;
+  --nau-txt:    #E9E0C8;
+  --nau-txtm:   #7E96A6;
+  --nau-txts:   rgba(233, 224, 200, 0.55);
 
-  --nau-hit:    #B83020;
-  --nau-miss:   #1A2E3E;
-  --nau-ship:   #2C1D0A;
-  --nau-sunk:   #6A1E10;
+  --nau-brd:    color-mix(in srgb, var(--nau-gold) 24%, transparent);
+  --nau-brdh:   color-mix(in srgb, var(--nau-gold) 48%, transparent);
 
-  --nau-ok:     #3A6025;
-  --nau-bad:    #6A2020;
+  /* Gameplay colours (fixed — legibility over theming) */
+  --nau-water:  #0A2032;
+  --nau-watl:   #0F2A3F;
+  --nau-hit:    #C23B22;
+  --nau-miss:   #16374C;
+  --nau-ship:   #55391B;
+  --nau-shipl:  #6E4C24;
+  --nau-sunk:   #3C1810;
 
-  --nau-prev-ok:  rgba(58, 96, 37, 0.50);
-  --nau-prev-bad: rgba(106, 32, 32, 0.55);
+  --nau-sea-glyph: rgba(140, 200, 224, 1);
+
+  --nau-prev-ok:  rgba(84, 140, 60, 0.45);
+  --nau-prev-bad: rgba(150, 44, 34, 0.5);
+}
+
+/* Tint the shared overlay chrome to match the chart (scoped to this game) */
+#naumachia-overlay .overlay-topbar {
+  background: linear-gradient(180deg, #081B29 0%, #061421 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--sym-gold, #C9A44A) 22%, transparent);
 }
 
 /* ── Root ───────────────────────────────────────────────────── */
 .nau-root {
   width: 100%; height: 100%;
-  background: var(--nau-bg);
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--sym-font-sans, 'Montserrat', 'Raleway', sans-serif);
   color: var(--nau-txt);
+  background:
+    radial-gradient(1100px 640px at 72% -12%, rgba(30, 82, 108, 0.34), transparent 62%),
+    radial-gradient(880px 520px at 8% 112%, rgba(22, 62, 86, 0.38), transparent 58%),
+    linear-gradient(180deg, #071926 0%, var(--nau-ink) 52%, #030D15 100%);
 }
+
+/* ── Ambient sea layer (decorative, injected by _nauBuild) ──── */
+.nau-sea { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+
+/* Chart graticule + twin compass roses */
+.nau-sea-chart {
+  position: absolute; inset: 0;
+  background-image:
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='none' stroke='%23A8D8EC' stroke-width='1'><circle cx='200' cy='200' r='196'/><circle cx='200' cy='200' r='158'/><circle cx='200' cy='200' r='64'/><circle cx='200' cy='200' r='6'/></g><g stroke='%23A8D8EC' stroke-width='0.6'><line x1='200' y1='4' x2='200' y2='396'/><line x1='4' y1='200' x2='396' y2='200'/><line x1='61' y1='61' x2='339' y2='339'/><line x1='339' y1='61' x2='61' y2='339'/><line x1='200' y1='4' x2='200' y2='396' transform='rotate(22.5 200 200)'/><line x1='200' y1='4' x2='200' y2='396' transform='rotate(67.5 200 200)'/></g><g fill='%23A8D8EC'><path d='M200 22 L210 200 L200 378 L190 200 Z'/><path d='M22 200 L200 190 L378 200 L200 210 Z'/></g></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='none' stroke='%23A8D8EC' stroke-width='1.4'><circle cx='200' cy='200' r='190'/><circle cx='200' cy='200' r='70'/></g><g fill='%23A8D8EC'><path d='M200 30 L212 200 L200 370 L188 200 Z'/><path d='M30 200 L200 188 L370 200 L200 212 Z'/></g></svg>"),
+    repeating-linear-gradient(0deg,  var(--nau-line) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(90deg, var(--nau-line) 0 1px, transparent 1px 96px);
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-size: 560px 560px, 260px 260px, auto, auto;
+  background-position: calc(100% + 170px) -190px, -80px calc(100% + 70px), 0 0, 0 0;
+  opacity: 0.16;
+}
+
+/* Slow drifting light on the water */
+.nau-sea-glow {
+  position: absolute; inset: -20%;
+  background:
+    radial-gradient(46% 32% at 30% 34%, rgba(96, 176, 210, 0.10), transparent 70%),
+    radial-gradient(38% 26% at 74% 62%, rgba(201, 164, 74, 0.06), transparent 70%);
+  animation: nauGlowDrift 26s ease-in-out infinite alternate;
+}
+@keyframes nauGlowDrift {
+  from { transform: translate3d(-3%,  1.5%, 0) scale(1);    }
+  to   { transform: translate3d( 3%, -1.5%, 0) scale(1.06); }
+}
+
+/* Horizon fleet — drifting trireme silhouettes */
+.nau-sea-ships { position: absolute; inset: 0; }
+.nau-sea-ships .nau-trireme {
+  position: absolute;
+  color: #113044;
+  opacity: 0.55;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+}
+.nau-sea-ships .nau-trireme.s1 { width: 200px; top: 16%; left: -240px; animation: nauSail 95s  linear infinite,          nauBob 7s   ease-in-out infinite; }
+.nau-sea-ships .nau-trireme.s2 { width: 120px; top: 27%; left: -160px; animation: nauSail 140s linear infinite -55s,     nauBob 9s   ease-in-out infinite -3s; opacity: 0.35; }
+.nau-sea-ships .nau-trireme.s3 { width: 78px;  top: 9%;  left: -110px; animation: nauSail 190s linear infinite -120s,    nauBob 11s  ease-in-out infinite -5s; opacity: 0.22; }
+@keyframes nauSail { to { transform: translateX(calc(100vw + 320px)); } }
+@keyframes nauBob  { 0%,100% { margin-top: 0; } 50% { margin-top: 7px; } }
+
+/* Rolling wave bands at the foot of the chart */
+.nau-sea-waves { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; opacity: 0.4; }
+.nau-sea-waves i {
+  position: absolute; left: -50%; right: -50%; height: 22px; display: block;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 20' preserveAspectRatio='none'><path d='M0 12 Q15 4 30 12 T60 12 T90 12 T120 12' fill='none' stroke='%23A8D8EC' stroke-width='1.4' opacity='0.55'/></svg>") repeat-x;
+  background-size: 130px 22px;
+}
+.nau-sea-waves i:nth-child(1) { bottom: 46px; animation: nauWaveL 17s linear infinite;  opacity: 0.5; }
+.nau-sea-waves i:nth-child(2) { bottom: 26px; animation: nauWaveR 23s linear infinite;  opacity: 0.75; }
+.nau-sea-waves i:nth-child(3) { bottom: 8px;  animation: nauWaveL 13s linear infinite;  }
+@keyframes nauWaveL { to { transform: translateX(-130px); } }
+@keyframes nauWaveR { to { transform: translateX(130px);  } }
 
 /* ── Phases ─────────────────────────────────────────────────── */
 .nau-phase {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
+  z-index: 1;
   display: none;
   flex-direction: column;
   align-items: center;
@@ -73,88 +141,165 @@
   overflow: auto;
   box-sizing: border-box;
 }
-.nau-phase.active { display: flex; }
+.nau-phase.active { display: flex; animation: nauPhaseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes nauPhaseIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── Menu ───────────────────────────────────────────────────── */
 .nau-menu {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  max-width: 420px;
+  gap: 22px;
+  max-width: 460px;
   width: 100%;
+}
+
+.nau-emblem {
+  width: 150px;
+  color: var(--nau-gold);
+  opacity: 0.9;
+  filter: drop-shadow(0 0 26px color-mix(in srgb, var(--nau-gold) 30%, transparent));
+  animation: nauEmblemIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) both, nauBob 6.5s ease-in-out 1.1s infinite;
+}
+@keyframes nauEmblemIn {
+  from { opacity: 0; transform: translateX(-46px); }
+  to   { opacity: 0.9; transform: translateX(0); }
+}
+
+.nau-kicker {
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--nau-txtm);
+  margin: 0 0 -14px;
+  text-indent: 0.5em;   /* optical centering vs tracking */
 }
 
 .nau-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(3rem, 8vw, 5.5rem);
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  color: var(--nau-gold);
-  text-align: center;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: clamp(3.1rem, 8vw, 5.6rem);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
   line-height: 1;
   margin: 0;
-  text-shadow: 0 0 60px color-mix(in srgb, var(--nau-gold) 25%, transparent);
+  text-align: center;
+  background: linear-gradient(180deg, var(--nau-goldl) 8%, var(--nau-gold) 46%, var(--nau-goldd) 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 70px color-mix(in srgb, var(--nau-gold) 28%, transparent);
+  animation: nauTitleIn 1.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes nauTitleIn {
+  from { opacity: 0; letter-spacing: 0.46em; filter: blur(6px); }
+  to   { opacity: 1; letter-spacing: 0.2em;  filter: blur(0); }
 }
 
 .nau-subtitle {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 1.02rem;
   font-style: italic;
   color: var(--nau-txtm);
-  letter-spacing: 0.14em;
-  margin: -14px 0 0;
+  letter-spacing: 0.16em;
+  margin: -12px 0 0;
   text-align: center;
+  animation: nauPhaseIn 0.8s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Greek-key meander divider */
 .nau-hr {
-  width: 72px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--nau-goldd), transparent);
+  width: 190px; height: 12px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 12'><path d='M1 11 L1 1 L17 1 L17 7 L7 7 L7 4 L13 4' fill='none' stroke='%23C9A44A' stroke-width='1.4'/></svg>") repeat-x center / 20px 12px;
+  opacity: 0.5;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
 }
 
-.nau-menu-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.nau-menu-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 380px; }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* ── Buttons — bronze plaques ────────────────────────────────── */
 .nau-btn {
-  padding: 12px 24px;
+  position: relative;
+  overflow: hidden;
+  padding: 13px 24px;
   border: 1px solid var(--nau-brd);
-  background: var(--nau-surf);
+  background: linear-gradient(180deg, var(--nau-ink3), var(--nau-ink2));
   color: var(--nau-txt);
-  font-family: 'Raleway', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-family: var(--sym-font-sans, 'Montserrat', 'Raleway', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
-  border-radius: 2px;
-  transition: background 0.16s, border-color 0.16s, color 0.16s;
+  border-radius: 3px;
   text-align: center;
   width: 100%;
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.06), 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.22s, color 0.22s, transform 0.16s, box-shadow 0.22s;
+}
+/* sheen sweep */
+.nau-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 236, 180, 0.16) 50%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
 }
 .nau-btn:hover:not(:disabled) {
-  background: var(--nau-sur2);
   border-color: var(--nau-brdh);
   color: var(--nau-goldl);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.08), 0 8px 22px rgba(0, 0, 0, 0.45);
 }
-.nau-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.nau-btn:hover:not(:disabled)::after { transform: translateX(130%); }
+.nau-btn:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+.nau-btn:disabled { opacity: 0.32; cursor: not-allowed; }
 
 .nau-btn-primary {
-  background: var(--nau-olive);
-  border-color: var(--nau-olivl);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nau-gold) 88%, #fff 12%), var(--nau-goldd));
+  border-color: color-mix(in srgb, var(--nau-gold) 70%, transparent);
+  color: #1A0F02;
+  text-shadow: 0 1px 0 rgba(255, 245, 215, 0.25);
 }
 .nau-btn-primary:hover:not(:disabled) {
-  background: var(--nau-olivl);
-  border-color: rgba(80,104,49,0.8);
-  color: var(--nau-txt);
+  color: #120A01;
+  border-color: var(--nau-goldl);
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--nau-gold) 26%, transparent);
 }
 
-.nau-btn-sm { padding: 8px 16px; font-size: 0.76rem; width: auto; }
+.nau-btn-sm { padding: 8px 16px; font-size: 0.72rem; width: auto; }
 
-.nau-btn-danger { border-color: rgba(150,50,30,0.35); }
+.nau-btn-danger { border-color: rgba(194, 59, 34, 0.4); }
 .nau-btn-danger:hover:not(:disabled) {
-  background: var(--nau-terra);
-  border-color: var(--nau-terrl);
-  color: #f0cfc0;
+  background: linear-gradient(180deg, #7A2A18, #521B0E);
+  border-color: #B05436;
+  color: #F3D3C4;
+}
+
+/* Mode buttons with icon + two-line label */
+.nau-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 14px 18px;
+}
+.nau-mode-ico { font-size: 1.3rem; line-height: 1; flex: 0 0 auto; filter: grayscale(0.2); }
+.nau-mode-txt { display: flex; flex-direction: column; gap: 3px; }
+.nau-mode-txt strong { font-size: 0.82rem; letter-spacing: 0.12em; }
+.nau-mode-txt small  {
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  opacity: 0.65;
 }
 
 /* ── Matchmaking ─────────────────────────────────────────────── */
@@ -164,27 +309,44 @@
   align-items: center;
   gap: 22px;
   text-align: center;
-  max-width: 360px;
+  max-width: 380px;
 }
 
-.nau-spinner {
-  width: 44px; height: 44px;
-  border: 3px solid var(--nau-brd);
-  border-top-color: var(--nau-gold);
-  border-radius: 50%;
-  animation: nauSpin 0.85s linear infinite;
+.nau-wait { position: relative; width: 170px; height: 96px; }
+.nau-wait .nau-trireme {
+  position: absolute; left: 50%; top: 34px; width: 120px;
+  transform: translateX(-50%);
+  color: var(--nau-gold);
+  opacity: 0.9;
+  animation: nauWaitRock 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
 }
-@keyframes nauSpin { to { transform: rotate(360deg); } }
+@keyframes nauWaitRock {
+  0%, 100% { transform: translateX(-50%) rotate(-2.4deg) translateY(0); }
+  50%       { transform: translateX(-50%) rotate(2.4deg)  translateY(4px); }
+}
+.nau-wait-sea {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 18px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 20' preserveAspectRatio='none'><path d='M0 12 Q15 4 30 12 T60 12 T90 12 T120 12' fill='none' stroke='%23A8D8EC' stroke-width='2' opacity='0.7'/></svg>") repeat-x;
+  background-size: 120px 18px;
+  animation: nauWaveL 6s linear infinite;
+  opacity: 0.5;
+}
+
+#nau-mm-msg { font-size: 0.88rem; color: var(--nau-txtm); letter-spacing: 0.06em; margin: 0; }
 
 .nau-code-box {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.9rem;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 2rem;
+  font-weight: 600;
   letter-spacing: 0.35em;
-  color: var(--nau-gold);
+  text-indent: 0.35em;
+  color: var(--nau-goldl);
   background: var(--nau-surf);
-  border: 1px solid var(--nau-brd);
-  padding: 10px 28px;
-  border-radius: 2px;
+  border: 1px solid var(--nau-brdh);
+  padding: 10px 26px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.4), 0 0 30px color-mix(in srgb, var(--nau-gold) 12%, transparent);
 }
 
 /* ── Placement ───────────────────────────────────────────────── */
@@ -194,103 +356,145 @@
   align-items: center;
   gap: 18px;
   width: 100%;
-  max-width: 700px;
+  max-width: 720px;
 }
 
 .nau-place-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   width: 100%;
   flex-wrap: wrap;
   gap: 10px;
 }
 .nau-place-header h2 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
-  font-weight: 500;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 1.55rem;
+  font-weight: 600;
   color: var(--nau-gold);
   margin: 0;
   letter-spacing: 0.08em;
+  line-height: 1.1;
+}
+.nau-place-hint {
+  display: block;
+  font-family: var(--sym-font-sans, 'Montserrat', sans-serif);
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--nau-txtm);
+  margin-top: 4px;
 }
 .nau-place-controls { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .nau-place-body {
   display: flex;
-  gap: 22px;
+  gap: 24px;
   align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
   width: 100%;
 }
 
-/* ── Ship Dock ───────────────────────────────────────────────── */
+/* ── Ship dock — harbour manifest ────────────────────────────── */
 .nau-dock {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  min-width: 155px;
+  gap: 8px;
+  min-width: 170px;
 }
 .nau-dock-hd {
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
   color: var(--nau-txtm);
   margin-bottom: 2px;
 }
 
 .nau-dock-ship {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 12px;
   background: var(--nau-surf);
   border: 1px solid var(--nau-brd);
-  border-radius: 2px;
+  border-left: 3px solid var(--nau-brd);
+  border-radius: 3px;
   cursor: pointer;
-  transition: background 0.14s, border-color 0.14s;
+  transition: border-color 0.18s, background 0.18s, transform 0.14s;
+}
+/* faint trireme watermark */
+.nau-dock-ship::after {
+  content: '';
+  position: absolute; right: -14px; bottom: -8px;
+  width: 86px; height: 40px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 70'><g fill='%23A8D8EC'><path d='M6 40 L20 36 Q24 35 30 35 L112 35 Q124 35 132 24 Q134 22 137 21 Q133 38 118 46 Q112 49 104 49 L30 49 Q16 49 8 43 Z'/><path d='M2 37 L20 33 L20 41 Z'/><rect x='68' y='6' width='2.6' height='30' rx='1'/><path d='M46 8 Q69 0 92 8 L92 26 Q69 19 46 26 Z'/></g></svg>") no-repeat center / contain;
+  opacity: 0.08;
+  pointer-events: none;
+  transition: opacity 0.18s;
 }
 .nau-dock-ship:hover:not(.nau-placed):not(.nau-selected) {
   background: var(--nau-sur2);
   border-color: var(--nau-brdh);
+  transform: translateX(3px);
 }
+.nau-dock-ship:hover:not(.nau-placed)::after { opacity: 0.16; }
 .nau-dock-ship.nau-selected {
   border-color: var(--nau-gold);
-  background: color-mix(in srgb, var(--nau-gold) 8%, transparent);
+  border-left-color: var(--nau-gold);
+  background: color-mix(in srgb, var(--nau-gold) 10%, var(--nau-surf));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--nau-gold) 16%, transparent);
 }
-.nau-dock-ship.nau-placed {
-  opacity: 0.35;
-  cursor: default;
-  pointer-events: none;
+.nau-dock-ship.nau-placed { opacity: 0.32; cursor: default; pointer-events: none; }
+.nau-dock-ship.nau-placed .nau-dock-name::after {
+  content: ' ✓';
+  color: #7FB069;
 }
 .nau-dock-name {
   font-size: 0.8rem;
   color: var(--nau-txt);
-  min-width: 72px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.05em;
 }
 .nau-dock-blocks { display: flex; gap: 3px; }
 .nau-dock-block {
-  width: 12px; height: 12px;
-  background: var(--nau-olivl);
+  width: 13px; height: 9px;
+  background: linear-gradient(180deg, var(--nau-shipl), var(--nau-ship));
+  border: 1px solid rgba(201, 164, 74, 0.28);
   border-radius: 1px;
 }
 
-/* ── Grid ────────────────────────────────────────────────────── */
+/* ── Board sections ──────────────────────────────────────────── */
 .nau-board-sec {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
 
 .nau-board-lbl {
-  font-size: 0.62rem;
-  letter-spacing: 0.24em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.64rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
   text-transform: uppercase;
   color: var(--nau-txtm);
-  font-weight: 600;
 }
+.nau-board-lbl::before,
+.nau-board-lbl::after {
+  content: '';
+  width: 26px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--nau-lineb));
+}
+.nau-board-lbl::after { background: linear-gradient(90deg, var(--nau-lineb), transparent); }
 
 .nau-grid-outer {
   display: grid;
@@ -312,20 +516,35 @@
   gap: var(--ng);
 }
 .nau-ax-lbl {
+  font-family: 'Oswald', 'Montserrat', sans-serif;
   font-size: 0.58rem;
-  color: var(--nau-txtm);
+  font-weight: 400;
+  color: rgba(140, 200, 224, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Raleway', sans-serif;
   letter-spacing: 0;
 }
 
+/* Chart frame around each board */
 .nau-grid-wrap {
   grid-column: 2; grid-row: 2;
   position: relative;
   display: inline-block;
   line-height: 0;
+}
+.nau-grid-wrap::before {
+  content: '';
+  position: absolute; inset: -7px;
+  border: 1px solid rgba(140, 200, 224, 0.16);
+  border-radius: 2px;
+  pointer-events: none;
+  /* gold corner points of the chart frame */
+  background:
+    radial-gradient(circle 2.5px at 0 0,       var(--nau-gold) 98%, transparent) no-repeat,
+    radial-gradient(circle 2.5px at 100% 0,    var(--nau-gold) 98%, transparent) no-repeat,
+    radial-gradient(circle 2.5px at 0 100%,    var(--nau-gold) 98%, transparent) no-repeat,
+    radial-gradient(circle 2.5px at 100% 100%, var(--nau-gold) 98%, transparent) no-repeat;
 }
 
 .nau-grid {
@@ -333,58 +552,155 @@
   grid-template-columns: repeat(10, var(--nc));
   grid-template-rows: repeat(10, var(--nc));
   gap: var(--ng);
-  background: var(--nau-water);
+  background: var(--nau-line);
   padding: var(--ng);
-  border: 1px solid var(--nau-brd);
+  border: 1px solid var(--nau-brdh);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45), inset 0 0 46px rgba(2, 10, 16, 0.6);
+}
+
+/* moving light sheen across the water (very subtle) */
+.nau-grid-wrap::after {
+  content: '';
+  position: absolute; inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(150, 210, 235, 0.05) 46%, rgba(150, 210, 235, 0.09) 50%, rgba(150, 210, 235, 0.05) 54%, transparent 70%);
+  background-size: 300% 100%;
+  animation: nauSheen 9s ease-in-out infinite;
+}
+@keyframes nauSheen {
+  0%   { background-position: 120% 0; }
+  60%, 100% { background-position: -60% 0; }
 }
 
 /* ── Cells ───────────────────────────────────────────────────── */
 .nau-cell {
   width: var(--nc); height: var(--nc);
-  background: var(--nau-watl);
+  background:
+    radial-gradient(120% 90% at 30% 20%, rgba(150, 210, 235, 0.05), transparent 55%),
+    linear-gradient(180deg, var(--nau-watl), var(--nau-water));
   border-radius: 1px;
-  transition: background 0.1s;
+  transition: background 0.12s, box-shadow 0.16s;
   position: relative;
   cursor: default;
   box-sizing: border-box;
 }
 
-.nau-cell.ship      { background: var(--nau-ship); border: 1px solid rgba(160,110,50,0.22); }
-.nau-cell.hit       { background: var(--nau-hit); }
-.nau-cell.miss      { background: var(--nau-miss); }
-.nau-cell.sunk      { background: var(--nau-sunk); }
-.nau-cell.prev-ok   { background: var(--nau-prev-ok) !important; }
-.nau-cell.prev-bad  { background: var(--nau-prev-bad) !important; }
+/* my ship — bronze-planked deck */
+.nau-cell.ship {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, var(--nau-shipl), var(--nau-ship));
+  border: 1px solid rgba(201, 164, 74, 0.34);
+  box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.14);
+}
 
+/* hit — burning */
+.nau-cell.hit {
+  background: radial-gradient(circle at 50% 62%, #E8742E 0%, #B23219 48%, #571E10 100%);
+  animation: nauCellPop 0.45s cubic-bezier(0.2, 1.7, 0.4, 1);
+}
+.nau-cell.hit::before {
+  content: '';
+  position: absolute; inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 58%, rgba(255, 214, 120, 0.85) 0%, rgba(240, 110, 40, 0.4) 45%, transparent 72%);
+  animation: nauFlicker 1.15s ease-in-out infinite;
+  pointer-events: none;
+}
 .nau-cell.hit::after {
-  content: '×';
+  content: '✕';
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; font-weight: 700;
-  color: rgba(255, 175, 140, 0.9);
+  font-size: 0.85rem; font-weight: 700;
+  color: rgba(255, 236, 200, 0.9);
+  text-shadow: 0 0 8px rgba(255, 150, 60, 0.9);
+}
+@keyframes nauFlicker {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  38%      { opacity: 0.55; transform: scale(0.9); }
+  70%      { opacity: 1;    transform: scale(1.07); }
+}
+@keyframes nauCellPop {
+  0%   { transform: scale(0.55); }
+  60%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+/* miss — ripple ping */
+.nau-cell.miss {
+  background: linear-gradient(180deg, #1A3D53, var(--nau-miss));
+  animation: nauCellPop 0.35s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+.nau-cell.miss::before {
+  content: '';
+  position: absolute; inset: 0; margin: auto;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(140, 210, 235, 0.75);
+  animation: nauRipple 0.9s cubic-bezier(0.2, 0.7, 0.4, 1) both;
+  pointer-events: none;
 }
 .nau-cell.miss::after {
-  content: '·';
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem; line-height: 1;
-  color: rgba(90, 150, 190, 0.45);
+  content: '';
+  position: absolute; inset: 0; margin: auto;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(140, 210, 235, 0.5);
+}
+@keyframes nauRipple {
+  from { transform: scale(0.4); opacity: 1; }
+  to   { transform: scale(3.4); opacity: 0; }
+}
+
+/* sunk — charred wreck */
+.nau-cell.sunk {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.28) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #4A1D12, var(--nau-sunk));
+  border: 1px solid rgba(120, 50, 30, 0.5);
+}
+.nau-cell.sunk::before {
+  content: '';
+  position: absolute; inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 60%, rgba(230, 100, 40, 0.28), transparent 65%);
+  animation: nauFlicker 2.6s ease-in-out infinite;
+  pointer-events: none;
 }
 .nau-cell.sunk::after {
   content: '⚓';
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.65rem;
-  opacity: 0.6;
+  font-size: 0.68rem;
+  color: rgba(233, 224, 200, 0.55);
 }
 
-.nau-cell.fire {
-  cursor: crosshair;
-}
+.nau-cell.prev-ok  { background: var(--nau-prev-ok) !important;  box-shadow: inset 0 0 0 1px rgba(130, 190, 100, 0.55); }
+.nau-cell.prev-bad { background: var(--nau-prev-bad) !important; box-shadow: inset 0 0 0 1px rgba(220, 100, 80, 0.55); }
+
+/* targetable water — crosshair reticle */
+.nau-cell.fire { cursor: crosshair; }
 .nau-cell.fire:hover {
-  background: color-mix(in srgb, var(--nau-gold) 15%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--nau-gold) 38%, transparent);
-  outline-offset: -1px;
+  background:
+    linear-gradient(0deg,  transparent calc(50% - 0.5px), rgba(201, 164, 74, 0.55) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(90deg, transparent calc(50% - 0.5px), rgba(201, 164, 74, 0.55) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--nau-gold) 20%, transparent) 0%, transparent 68%),
+    linear-gradient(180deg, var(--nau-watl), var(--nau-water));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nau-gold) 45%, transparent);
+}
+.nau-cell.fire:hover::after {
+  content: '';
+  position: absolute; inset: 0; margin: auto;
+  width: 58%; height: 58%;
+  border: 1px solid color-mix(in srgb, var(--nau-gold) 65%, transparent);
+  border-radius: 50%;
+  animation: nauReticle 1s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes nauReticle {
+  0%, 100% { transform: scale(1);    opacity: 0.9; }
+  50%      { transform: scale(0.82); opacity: 0.5; }
 }
 
 /* ── Particle canvas ─────────────────────────────────────────── */
@@ -395,14 +711,14 @@
   z-index: 6;
 }
 
-/* ── Screen shake ─────────────────────────────────────────────── */
+/* ── Screen shake ────────────────────────────────────────────── */
 @keyframes nauShake {
-  0%,100% { transform: translate(0,0) rotate(0deg); }
-  15%     { transform: translate(-5px, 3px) rotate(-0.4deg); }
-  30%     { transform: translate(4px, -4px) rotate(0.3deg); }
-  50%     { transform: translate(-4px, 4px) rotate(-0.3deg); }
-  70%     { transform: translate(5px, -2px) rotate(0.2deg); }
-  85%     { transform: translate(-3px, 3px) rotate(-0.2deg); }
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  15%      { transform: translate(-5px, 3px) rotate(-0.4deg); }
+  30%      { transform: translate(4px, -4px) rotate(0.3deg); }
+  50%      { transform: translate(-4px, 4px) rotate(-0.3deg); }
+  70%      { transform: translate(5px, -2px) rotate(0.2deg); }
+  85%      { transform: translate(-3px, 3px) rotate(-0.2deg); }
 }
 .nau-shake { animation: nauShake 0.38s ease-out; }
 
@@ -411,7 +727,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
 }
 
@@ -419,171 +735,439 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 820px;
+  max-width: 830px;
   width: 100%;
-  padding: 9px 16px;
+  padding: 10px 18px;
   background: var(--nau-surf);
   border: 1px solid var(--nau-brd);
-  border-radius: 2px;
+  border-radius: 3px;
   flex-wrap: wrap;
   gap: 8px;
   box-sizing: border-box;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
 }
 .nau-status-txt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-size: 0.82rem;
+  font-weight: 500;
   letter-spacing: 0.07em;
   transition: color 0.3s;
 }
-.nau-status-txt.myturn  { color: var(--nau-goldl); }
+/* signal beacon */
+.nau-status-txt::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--nau-txtm);
+  flex: 0 0 auto;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.nau-status-txt.myturn { color: var(--nau-goldl); }
+.nau-status-txt.myturn::before {
+  background: var(--nau-gold);
+  box-shadow: 0 0 10px var(--nau-gold);
+  animation: nauBeacon 1.3s ease-in-out infinite;
+}
 .nau-status-txt.waiting { color: var(--nau-txtm); }
-.nau-status-txt.wrong   { color: var(--nau-terrl); }
+.nau-status-txt.waiting::before { animation: nauBeacon 2.2s ease-in-out infinite; }
+.nau-status-txt.wrong { color: #E07B5E; }
+.nau-status-txt.wrong::before { background: #C23B22; box-shadow: 0 0 10px #C23B22; }
+@keyframes nauBeacon {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
 
+/* fleet strength pips */
 .nau-ships-rem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 0.76rem;
 }
-.nau-ships-rem .me    { color: var(--nau-olivl); }
-.nau-ships-rem .vs    { color: var(--nau-txtm); }
-.nau-ships-rem .them  { color: var(--nau-terrl); }
+.nau-ships-rem .me   { color: var(--nau-goldl); }
+.nau-ships-rem .vs   { color: var(--nau-txtm); font-size: 0.85rem; }
+.nau-ships-rem .them { color: #D26A4E; }
+.nau-ships-rem .me, .nau-ships-rem .them {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.nau-pip {
+  display: inline-flex;
+  width: 21px; height: 11px;
+  transition: opacity 0.4s;
+}
+.nau-pip svg { width: 100%; height: 100%; }
+.nau-pip.dead {
+  opacity: 0.22;
+  animation: nauPipSink 0.7s cubic-bezier(0.5, 0, 0.7, 0.4) both;
+}
+@keyframes nauPipSink {
+  0%   { transform: translateY(0) rotate(0);        opacity: 1; }
+  100% { transform: translateY(5px) rotate(14deg);  opacity: 0.22; }
+}
 
 .nau-boards-wrap {
   display: flex;
-  gap: 28px;
+  gap: 30px;
   align-items: flex-start;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-/* ── Question modal ───────────────────────────────────────────── */
+/* ── Sunk banner ─────────────────────────────────────────────── */
+.nau-banner {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  animation: nauBannerIn 1.7s cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+.nau-banner-t {
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: clamp(1.7rem, 4.5vw, 2.7rem);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  line-height: 1;
+}
+.nau-banner.foe  .nau-banner-t { color: var(--nau-goldl); text-shadow: 0 0 34px color-mix(in srgb, var(--nau-gold) 55%, transparent); }
+.nau-banner.mine .nau-banner-t { color: #E86A48; text-shadow: 0 0 34px rgba(194, 59, 34, 0.65); }
+.nau-banner-n {
+  margin-top: 6px;
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  text-transform: uppercase;
+  color: var(--nau-txts);
+}
+@keyframes nauBannerIn {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(14px) scale(0.82); }
+  12%  { opacity: 1; transform: translateX(-50%) translateY(0)    scale(1.04); }
+  20%  { transform: translateX(-50%) scale(1); }
+  78%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+}
+
+/* ── Question modal — bronze tablet ──────────────────────────── */
 .nau-q-overlay {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--sym-bg, #080502) 88%, transparent);
+  background: radial-gradient(120% 120% at 50% 45%, rgba(4, 16, 25, 0.82), rgba(2, 9, 15, 0.94));
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(7px);
 }
-.nau-q-overlay.active { display: flex; }
+.nau-q-overlay.active { display: flex; animation: nauFadeIn 0.25s ease-out both; }
+@keyframes nauFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .nau-q-modal {
-  background: var(--nau-surf);
+  position: relative;
+  background: linear-gradient(180deg, #0B2233, #071826);
   border: 1px solid var(--nau-brdh);
-  border-radius: 3px;
-  padding: 26px 28px;
-  max-width: 430px;
-  width: 90%;
+  border-radius: 4px;
+  padding: 28px 30px 24px;
+  max-width: 460px;
+  width: 92%;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  animation: nauModalIn 0.22s ease-out both;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.6), 0 0 44px color-mix(in srgb, var(--nau-gold) 8%, transparent);
+  animation: nauModalIn 0.32s cubic-bezier(0.2, 1.2, 0.35, 1) both;
+}
+/* meander crown */
+.nau-q-modal::before {
+  content: '';
+  position: absolute; top: 7px; left: 22px; right: 22px;
+  height: 10px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 12'><path d='M1 11 L1 1 L17 1 L17 7 L7 7 L7 4 L13 4' fill='none' stroke='%23C9A44A' stroke-width='1.4'/></svg>") repeat-x center / 17px 10px;
+  opacity: 0.32;
+  mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  pointer-events: none;
 }
 @keyframes nauModalIn {
-  from { transform: scale(0.93) translateY(8px); opacity: 0; }
+  from { transform: scale(0.9) translateY(14px); opacity: 0; }
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .nau-q-hd {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
   color: var(--nau-gold);
   text-transform: uppercase;
   text-align: center;
-  border-bottom: 1px solid var(--nau-brd);
-  padding-bottom: 12px;
+  padding-top: 8px;
+}
+.nau-q-sub {
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  color: var(--nau-txtm);
+  text-align: center;
+  margin: -14px 0 0;
 }
 
 .nau-q-text {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.18rem;
-  line-height: 1.55;
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 1.22rem;
+  line-height: 1.5;
   color: var(--nau-txt);
   text-align: center;
   font-style: italic;
-  font-weight: 400;
+  font-weight: 500;
 }
 
-.nau-q-opts { display: flex; flex-direction: column; gap: 7px; }
+.nau-q-opts { display: flex; flex-direction: column; gap: 8px; }
 
 .nau-q-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 10px 14px;
-  background: var(--nau-sur2);
+  background: rgba(16, 42, 60, 0.65);
   border: 1px solid var(--nau-brd);
-  border-radius: 2px;
+  border-radius: 3px;
   color: var(--nau-txt);
-  font-family: 'Noto Serif', 'Cormorant Garamond', serif;
+  font-family: var(--sym-font-serif, 'Noto Serif', 'Alegreya', serif);
   font-size: 0.97rem;
   line-height: 1.45;
   text-align: left;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+  animation: nauOptIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.nau-q-opt:hover { background: color-mix(in srgb, var(--nau-sur2) 80%, transparent); border-color: var(--nau-brdh); }
+.nau-q-opt:nth-child(1) { animation-delay: 0.05s; }
+.nau-q-opt:nth-child(2) { animation-delay: 0.11s; }
+.nau-q-opt:nth-child(3) { animation-delay: 0.17s; }
+.nau-q-opt:nth-child(4) { animation-delay: 0.23s; }
+@keyframes nauOptIn {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.nau-q-key {
+  flex: 0 0 auto;
+  width: 24px; height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sym-font-serif, 'Alegreya', serif);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--nau-gold);
+  border: 1px solid var(--nau-brd);
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.nau-q-opt:hover:not(:disabled) {
+  background: var(--nau-sur2);
+  border-color: var(--nau-brdh);
+  transform: translateX(4px);
+}
+.nau-q-opt:hover:not(:disabled) .nau-q-key {
+  background: var(--nau-gold);
+  color: #14202B;
+  border-color: var(--nau-gold);
+}
 .nau-q-opt.correct {
-  background: rgba(48, 88, 30, 0.45);
-  border-color: rgba(80, 140, 50, 0.6);
-  color: #b8e898;
+  background: rgba(48, 88, 30, 0.4);
+  border-color: rgba(110, 170, 70, 0.7);
+  color: #C8ECA8;
+  animation: nauCorrectPulse 0.55s ease-out;
+  box-shadow: 0 0 22px rgba(90, 150, 50, 0.3);
 }
+.nau-q-opt.correct .nau-q-key { border-color: rgba(110, 170, 70, 0.7); color: #C8ECA8; }
 .nau-q-opt.wrong {
-  background: rgba(90, 28, 28, 0.45);
-  border-color: rgba(150, 50, 50, 0.6);
-  color: #e8a0a0;
+  background: rgba(96, 28, 22, 0.45);
+  border-color: rgba(180, 66, 48, 0.7);
+  color: #F0AC9A;
+  animation: nauWrongShake 0.4s ease-out;
 }
+.nau-q-opt.wrong .nau-q-key { border-color: rgba(180, 66, 48, 0.7); color: #F0AC9A; }
 .nau-q-opt:disabled { cursor: default; }
+@keyframes nauCorrectPulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+@keyframes nauWrongShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  50%      { transform: translateX(5px); }
+  75%      { transform: translateX(-3px); }
+}
 
 /* ── Game over ───────────────────────────────────────────────── */
 .nau-over {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   text-align: center;
-  max-width: 380px;
+  max-width: 420px;
 }
-.nau-over-icon  { font-size: 3.8rem; line-height: 1; }
+/* victory rays */
+.nau-over::before {
+  content: '';
+  position: absolute;
+  top: -90px; left: 50%;
+  width: 420px; height: 420px;
+  margin-left: -210px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    transparent 0deg 14deg,  color-mix(in srgb, var(--nau-gold) 7%, transparent) 18deg 22deg,
+    transparent 26deg 50deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 54deg 58deg,
+    transparent 62deg 86deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 90deg 94deg,
+    transparent 98deg 122deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 126deg 130deg,
+    transparent 134deg 158deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 162deg 166deg,
+    transparent 170deg 194deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 198deg 202deg,
+    transparent 206deg 230deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 234deg 238deg,
+    transparent 242deg 266deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 270deg 274deg,
+    transparent 278deg 302deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 306deg 310deg,
+    transparent 314deg 338deg, color-mix(in srgb, var(--nau-gold) 7%, transparent) 342deg 346deg,
+    transparent 350deg 360deg);
+  mask-image: radial-gradient(circle, #000 0%, transparent 68%);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 68%);
+  animation: nauRays 40s linear infinite;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s;
+}
+.nau-root.nau-victory .nau-over::before { opacity: 1; }
+@keyframes nauRays { to { transform: rotate(360deg); } }
+
+.nau-over-icon {
+  position: relative;
+  width: 120px; height: 120px;
+  line-height: 1;
+  animation: nauOverIconIn 0.9s cubic-bezier(0.2, 1.4, 0.35, 1) both 0.15s;
+}
+.nau-over-icon svg { width: 100%; height: 100%; }
+.nau-root.nau-victory .nau-over-icon { color: var(--nau-gold); filter: drop-shadow(0 0 26px color-mix(in srgb, var(--nau-gold) 45%, transparent)); }
+.nau-root.nau-defeat  .nau-over-icon { color: #97552F; filter: drop-shadow(0 0 20px rgba(140, 60, 30, 0.4)); }
+@keyframes nauOverIconIn {
+  from { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
 .nau-over-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.4rem;
-  font-weight: 600;
-  color: var(--nau-gold);
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 2.7rem;
+  font-weight: 700;
   margin: 0;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  animation: nauTitleIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both 0.3s;
 }
+.nau-root.nau-victory .nau-over-title {
+  background: linear-gradient(180deg, var(--nau-goldl), var(--nau-goldd));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 50px color-mix(in srgb, var(--nau-gold) 32%, transparent);
+}
+.nau-root.nau-defeat .nau-over-title { color: #C05A3C; }
+
 .nau-over-msg {
   color: var(--nau-txtm);
   font-size: 0.88rem;
   margin: 0;
   letter-spacing: 0.05em;
-  line-height: 1.6;
+  line-height: 1.65;
+  max-width: 330px;
+  animation: nauPhaseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both 0.45s;
 }
+
+.nau-over-stats {
+  display: flex;
+  gap: 34px;
+  animation: nauPhaseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both 0.55s;
+}
+.nau-over-stat { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.nau-over-stat b {
+  font-family: var(--sym-font-serif, 'Cormorant Garamond', 'Alegreya', serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--nau-txt);
+}
+.nau-over-stat.gold b { color: var(--nau-goldl); }
+.nau-over-stat.red  b { color: #D26A4E; }
+.nau-over-stat span {
+  font-family: 'Oswald', 'Montserrat', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: var(--nau-txtm);
+}
+
 .nau-over-btns {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 4px;
+  margin-top: 6px;
+  animation: nauPhaseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both 0.65s;
 }
 
-/* ── Responsive ───────────────────────────────────────────────── */
+/* ── While-you-wait mini-game slot ───────────────────────────── */
+.nau-flappy-slot { margin-top: 8px; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 640px) {
   #naumachia-overlay { --nc: 30px; }
   .nau-boards-wrap   { gap: 16px; }
   .nau-place-body    { flex-direction: column; align-items: center; }
+  .nau-dock          { width: 100%; max-width: 340px; }
 }
 
-/* On phones, stack boards vertically so cells stay ≥ 34 px (touch-friendly).
-   Two 10×10 grids side-by-side at 30 px = ≈ 628 px — wider than a phone screen.
-   Stacking them gives each board its own full-width row.                      */
+/* On phones, stack boards vertically so cells stay ≥ 34 px (touch-friendly). */
 @media (max-width: 520px) {
-  #naumachia-overlay { --nc: 34px; }   /* restore near-desktop cell size */
+  #naumachia-overlay { --nc: 34px; }
   .nau-boards-wrap {
-    flex-direction: column;            /* YOUR board on top, ENEMY below  */
-    gap: 20px;
+    flex-direction: column;
+    gap: 22px;
     align-items: center;
   }
-  .nau-q-modal { padding: 18px 14px; }
+  .nau-q-modal { padding: 20px 16px 18px; }
+  .nau-sea-chart { opacity: 0.1; }
+}
+
+/* ── Reduced motion — still the still waters ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .nau-sea-glow,
+  .nau-sea-ships .nau-trireme,
+  .nau-sea-waves i,
+  .nau-grid-wrap::after,
+  .nau-wait .nau-trireme,
+  .nau-wait-sea,
+  .nau-emblem,
+  .nau-over::before,
+  .nau-cell.hit::before,
+  .nau-cell.sunk::before,
+  .nau-cell.fire:hover::after,
+  .nau-status-txt.myturn::before,
+  .nau-status-txt.waiting::before { animation: none !important; }
+  .nau-phase.active,
+  .nau-title, .nau-subtitle,
+  .nau-q-modal, .nau-q-opt,
+  .nau-over-icon, .nau-over-title, .nau-over-msg,
+  .nau-over-stats, .nau-over-btns,
+  .nau-banner, .nau-pip.dead,
+  .nau-cell.hit, .nau-cell.miss, .nau-cell.miss::before { animation-duration: 0.001s !important; animation-delay: 0s !important; }
+  .nau-shake { animation: none !important; }
 }

@@ -23,7 +23,7 @@
   const D = {};                 // cached DOM refs
   let pad = null;               // shared SymTouch handle (joystick + door)
   let built = false;
-  let maxLives = 3, lastLives = -1, lastMax = -1;
+  let maxLives = 3, lastLives = -1, lastMax = -1, lastScore = -1;
   let quizLock = false, quizTimer = null, depthTimer = null;
   let resDiffKey = 'normal';
 
@@ -37,6 +37,35 @@
     s = Math.max(0, Math.floor(s || 0));
     const mm = (s / 60) | 0, ss = s % 60;
     return mm + ':' + (ss < 10 ? '0' : '') + ss;
+  }
+  function reducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  // Greek-key (meander) divider, drawn procedurally as inline SVG
+  function meanderEl() {
+    const div = E('div', 'lb-meander');
+    div.setAttribute('aria-hidden', 'true');
+    let d = '';
+    for (let i = 0; i < 9; i++) {
+      const x = i * 22;
+      d += 'M' + (x + 1) + ' 13 V2 H' + (x + 19) + ' V9 H' + (x + 8) + ' V6 H' + (x + 14) + ' ';
+    }
+    div.innerHTML = '<svg viewBox="0 0 198 15" width="198" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="' + d + '"/></svg>';
+    return div;
+  }
+  // eased count-up for the result score (respects reduced motion)
+  function countUp(el, target) {
+    if (!el) return;
+    target = target | 0;
+    if (reducedMotion() || target <= 0) { el.textContent = target; return; }
+    const t0 = performance.now(), dur = 900;
+    el.textContent = '0';
+    (function tick(t) {
+      const k = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(target * e);
+      if (k < 1 && el.isConnected) requestAnimationFrame(tick);
+    })(t0);
   }
   // bilingual textContent + data-gr/data-en so setSiteLang keeps it synced
   function setBi(node, gr, en) {
@@ -97,12 +126,21 @@
       '</div>' +
     '</div>' +
 
-    '<div class="lb-pane lb-dim" id="lb-menu"><div class="lb-menu-inner" id="lb-menu-inner"></div></div>' +
+    '<div class="lb-pane lb-dim" id="lb-menu">' +
+      '<div class="lb-menu-fx" aria-hidden="true">' +
+        '<div class="lb-menu-sigil"></div>' +
+        '<div class="lb-menu-halo"></div>' +
+        '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>' +
+      '</div>' +
+      '<div class="lb-menu-inner" id="lb-menu-inner"></div>' +
+    '</div>' +
 
     '<div class="lb-depth-banner" id="lb-depthbanner">' +
       '<div class="lb-depth-k" id="lb-db-k"></div>' +
       '<div class="lb-depth-big" id="lb-db-big"></div>' +
       '<div class="lb-depth-sub" id="lb-db-sub"></div>' +
+      '<div class="lb-depth-prog" id="lb-db-prog" aria-hidden="true"></div>' +
+      '<div class="lb-depth-chevs" aria-hidden="true"><span>▾</span><span>▾</span><span>▾</span></div>' +
     '</div>' +
 
     '<div class="lb-pane lb-quiz" id="lb-quiz">' +
@@ -132,6 +170,10 @@
     '</div>' +
 
     '<div class="lb-pane lb-dim" id="lb-result">' +
+      '<div class="lb-menu-fx lb-res-fx" aria-hidden="true">' +
+        '<div class="lb-menu-halo"></div>' +
+        '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>' +
+      '</div>' +
       '<div class="lb-res-inner">' +
         '<div class="lb-res-title" id="lb-res-title"></div>' +
         '<div class="lb-res-sub" id="lb-res-sub"></div>' +
@@ -168,10 +210,12 @@
     D.menu        = wrap.querySelector('#lb-menu');
     D.menuInner   = wrap.querySelector('#lb-menu-inner');
     D.depthBanner = wrap.querySelector('#lb-depthbanner');
+    D.dbProg      = wrap.querySelector('#lb-db-prog');
     D.dbK         = wrap.querySelector('#lb-db-k');
     D.dbBig       = wrap.querySelector('#lb-db-big');
     D.dbSub       = wrap.querySelector('#lb-db-sub');
     D.quiz        = wrap.querySelector('#lb-quiz');
+    D.quizBox     = wrap.querySelector('.lb-quiz-box');
     D.qCtx        = wrap.querySelector('#lb-q-ctx');
     D.qSub        = wrap.querySelector('#lb-q-sub');
     D.qText       = wrap.querySelector('#lb-q-text');
@@ -183,6 +227,10 @@
     D.resSub      = wrap.querySelector('#lb-res-sub');
     D.resStats    = wrap.querySelector('#lb-res-stats');
     D.resBest     = wrap.querySelector('#lb-res-best');
+
+    // carved-stele ornament between the result title and the stats
+    const resInner = D.result.querySelector('.lb-res-inner');
+    if (resInner) resInner.insertBefore(meanderEl(), D.resStats);
 
     // HUD buttons
     D.mute.addEventListener('click', function () {
@@ -241,7 +289,8 @@
     inner.innerHTML = '';
 
     const title = E('div', 'lb-title'); setBi(title, 'Λαβύρινθος', 'Labyrinth'); inner.appendChild(title);
-    const ten = E('div', 'lb-title-en'); ten.textContent = 'LABYRINTH · REIMAGINED'; inner.appendChild(ten);
+    const ten = E('div', 'lb-title-en'); ten.textContent = 'THE HOUSE OF THE MINOTAUR'; inner.appendChild(ten);
+    inner.appendChild(meanderEl());
 
     const howto = E('div', 'lb-howto');
     howto.setAttribute('data-gr-html', HOWTO_GR);
@@ -347,7 +396,7 @@
     D.depthBanner.classList.remove('on');
     D.hud.classList.add('on');
     wrap.classList.add('playing');
-    lastLives = -1; lastMax = -1;   // force lives pips re-render
+    lastLives = -1; lastMax = -1; lastScore = -1;   // force lives pips re-render
     if (pad) pad.show();
     syncMute();
   }
@@ -368,11 +417,22 @@
     }
     const f = Math.max(0, Math.min(1, s.fuel || 0));
     D.torchFill.style.width = (f * 100) + '%';
-    D.torchFill.style.background = f < 0.2 ? 'var(--lb-terra)' : (f < 0.45 ? 'var(--lb-gold-lt)' : 'var(--lb-gold)');
+    D.torchFill.style.background = f < 0.2
+      ? 'linear-gradient(90deg,#7e2914,var(--lb-terra) 60%,#ff8a4c)'
+      : (f < 0.45
+        ? 'linear-gradient(90deg,#8a5f18,var(--lb-gold-lt) 65%,#ffd98a)'
+        : 'linear-gradient(90deg,#8a5f18,var(--lb-gold) 55%,#ffd98a)');
     D.torch.classList.toggle('low', f < 0.34);
     D.depthVal.textContent = toRoman(s.depth) + ' / ' + toRoman(s.maxDepth);
     D.time.textContent = fmtTime(s.time);
     D.score.textContent = (s.score | 0);
+    // kinetic score pop whenever it climbs
+    if (lastScore >= 0 && (s.score | 0) > lastScore) {
+      D.score.classList.remove('pop');
+      void D.score.offsetWidth;   // restart the animation
+      D.score.classList.add('pop');
+    }
+    lastScore = s.score | 0;
     D.hunt.classList.toggle('on', !!s.hunting);
     if (pad) {
       const near = window.LabEngine && LabEngine.hasNearDoor && LabEngine.hasNearDoor();
@@ -388,6 +448,13 @@
     setBi(D.dbK, isDescend ? 'ΚΑΤΑΒΑΣΗ' : 'Ο ΛΑΒΥΡΙΝΘΟΣ', isDescend ? 'DESCENDING' : 'THE LABYRINTH');
     setBi(D.dbBig, 'Κύκλος ' + toRoman(depth), 'Circle ' + toRoman(depth));
     const total = (d && d.maxDepth) || depth;
+    // depth progress diamonds — how far down the descent you are
+    if (D.dbProg) {
+      D.dbProg.innerHTML = '';
+      for (let i = 1; i <= total; i++) {
+        D.dbProg.appendChild(E('span', i < depth ? 'done' : (i === depth ? 'cur' : '')));
+      }
+    }
     setBi(D.dbSub,
       depth >= total ? 'Η τελευταία πύλη — βρες την έξοδο' : 'Βρες την αιγαιακή πύλη και κατέβα',
       depth >= total ? 'The final gate — find the exit' : 'Find the aegean gate and descend');
@@ -404,6 +471,7 @@
     lang = lang || curLang();
     quizLock = false;
     clearTimeout(quizTimer);
+    if (D.quizBox) D.quizBox.classList.remove('ok', 'no');
 
     const ctx = window._lbSubjectLabel;
     setBi(D.qCtx, ctx || 'ΒΩΜΟΣ ΓΝΩΣΗΣ', ctx || 'ALTAR OF KNOWLEDGE');
@@ -432,6 +500,11 @@
     const opts = D.qOpts.querySelectorAll('.lb-opt');
     opts.forEach(function (b, j) { b.disabled = true; if (j === obj.c) b.classList.add('correct'); });
     if (!correct) btn.classList.add('wrong');
+    if (D.quizBox) {
+      D.quizBox.classList.remove('ok', 'no');
+      void D.quizBox.offsetWidth;   // restart the animation
+      D.quizBox.classList.add(correct ? 'ok' : 'no');
+    }
     D.qRes.className = 'lb-q-res ' + (correct ? 'ok' : 'no');
     setBi(D.qRes,
       correct ? 'Σωστά! Ο πυρσός αναζωπυρώνεται.' : 'Λάθος. Το σκοτάδι πυκνώνει.',
@@ -455,6 +528,7 @@
     const s = E('span'); setBi(s, gr, en);
     const b = E('b'); b.textContent = val;
     d.appendChild(s); d.appendChild(b); parent.appendChild(d);
+    return b;
   }
   function onResult(res, lang) {
     if (!wrap || !res) return;
@@ -464,6 +538,8 @@
     if (pad) pad.hide();
     hideDepth();
 
+    D.result.classList.toggle('win', !!res.win);
+    D.result.classList.toggle('lose', !res.win);
     D.resTitle.className = 'lb-res-title ' + (res.win ? 'win' : 'lose');
     setBi(D.resTitle, res.win ? 'ΕΞΟΔΟΣ' : 'ΧΑΘΗΚΕΣ', res.win ? 'ESCAPED' : 'LOST');
     setBi(D.resSub,
@@ -472,9 +548,10 @@
 
     D.resStats.innerHTML = '';
     addStat(D.resStats, 'ΒΑΘΟΣ', 'DEPTH', toRoman(res.depth) + '/' + toRoman(res.maxDepth));
-    addStat(D.resStats, 'ΣΚΟΡ', 'SCORE', res.score | 0);
+    const scoreEl = addStat(D.resStats, 'ΣΚΟΡ', 'SCORE', res.score | 0);
     addStat(D.resStats, 'ΧΡΟΝΟΣ', 'TIME', fmtTime(res.time));
     addStat(D.resStats, 'ΒΩΜΟΙ', 'ALTARS', res.braz | 0);
+    countUp(scoreEl, res.score | 0);
 
     const b = res.best || {};
     const tail = b.escaped && b.time ? (' · ' + fmtTime(b.time)) : '';

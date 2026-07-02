@@ -15,6 +15,77 @@ const NAU_FLEET = [
 ];
 const NAU_SIZE = 10;
 
+// ── Presentation helpers (visual layer only) ─────────────────
+const NAU_RM = (typeof matchMedia === 'function')
+  ? matchMedia('(prefers-reduced-motion: reduce)')
+  : { matches: false };
+
+// Procedural trireme silhouette (bow-left, ram, mast, billowed sail, oars)
+function _nauTriremeSVG(cls) {
+  return `<svg class="${cls || 'nau-trireme'}" viewBox="0 0 140 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g fill="currentColor">
+      <path d="M6 40 L20 36 Q24 35 30 35 L112 35 Q124 35 132 24 Q134 22 137 21 Q133 38 118 46 Q112 49 104 49 L30 49 Q16 49 8 43 Z"/>
+      <path d="M2 37 L20 33 L20 41 Z"/>
+      <rect x="68" y="6" width="2.6" height="30" rx="1"/>
+      <path d="M46 8 Q69 0 92 8 L92 26 Q69 19 46 26 Z" opacity=".85"/>
+      <path d="M118 20 Q126 12 124 4 Q132 10 128 22 Z" opacity=".9"/>
+      <circle cx="22" cy="38" r="1.6" opacity=".55"/>
+    </g>
+    <g stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".75">
+      <line x1="34" y1="49" x2="28" y2="60"/>
+      <line x1="46" y1="49" x2="40" y2="60"/>
+      <line x1="58" y1="49" x2="52" y2="60"/>
+      <line x1="70" y1="49" x2="64" y2="60"/>
+      <line x1="82" y1="49" x2="76" y2="60"/>
+      <line x1="94" y1="49" x2="88" y2="60"/>
+    </g>
+  </svg>`;
+}
+
+// Tiny hull glyph used for the fleet-strength pips
+const NAU_PIP_SVG = '<svg viewBox="0 0 24 12" aria-hidden="true"><path fill="currentColor" d="M1 6 L5 4.6 L19 4.6 Q22.4 4.6 23.4 2.2 Q22.8 8.2 17.6 10.6 L5.4 10.6 Q2.4 9.6 1 6 Z"/><rect fill="currentColor" x="11" y="0.5" width="1.4" height="5" rx="0.7"/></svg>';
+
+// Victory laurel (with trireme heart) / defeat sinking-ship emblems
+function _nauLaurelSVG() {
+  let leaves = '';
+  for (let i = 0; i < 8; i++) {
+    const aL = -152 + i * 17.5;
+    const aR = 152 - i * 17.5;
+    leaves += `<g transform="rotate(${aL} 60 60)"><ellipse cx="60" cy="15" rx="4.6" ry="12" transform="rotate(24 60 15)" /></g>`;
+    leaves += `<g transform="rotate(${aR} 60 60)"><ellipse cx="60" cy="15" rx="4.6" ry="12" transform="rotate(-24 60 15)" /></g>`;
+  }
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g fill="currentColor" opacity=".92">${leaves}</g>
+    <path d="M60 108 A48 48 0 0 1 15 46" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M60 108 A48 48 0 0 0 105 46" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    <g transform="translate(24 42) scale(0.52)">
+      <path fill="currentColor" d="M6 40 L20 36 Q24 35 30 35 L112 35 Q124 35 132 24 Q134 22 137 21 Q133 38 118 46 Q112 49 104 49 L30 49 Q16 49 8 43 Z"/>
+      <path fill="currentColor" d="M2 37 L20 33 L20 41 Z"/>
+      <rect fill="currentColor" x="68" y="6" width="2.6" height="30" rx="1"/>
+      <path fill="currentColor" d="M46 8 Q69 0 92 8 L92 26 Q69 19 46 26 Z" opacity=".85"/>
+    </g>
+  </svg>`;
+}
+
+function _nauSunkSVG() {
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs><clipPath id="nau-sunk-clip"><rect x="0" y="0" width="120" height="76"/></clipPath></defs>
+    <g clip-path="url(#nau-sunk-clip)">
+      <g transform="rotate(-22 60 66) translate(14 34) scale(0.66)">
+        <path fill="currentColor" d="M6 40 L20 36 Q24 35 30 35 L112 35 Q124 35 132 24 Q134 22 137 21 Q133 38 118 46 Q112 49 104 49 L30 49 Q16 49 8 43 Z"/>
+        <path fill="currentColor" d="M2 37 L20 33 L20 41 Z"/>
+        <rect fill="currentColor" x="68" y="-4" width="2.6" height="40" rx="1"/>
+        <path fill="currentColor" d="M46 0 Q69 -8 92 0 L92 20 Q69 13 46 20 Z" opacity=".8"/>
+      </g>
+    </g>
+    <path d="M4 78 Q14 70 24 78 T44 78 T64 78 T84 78 T104 78 T124 78" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M4 90 Q14 83 24 90 T44 90 T64 90 T84 90 T104 90 T124 90" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+    <circle cx="78" cy="62" r="2.6" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
+    <circle cx="86" cy="52" r="1.8" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+    <circle cx="82" cy="42" r="1.2" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/>
+  </svg>`;
+}
+
 // ── Question bank (naval history) ─────────────────────────────
 const NAU_QB = [
   { q:'Σε ποια ναυμαχία νίκησαν οι Αθηναίοι τον Περσικό στόλο;',          opts:['Θερμοπύλες','Σαλαμίς','Μαραθώνας','Πλαταιές'],             ans:1 },
@@ -128,15 +199,35 @@ function _nauBuild() {
 
   frame.innerHTML = `<div class="nau-root" id="nau-root">
 
+  <!-- ══ AMBIENT AEGEAN CHART (decorative) ══ -->
+  <div class="nau-sea" aria-hidden="true">
+    <div class="nau-sea-chart"></div>
+    <div class="nau-sea-glow"></div>
+    <div class="nau-sea-ships">
+      ${_nauTriremeSVG('nau-trireme s1')}
+      ${_nauTriremeSVG('nau-trireme s2')}
+      ${_nauTriremeSVG('nau-trireme s3')}
+    </div>
+    <div class="nau-sea-waves"><i></i><i></i><i></i></div>
+  </div>
+
   <!-- ══ MENU ══ -->
   <div class="nau-phase" id="nau-ph-menu">
     <div class="nau-menu">
+      ${_nauTriremeSVG('nau-emblem')}
+      <p class="nau-kicker">Σαλαμίς &middot; 480 π.Χ.</p>
       <h1 class="nau-title">ΝΑΥΜΑΧΙΑ</h1>
       <p class="nau-subtitle">Ναυτική Σύγκρουση &middot; 5ος αι. π.Χ.</p>
       <div class="nau-hr"></div>
       <div class="nau-menu-btns">
-        <button class="nau-btn nau-btn-primary" onclick="_nauMode('ai')">⚔ Εναντίον Υπολογιστή</button>
-        <button class="nau-btn" onclick="_nauMode('pvp')">⚓ Εναντίον Παίκτη (PvP)</button>
+        <button class="nau-btn nau-btn-primary nau-mode-btn" onclick="_nauMode('ai')">
+          <span class="nau-mode-ico">⚔</span>
+          <span class="nau-mode-txt"><strong>Εναντίον Υπολογιστή</strong><small>Αντιμετώπισε τον Πέρση ναύαρχο</small></span>
+        </button>
+        <button class="nau-btn nau-mode-btn" onclick="_nauMode('pvp')">
+          <span class="nau-mode-ico">⚓</span>
+          <span class="nau-mode-txt"><strong>Εναντίον Παίκτη (PvP)</strong><small>Ναυμαχία με άλλον παίκτη</small></span>
+        </button>
       </div>
     </div>
   </div>
@@ -144,8 +235,11 @@ function _nauBuild() {
   <!-- ══ MATCHMAKING ══ -->
   <div class="nau-phase" id="nau-ph-mm">
     <div class="nau-matchmaking">
-      <div class="nau-spinner"></div>
-      <p id="nau-mm-msg" style="font-size:.88rem;color:var(--nau-txtm);letter-spacing:.06em;margin:0">Αναζήτηση αντιπάλου…</p>
+      <div class="nau-wait">
+        ${_nauTriremeSVG('nau-trireme')}
+        <div class="nau-wait-sea"></div>
+      </div>
+      <p id="nau-mm-msg">Αναζήτηση αντιπάλου…</p>
       <div id="nau-code-wrap" style="display:none;text-align:center">
         <div style="font-size:.6rem;color:var(--nau-txtm);letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">Κωδικός Παρτίδας</div>
         <div class="nau-code-box" id="nau-code-box"></div>
@@ -160,7 +254,9 @@ function _nauBuild() {
   <div class="nau-phase" id="nau-ph-place">
     <div class="nau-place-wrap">
       <div class="nau-place-header">
-        <h2>Τοποθέτηση Πλοίων</h2>
+        <h2>Τοποθέτηση Πλοίων
+          <span class="nau-place-hint">Επίλεξε πλοίο από τον ναύσταθμο και τοποθέτησέ το στον χάρτη</span>
+        </h2>
         <div class="nau-place-controls">
           <button class="nau-btn nau-btn-sm" onclick="_nauRotate()">↻ Περιστροφή</button>
           <button class="nau-btn nau-btn-sm" onclick="_nauRandPlace()">⚄ Τυχαία</button>
@@ -169,7 +265,7 @@ function _nauBuild() {
       </div>
       <div class="nau-place-body">
         <div class="nau-dock" id="nau-dock">
-          <div class="nau-dock-hd">Ο Στόλος Σου</div>
+          <div class="nau-dock-hd">Ναύσταθμος</div>
           ${dockHTML}
         </div>
         <div class="nau-board-sec">
@@ -186,9 +282,9 @@ function _nauBuild() {
       <div class="nau-status-bar">
         <span class="nau-status-txt" id="nau-stat">Ετοιμαστείτε…</span>
         <div class="nau-ships-rem">
-          <span class="me"  id="nau-my-alive">5 πλοία</span>
+          <span class="me"  id="nau-my-alive"></span>
           <span class="vs">⚔</span>
-          <span class="them" id="nau-en-alive">5 πλοία</span>
+          <span class="them" id="nau-en-alive"></span>
         </div>
       </div>
       <div class="nau-boards-wrap" id="nau-boards">
@@ -207,9 +303,10 @@ function _nauBuild() {
   <!-- ══ GAME OVER ══ -->
   <div class="nau-phase" id="nau-ph-over">
     <div class="nau-over">
-      <div class="nau-over-icon" id="nau-ov-icon">⚔</div>
+      <div class="nau-over-icon" id="nau-ov-icon"></div>
       <h2 class="nau-over-title" id="nau-ov-title">—</h2>
       <p class="nau-over-msg" id="nau-ov-msg"></p>
+      <div class="nau-over-stats" id="nau-ov-stats"></div>
       <div class="nau-over-btns">
         <button class="nau-btn nau-btn-primary nau-btn-sm" onclick="openNaumachia()">Νέα Ναυμαχία</button>
         <button class="nau-btn nau-btn-sm" onclick="closeNaumachia()">← Έξοδος</button>
@@ -220,7 +317,8 @@ function _nauBuild() {
   <!-- ══ QUESTION MODAL ══ -->
   <div class="nau-q-overlay" id="nau-qov">
     <div class="nau-q-modal">
-      <div class="nau-q-hd">⚡ Πριν Επιτεθείς…</div>
+      <div class="nau-q-hd">Πριν Επιτεθείς</div>
+      <p class="nau-q-sub">Απάντησε σωστά για να ρίξεις τη βολή σου</p>
       <div class="nau-q-text" id="nau-qt"></div>
       <div class="nau-q-opts" id="nau-qo"></div>
     </div>
@@ -280,8 +378,13 @@ function _nauSizeCanvas(id) {
   if (!grid || !cv || !NAU) return;
   cv.width  = grid.offsetWidth;
   cv.height = grid.offsetHeight;
-  if (!NAU.cv[id]) NAU.cv[id] = { el: cv, ctx: cv.getContext('2d'), particles: [] };
-  else { NAU.cv[id].el = cv; NAU.cv[id].ctx = cv.getContext('2d'); }
+  if (!NAU.cv[id]) NAU.cv[id] = { el: cv, ctx: cv.getContext('2d'), particles: [], shots: [], rings: [] };
+  else {
+    NAU.cv[id].el  = cv;
+    NAU.cv[id].ctx = cv.getContext('2d');
+    NAU.cv[id].shots = NAU.cv[id].shots || [];
+    NAU.cv[id].rings = NAU.cv[id].rings || [];
+  }
   if (!NAU.raf) _nauAnimLoop();
 }
 
@@ -649,6 +752,7 @@ function _nauStartCombat() {
     _nauSizeCanvas('nau-eg');
     _nauRenderMyGrid();
     _nauRenderEnemyGrid();
+    _nauUpdateCounts();
   });
 }
 
@@ -701,10 +805,20 @@ function _nauUpdateCounts() {
   if (!NAU) return;
   NAU.myAlive = NAU.myShips.filter(s => !s.sunk).length;
   NAU.enAlive = NAU.enemyShips.filter(s => !s.sunk).length;
-  const ma = document.getElementById('nau-my-alive');
-  const ea = document.getElementById('nau-en-alive');
-  if (ma) ma.textContent = NAU.myAlive + ' πλοία';
-  if (ea) ea.textContent = NAU.enAlive + ' πλοία';
+  _nauRenderPips(document.getElementById('nau-my-alive'), NAU.myAlive);
+  _nauRenderPips(document.getElementById('nau-en-alive'), NAU.enAlive);
+}
+
+// Fleet strength as little hull pips (sunk ones keel over) — visual only
+function _nauRenderPips(el, alive) {
+  if (!el) return;
+  if (el.childElementCount !== NAU_FLEET.length) {
+    el.innerHTML = NAU_FLEET
+      .map(() => `<span class="nau-pip">${NAU_PIP_SVG}</span>`).join('');
+  }
+  el.title = alive + ' πλοία';
+  Array.prototype.forEach.call(el.children,
+    (pip, i) => pip.classList.toggle('dead', i >= alive));
 }
 
 // ── Fire + Educational Gate ────────────────────────────────────
@@ -724,8 +838,15 @@ function _nauShowQuestion() {
   optsEl.innerHTML   = '';
   q.opts.forEach((opt, i) => {
     const btn = document.createElement('button');
-    btn.className   = 'nau-q-opt';
-    btn.textContent = opt;
+    btn.className = 'nau-q-opt';
+    const key = document.createElement('span');
+    key.className   = 'nau-q-key';
+    key.textContent = 'ΑΒΓΔΕ'[i] || '';
+    const lbl = document.createElement('span');
+    lbl.className   = 'nau-q-lbl';
+    lbl.textContent = opt;
+    btn.appendChild(key);
+    btn.appendChild(lbl);
     btn.addEventListener('click', () => _nauAnswer(i, q.ans, optsEl, q));
     optsEl.appendChild(btn);
   });
@@ -905,22 +1026,95 @@ function _nauGameOver(iWon) {
   if (typeof awardGameRewards === 'function' && shipsSunk > 0) {
     awardGameRewards('naumachia', { score: shipsSunk, perfect: iWon });
   }
-  document.getElementById('nau-ov-icon').textContent  = iWon ? '🏆' : '💀';
+  const shipsLost = 5 - (NAU.myAlive ?? 5);
+  const root = document.getElementById('nau-root');
+  if (root) root.classList.add(iWon ? 'nau-victory' : 'nau-defeat');
+  const icon = document.getElementById('nau-ov-icon');
+  if (icon) icon.innerHTML = iWon ? _nauLaurelSVG() : _nauSunkSVG();
   document.getElementById('nau-ov-title').textContent = iWon ? 'Νίκη!' : 'Ήττα';
   document.getElementById('nau-ov-msg').textContent   = iWon
     ? 'Ο εχθρικός στόλος βυθίστηκε. Η Αθήνα θριαμβεύει!'
     : 'Ο στόλος σου καταστράφηκε. Μεγάλη απώλεια για την Αθήνα.';
+  const stats = document.getElementById('nau-ov-stats');
+  if (stats) {
+    stats.innerHTML =
+      `<div class="nau-over-stat gold"><b id="nau-st-sunk">0</b><span>Βυθίσεις</span></div>` +
+      `<div class="nau-over-stat red"><b id="nau-st-lost">0</b><span>Απώλειες</span></div>`;
+    _nauCountUp(document.getElementById('nau-st-sunk'), shipsSunk);
+    _nauCountUp(document.getElementById('nau-st-lost'), shipsLost);
+  }
   _nauPhase('over');
 }
 
-// ── Canvas Particle System ─────────────────────────────────────
+// Presentational count-up for the game-over tallies
+function _nauCountUp(el, target) {
+  if (!el) return;
+  if (NAU_RM.matches || target <= 0) { el.textContent = String(target); return; }
+  const t0 = performance.now(), dur = 700;
+  (function tick(now) {
+    const k = Math.min(1, (now - t0) / dur);
+    el.textContent = String(Math.round(target * (1 - Math.pow(1 - k, 3))));
+    if (k < 1 && document.body.contains(el)) requestAnimationFrame(tick);
+  })(t0);
+}
+
+// ── Canvas FX system: shot arcs → rings → particles ───────────
 function _nauAnimLoop() {
   if (!NAU) return;
   for (const key in NAU.cv) {
     const state = NAU.cv[key];
     if (!state) continue;
     const { ctx, el, particles } = state;
+    const shots = state.shots || (state.shots = []);
+    const rings = state.rings || (state.rings = []);
     ctx.clearRect(0, 0, el.width, el.height);
+
+    // Ballista shots — flaming bolt on a parabolic arc, with trail
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const s = shots[i];
+      s.t += s.dt;
+      if (s.t >= 1) {
+        shots.splice(i, 1);
+        try { s.land(); } catch (_) {}
+        continue;
+      }
+      for (let k = 3; k >= 0; k--) {              // trail (older → fainter)
+        const tt = Math.max(0, s.t - k * 0.05);
+        const x  = s.x0 + (s.x1 - s.x0) * tt;
+        const y  = s.y0 + (s.y1 - s.y0) * tt - s.h * Math.sin(Math.PI * tt);
+        ctx.save();
+        ctx.globalAlpha = 0.85 * (1 - k * 0.24);
+        if (k === 0) {                            // glowing head
+          ctx.fillStyle = s.glow;
+          ctx.beginPath(); ctx.arc(x, y, 6.5, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#FFF3D6';
+          ctx.beginPath(); ctx.arc(x, y, 2.6, 0, Math.PI * 2); ctx.fill();
+        } else {
+          ctx.fillStyle = s.color;
+          ctx.beginPath(); ctx.arc(x, y, 3.4 - k * 0.6, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    // Expanding shock / ripple rings
+    for (let i = rings.length - 1; i >= 0; i--) {
+      const g = rings[i];
+      g.r    += g.v;
+      g.life -= g.d;
+      if (g.life <= 0) { rings.splice(i, 1); continue; }
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, g.life) * 0.85;
+      ctx.strokeStyle = g.color;
+      ctx.lineWidth   = g.w * g.life;
+      ctx.beginPath();
+      ctx.arc(g.x, g.y, g.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Particles
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.x  += p.vx;
@@ -974,27 +1168,99 @@ function _nauSpawn(gid, n, x, y, colors, speed, upBias, size, startLife, gravity
   }
 }
 
-// Trigger the right effect after a shot resolves
-function _nauDoEffect(r, c, result, sunkShip, gid) {
-  const { x, y } = _nauCellPx(gid, r, c);
+// Push an expanding ring onto a grid's canvas
+function _nauRing(gid, x, y, color, speed, width, startR) {
+  const cv = NAU?.cv?.[gid];
+  if (!cv) return;
+  (cv.rings || (cv.rings = [])).push({
+    x, y,
+    r:     startR || 2,
+    v:     speed,
+    w:     width,
+    life:  1,
+    d:     0.045,
+    color,
+  });
+}
 
+// Impact burst once a bolt lands (or immediately under reduced motion)
+function _nauImpact(gid, x, y, result, incoming) {
   if (result === 'miss') {
-    // Water splash — cyan/blue droplets
+    // Water splash — spray column + double ripple
     _nauSpawn(gid, 18, x, y,
       ['#1A8AAA', '#2AAAC0', '#40B8CC', '#7ACCE0', '#AAE0EE'],
       3.8, 4.0, 5, 1.0, 0.20, 0.014);
+    _nauSpawn(gid, 7, x, y,
+      ['#DFF3FA', '#AAE0EE'],
+      1.6, 5.4, 3, 1.0, 0.16, 0.020);
+    _nauRing(gid, x, y, 'rgba(140,210,235,0.9)', 1.5, 2.4);
+    setTimeout(() => { if (NAU) _nauRing(gid, x, y, 'rgba(90,170,200,0.7)', 1.2, 1.8); }, 160);
   } else {
-    // Hit explosion — oranges, reds, golds
+    // Burning hit — fire burst + smoke + shockwave
     _nauSpawn(gid, 36, x, y,
       ['#C9A44A', '#C0391B', '#E06018', '#FF8020', '#FFD050', '#FF4428'],
       5.5, 5.0, 8, 1.0, 0.24, 0.010);
-    _nauShake();
+    _nauSpawn(gid, 10, x, y,
+      ['#4A4A4A', '#5E5E5E', '#333333'],
+      2.0, 3.2, 6, 1.4, -0.02, 0.008);
+    _nauRing(gid, x, y, incoming ? 'rgba(255,110,70,0.9)' : 'rgba(255,208,80,0.9)', 2.4, 3);
   }
+}
 
-  if (sunkShip?.cells?.length) {
-    // Sunk ship burning embers — delayed
-    setTimeout(() => { if (NAU) _nauEmbers(gid, sunkShip.cells); }, 260);
+// Trigger the right effect after a shot resolves: ballista bolt arcs
+// onto the board, then splashes (miss) or bursts into flame (hit).
+// Purely presentational — game state is already resolved by the caller.
+function _nauDoEffect(r, c, result, sunkShip, gid) {
+  const { x, y } = _nauCellPx(gid, r, c);
+  const incoming = gid === 'nau-mg';        // enemy firing at MY board
+
+  const land = () => {
+    if (!NAU) return;
+    _nauImpact(gid, x, y, result, incoming);
+    if (result !== 'miss') _nauShake();
+    if (sunkShip?.cells?.length) {
+      setTimeout(() => { if (NAU) _nauEmbers(gid, sunkShip.cells); }, 240);
+      _nauSunkBanner(sunkShip, incoming);
+    }
+  };
+
+  const cv = NAU.cv[gid];
+  if (NAU_RM.matches || !cv || !cv.el) { land(); return; }
+
+  const W = cv.el.width, H = cv.el.height;
+  const fromTop = incoming;
+  const y0 = fromTop ? -12 : H + 12;
+  const x0 = Math.max(10, Math.min(W - 10, x + (Math.random() * 140 - 70)));
+  (cv.shots || (cv.shots = [])).push({
+    x0, y0, x1: x, y1: y,
+    t: 0, dt: 1 / 22,                       // ≈ 0.37 s at 60 fps
+    h: (fromTop ? 30 : 50) + Math.random() * 36,
+    color: incoming ? '#FF6A42' : '#FFC96A',
+    glow:  incoming ? 'rgba(255,90,50,0.45)' : 'rgba(255,200,100,0.45)',
+    land,
+  });
+}
+
+// Kinetic "ship sunk" banner — gold for enemy losses, red for ours
+function _nauSunkBanner(sunkShip, incoming) {
+  const root = document.getElementById('nau-root');
+  if (!root) return;
+  const name = sunkShip.name
+    || (sunkShip.id != null && NAU_FLEET[sunkShip.id]?.name) || '';
+  const b = document.createElement('div');
+  b.className = 'nau-banner ' + (incoming ? 'mine' : 'foe');
+  const t = document.createElement('div');
+  t.className   = 'nau-banner-t';
+  t.textContent = incoming ? 'ΑΠΩΛΕΙΑ!' : 'ΒΥΘΙΣΤΗΚΕ!';
+  b.appendChild(t);
+  if (name) {
+    const n = document.createElement('div');
+    n.className   = 'nau-banner-n';
+    n.textContent = name;
+    b.appendChild(n);
   }
+  root.appendChild(b);
+  setTimeout(() => b.remove(), 1750);
 }
 
 // Floating embers across all cells of a sunk ship

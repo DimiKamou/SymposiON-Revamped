@@ -44,6 +44,79 @@
   function save(p) { try { localStorage.setItem(LS, JSON.stringify(p)); } catch (e) {} }
   const LANG = () => (typeof siteLang !== 'undefined' ? siteLang : 'gr');
   const T = (gr, en) => (LANG() === 'en' ? en : gr);
+  const RMQ = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)')) || { matches: false };
+
+  /* ── shared visual dressing (ambient dawn backdrop + shield crest) ── */
+  // A living dawn sky with drifting embers, painted behind the menu screens.
+  // Pure CSS/DOM — respects prefers-reduced-motion via the .ph-ember rules.
+  function skyBg() {
+    let embers = '';
+    for (let i = 0; i < 14; i++) {
+      const left = (7 + i * 6.4).toFixed(1);
+      const dur = (7 + (i % 5) * 2.2).toFixed(1);
+      const delay = (-(i * 1.37) % 9).toFixed(1);
+      const drift = (((i * 37) % 30) - 15).toFixed(0);
+      const sz = (2 + (i % 3)).toFixed(0);
+      embers += `<span class="ph-ember" style="left:${left}%;width:${sz}px;height:${sz}px;--drift:${drift}px;animation-duration:${dur}s;animation-delay:${delay}s"></span>`;
+    }
+    return `<div class="ph-sky-bg" aria-hidden="true">${embers}</div>`;
+  }
+  // Bronze lambda shield emblem (the phalanx sigil) as inline SVG.
+  // `extra` adds a size-variant class; the gradient id is unique per call so
+  // several crests can live in the DOM (picker + lobby) without id clashes.
+  let crestUid = 0;
+  function shieldCrest(extra) {
+    const gid = 'phCrestG' + (++crestUid);
+    return `<div class="ph-pick-crest${extra ? ' ' + extra : ''}" aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <radialGradient id="${gid}" cx="38%" cy="32%" r="75%">
+            <stop offset="0" stop-color="#F0C878"/><stop offset="55%" stop-color="#C9A44A"/><stop offset="100%" stop-color="#6e5722"/>
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="url(#${gid})" stroke="#3a2d12" stroke-width="2"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(20,14,6,.4)" stroke-width="2.5"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,238,190,.35)" stroke-width="1" stroke-dasharray="2 5"/>
+        <path d="M34 72 L50 26 L66 72 L58 72 L50 48 L42 72 Z" fill="#0e0a05"/>
+        <path d="M20 20 Q28 12 36 20" fill="none" stroke="rgba(255,238,190,.4)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+    </div>`;
+  }
+  // Procedural laurel wreath (victory crown) — two mirrored branches whose
+  // leaves are placed along a quadratic arc. Pure SVG, no assets.
+  function laurelSvg() {
+    const P0 = { x: 100, y: 60 }, P1 = { x: 58, y: 62 }, P2 = { x: 14, y: 16 };
+    let leaves = '';
+    for (let k = 0; k <= 8; k++) {
+      const t = k / 8;
+      const mt = 1 - t;
+      const x = mt * mt * P0.x + 2 * mt * t * P1.x + t * t * P2.x;
+      const y = mt * mt * P0.y + 2 * mt * t * P1.y + t * t * P2.y;
+      const dx = 2 * mt * (P1.x - P0.x) + 2 * t * (P2.x - P1.x);
+      const dy = 2 * mt * (P1.y - P0.y) + 2 * t * (P2.y - P1.y);
+      const ang = Math.atan2(dy, dx) * 180 / Math.PI + (k % 2 ? 34 : -34);
+      const s = 10.5 - k * 0.55;
+      leaves += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${s.toFixed(1)}" ry="${(s * 0.34).toFixed(1)}" transform="rotate(${ang.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    return `<div class="ph-res-laurel" aria-hidden="true"><svg viewBox="0 0 200 72">
+      <g fill="none" stroke="rgba(201,164,74,.65)" stroke-width="1.6" stroke-linecap="round">
+        <path d="M100 60 Q58 62 14 16"/><path d="M100 60 Q142 62 186 16"/>
+      </g>
+      <g fill="rgba(201,164,74,.6)">${leaves}<g transform="translate(200,0) scale(-1,1)">${leaves}</g></g>
+      <circle cx="100" cy="61" r="3.4" fill="rgba(240,200,120,.85)"/>
+    </svg></div>`;
+  }
+  // eased count-up for the result stats — the numbers march to their post
+  function countUp(el) {
+    const target = +el.dataset.cnt || 0, suf = el.dataset.suf || '';
+    if (RMQ.matches || target <= 0) { el.textContent = target + suf; return; }
+    const t0 = performance.now(), dur = 950;
+    (function step(now) {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * e) + suf;
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
 
   /* ── open / close ── */
   window.openPhalanx = function () {
@@ -104,6 +177,7 @@
                 <div class="ph-clash-side"><div class="ph-clash-emb" id="ph-qd-emb"></div><div class="ph-clash-nm" id="ph-qd-nm"></div><div class="ph-clash-edge" id="ph-qd-edge"></div></div>
               </div>
               <div class="ph-qlbl"><span id="ph-qlbl-t">ΓΛΩΣΣΙΚΟΣ ΑΓΩΝΑΣ</span><span class="ph-qtimer" id="ph-qtimer"></span></div>
+              <div class="ph-qbar-track" id="ph-qbar-track"><i id="ph-qbar"></i></div>
               <div class="ph-qtxt" id="ph-qtxt"></div>
               <div class="ph-opts" id="ph-opts"></div>
               <div class="ph-clash-res" id="ph-res"></div>
@@ -172,10 +246,11 @@
         </div>
       </div>`).join('');
 
-    w.innerHTML = `
+    w.innerHTML = skyBg() + `
       <div class="ph-pick-root">
         <button class="ph-pick-exit" id="ph-pick-exit">← ${T('Έξοδος','Exit')}</button>
         <div class="ph-pick-menu">
+          ${shieldCrest()}
           <h1 class="ph-pick-title">ΦΑΛΑΓΓΑ</h1>
           <p class="ph-pick-sub">${T('Διάλεξε την ύλη της μάχης','Choose your battle content')}</p>
           <div class="ph-pick-hr"></div>
@@ -227,9 +302,10 @@
     if (window.PhalanxAudio) window.PhalanxAudio.setMuted(S.muted);
 
     const w = document.getElementById('ph-lobby');
-    w.innerHTML = `
+    w.innerHTML = skyBg() + `
     <div class="ph-lobby">
       <div class="ph-l-head">
+        ${shieldCrest('sm')}
         <div class="ph-l-kicker">ΦΑΛΑΓΓΑ · REIMAGINED</div>
         <h1 class="ph-l-title">Φάλαγγα<em>.</em></h1>
         <p class="ph-l-sub">Παράταξε τη φάλαγγα, διάβασε το έδαφος, κέρδισε τους <strong>Γλωσσικούς Αγῶνες</strong> — και ρίξε τον εχθρικό Στρατηγό.</p>
@@ -407,6 +483,7 @@
   }
   function renderPbar() {
     const bar = document.getElementById('ph-pbar');
+    bar.style.display = '';   // enterBattle hides it; restore for replays
     const counts = {}; ROSTER.forEach(t => counts[t] = (counts[t] || 0) + 1);
     const picks = Object.entries(counts).map(([type, total]) => {
       const left = S.toPlace.filter(t => t === type).length;
@@ -648,9 +725,11 @@
       ? (S.opponent === 'hotseat' ? (T(`ΑΓΩΝΑΣ — ${a.ansSide === 'player' ? 'Α' : 'Β'}`, `CLASH — ${a.ansSide === 'player' ? 'Α' : 'Β'}`)) : T('ΓΛΩΣΣΙΚΟΣ ΑΓΩΝΑΣ', 'LANGUAGE CLASH'))
       : T('ΑΜΥΝΑ!', 'DEFEND!');
     const opts = document.getElementById('ph-opts');
-    opts.innerHTML = qObj.a.map((o, i) => `<button class="ph-opt" data-i="${i}">${o}</button>`).join('');
+    opts.innerHTML = qObj.a.map((o, i) => `<button class="ph-opt" data-i="${i}"><span class="ph-opt-key">${i + 1}</span><span class="ph-opt-tx">${o}</span></button>`).join('');
     opts.querySelectorAll('.ph-opt').forEach(b => b.addEventListener('click', () => answer(+b.dataset.i)));
     document.getElementById('ph-res').textContent = ''; document.getElementById('ph-res').className = 'ph-clash-res';
+    const box = document.querySelector('#ph-quiz .ph-quiz-box');
+    if (box) box.classList.remove('shake', 'glow');
     document.getElementById('ph-quiz').classList.add('active');
     startQTimer();
   }
@@ -668,10 +747,23 @@
   function startQTimer() {
     if (qTimer) { clearInterval(qTimer); qTimer = null; }
     const el = document.getElementById('ph-qtimer');
-    if (!S.answerSec) { el.textContent = ''; return; }
+    const track = document.getElementById('ph-qbar-track'), bar = document.getElementById('ph-qbar');
+    el.classList.remove('low');
+    if (!S.answerSec) { el.textContent = ''; if (track) track.classList.remove('on', 'low'); return; }
     let t = S.answerSec; el.textContent = t + 's';
+    // depleting bronze fuse under the question label
+    if (track && bar) {
+      track.classList.add('on'); track.classList.remove('low');
+      bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
+      void bar.offsetWidth;
+      if (!RMQ.matches) { bar.style.transition = `transform ${S.answerSec}s linear`; bar.style.transform = 'scaleX(0)'; }
+    }
     qTimer = setInterval(() => {
       t--; el.textContent = t + 's';
+      const low = t > 0 && t <= 5;
+      el.classList.toggle('low', low);
+      if (track) track.classList.toggle('low', low);
+      if (low && window.PhalanxAudio) window.PhalanxAudio.tick();
       if (t <= 0) { clearInterval(qTimer); qTimer = null; answer(-1); }
     }, 1000);
   }
@@ -679,6 +771,12 @@
     if (qTimer) { clearInterval(qTimer); qTimer = null; }
     const qObj = S.curQ, correct = choice === qObj.c;
     const a = answeringInfo();
+    // freeze the fuse where it stopped
+    const fbar = document.getElementById('ph-qbar');
+    if (fbar) { const tf = getComputedStyle(fbar).transform; fbar.style.transition = 'none'; if (tf && tf !== 'none') fbar.style.transform = tf; }
+    // war-drum feedback on the whole tablet: gold flare or a violent shake
+    const box = document.querySelector('#ph-quiz .ph-quiz-box');
+    if (box && !RMQ.matches) { box.classList.remove('shake', 'glow'); void box.offsetWidth; box.classList.add(correct ? 'glow' : 'shake'); }
     document.querySelectorAll('#ph-opts .ph-opt').forEach((b, i) => {
       b.disabled = true;
       if (i === qObj.c) b.classList.add('correct');
@@ -826,20 +924,22 @@
         : playerWon ? T('Ο εχθρικός Στρατηγός έπεσε. Η φάλαγγά σου κράτησε τη γραμμή — η ιστορία ανταμείβει όσους απαντούν σωστά υπό πίεση.', 'The enemy General has fallen. Your phalanx held the line — history rewards those who answer well under pressure.')
         : T('Ο Στρατηγός σου έπεσε. Η φάλαγγα ραγίζει — μελέτησε και επέστρεψε στη μάχη.', 'Your General has fallen. The phalanx breaks — study and return to battle.');
       const acc = S.stats.q ? Math.round(100 * S.stats.correct / S.stats.q) : 0;
-      r.innerHTML = `<div class="ph-screen active ph-result">
+      r.innerHTML = `${skyBg()}<div class="ph-screen active ph-result">
         <div class="ph-res-kicker">${hot ? 'ΑΓΩΝΑΣ ΦΑΛΑΓΓΑΣ' : T('Η ΜΑΧΗ ΕΚΡΙΘΗ','THE BATTLE IS DECIDED')}</div>
+        ${win ? laurelSvg() : ''}
         <div class="ph-res-title ${win ? 'win' : 'lose'}">${title}</div>
         <div class="ph-res-detail">${detail}</div>
         <div class="ph-res-stats">
-          <div class="ph-res-stat"><span class="v">${S.stats.correct}/${S.stats.q}</span><span class="k">${T('Σωστές','Correct')}</span></div>
-          <div class="ph-res-stat"><span class="v">${acc}%</span><span class="k">${T('Ακρίβεια','Accuracy')}</span></div>
-          <div class="ph-res-stat"><span class="v">${S.stats.kills}</span><span class="k">${T('Νίκες','Routs')}</span></div>
+          <div class="ph-res-stat"><span class="v" data-cnt="${S.stats.correct}" data-suf="/${S.stats.q}">0/${S.stats.q}</span><span class="k">${T('Σωστές','Correct')}</span></div>
+          <div class="ph-res-stat"><span class="v" data-cnt="${acc}" data-suf="%">0%</span><span class="k">${T('Ακρίβεια','Accuracy')}</span></div>
+          <div class="ph-res-stat"><span class="v" data-cnt="${S.stats.kills}">0</span><span class="k">${T('Νίκες','Routs')}</span></div>
         </div>
         <div class="ph-res-btns">
           <button class="ph-start-btn" id="ph-again" style="width:auto;padding:14px 30px">${T('ΝΕΟΣ ΑΓΩΝΑΣ','NEW BATTLE')}</button>
           <button class="ph-start-btn sec" id="ph-menu" style="width:auto;padding:14px 30px">${T('ΜΕΝΟΥ','MENU')}</button>
         </div>
       </div>`;
+      r.querySelectorAll('.ph-res-stat .v[data-cnt]').forEach(countUp);
       document.getElementById('ph-again').addEventListener('click', startGame);
       document.getElementById('ph-menu').addEventListener('click', renderLobby);
       show('ph-result');
@@ -869,10 +969,15 @@
     el.innerHTML = units.map(u => `<span class="ph-pip ${oc} live${u.type === 'general' ? ' gen' : ''}"></span>`).join('') ||
       `<span class="ph-pip ${oc}"></span>`;
   }
-  function setStatus(html) { const el = document.getElementById('ph-status'); if (el) el.innerHTML = html; }
+  function setStatus(html) {
+    const el = document.getElementById('ph-status'); if (!el) return;
+    el.innerHTML = html;
+    if (!RMQ.matches) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+  }
   function setTurnTag(side, label) {
     const el = document.getElementById('ph-turn'); if (!el) return;
     el.textContent = label; el.className = 'ph-turn-tag ' + (side === 'player' ? 'p' : 'a');
+    if (!RMQ.matches) { void el.offsetWidth; el.classList.add('pop'); }
   }
 
   /* ── curtain (hot-seat) ── */

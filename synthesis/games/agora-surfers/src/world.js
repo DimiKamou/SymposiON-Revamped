@@ -89,6 +89,17 @@ export class World {
       this.contentFrontier += G.CHUNK;
     }
 
+    // moving hazards close in faster than the road & their wheels spin
+    for (const o of this.obstacles) {
+      if (o.userData.moving) {
+        o.userData.wz -= (o.userData.zSpeed || 6) * dt;
+        if (o.userData.wheels) {
+          const spin = (speed + (o.userData.zSpeed || 6)) * dt * 1.9;
+          for (const w of o.userData.wheels) w.rotation.x += spin;
+        }
+      }
+    }
+
     // reposition + recycle
     this._stream(this.scenery, distance);
     this._stream(this.coins, distance);
@@ -157,6 +168,7 @@ export class World {
     o.userData.hit = false;
     o.userData.scored = false;
     o.userData.didCrash = false;
+    o.userData.passFx = false;
     if (o.userData.action === undefined) {
       const sample = factory();
       o.userData.action = sample.userData.action;
@@ -218,7 +230,21 @@ export class World {
     this.rowsSinceObstacle++;
     const lane = (Math.random() * 3) | 0;
     const n = 3 + (Math.random() * 3 | 0);
-    for (let k = 0; k < n; k++) this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane);
+    // Subway-Surfers coin grammar: straight runs, floating arcs, lane weaves
+    const pat = Math.random();
+    if (pat < 0.3) {                                     // arc — jump through it
+      for (let k = 0; k < n; k++) {
+        const y = 1.0 + Math.sin((k / (n - 1)) * Math.PI) * 1.5;
+        this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane, y);
+      }
+    } else if (pat < 0.45 && n >= 4) {                   // weave into a neighbour lane
+      const lane2 = lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : 1;
+      for (let k = 0; k < n; k++) {
+        this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, k < n / 2 ? lane : lane2);
+      }
+    } else {
+      for (let k = 0; k < n; k++) this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane);
+    }
   }
 
   collectCoin(o) {

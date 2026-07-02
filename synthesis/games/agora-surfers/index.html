@@ -180,6 +180,41 @@
   #danger.d1{opacity:.45} #danger.d2{opacity:.7;animation:dpulse .55s ease-in-out infinite alternate}
   @keyframes dpulse{from{opacity:.5}to{opacity:.82}}
 
+  /* ── Near-miss whoosh streaks (left / right / centre) ─ */
+  #whoosh{position:absolute;inset:0;pointer-events:none;z-index:8;opacity:0}
+  #whoosh.go-l{animation:whooshL .42s ease-out}
+  #whoosh.go-r{animation:whooshR .42s ease-out}
+  #whoosh.go-c{animation:whooshC .38s ease-out}
+  #whoosh::before{content:'';position:absolute;inset:0}
+  #whoosh.go-l::before{background:linear-gradient(90deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 22%,transparent 40%)}
+  #whoosh.go-r::before{background:linear-gradient(270deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 22%,transparent 40%)}
+  #whoosh.go-c::before{background:linear-gradient(0deg,rgba(255,255,255,.6),rgba(255,255,255,.12) 26%,transparent 46%)}
+  @keyframes whooshL{0%{opacity:0;transform:translateX(30px)}22%{opacity:1}100%{opacity:0;transform:translateX(-40px)}}
+  @keyframes whooshR{0%{opacity:0;transform:translateX(-30px)}22%{opacity:1}100%{opacity:0;transform:translateX(40px)}}
+  @keyframes whooshC{0%{opacity:0;transform:translateY(26px)}25%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
+
+  /* ── Kinetic score floaters ("+250", "ΠΑΡΑ ΤΡΙΧΑ") ─── */
+  #floaters{position:absolute;top:0;left:0;right:0;height:100%;pointer-events:none;z-index:13}
+  #floaters .fl{position:absolute;top:44%;transform:translate(-50%,0);
+    font-family:var(--fDisp);font-weight:900;font-size:clamp(19px,3.4vw,30px);letter-spacing:2px;
+    color:var(--goldDk);white-space:nowrap;
+    text-shadow:0 2px 0 rgba(255,255,255,.85),0 4px 14px rgba(40,30,15,.25);
+    animation:flUp 1.15s cubic-bezier(.22,.9,.36,1) forwards}
+  @keyframes flUp{0%{opacity:0;transform:translate(-50%,26px) scale(.55)}
+    16%{opacity:1;transform:translate(-50%,0) scale(1.14)}
+    34%{transform:translate(-50%,-10px) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-86px) scale(.92)}}
+
+  /* score pop when a question lands */
+  #hud-score.bump{animation:scoreBump .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes scoreBump{40%{transform:scale(1.22);color:var(--goldDk)}}
+
+  @media (prefers-reduced-motion: reduce){
+    #speedfx{display:none}
+    #danger.d2,#chase.peril{animation:none}
+    #floaters .fl{animation-duration:.7s}
+  }
+
   /* speed lines — radial motion streaks that bloom in at high velocity */
   #speedfx{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;
     transition:opacity .25s ease;mix-blend-mode:screen;
@@ -370,7 +405,9 @@
   <!-- FX layers -->
   <div id="flash"></div>
   <div id="toast"></div>
+  <div id="floaters"></div>
   <div id="danger"></div>
+  <div id="whoosh"></div>
   <div id="speedfx"></div>
 
   <!-- Mobile controls -->

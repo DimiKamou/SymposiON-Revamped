@@ -219,9 +219,119 @@ export function obCart() {
 
 function cap2(r, len) { return new THREE.CapsuleGeometry(r, len, 4, 8); }
 
+/* low merchant table piled with fruit → VAULT over (jump) */
+export function obVaultTable() {
+  const g = new THREE.Group();
+  const wood = toon(PAL.trunk);
+  const top = mesh(box(2.1, 0.14, 0.95), wood, 0, 0.78, 0);
+  const cloth = mesh(box(2.14, 0.1, 1.0), toon(PAL.terra), 0, 0.7, 0);
+  const legFL = mesh(box(0.12, 0.72, 0.12), wood, -0.9, 0.36, 0.35);
+  const legFR = mesh(box(0.12, 0.72, 0.12), wood, 0.9, 0.36, 0.35);
+  const legBL = mesh(box(0.12, 0.72, 0.12), wood, -0.9, 0.36, -0.35);
+  const legBR = mesh(box(0.12, 0.72, 0.12), wood, 0.9, 0.36, -0.35);
+  g.add(top, cloth, legFL, legFR, legBL, legBR);
+  // fruit piles (figs / pomegranates / quinces)
+  const fruits = [0xD9573D, 0xE8B23C, 0x8AA94F];
+  for (let i = 0; i < 8; i++) {
+    const f = mesh(new THREE.SphereGeometry(0.11 + Math.random() * 0.05, 8, 6),
+      toon(choice(fruits)), rand(-0.85, 0.85), 0.93, rand(-0.3, 0.3));
+    g.add(f);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData = { action: ACT.JUMP, clearH: 1.0 };
+  return g;
+}
+
+/* stoa scaffold beam hung with pennants → SLIDE / roll under */
+export function obBeam() {
+  const g = new THREE.Group();
+  const wood = toon(PAL.trunk);
+  const pL = mesh(box(0.22, 1.95, 0.22), wood, -1.2, 0.98, 0);
+  const pR = mesh(box(0.22, 1.95, 0.22), wood, 1.2, 0.98, 0);
+  const beam = mesh(box(3.0, 0.3, 0.5), toon(PAL.roofTileDk), 0, 2.02, 0);
+  const braceL = mesh(box(0.1, 0.66, 0.1), wood, -0.98, 1.62, 0); braceL.rotation.z = 0.7;
+  const braceR = mesh(box(0.1, 0.66, 0.1), wood, 0.98, 1.62, 0); braceR.rotation.z = -0.7;
+  g.add(pL, pR, beam, braceL, braceR);
+  // hanging cloth pennants (blue / terracotta / cream)
+  const cols = [PAL.sash, PAL.terra, PAL.chiton];
+  for (let i = 0; i < 4; i++) {
+    const p = mesh(box(0.34, 0.42, 0.05), toon(cols[i % 3]), -0.85 + i * 0.56, 1.66, 0.08);
+    p.rotation.x = rand(-0.12, 0.12);
+    g.add(p);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData = { action: ACT.SLIDE, gapH: 1.45 };
+  return g;
+}
+
+/* runaway merchant cart — rolls TOWARD you faster than the road → DODGE */
+export function obRunawayCart() {
+  const g = new THREE.Group();
+  const wood = toon(PAL.trunk);
+  const bed = mesh(box(1.5, 0.42, 1.5), wood, 0, 0.85, 0);
+  const front = mesh(box(1.5, 0.5, 0.12), wood, 0, 1.25, 0.75);
+  const sideL = mesh(box(0.1, 0.4, 1.5), wood, -0.72, 1.2, 0);
+  const sideR = mesh(box(0.1, 0.4, 1.5), wood, 0.72, 1.2, 0);
+  g.add(bed, front, sideL, sideR);
+  // big side wheels in spin-wrappers (world.js spins wrapper.rotation.x)
+  const wheels = [];
+  for (const side of [-1, 1]) {
+    const wrap = new THREE.Group();
+    wrap.position.set(side * 0.85, 0.52, 0);
+    const tyre = mesh(new THREE.TorusGeometry(0.5, 0.11, 6, 16), toon(PAL.bronzeDk), 0, 0, 0);
+    tyre.rotation.y = Math.PI / 2;
+    for (let s = 0; s < 4; s++) {
+      const spoke = mesh(box(0.05, 0.9, 0.05), wood, 0, 0, 0);
+      spoke.rotation.x = (s / 4) * Math.PI;
+      wrap.add(spoke);
+    }
+    wrap.add(tyre);
+    g.add(wrap);
+    wheels.push(wrap);
+  }
+  // toppling amphorae load
+  for (let i = 0; i < 3; i++) {
+    const pot = mesh(new THREE.SphereGeometry(0.26, 8, 6), toon(i % 2 ? PAL.roofTile : PAL.roofTileDk),
+      -0.4 + i * 0.4, 1.32, rand(-0.2, 0.2));
+    pot.scale.set(1, 1.35, 1);
+    pot.rotation.z = rand(-0.25, 0.25);
+    g.add(pot);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData = { action: ACT.DODGE, clearH: 99, moving: true, zSpeed: 7, wheels };
+  return g;
+}
+
+/* striped shop awning slung low across the lane → SLIDE under */
+export function obAwning() {
+  const g = new THREE.Group();
+  const wood = toon(PAL.trunk);
+  const pL = mesh(box(0.18, 2.2, 0.18), wood, -1.15, 1.1, 0.32);
+  const pR = mesh(box(0.18, 2.2, 0.18), wood, 1.15, 1.1, 0.32);
+  const bar = mesh(box(2.6, 0.12, 0.12), wood, 0, 2.14, 0.32);
+  g.add(pL, pR, bar);
+  // sloped striped canvas (terracotta / cream, black-figure market colours)
+  const stripeA = toon(PAL.terra), stripeB = toon(PAL.chiton);
+  for (let i = 0; i < 6; i++) {
+    const s = mesh(box(0.42, 0.05, 1.45), i % 2 ? stripeB : stripeA, -1.05 + i * 0.42, 2.02, -0.22);
+    s.rotation.x = -0.4;
+    g.add(s);
+  }
+  // scalloped hem swinging at the low edge
+  for (let i = 0; i < 6; i++) {
+    const h = mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 8), i % 2 ? stripeA : stripeB,
+      -1.05 + i * 0.42, 1.66, 0.42);
+    h.rotation.x = Math.PI / 2;
+    g.add(h);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  g.userData = { action: ACT.SLIDE, gapH: 1.4 };
+  return g;
+}
+
 /* registry → world.js picks by action need */
 export const OBSTACLES = {
-  jump:  [obFallenColumn, obAmphorae, obPit],
-  slide: [obArch],
-  dodge: [obStall, obStatue, obCart],
+  jump:  [obFallenColumn, obAmphorae, obPit, obVaultTable],
+  slide: [obArch, obBeam, obAwning],
+  dodge: [obStall, obStatue, obCart, obRunawayCart],
 };

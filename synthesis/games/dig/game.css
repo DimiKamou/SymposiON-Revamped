@@ -1,250 +1,704 @@
 /* ============================================================
-   Archaeological Dig (Ανασκαφή) — Discovery Grid Game
-   Earthy palette: terracotta · clay · mud · olive · dark earth
-   NO beige. Typography: Raleway + Cormorant Garamond
+   ΑΝΑΣΚΑΦΗ · Archaeological Dig — presentation layer
+   ------------------------------------------------------------
+   A lantern-lit excavation trench. Layered earth strata, a
+   surveyor's coordinate frame around the pit, black-figure
+   meander motifs, and a museum-card artifact reveal.
+
+   Palette: bronze · terracotta · Attic-clay · olive · deep loam.
+   Type:   Cormorant Garamond (display) + Raleway (labels), with
+           serif / sans-serif fallbacks that match the shell.
+   The trench palette is FIXED (not theme-derived): a lantern-lit
+   excavation must stay dark and legible under every site theme,
+   light ones included. Only fonts fall back to the shell tokens.
+   Gameplay, DOM ids and class hooks are UNCHANGED — this file
+   only paints what game.js builds.
    ============================================================ */
 
 #dig-wrap {
-  /* Chrome derives from the live front-page theme (--sym-*) so the game
-     background + surfaces + gold accent follow the chosen theme. Gameplay
-     colours (dirt/clay/olive/scan/artifact) stay fixed below for legibility. */
-  --dg-bg:       var(--sym-bg, #110C07);
-  --dg-panel:    var(--sym-bg-card, #1A1109);
-  --dg-raised:   color-mix(in srgb, var(--sym-bg-card, #231710) 82%, var(--sym-fg, #fff) 7%);
-  --dg-bdr:      color-mix(in srgb, var(--sym-gold, #8c5f28) 22%, transparent);
+  --dg-bg:       #150E07;
+  --dg-bg-deep:  #0C0703;
+  --dg-panel:    #1E140A;
+  --dg-raised:   #2A1C10;
+  --dg-bdr:      rgba(200, 154, 70, .26);
+  --dg-bdr-soft: rgba(200, 154, 70, .14);
+
   --dg-clay:     #8B4A2A;
-  --dg-terra:    #A85A30;
-  --dg-ter-lt:   #C87040;
+  --dg-terra:    #B15B31;
+  --dg-ter-lt:   #D07A44;
   --dg-mud:      #4A3018;
   --dg-olive:    #4A5C25;
   --dg-oli-lt:   #6A7E38;
-  --dg-gold:     var(--sym-gold, #A87820);
-  --dg-gol-lt:   color-mix(in srgb, var(--sym-gold, #C8962A) 78%, #fff 22%);
-  --dg-text:     var(--sym-fg, #DFC8A0);
-  --dg-muted:    color-mix(in srgb, var(--sym-fg, #DFC8A0) 42%, transparent);
-  --dg-scan-row: rgba(100,140,60,0.18);
-  --dg-scan-col: rgba(180,110,50,0.18);
+  --dg-gold:     #B98A2E;
+  --dg-gol-lt:   #E9CB80;
+  --dg-bronze:   #C89A46;
+  --dg-text:     #EEDCB6;
+  --dg-muted:    rgba(238, 220, 182, .58);
+  --dg-faint:    rgba(238, 220, 182, .32);
+
+  --dg-serif: 'Cormorant Garamond', var(--sym-font-serif, 'Alegreya'), Georgia, serif;
+  --dg-sans:  'Raleway', var(--sym-font-sans, 'Montserrat'), system-ui, sans-serif;
+
+  --dg-ease:  cubic-bezier(.2, .9, .25, 1);
+  --dg-ease-back: cubic-bezier(.34, 1.56, .5, 1);
 
   position: relative; width: 100%; height: 100%;
-  background: var(--dg-bg);
   display: flex; flex-direction: column;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--dg-sans);
   color: var(--dg-text);
   overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% -8%, color-mix(in srgb, var(--dg-terra) 12%, transparent) 0%, transparent 46%),
+    radial-gradient(90% 70% at 50% 118%, #000 0%, transparent 55%),
+    linear-gradient(180deg, var(--dg-bg) 0%, var(--dg-bg-deep) 100%);
 }
 
-/* ── Canvas Overlay ── */
-.dg-canvas-ovl {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 90;
+/* ── Earth strata: the whole trench sits behind everything ── */
+.dg-strata {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      #3A2612 0%, #34220F 14%, #2E1E0D 30%, #29190B 46%,
+      #241509 62%, #1E1207 78%, #180E05 100%);
+  opacity: .55;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 100%);
 }
-
-/* ── Screens ── */
-.dg-screen { display: none; position: absolute; inset: 0; flex-direction: column; align-items: center; overflow: hidden; }
-.dg-screen.active { display: flex; }
-
-/* ──────── MENU ──────── */
-.dg-menu-wrap {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 100%; gap: 1.1rem; padding: 2rem; text-align: center;
-}
-.dg-logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(48px, 9vw, 82px); font-weight: 300; line-height: 1; letter-spacing: -1px;
-}
-.dg-logo em { color: var(--dg-terra); font-style: normal; }
-.dg-logo-sub { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--dg-muted); margin-top: -0.5rem; }
-.dg-rule {
-  max-width: 500px; width: 100%; border: 1px solid var(--dg-bdr);
-  background: color-mix(in srgb, var(--sym-bg-card, #140d07) 75%, transparent); padding: 1.1rem 1.4rem;
-  font-size: 12.5px; line-height: 1.75; color: var(--dg-muted); text-align: left;
-}
-.dg-rule strong { color: var(--dg-text); }
-.dg-btn {
-  padding: 11px 44px; border: none; cursor: pointer;
-  background: var(--dg-terra); color: var(--dg-text);
-  font-family: 'Raleway', sans-serif; font-size: 10px; font-weight: 700;
-  letter-spacing: 2.5px; text-transform: uppercase;
-  transition: background .2s, transform .15s;
-}
-.dg-btn:not(:disabled):hover { background: var(--dg-ter-lt); transform: translateY(-2px); }
-.dg-btn:disabled { opacity: .35; cursor: default; }
-.dg-btn.sec { background: transparent; border: 1px solid var(--dg-bdr); color: var(--dg-muted); }
-.dg-btn.sec:hover { border-color: var(--dg-gold); color: var(--dg-text); transform: none; }
-
-/* ──────── MAIN GAME SCREEN ──────── */
-.dg-game-inner {
-  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; overflow: hidden;
-}
-
-/* HUD */
-.dg-hud {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 1.2rem; background: var(--dg-panel); border-bottom: 1px solid var(--dg-bdr); flex-shrink: 0;
-}
-.dg-hud-item { display: flex; flex-direction: column; gap: 1px; }
-.dg-hud-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dg-muted); }
-.dg-hud-val { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; line-height: 1; color: var(--dg-gol-lt); }
-.dg-status-msg { font-size: 11px; letter-spacing: .7px; color: var(--dg-gold); text-align: center; min-height: 20px; padding: 5px 1rem; flex-shrink: 0; }
-
-/* ──────── SCAN CONTROLS ──────── */
-.dg-scan-panel {
-  display: flex; align-items: center; gap: 8px; margin-bottom: .5rem; flex-shrink: 0; flex-wrap: wrap; justify-content: center;
-}
-.dg-scan-lbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dg-muted); }
-.dg-scan-btn {
-  padding: 5px 10px; border: 1px solid var(--dg-bdr); background: var(--dg-raised);
-  color: var(--dg-text); font-family: 'Raleway', sans-serif; font-size: 9px;
-  letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all .18s;
-}
-.dg-scan-btn:hover { border-color: var(--dg-gold); background: color-mix(in srgb, var(--sym-gold, #A87820) 12%, transparent); }
-.dg-scan-btn.active-scan { border-color: var(--dg-gold); background: color-mix(in srgb, var(--sym-gold, #A87820) 20%, transparent); color: var(--dg-gol-lt); }
-.dg-scan-divider { width: 1px; height: 18px; background: var(--dg-bdr); }
-
-/* ──────── GRID ──────── */
-.dg-grid-outer { flex: 1; display: flex; align-items: center; justify-content: center; padding: .4rem; }
-.dg-grid {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
-  width: min(400px, 92vw);
-}
-.dg-cell {
-  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--dg-bdr); background: var(--dg-mud);
-  cursor: pointer; position: relative; user-select: none; overflow: hidden;
-  transition: background .2s, border-color .2s;
-}
-.dg-cell:hover { border-color: color-mix(in srgb, var(--sym-gold, #C8962A) 50%, transparent); }
-
-/* Covered: bumpy dirt texture via CSS */
-.dg-cell.covered {
-  background: var(--dg-mud);
-  cursor: pointer;
-}
-.dg-cell.covered::before {
+.dg-strata::before {
+  /* wavy sediment seams — the layers of an archaeological section */
   content: ''; position: absolute; inset: 0;
   background:
-    radial-gradient(circle at 25% 35%, rgba(100,68,32,.6) 30%, transparent 31%),
-    radial-gradient(circle at 70% 65%, rgba(80,52,24,.5) 25%, transparent 26%),
-    radial-gradient(circle at 50% 20%, rgba(110,78,40,.4) 20%, transparent 21%);
+    repeating-linear-gradient(179deg,
+      transparent 0 46px,
+      color-mix(in srgb, var(--dg-bronze) 8%, transparent) 46px 47px,
+      transparent 47px 50px);
+  opacity: .5;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.02' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 -3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.02' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 -3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.dg-cell.scan-row { background: rgba(100,140,60,.15) !important; border-color: rgba(106,126,56,.4) !important; }
-.dg-cell.scan-col { background: rgba(168,90,48,.15)  !important; border-color: rgba(168,90,48,.4)  !important; }
+.dg-strata::after {
+  /* fine grain speckle so the soil never looks flat */
+  content: ''; position: absolute; inset: 0; opacity: .5; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+}
 
-/* Revealed empty — raw earth */
+/* ── Lantern glow + vignette wrap the whole scene ── */
+.dg-lantern {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(58% 52% at 50% 30%,
+    color-mix(in srgb, #FFC873 22%, transparent) 0%,
+    color-mix(in srgb, #E79A3C 8%, transparent) 34%,
+    transparent 68%);
+  mix-blend-mode: screen;
+  animation: dg-flicker 5.5s ease-in-out infinite;
+}
+.dg-vignette {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+  background: radial-gradient(130% 100% at 50% 42%, transparent 52%, rgba(0,0,0,.5) 100%);
+}
+@keyframes dg-flicker {
+  0%,100% { opacity: .9; transform: scale(1); }
+  40%     { opacity: 1;  transform: scale(1.015); }
+  62%     { opacity: .82; }
+  74%     { opacity: .97; }
+}
+
+/* Canvas particle layer above the scene, below modals */
+.dg-canvas-ovl { position: absolute; inset: 0; pointer-events: none; z-index: 45; }
+
+/* ── Screens ── */
+.dg-screen {
+  display: none; position: absolute; inset: 0; z-index: 5;
+  flex-direction: column; align-items: center; overflow: hidden;
+}
+.dg-screen.active { display: flex; }
+
+/* Staggered entrance for hero rows (--d = step index) */
+.dg-up { opacity: 0; transform: translateY(16px); }
+.dg-screen.active .dg-up {
+  animation: dg-rise .62s var(--dg-ease) forwards;
+  animation-delay: calc(var(--d, 0) * .085s + .04s);
+}
+@keyframes dg-rise { to { opacity: 1; transform: none; } }
+
+/* Reusable black-figure meander (Greek key) rule */
+.dg-meander {
+  height: 12px; width: min(240px, 70%);
+  background-repeat: repeat-x;
+  background-size: 24px 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M1 11h10V3h6v5h-4V5h-2v6h8V1H3v6h4V4h2v5H1z' fill='none' stroke='%23C89A46' stroke-width='1.1' opacity='0.7'/%3E%3C/svg%3E");
+  opacity: .9;
+}
+
+/* ══════════════════ MENU ══════════════════ */
+.dg-scene {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  width: 100%; height: 46%; pointer-events: none; opacity: .9;
+}
+.dg-menu-wrap {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; gap: 1.05rem;
+  padding: 2rem 1.5rem; text-align: center;
+}
+.dg-kicker {
+  font-size: 9.5px; letter-spacing: 5px; text-transform: uppercase;
+  color: var(--dg-bronze);
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.dg-kicker::before, .dg-kicker::after {
+  content: ''; width: 26px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--dg-bronze));
+}
+.dg-kicker::after { transform: scaleX(-1); }
+
+.dg-logo {
+  font-family: var(--dg-serif);
+  font-size: clamp(52px, 10vw, 96px); font-weight: 300;
+  line-height: .92; letter-spacing: -1.5px;
+  color: var(--dg-text);
+  text-shadow: 0 2px 30px color-mix(in srgb, var(--dg-terra) 40%, transparent);
+}
+.dg-logo em {
+  color: var(--dg-terra); font-style: normal;
+  text-shadow: 0 0 24px color-mix(in srgb, var(--dg-terra) 70%, transparent);
+}
+.dg-logo-sub {
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--dg-muted); margin-top: -0.35rem;
+}
+
+.dg-rule {
+  position: relative;
+  max-width: 520px; width: 100%;
+  border: 1px solid var(--dg-bdr);
+  background: color-mix(in srgb, var(--dg-panel) 84%, transparent);
+  backdrop-filter: blur(2px);
+  padding: 1.5rem 1.5rem 1.35rem;
+  font-family: var(--dg-serif);
+  font-size: 15.5px; line-height: 1.7; color: var(--dg-muted); text-align: left;
+  box-shadow: 0 18px 50px -20px #000, inset 0 1px 0 color-mix(in srgb, var(--dg-bronze) 18%, transparent);
+}
+/* aged parchment corner tabs */
+.dg-rule::before, .dg-rule::after {
+  content: ''; position: absolute; width: 12px; height: 12px;
+  border: 1px solid var(--dg-bronze); opacity: .55;
+}
+.dg-rule::before { top: 7px; left: 7px; border-right: none; border-bottom: none; }
+.dg-rule::after  { bottom: 7px; right: 7px; border-left: none; border-top: none; }
+.dg-rule strong { color: var(--dg-text); font-weight: 600; }
+.dg-rule-hd {
+  font-family: var(--dg-sans);
+  font-size: 8.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--dg-bronze); margin-bottom: .7rem;
+  padding-bottom: .55rem; border-bottom: 1px solid var(--dg-bdr-soft);
+}
+
+.dg-relics {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  max-width: 520px;
+}
+.dg-relic {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 9px 14px; min-width: 84px;
+  border: 1px solid var(--dg-bdr-soft);
+  background: color-mix(in srgb, var(--dg-mud) 30%, transparent);
+  transition: transform .25s var(--dg-ease-back), border-color .25s, background .25s;
+}
+.dg-relic:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--dg-gold) 50%, transparent);
+  background: color-mix(in srgb, var(--dg-gold) 9%, transparent);
+}
+.dg-relic-ico { font-size: 22px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.dg-relic-nm  { font-size: 10px; letter-spacing: .5px; color: var(--dg-text); }
+.dg-relic-era { font-size: 8px; letter-spacing: 1.5px; color: var(--dg-faint); text-transform: uppercase; }
+
+/* ── Primary button: a bronze field-tag ── */
+.dg-btn {
+  position: relative; overflow: hidden;
+  padding: 14px 46px; border: none; cursor: pointer;
+  background: linear-gradient(180deg, var(--dg-ter-lt), var(--dg-terra));
+  color: #1A0E06;
+  font-family: var(--dg-sans); font-size: 10.5px; font-weight: 800;
+  letter-spacing: 3px; text-transform: uppercase;
+  box-shadow: 0 10px 26px -10px color-mix(in srgb, var(--dg-terra) 80%, transparent),
+              inset 0 1px 0 rgba(255,255,255,.28);
+  transition: transform .16s var(--dg-ease-back), box-shadow .2s, filter .2s;
+}
+.dg-btn > span { position: relative; z-index: 2; }
+/* sweeping "wipe-away shine" */
+.dg-btn::after {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,244,214,.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.dg-btn:not(:disabled):hover {
+  transform: translateY(-3px);
+  filter: brightness(1.06);
+  box-shadow: 0 16px 34px -10px color-mix(in srgb, var(--dg-terra) 90%, transparent),
+              inset 0 1px 0 rgba(255,255,255,.32);
+}
+.dg-btn:not(:disabled):hover::after { animation: dg-sheen .7s var(--dg-ease); }
+.dg-btn:not(:disabled):active { transform: translateY(-1px) scale(.98); }
+@keyframes dg-sheen { to { transform: translateX(120%); } }
+.dg-btn:disabled { opacity: .35; cursor: default; }
+.dg-btn.sec {
+  background: transparent; color: var(--dg-muted);
+  border: 1px solid var(--dg-bdr); box-shadow: none;
+}
+.dg-btn.sec:hover {
+  border-color: var(--dg-gold); color: var(--dg-text);
+  background: color-mix(in srgb, var(--dg-gold) 10%, transparent);
+  transform: translateY(-2px); filter: none;
+}
+.dg-btn.sec::after { display: none; }
+
+/* ══════════════════ GAME SCREEN ══════════════════ */
+.dg-game-inner {
+  width: 100%; height: 100%; display: flex; flex-direction: column;
+  align-items: center; overflow: hidden;
+}
+
+/* HUD — a field-instrument bar */
+.dg-hud {
+  width: 100%; display: flex; align-items: stretch; justify-content: space-between;
+  gap: 1px; padding: 0; flex-shrink: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--dg-panel) 96%, #000), var(--dg-panel));
+  border-bottom: 1px solid var(--dg-bdr);
+  box-shadow: 0 6px 18px -12px #000;
+}
+.dg-hud-item {
+  flex: 1; display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 1.2rem; justify-content: center;
+}
+.dg-hud-item.mid { align-items: center; border-left: 1px solid var(--dg-bdr-soft); border-right: 1px solid var(--dg-bdr-soft); }
+.dg-hud-item.end { align-items: flex-end; }
+.dg-hud-lbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dg-faint); }
+.dg-hud-val {
+  font-family: var(--dg-serif); font-size: 26px; font-weight: 400; line-height: 1;
+  color: var(--dg-gol-lt); font-variant-numeric: tabular-nums;
+}
+.dg-hud-val.bump { animation: dg-bump .4s var(--dg-ease-back); }
+@keyframes dg-bump { 0%{transform:scale(1)} 45%{transform:scale(1.28); color:#FFE6A6} 100%{transform:scale(1)} }
+
+.dg-hud-found { display: flex; align-items: center; gap: 9px; }
+.dg-found-row { display: inline-flex; gap: 4px; }
+.dg-found-slot {
+  font-size: 15px; line-height: 1;
+  filter: grayscale(1) brightness(.5) opacity(.55);
+  transition: filter .4s var(--dg-ease), transform .4s var(--dg-ease-back);
+}
+.dg-found-slot.lit {
+  filter: none;
+  transform: scale(1.1);
+  animation: dg-ignite .6s var(--dg-ease-back);
+}
+@keyframes dg-ignite {
+  0% { transform: scale(2.1); filter: brightness(2.4) drop-shadow(0 0 14px #FFCE6B); }
+  100% { transform: scale(1.1); filter: none; }
+}
+
+.dg-status-msg {
+  font-size: 11.5px; letter-spacing: .6px; color: var(--dg-gold);
+  text-align: center; min-height: 22px; padding: 7px 1rem; flex-shrink: 0;
+}
+.dg-status-msg.flash { animation: dg-status-in .5s var(--dg-ease); }
+@keyframes dg-status-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ── The excavation site: pit framed by a surveyor's coordinate rail ── */
+.dg-grid-outer { flex: 1; display: flex; align-items: center; justify-content: center; padding: .6rem; width: 100%; }
+.dg-site {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px min(400px, 78vw);
+  grid-template-rows: 26px min(400px, 78vw);
+  grid-template-areas: "corner cols" "rows pit";
+  gap: 6px;
+}
+.dg-site-corner {
+  grid-area: corner; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--dg-bronze); opacity: .8;
+}
+.dg-rail { display: grid; gap: 2px; }
+.dg-rail-cols { grid-area: cols; grid-template-columns: repeat(8, 1fr); }
+.dg-rail-rows { grid-area: rows; grid-template-rows: repeat(8, 1fr); }
+.dg-scan-btn {
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--dg-bdr-soft);
+  background: color-mix(in srgb, var(--dg-raised) 90%, transparent);
+  color: var(--dg-bronze);
+  font-family: var(--dg-serif); font-size: 14px; font-weight: 600; line-height: 1;
+  cursor: pointer; transition: all .18s var(--dg-ease);
+}
+.dg-scan-btn:hover {
+  border-color: var(--dg-gold);
+  background: color-mix(in srgb, var(--dg-gold) 20%, transparent);
+  color: var(--dg-gol-lt);
+  box-shadow: 0 0 14px -3px color-mix(in srgb, var(--dg-gold) 60%, transparent);
+}
+.dg-scan-btn:active { transform: scale(.9); }
+
+/* Pit: a recessed, inset trench holding the grid */
+.dg-pit {
+  grid-area: pit; position: relative; padding: 6px;
+  background:
+    radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--dg-mud) 50%, transparent), transparent 70%),
+    var(--dg-bg-deep);
+  border: 1px solid var(--dg-bdr);
+  box-shadow: inset 0 0 40px -6px #000, inset 0 0 0 1px rgba(0,0,0,.5),
+              0 24px 60px -30px #000;
+}
+.dg-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: 100%; height: 100%; }
+
+.dg-cell {
+  aspect-ratio: 1; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0,0,0,.35);
+  background: var(--soil, var(--dg-mud));
+  cursor: pointer; user-select: none;
+  transition: transform .18s var(--dg-ease), filter .2s, box-shadow .2s;
+}
+.dg-cell.covered { cursor: pointer; }
+/* clods of packed earth — deterministic jitter comes from --jx/--jy/--rt */
+.dg-cell.covered::before {
+  content: ''; position: absolute; inset: -20%;
+  background:
+    radial-gradient(circle at calc(30% + var(--jx,0) * 1%) calc(34% + var(--jy,0) * 1%),
+      color-mix(in srgb, #fff 10%, transparent) 0 18%, transparent 30%),
+    radial-gradient(circle at 72% 66%, rgba(0,0,0,.4) 0 20%, transparent 34%),
+    radial-gradient(circle at 20% 78%, rgba(0,0,0,.32) 0 16%, transparent 30%);
+  transform: rotate(var(--rt, 0deg));
+}
+.dg-cell.covered::after {
+  content: ''; position: absolute; inset: 0;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent),
+              inset 0 -3px 6px rgba(0,0,0,.4);
+}
+.dg-cell.covered:hover {
+  filter: brightness(1.16) saturate(1.1);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-gold) 55%, transparent);
+  z-index: 3;
+}
+.dg-cell.covered:active { transform: scale(.94); }
+
+/* Hover peek — the row/col a scan button would sweep */
+.dg-cell.scan-peek {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-gold) 45%, transparent);
+  filter: brightness(1.1);
+}
+
+/* Revealed empty — raw dug earth, lower & darker */
 .dg-cell.empty {
-  background: #2E2010; cursor: default;
+  background: #251809; cursor: default;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.4);
 }
 .dg-cell.empty::after {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at 60% 40%, rgba(255,200,120,.03) 40%, transparent 70%);
+  background: radial-gradient(circle at 58% 40%, rgba(255,200,120,.05) 30%, transparent 66%);
 }
 
-/* Artifact tiles (colour set by --art-col custom prop) */
+/* Artifact — buried piece, dirt-caked (colour set by --art-col) */
 .dg-cell.artifact-dirty {
-  background: var(--art-col, var(--dg-clay)); cursor: pointer;
-  border-color: color-mix(in srgb, var(--sym-gold, #C8962A) 35%, transparent);
+  background:
+    linear-gradient(135deg, rgba(0,0,0,.5) 0%, transparent 58%),
+    color-mix(in srgb, var(--art-col, var(--dg-clay)) 70%, #2A1B0C);
+  cursor: pointer;
+  border-color: color-mix(in srgb, var(--dg-gold) 32%, transparent);
+  animation: dg-dirty-pulse 2.2s ease-in-out infinite;
 }
 .dg-cell.artifact-dirty::before {
+  /* a glint of buried metal peeking through the crust */
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,.45) 0%, transparent 60%);
+  background: radial-gradient(circle at 60% 42%, color-mix(in srgb, var(--art-lt, var(--dg-gol-lt)) 55%, transparent) 0%, transparent 42%);
+  opacity: .55; mix-blend-mode: screen;
 }
+@keyframes dg-dirty-pulse {
+  0%,100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-gold) 18%, transparent); }
+  50%     { box-shadow: inset 0 0 12px -2px color-mix(in srgb, var(--art-lt, var(--dg-gol-lt)) 50%, transparent),
+                        inset 0 0 0 1px color-mix(in srgb, var(--dg-gold) 40%, transparent); }
+}
+.dg-cell.artifact-dirty:hover { filter: brightness(1.14); transform: scale(1.02); z-index: 3; }
+
+/* Artifact — cleaned & preserved, glowing gold-rimmed */
 .dg-cell.artifact-clean {
-  background: var(--art-col, var(--dg-clay));
+  background:
+    radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--art-lt, var(--dg-gol-lt)) 32%, transparent) 0%, transparent 60%),
+    color-mix(in srgb, var(--art-col, var(--dg-clay)) 82%, #000);
   border-color: var(--dg-gol-lt);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sym-gold, #C8A028) 30%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-gol-lt) 55%, transparent),
+              0 0 16px -4px color-mix(in srgb, var(--dg-gold) 60%, transparent);
   cursor: default;
 }
 .dg-cell.artifact-clean::after {
-  content: '✓'; position: absolute; bottom: 2px; right: 3px;
-  font-size: 8px; color: var(--dg-gol-lt); opacity: .7;
+  content: '✓'; position: absolute; bottom: 1px; right: 3px;
+  font-size: 9px; color: var(--dg-gol-lt); opacity: .8;
+  text-shadow: 0 0 4px rgba(0,0,0,.8);
+}
+.dg-cell-icon {
+  font-size: clamp(14px, 3.2vw, 22px); line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.6));
+  animation: dg-icon-pop .5s var(--dg-ease-back);
+}
+@keyframes dg-icon-pop { 0%{transform:scale(0) rotate(-20deg)} 100%{transform:scale(1) rotate(0)} }
+
+/* one-shot flashes on freshly changed cells */
+@keyframes dg-reveal { from { transform: scale(.78) rotate(-5deg); opacity: .2; } to { transform: none; opacity: 1; } }
+.dg-cell.just-revealed { animation: dg-reveal .3s var(--dg-ease); }
+@keyframes dg-found { 0%{transform:scale(.7)} 50%{transform:scale(1.14)} 100%{transform:scale(1)}
+                      0%,100%{box-shadow:none} 50%{box-shadow:0 0 22px -2px color-mix(in srgb, var(--art-lt,#FFCE6B) 80%, transparent)} }
+.dg-cell.just-found { animation: dg-found .5s var(--dg-ease-back); z-index: 4; }
+@keyframes dg-cleaned {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.16); filter: brightness(1.8); }
+  100% { transform: scale(1); filter: none; }
+}
+/* wipe-away shine sweeping across the newly cleaned artifact */
+.dg-cell.just-cleaned { animation: dg-cleaned .55s var(--dg-ease); z-index: 4; }
+.dg-cell.just-cleaned::before {
+  content: ''; position: absolute; inset: 0; z-index: 2;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,246,214,.85) 50%, transparent 65%);
+  transform: translateX(-130%);
+  animation: dg-wipe .6s var(--dg-ease) .05s;
+}
+@keyframes dg-wipe { to { transform: translateX(130%); } }
+
+/* Radar sweep states (added/removed by JS with a stagger) */
+.dg-cell.scan-ping { animation: dg-ping .5s var(--dg-ease); }
+@keyframes dg-ping { 0%{box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--dg-gold) 70%, transparent)}
+                     100%{box-shadow:inset 0 0 0 0 transparent} }
+.dg-cell.scan-hit {
+  background: color-mix(in srgb, var(--dg-terra) 22%, var(--soil, var(--dg-mud))) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-ter-lt) 60%, transparent) !important;
+}
+.dg-cell.scan-clear {
+  background: color-mix(in srgb, var(--dg-olive) 20%, var(--soil, var(--dg-mud))) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dg-oli-lt) 45%, transparent) !important;
 }
 
-/* Scan target hover state */
-.dg-cell.scan-target { cursor: pointer !important; border-color: color-mix(in srgb, var(--sym-gold, #C8962A) 60%, transparent) !important; }
-.dg-cell.scan-target:hover { background: color-mix(in srgb, var(--sym-gold, #A87820) 20%, transparent) !important; }
+.dg-site-hint {
+  font-size: 10px; letter-spacing: .5px; color: var(--dg-faint);
+  text-align: center; padding: .5rem 1rem .8rem; flex-shrink: 0;
+}
 
-/* ──────── QUIZ MODAL ──────── */
+/* ══════════════════ QUIZ MODAL ══════════════════ */
 .dg-quiz-wrap {
   position: absolute; inset: 0; z-index: 80;
-  background: color-mix(in srgb, var(--sym-bg, #080502) 93%, transparent);
+  background: color-mix(in srgb, var(--dg-bg-deep) 90%, transparent);
+  backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center; padding: 1.5rem;
 }
-.dg-quiz-wrap.active { display: flex; }
+.dg-quiz-wrap.active { display: flex; animation: dg-fade .25s var(--dg-ease); }
+@keyframes dg-fade { from { opacity: 0; } to { opacity: 1; } }
 .dg-quiz-box {
-  max-width: 520px; width: 100%; border: 1px solid var(--dg-bdr);
-  background: var(--dg-raised); padding: 1.75rem;
+  max-width: 540px; width: 100%;
+  border: 1px solid var(--dg-bdr);
+  background: linear-gradient(180deg, var(--dg-raised), var(--dg-panel));
+  padding: 1.9rem;
+  box-shadow: 0 30px 80px -30px #000, inset 0 1px 0 color-mix(in srgb, var(--dg-bronze) 20%, transparent);
+  animation: dg-pop .3s var(--dg-ease-back);
+}
+@keyframes dg-pop { from { transform: scale(.92) translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+.dg-quiz-box.dg-shake { animation: dg-shake .45s ease; }
+@keyframes dg-shake {
+  10%,90% { transform: translateX(-2px); }
+  20%,80% { transform: translateX(4px); }
+  30%,50%,70% { transform: translateX(-7px); }
+  40%,60% { transform: translateX(7px); }
 }
 .dg-quiz-header {
-  display: flex; align-items: center; gap: .75rem;
-  margin-bottom: 1.1rem; padding-bottom: .9rem; border-bottom: 1px solid var(--dg-bdr);
+  display: flex; align-items: center; gap: .8rem;
+  margin-bottom: 1.1rem; padding-bottom: .9rem; border-bottom: 1px solid var(--dg-bdr-soft);
 }
 .dg-quiz-icon {
-  width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
-  font-size: 20px; background: var(--dg-mud); border: 1px solid var(--dg-bdr); flex-shrink: 0;
+  width: 46px; height: 46px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--dg-mud) 90%, var(--dg-gold) 10%), var(--dg-bg-deep));
+  border: 1px solid var(--dg-bdr);
+  box-shadow: inset 0 0 12px rgba(0,0,0,.6);
 }
-.dg-quiz-type { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dg-muted); }
-.dg-quiz-subtitle { font-size: 12px; color: var(--dg-gold); margin-top: 2px; }
-.dg-qlbl { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--dg-gold); margin-bottom: .5rem; }
+.dg-quiz-type { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dg-faint); }
+.dg-quiz-subtitle { font-family: var(--dg-serif); font-size: 17px; color: var(--dg-gol-lt); margin-top: 1px; }
+.dg-qlbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dg-bronze); margin-bottom: .55rem; }
 .dg-qtxt {
-  font-family: 'Cormorant Garamond', serif; font-size: clamp(16px, 3vw, 21px);
-  line-height: 1.45; color: var(--dg-text); margin-bottom: 1rem;
+  font-family: var(--dg-serif); font-size: clamp(18px, 3.2vw, 24px);
+  line-height: 1.42; color: var(--dg-text); margin-bottom: 1.1rem;
 }
-.dg-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.dg-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dg-opt {
-  padding: 14px 10px; border: 1px solid var(--dg-bdr); background: color-mix(in srgb, var(--sym-fg, #fff) 2.5%, transparent);
-  cursor: pointer; font-family: 'Raleway', sans-serif; font-size: 11.5px;
-  color: var(--dg-text); text-align: left; transition: all .18s;
+  display: flex; align-items: center; gap: 9px;
+  padding: 13px 12px; border: 1px solid var(--dg-bdr-soft);
+  background: color-mix(in srgb, var(--dg-text) 3%, transparent);
+  cursor: pointer; font-family: var(--dg-sans); font-size: 12px;
+  color: var(--dg-text); text-align: left; transition: all .16s var(--dg-ease);
+  opacity: 0; transform: translateY(8px);
+  animation: dg-rise .35s var(--dg-ease) forwards;
+  animation-delay: calc(var(--oi, 0) * .05s + .08s);
   -webkit-tap-highlight-color: transparent;
 }
-.dg-opt:not(:disabled):hover { background: color-mix(in srgb, var(--sym-gold, #A87820) 12%, transparent); border-color: color-mix(in srgb, var(--sym-gold, #A87820) 45%, transparent); }
-.dg-opt.correct { background: rgba(74,92,37,.3); border-color: var(--dg-olive); }
-.dg-opt.wrong   { background: rgba(139,74,42,.22); border-color: var(--dg-clay); color: var(--dg-muted); }
+.dg-opt-key {
+  flex-shrink: 0; width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--dg-serif); font-size: 13px; color: var(--dg-bronze);
+  border: 1px solid var(--dg-bdr); transition: all .16s;
+}
+.dg-opt-txt { flex: 1; }
+.dg-opt:not(:disabled):hover {
+  background: color-mix(in srgb, var(--dg-gold) 11%, transparent);
+  border-color: color-mix(in srgb, var(--dg-gold) 45%, transparent);
+  transform: translateY(-1px);
+}
+.dg-opt:not(:disabled):hover .dg-opt-key { border-color: var(--dg-gold); color: var(--dg-gol-lt); }
+.dg-opt.correct {
+  background: color-mix(in srgb, var(--dg-olive) 32%, transparent);
+  border-color: var(--dg-oli-lt); color: var(--dg-text);
+  animation: dg-bump .4s var(--dg-ease-back);
+}
+.dg-opt.correct .dg-opt-key { border-color: var(--dg-oli-lt); color: #D6E9A6; }
+.dg-opt.wrong {
+  background: color-mix(in srgb, var(--dg-clay) 24%, transparent);
+  border-color: var(--dg-clay); color: var(--dg-muted);
+}
 .dg-opt:disabled { cursor: default; }
-.dg-quiz-result { margin-top: .9rem; padding-top: .75rem; border-top: 1px solid var(--dg-bdr); font-size: 12px; color: var(--dg-muted); line-height: 1.55; text-align: center; }
+.dg-quiz-result {
+  margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--dg-bdr-soft);
+  font-size: 12.5px; color: var(--dg-muted); line-height: 1.55; text-align: center;
+  animation: dg-status-in .35s var(--dg-ease);
+}
+.dg-quiz-result.ok strong { color: var(--dg-oli-lt); }
+.dg-quiz-result.bad strong { color: var(--dg-ter-lt); }
 .dg-quiz-result strong { color: var(--dg-text); }
 
-/* ──────── ARTIFACT MODAL ──────── */
+/* ══════════════════ ARTIFACT (MUSEUM CARD) MODAL ══════════════════ */
 .dg-art-modal {
   position: absolute; inset: 0; z-index: 85;
-  background: color-mix(in srgb, var(--sym-bg, #080502) 95%, transparent);
+  background: color-mix(in srgb, var(--dg-bg-deep) 94%, transparent);
+  backdrop-filter: blur(5px);
   display: none; align-items: center; justify-content: center; padding: 1.5rem;
 }
-.dg-art-modal.active { display: flex; }
+.dg-art-modal.active { display: flex; animation: dg-fade .3s var(--dg-ease); }
 .dg-art-box {
-  max-width: 540px; width: 100%; border: 1px solid var(--dg-bdr);
-  background: var(--dg-raised); padding: 2rem; text-align: center;
+  position: relative; overflow: hidden;
+  max-width: 500px; width: 100%;
+  border: 1px solid color-mix(in srgb, var(--dg-gold) 45%, transparent);
+  background: linear-gradient(180deg, var(--dg-raised), var(--dg-panel));
+  padding: 2.2rem 2rem 1.8rem; text-align: center;
+  box-shadow: 0 40px 100px -30px #000,
+              0 0 60px -20px color-mix(in srgb, var(--dg-gold) 50%, transparent),
+              inset 0 1px 0 color-mix(in srgb, var(--dg-bronze) 24%, transparent);
+  animation: dg-card-in .5s var(--dg-ease-back);
 }
-.dg-art-icon { font-size: 52px; margin-bottom: .75rem; }
+@keyframes dg-card-in { from { transform: scale(.85) translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* accession stamp */
+.dg-art-stamp {
+  position: absolute; top: 14px; right: -34px;
+  transform: rotate(38deg);
+  font-size: 7.5px; letter-spacing: 2.5px; font-weight: 700;
+  color: color-mix(in srgb, var(--dg-terra) 90%, #fff);
+  border: 1px solid color-mix(in srgb, var(--dg-terra) 60%, transparent);
+  padding: 3px 40px; opacity: .55;
+}
+/* radiant spotlight behind the relic */
+.dg-art-spot {
+  position: absolute; top: -10%; left: 50%; transform: translateX(-50%);
+  width: 300px; height: 300px; pointer-events: none;
+  background: radial-gradient(circle, color-mix(in srgb, var(--dg-gold) 34%, transparent) 0%, transparent 62%);
+  animation: dg-spot 6s ease-in-out infinite;
+}
+@keyframes dg-spot { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
+.dg-art-stage { position: relative; z-index: 2; margin-bottom: 1rem; }
+.dg-art-icon {
+  font-size: 68px; line-height: 1;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.6)) drop-shadow(0 0 22px color-mix(in srgb, var(--dg-gold) 55%, transparent));
+  animation: dg-relic-float 4.5s ease-in-out infinite;
+}
+@keyframes dg-relic-float { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-8px) rotate(1.5deg); } }
+.dg-art-plinth {
+  width: 120px; height: 14px; margin: 6px auto 0;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--dg-gold) 30%, transparent), transparent 72%);
+}
 .dg-art-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(28px, 5vw, 44px); font-weight: 300; line-height: 1.1;
-  color: var(--dg-gol-lt); margin-bottom: .3rem;
+  position: relative; z-index: 2;
+  font-family: var(--dg-serif); font-size: clamp(30px, 5.5vw, 46px);
+  font-weight: 300; line-height: 1.05; color: var(--dg-gol-lt); margin-bottom: .35rem;
+  text-shadow: 0 0 30px color-mix(in srgb, var(--dg-gold) 40%, transparent);
 }
-.dg-art-era { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--dg-muted); margin-bottom: 1.2rem; }
-.dg-art-divider { height: 1px; background: var(--dg-bdr); margin-bottom: 1.2rem; }
+.dg-art-era {
+  position: relative; z-index: 2;
+  font-size: 8.5px; letter-spacing: 3.5px; text-transform: uppercase;
+  color: var(--dg-bronze); margin-bottom: 1.1rem;
+}
+.dg-art-divider { margin: 0 auto 1.2rem; }
 .dg-art-fact {
-  font-size: 13.5px; line-height: 1.78; color: var(--dg-muted); text-align: left;
-  max-height: 160px; overflow-y: auto; margin-bottom: 1.4rem;
+  position: relative; z-index: 2;
+  font-family: var(--dg-serif);
+  font-size: 15.5px; line-height: 1.72; color: var(--dg-muted); text-align: left;
+  max-height: 168px; overflow-y: auto; margin-bottom: 1.5rem;
+  padding-right: 6px;
 }
-.dg-art-fact strong { color: var(--dg-text); }
+.dg-art-fact::-webkit-scrollbar { width: 5px; }
+.dg-art-fact::-webkit-scrollbar-thumb { background: var(--dg-bdr); border-radius: 3px; }
+.dg-art-fact strong { color: var(--dg-text); font-weight: 600; }
+.dg-art-fact em { color: var(--dg-bronze); }
 
-/* ──────── RESULT SCREEN ──────── */
+/* ══════════════════ RESULT SCREEN ══════════════════ */
 .dg-result-wrap {
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 1.1rem; height: 100%; padding: 2rem; text-align: center;
+  justify-content: center; gap: 1rem; height: 100%; padding: 2rem 1.5rem; text-align: center;
+}
+.dg-res-kicker {
+  font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--dg-bronze);
 }
 .dg-res-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(44px, 9vw, 76px); font-weight: 300; line-height: 1; color: var(--dg-gol-lt);
+  font-family: var(--dg-serif); font-size: clamp(48px, 10vw, 82px);
+  font-weight: 300; line-height: .95; color: var(--dg-gol-lt);
+  text-shadow: 0 0 40px color-mix(in srgb, var(--dg-gold) 45%, transparent);
 }
-.dg-res-sub  { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--dg-muted); }
-.dg-res-detail { font-size: 13px; line-height: 1.7; color: var(--dg-muted); max-width: 440px; }
-.dg-res-btns { display: flex; gap: 10px; margin-top: .5rem; }
+.dg-res-sub { font-size: 12px; letter-spacing: .5px; color: var(--dg-muted); }
 
-/* Animations */
-@keyframes dg-reveal { from { transform: scale(.8) rotate(-4deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
-.dg-cell.just-revealed { animation: dg-reveal .28s ease-out; }
+.dg-res-gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: .3rem 0; }
+.dg-gal-item {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 16px; min-width: 90px;
+  border: 1px solid var(--dg-bdr);
+  background: color-mix(in srgb, var(--dg-mud) 26%, transparent);
+  animation: dg-card-in .5s var(--dg-ease-back) backwards;
+  animation-delay: calc(var(--gi, 0) * .1s + .35s);
+}
+.dg-gal-ico { font-size: 30px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,.5)) drop-shadow(0 0 12px color-mix(in srgb, var(--dg-gold) 40%, transparent)); }
+.dg-gal-nm { font-family: var(--dg-serif); font-size: 15px; color: var(--dg-text); }
 
-@keyframes dg-dust-puff { 0%{opacity:.8;transform:scale(.5)} 100%{opacity:0;transform:scale(2.5)} }
-.dg-dust { position: absolute; width: 20px; height: 20px; border-radius: 50%; pointer-events: none; animation: dg-dust-puff .5s ease-out forwards; }
+.dg-res-stats { display: flex; align-items: center; gap: 2rem; margin: .4rem 0; }
+.dg-res-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.dg-res-num {
+  font-family: var(--dg-serif); font-size: clamp(40px, 8vw, 60px); font-weight: 300; line-height: 1;
+  color: var(--dg-text); font-variant-numeric: tabular-nums;
+}
+.dg-res-stat-lbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dg-faint); }
+.dg-res-stat-div { width: 1px; height: 44px; background: var(--dg-bdr); }
+.dg-res-detail { font-family: var(--dg-serif); font-size: 15.5px; line-height: 1.7; color: var(--dg-muted); max-width: 460px; }
+.dg-res-btns { display: flex; gap: 12px; margin-top: .4rem; flex-wrap: wrap; justify-content: center; }
+
+/* ══════════════════ RESPONSIVE ══════════════════ */
+@media (max-height: 620px) {
+  .dg-site { grid-template-columns: 26px min(320px, 74vw); grid-template-rows: 22px min(320px, 74vw); }
+  .dg-hud-val { font-size: 22px; }
+  .dg-site-hint { display: none; }
+}
+@media (max-width: 460px) {
+  .dg-opts { grid-template-columns: 1fr; }
+  .dg-res-gallery .dg-gal-item { min-width: 74px; padding: 9px 11px; }
+}
+
+/* ══════════════════ REDUCED MOTION ══════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .dg-lantern, .dg-cell.artifact-dirty, .dg-art-spot, .dg-art-icon,
+  .dg-btn::after { animation: none !important; }
+  .dg-up, .dg-opt, .dg-gal-item { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .dg-cell.just-revealed, .dg-cell.just-found, .dg-cell.just-cleaned,
+  .dg-cell.just-cleaned::before, .dg-cell-icon, .dg-found-slot.lit,
+  .dg-quiz-box, .dg-art-box, .dg-cell.scan-ping { animation: none !important; }
+  .dg-hud-val.bump, .dg-opt.correct { animation: none !important; }
+  .dg-btn:not(:disabled):hover, .dg-relic:hover, .dg-opt:not(:disabled):hover { transform: none; }
+  * { scroll-behavior: auto !important; }
+}
