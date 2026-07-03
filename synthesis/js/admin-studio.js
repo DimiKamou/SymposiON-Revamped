@@ -337,6 +337,18 @@ function gameContentView() {
       <div class="cc-note">Επεξεργασία ερμηνευτικών · ασκήσεων · σχολίων ανά ενότητα. Αλλαγές αποθηκεύονται τοπικά· «Εξαγωγή» δίνει το αρχείο <code>data/eNN.js</code> για μόνιμη ενσωμάτωση.</div>
       <iframe class="st-embed" src="${esc(url)}" title="Διδαγμένο Κείμενο — Επεξεργαστής" loading="lazy"></iframe>`;
   }
+  // «Συντακτικό» keeps its content in its OWN editor (games/syntaktiko/admin.html
+  // — localStorage + export-to-code), like istoria/gnwsto.
+  if (gm.type === 'syntaktiko') {
+    const url = (typeof window !== 'undefined' && window.APP_BASE ? window.APP_BASE : '') + 'games/syntaktiko/admin.html';
+    return `${crumb()}
+      <div class="st-gamehd"><span class="st-row-ic big">${esc(gm.ic || '🧩')}</span>
+        <div style="flex:1;min-width:0"><div class="st-gamehd-nm">${esc(gm.label)}</div>
+          <div class="st-gamehd-sub">Συντακτικό — πτώσεις &amp; λειτουργίες · μετοχές · δευτερεύουσες προτάσεις</div></div>
+        <button class="st-open" onclick="window.open('${url}','_blank','noopener')" title="Άνοιγμα σε νέα καρτέλα">↗ Νέα καρτέλα</button></div>
+      <div class="cc-note">Επεξεργασία θεωρίας · ασκήσεων · ερωτήσεων κατανόησης ανά ενότητα. Αλλαγές αποθηκεύονται τοπικά· «Εξαγωγή» δίνει το αρχείο <code>data/&lt;id&gt;.js</code> για μόνιμη ενσωμάτωση.</div>
+      <iframe class="st-embed" src="${esc(url)}" title="Συντακτικό — Επεξεργαστής" loading="lazy"></iframe>`;
+  }
   if (cid && M.loadingCid === cid) return `${crumb()}<div class="cc-note">Loading content for <b>${esc(gm.label)}</b>…</div>`;
   const data = gameData(cid);
   if (!data) {

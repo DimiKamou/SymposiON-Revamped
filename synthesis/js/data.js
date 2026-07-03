@@ -245,9 +245,9 @@ Object.assign(SUBJECTS, {
               g('Αντωνυμίες','Pronouns','Match · τύποι','amphora',{fn:'openAntonymies'}) ] },
     { id:'ga-syntax', roman:'III', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
       summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
-      games:[ gSoon('Πτώσεις & Λειτουργίες','Cases & Functions','Σύνταξη · ρόλοι','scroll'),
-              gSoon('Μετοχές','Participles','Επιθετική / επιρρηματική','column'),
-              gSoon('Δευτερεύουσες Προτάσεις','Clauses','Maze · σύνταξη','labyrinth') ] },
+      games:[ g('Πτώσεις & Λειτουργίες','Cases & Functions','Θεωρία · ασκήσεις · κατανόηση','scroll',{fn:'openSyntaktiko',args:['ptoseis']}),
+              g('Μετοχές','Participles','Επιθετική / κατηγορηματική / επιρρηματική','column',{fn:'openSyntaktiko',args:['metoxes']}),
+              g('Δευτερεύουσες Προτάσεις','Clauses','Ονοματικές & επιρρηματικές','labyrinth',{fn:'openSyntaktiko',args:['protaseis']}) ] },
   ],
   'gram-latin': [
     // ── Latin grammar — explicit {fn} launches for every wired Latin game.
