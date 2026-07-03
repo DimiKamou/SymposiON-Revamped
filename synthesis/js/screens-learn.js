@@ -68,6 +68,28 @@
     ],
   };
 
+  /* ── Συντακτικό (kind:'syntax') — a self-contained, client-side course.
+     Its 36 lessons register into window.SYNTAX at load; we surface them as
+     theory cards in the Αρχαία grammar track's Θεωρία block (auto-scaling —
+     any lesson added to the registry appears here with no wiring). They
+     carry no lazy `data` (eager-loaded via index.html) and open through the
+     shared openTheoryLesson(), which dispatches kind:'syntax' → the engine. */
+  function syntaxTheoryLessons() {
+    if (!(window.SYNTAX && typeof window.SYNTAX.all === 'function')) return [];
+    return window.SYNTAX.all().filter(Boolean).map(function (Lx) {
+      var title = ((Lx.title || '') + (Lx.titleEm || '')).trim() || Lx.id;
+      var m = Lx.subtitle || Lx.section || 'Συντακτικό';
+      return { id: Lx.id, gr: title, en: title, illu: 'labyrinth',
+               meta: { gr: m, en: m } };
+    });
+  }
+  // theory list for a track = ported grammar-table lessons + (Αρχαία only)
+  // the live Συντακτικό registry.
+  function theoryListFor(trackId) {
+    var base = THEORY_TRACKS[trackId] || [];
+    return (trackId === 'gram-archaia') ? base.concat(syntaxTheoryLessons()) : base;
+  }
+
   // Ensure the theory subsystem CSS is present, lazy-load the dataset's
   // data-only script (defines the global the adapter reads), then open the
   // three-mode lesson. Falls back to a friendly notice if anything is off.
@@ -286,7 +308,7 @@
     tracks.forEach(tr => {
       const subs = (ctx.subjects[tr.id] || []);
       const nGames = subs.reduce((n, s) => n + ((s.games && s.games.length) || 0), 0);
-      const nTheory = (THEORY_TRACKS[tr.id] || []).length;
+      const nTheory = theoryListFor(tr.id).length;
       grid.appendChild(el('button', {
         class: 'sc-mode has-accent', style: `--ca:${tr.accent}`,
         onclick: () => go('gramtrack', { trackId: tr.id }),
@@ -315,7 +337,7 @@
       title: L(tr), sub: L(tr.blurb),
     });
     const wrap = el('div', { class: 'syn-subjects' });
-    renderSubjectBlocks(wrap, tr, THEORY_TRACKS[trackId] || []);
+    renderSubjectBlocks(wrap, tr, theoryListFor(trackId));
     body.appendChild(wrap);
     if (window.injectIllus) injectIllus(wrap);
   };

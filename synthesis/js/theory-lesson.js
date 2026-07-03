@@ -303,6 +303,9 @@
   function openTheoryLesson(datasetId) {
     var ds = (window.GP_CONTENT && window.GP_CONTENT.find && window.GP_CONTENT.find(datasetId)) ||
              (typeof GP_DATASETS !== 'undefined' && GP_DATASETS.find(function (d) { return d.id === datasetId; })) || null;
+    // dispatch the Συντακτικό kind to its own engine (built-in, client-side)
+    if (((ds && ds.kind === 'syntax') || (typeof window.canSyntaxLesson === 'function' && window.canSyntaxLesson(datasetId))) &&
+        typeof window.openSyntaxLesson === 'function') { window.openSyntaxLesson(datasetId); return; }
     // dispatch authored Q&A / Parallel kinds to their own views
     if (ds && ds.kind === 'qa' && typeof window.openQALesson === 'function') { window.openQALesson(datasetId); return; }
     if (ds && ds.kind === 'parallel' && typeof window.openParallelLesson === 'function') { window.openParallelLesson(datasetId); return; }
