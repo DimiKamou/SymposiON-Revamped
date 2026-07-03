@@ -121,10 +121,32 @@ var GT_CSS = `
 .flag{font-family:var(--sans);font-size:11px;color:var(--ink-faint);text-align:center;margin-top:26px;letter-spacing:.04em}
 
 .gt-close{position:fixed;top:14px;right:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line2);background:rgba(12,11,8,.92);color:var(--gold);font-size:24px;line-height:1;cursor:pointer;z-index:20;font-family:var(--sans)}
-.gt-close:hover{background:#1a1710;border-color:var(--gold)}`;
+.gt-close:hover{background:#1a1710;border-color:var(--gold)}
+.gt-edit{margin-left:auto;font-family:var(--sans);font-size:12px;color:var(--gold);background:rgba(156,130,56,.12);border:1px solid var(--gold-deep);border-radius:8px;padding:5px 10px;cursor:pointer}
+.gt-edit:hover{background:rgba(156,130,56,.22)}
+.gt-editor{position:fixed;inset:0;z-index:30;overflow:auto;background:rgba(8,7,6,.97);padding:26px 16px 60px;display:flex;justify-content:center}
+.gt-ed{width:100%;max-width:820px}
+.gt-ed h2{font-size:22px;font-weight:500;color:var(--gold);margin:0 0 4px}
+.gt-ed .gt-sub{font-family:var(--sans);font-size:12px;color:var(--ink-faint);margin:0 0 18px}
+.gt-ed label{display:block;font-family:var(--sans);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:14px 0 5px}
+.gt-ed input,.gt-ed textarea{width:100%;font-family:var(--serif);font-size:15px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;outline:none}
+.gt-ed input:focus,.gt-ed textarea:focus{border-color:var(--gold)}
+.gt-ed textarea{line-height:1.5;resize:vertical}
+.gt-ed .row2{display:flex;gap:10px}
+.gt-ed .row2>div{flex:1}
+.gt-ed .blk{border:1px solid var(--line);border-radius:9px;padding:12px;margin-top:10px;background:var(--card2)}
+.gt-ed .mini{font-family:var(--sans);font-size:11px;color:var(--terra);background:none;border:1px solid var(--terra-deep);border-radius:7px;padding:4px 9px;cursor:pointer;margin-top:8px}
+.gt-ed .mono{font-family:Consolas,"Courier New",monospace;font-size:12.5px;white-space:pre;min-height:180px}
+.gt-ed .bar2{position:sticky;bottom:0;display:flex;gap:9px;flex-wrap:wrap;margin-top:20px;padding:12px 0;background:linear-gradient(transparent,rgba(8,7,6,.97) 30%)}
+.gt-ed .b{font-family:var(--sans);font-size:13px;padding:9px 16px;border-radius:9px;cursor:pointer;border:1px solid var(--terra-deep);color:#a9c690;background:rgba(106,135,82,.12)}
+.gt-ed .b.gold{border-color:var(--gold-deep);color:#E6B968;background:rgba(156,130,56,.14)}
+.gt-ed .b.warn{border-color:var(--no);color:#e0a890;background:rgba(185,96,62,.1)}
+.gt-ed .st{font-family:var(--sans);font-size:12.5px;margin-top:10px;min-height:16px}
+.gt-ed .st.ok{color:#bcd9a0}
+.gt-ed .st.err{color:#e0a890}`;
 var GT_ROOT = null, GT_SR = null, GT_APP = null, _gtPrevOverflow = "";
 function gtScrollTop(){ if (GT_ROOT) GT_ROOT.scrollTop = 0; }
-function gtEsc(e){ if (e.key === "Escape") { e.preventDefault(); gtClose(); } }
+function gtEsc(e){ if (e.key === "Escape") { e.preventDefault(); var _ed = GT_SR && GT_SR.querySelector(".gt-editor"); if (_ed) { gtCloseEditor(); } else { gtClose(); } } }
 function gtClose(){ if (!GT_ROOT) return; document.removeEventListener("keydown", gtEsc);
   GT_ROOT.remove(); GT_ROOT = null; GT_SR = null; GT_APP = null;
   try { document.body.style.overflow = _gtPrevOverflow; } catch (_) {} }
@@ -459,6 +481,187 @@ function examView(v,L){
 }
 /* ===== end engine ===== */
 
+/* ===== overrides + in-lesson curator editor ===== */
+/* ===== Αρχαία Γραμματική Θεωρία — override + in-lesson curator editor =====
+   Injected INTO the module IIFE (shares LESSONS/render/CURRENT/GT_APP/GT_SR/el).
+   Overrides: Firestore lesson_overrides/__grammar__ {overrides:{id:lesson},updatedAt}
+   (reuses the deployed rule: read=public, write=can('content')) + SymStore mirror. */
+
+var LESSONS_DEFAULT = null;
+var _gtEditInit = false, _gtBaseRender = null, _gtRefreshed = false;
+
+function gtCloneDefaults() {
+  if (LESSONS_DEFAULT) return;
+  LESSONS_DEFAULT = {};
+  for (var k in LESSONS) LESSONS_DEFAULT[k] = JSON.parse(JSON.stringify(LESSONS[k]));
+}
+function gtApplyOverrides(ov) {
+  gtCloneDefaults();
+  for (var k in LESSONS_DEFAULT) LESSONS[k] = JSON.parse(JSON.stringify(LESSONS_DEFAULT[k]));
+  if (ov) for (var id in ov) { if (ov[id] && LESSONS_DEFAULT[id]) { var o = ov[id]; o.id = id; LESSONS[id] = o; } }
+}
+function gtFsReady() { try { return typeof firebase !== 'undefined' && !!(firebase && firebase.firestore); } catch (_) { return false; } }
+function gtSSget() { try { var s = window.SymStore; return (s && s.get) ? (s.get('gt_overrides', {}) || {}) : {}; } catch (_) { return {}; } }
+function gtSSset(ov) { try { var s = window.SymStore; if (s && s.set) s.set('gt_overrides', ov); } catch (_) {} }
+function gtFsDoc() { return firebase.firestore().collection('lesson_overrides').doc('__grammar__'); }
+function gtIsCurator() {
+  try { if (window.theoryIsCurator) return !!window.theoryIsCurator(); } catch (_) {}
+  try { if (window.currentUser && window.currentUser.email === 'dimikamou@gmail.com') return true; } catch (_) {}
+  return false;
+}
+
+function gtLoadOverridesSync() { gtApplyOverrides(gtSSget()); }
+function gtRefreshFromFirestore() {
+  if (_gtRefreshed || !gtFsReady()) return; _gtRefreshed = true;
+  try {
+    gtFsDoc().get().then(function (snap) {
+      var d = (snap && snap.exists) ? snap.data() : null;
+      var ov = (d && d.overrides) || null;
+      if (ov) { gtSSset(ov); gtApplyOverrides(ov); if (GT_ROOT) render(); }
+    }).catch(function () {});
+  } catch (_) {}
+}
+function gtPersist(ov) {
+  gtSSset(ov); gtApplyOverrides(ov);
+  if (gtFsReady()) { try { gtFsDoc().set({ overrides: ov, updatedAt: Date.now() }).catch(function () {}); } catch (_) {} }
+}
+function gtSaveOverride(id, lesson) { var ov = gtSSget(); ov[id] = lesson; gtPersist(ov); }
+function gtResetOverride(id) { var ov = gtSSget(); delete ov[id]; gtPersist(ov); }
+function gtIsOverridden(id) { var ov = gtSSget(); return !!ov[id]; }
+
+/* wrap render() so a curator sees the ✎ affordance after each paint */
+function gtInitEditing() {
+  if (_gtEditInit) return; _gtEditInit = true;
+  _gtBaseRender = render;
+  render = function () { _gtBaseRender(); try { gtAfterRender(); } catch (_) {} };
+}
+function gtAfterRender() {
+  if (!CURRENT || !gtIsCurator() || !GT_APP) return;
+  var bar = GT_APP.querySelector('.bar'); if (!bar || bar.querySelector('.gt-edit')) return;
+  var b = document.createElement('button');
+  b.className = 'gt-edit'; b.type = 'button';
+  b.textContent = '✎ Επεξεργασία' + (gtIsOverridden(CURRENT) ? ' •' : '');
+  b.onclick = function () { gtOpenEditor(CURRENT); };
+  bar.appendChild(b);
+}
+
+/* ---- editor overlay ---- */
+function _E(tag, props, kids) {
+  var e = document.createElement(tag); props = props || {};
+  for (var k in props) {
+    if (k === 'class') e.className = props[k];
+    else if (k === 'text') e.textContent = props[k];
+    else if (k === 'html') e.innerHTML = props[k];
+    else if (k === 'value') e.value = props[k];
+    else if (k === 'rows') e.rows = props[k];
+    else if (k.slice(0, 2) === 'on') e[k] = props[k];
+    else e.setAttribute(k, props[k]);
+  }
+  (kids || []).forEach(function (c) { if (c) e.appendChild(c); });
+  return e;
+}
+function gtCloseEditor() { var ed = GT_SR && GT_SR.querySelector('.gt-editor'); if (ed) ed.remove(); }
+
+function gtOpenEditor(id) {
+  gtCloseEditor();
+  var W = JSON.parse(JSON.stringify(LESSONS[id]));   // working copy (single source of truth)
+  var st;                                             // status line
+  function setSt(msg, cls) { st.className = 'st ' + (cls || ''); st.textContent = msg || ''; }
+
+  var fields = [];
+  function fInput(label, get, set) {
+    var inp = _E('input', { value: get() == null ? '' : get(), oninput: function () { set(inp.value); } });
+    fields.push(_E('div', {}, [_E('label', { text: label }), inp])); return inp;
+  }
+  function fArea(label, get, set, rows) {
+    var ta = _E('textarea', { value: get() == null ? '' : get(), rows: rows || 3, oninput: function () { set(ta.value); } });
+    fields.push(_E('div', {}, [_E('label', { text: label }), ta])); return ta;
+  }
+
+  fInput('Eyebrow (κατηγορία)', function () { return W.eyebrow; }, function (v) { W.eyebrow = v; });
+  var t = _E('div', { class: 'row2' }, [
+    _E('div', {}, [_E('label', { text: 'Τίτλος' }), _E('input', { value: W.title || '', oninput: function (e) { W.title = e.target.value; } })]),
+    _E('div', {}, [_E('label', { text: 'Τίτλος (χρυσό)' }), _E('input', { value: W.titleEm || '', oninput: function (e) { W.titleEm = e.target.value; } })]),
+  ]);
+  fields.push(t);
+  fInput('Υπότιτλος', function () { return W.subtitle; }, function (v) { W.subtitle = v; });
+  fInput('Επίπεδο', function () { return W.level; }, function (v) { W.level = v; });
+  fArea('Εισαγωγή (intro, HTML)', function () { return W.intro; }, function (v) { W.intro = v; }, 4);
+
+  // stats (3)
+  var statsWrap = _E('div', { class: 'blk' }, [_E('label', { text: 'Στατιστικά (3)' })]);
+  (W.stats || []).forEach(function (s, i) {
+    statsWrap.appendChild(_E('div', { class: 'row2', style: 'margin-top:6px' }, [
+      _E('div', {}, [_E('input', { value: s.k || '', placeholder: 'ετικέτα', oninput: function (e) { W.stats[i].k = e.target.value; } })]),
+      _E('div', {}, [_E('input', { value: s.v || '', placeholder: 'τιμή', oninput: function (e) { W.stats[i].v = e.target.value; } })]),
+    ]));
+  });
+  fields.push(statsWrap);
+
+  // theory blocks (add/remove) — rebuilt in place
+  var theoryWrap = _E('div', { class: 'blk' });
+  function paintTheory() {
+    theoryWrap.innerHTML = '';
+    theoryWrap.appendChild(_E('label', { text: 'Θεωρία — ενότητες (h + σώμα HTML)' }));
+    (W.theory || []).forEach(function (bl, i) {
+      theoryWrap.appendChild(_E('div', { class: 'blk', style: 'margin-top:8px' }, [
+        _E('input', { value: bl.h || '', placeholder: 'τίτλος ενότητας', oninput: function (e) { W.theory[i].h = e.target.value; } }),
+        _E('textarea', { value: bl.body || '', rows: 4, style: 'margin-top:6px', oninput: function (e) { W.theory[i].body = e.target.value; } }),
+        _E('button', { class: 'mini', text: '– Αφαίρεση ενότητας', onclick: function () { W.theory.splice(i, 1); paintTheory(); } }),
+      ]));
+    });
+    theoryWrap.appendChild(_E('button', { class: 'mini', text: '+ Νέα ενότητα', onclick: function () { (W.theory = W.theory || []).push({ h: '', body: '' }); paintTheory(); } }));
+  }
+  paintTheory();
+  fields.push(theoryWrap);
+
+  fArea('Λυμένο παράδειγμα — σημείωση (worked.note, HTML)', function () { return (W.worked || {}).note; }, function (v) { (W.worked = W.worked || {}).note = v; }, 3);
+  fInput('Εξέταση — πρόταση', function () { return (W.exam || {}).sentence; }, function (v) { (W.exam = W.exam || {}).sentence = v; });
+  fInput('Εξέταση — placeholder', function () { return (W.exam || {}).placeholder; }, function (v) { (W.exam = W.exam || {}).placeholder = v; });
+
+  // advanced: whole-lesson JSON (covers worked.tokens, exercises, examModel, anything)
+  var jsonTa = _E('textarea', { class: 'mono', rows: 14, value: JSON.stringify(W, null, 2) });
+  var adv = _E('div', { class: 'blk' }, [
+    _E('label', { text: 'Για προχωρημένους — πλήρες μάθημα ως JSON (ασκήσεις · λυμένο tokens · εξέταση)' }),
+    jsonTa,
+    _E('div', { class: 'row2', style: 'margin-top:8px' }, [
+      _E('button', { class: 'mini', text: '↧ Φόρτωση από τα πεδία', onclick: function () { jsonTa.value = JSON.stringify(W, null, 2); setSt('JSON συγχρονίστηκε από τα πεδία.', 'ok'); } }),
+      _E('button', { class: 'mini', text: '↥ Εφαρμογή JSON στα πεδία', onclick: function () { try { var p = JSON.parse(jsonTa.value); for (var kk in W) delete W[kk]; for (var kk2 in p) W[kk2] = p[kk2]; rebuild(); setSt('Το JSON εφαρμόστηκε.', 'ok'); } catch (e) { setSt('Άκυρο JSON: ' + e.message, 'err'); } } }),
+    ]),
+  ]);
+  fields.push(adv);
+
+  st = _E('div', { class: 'st' });
+
+  function commit(persist) {
+    // validate the JSON textarea is parseable IF it was touched — but W is the source; just sanity-check structure
+    if (!W.title && !W.titleEm) { setSt('Χρειάζεται τίτλος.', 'err'); return false; }
+    if (!Array.isArray(W.exercises)) { setSt('Λείπει ο πίνακας exercises (δες το JSON).', 'err'); return false; }
+    W.id = id;
+    if (persist) { gtSaveOverride(id, JSON.parse(JSON.stringify(W))); setSt('Αποθηκεύτηκε ✓', 'ok'); }
+    else { LESSONS[id] = JSON.parse(JSON.stringify(W)); }
+    return true;
+  }
+
+  var bar2 = _E('div', { class: 'bar2' }, [
+    _E('button', { class: 'b', text: 'Προεπισκόπηση', onclick: function () { if (commit(false)) { gtCloseEditor(); render(); } } }),
+    _E('button', { class: 'b gold', text: 'Αποθήκευση', onclick: function () { if (commit(true)) { gtCloseEditor(); render(); } } }),
+    _E('button', { class: 'b warn', text: 'Επαναφορά προεπιλογής', onclick: function () { gtResetOverride(id); gtCloseEditor(); render(); } }),
+    _E('button', { class: 'b', text: 'Άκυρο', onclick: function () { gtApplyOverrides(gtSSget()); gtCloseEditor(); render(); } }),
+  ]);
+
+  function rebuild() { /* re-open with the current W (after JSON apply) */ jsonTa.value = JSON.stringify(W, null, 2); }
+
+  var panel = _E('div', { class: 'gt-ed' }, [
+    _E('h2', { text: 'Επεξεργασία μαθήματος' }),
+    _E('p', { class: 'gt-sub', text: (W.eyebrow || id) + ' · οι αλλαγές αποθηκεύονται για όλους (Firestore) + τοπικά.' }),
+  ].concat(fields).concat([st, bar2]));
+
+  var ov = _E('div', { class: 'gt-editor' }, [panel]);
+  GT_SR.appendChild(ov); ov.scrollTop = 0;
+}
+/* ===== end editing ===== */
+
 window.openGrammarTheoria = function () {
   if (GT_ROOT) return;
   GT_ROOT = document.createElement("div"); GT_ROOT.className = "gt-overlay";
@@ -472,6 +675,8 @@ window.openGrammarTheoria = function () {
   document.body.appendChild(GT_ROOT);
   try { _gtPrevOverflow = document.body.style.overflow; document.body.style.overflow = "hidden"; } catch (_) {}
   document.addEventListener("keydown", gtEsc);
+  gtLoadOverridesSync(); gtInitEditing();
   CURRENT = null; TAB = "theory"; EX_DONE = {}; render(); gtScrollTop();
+  gtRefreshFromFirestore();
 };
 })();
