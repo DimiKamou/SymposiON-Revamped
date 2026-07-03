@@ -45,6 +45,9 @@
      teacher-edit chrome degrade gracefully when their globals are absent. */
   const THEORY_TRACKS = {
     'gram-archaia': [
+      { id: 'grammar-theoria', gr: 'Γραμματική', en: 'Grammar', illu: 'scroll',
+        meta: { gr: '44 μαθήματα · Θεωρία · Άσκηση · Εξέταση', en: '44 lessons · Theory · Practice · Exam' },
+        module: 'grammar-theoria', data: 'games/grammar-theoria/grammar-theoria.js' },
       { id: 'eimi',       gr: 'Ρήμα: εἰμί',          en: 'Verb: eimí',           illu: 'scroll',
         meta: { gr: 'Θεωρία · Πίνακας · Κάρτες', en: 'Theory · Table · Cards' },
         data: 'games/eimi/data.js' },
@@ -94,6 +97,18 @@
   // data-only script (defines the global the adapter reads), then open the
   // three-mode lesson. Falls back to a friendly notice if anything is off.
   function openTheory(lesson) {
+    // Self-contained grammar module (Αρχαία Γραμματική): lazy-load its single
+    // script, then open its shadow-DOM overlay. Isolated from the theory engine.
+    if (lesson.module === 'grammar-theoria') {
+      const runGram = function () {
+        if (typeof window.openGrammarTheoria === 'function') window.openGrammarTheoria();
+        else _theoryUnavailable(lesson);
+      };
+      if (lesson.data && typeof window.lazyLoad === 'function') {
+        window.lazyLoad([lesson.data]).then(runGram).catch(runGram);
+      } else { runGram(); }
+      return;
+    }
     const ds = lesson.id;
     if (window.synEnsureCss) {
       try { window.synEnsureCss(['css/theory-lessons.css']); } catch (_) {}
