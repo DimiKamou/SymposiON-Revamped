@@ -325,6 +325,18 @@ function gameContentView() {
       <div class="cc-note">7 τύποι ασκήσεων ανά τάξη (κωδικός επεξεργαστή: <code>admin</code>). Αλλαγές αποθηκεύονται στο Firestore (<code>game_data/istoria:${esc(S.grade || 'g3')}</code>) — οι μαθητές τις βλέπουν στην επόμενη φόρτωση.</div>
       <iframe class="st-embed" src="${esc(url)}" title="Ιστορία — Επεξεργαστής Περιεχομένου" loading="lazy"></iframe>`;
   }
+  // «Διδαγμένο Κείμενο» Γ΄ Λυκείου keeps its content in its OWN editor
+  // (games/gnwsto/admin.html — localStorage + export-to-code), like istoria.
+  if (gm.type === 'gnwsto') {
+    const url = (typeof window !== 'undefined' && window.APP_BASE ? window.APP_BASE : '') + 'games/gnwsto/admin.html';
+    return `${crumb()}
+      <div class="st-gamehd"><span class="st-row-ic big">${esc(gm.ic || '📜')}</span>
+        <div style="flex:1;min-width:0"><div class="st-gamehd-nm">${esc(gm.label)}</div>
+          <div class="st-gamehd-sub">Διδαγμένο Κείμενο Γ΄ Λυκείου — 22 ενότητες + 5 εισαγωγές</div></div>
+        <button class="st-open" onclick="window.open('${url}','_blank','noopener')" title="Άνοιγμα σε νέα καρτέλα">↗ Νέα καρτέλα</button></div>
+      <div class="cc-note">Επεξεργασία ερμηνευτικών · ασκήσεων · σχολίων ανά ενότητα. Αλλαγές αποθηκεύονται τοπικά· «Εξαγωγή» δίνει το αρχείο <code>data/eNN.js</code> για μόνιμη ενσωμάτωση.</div>
+      <iframe class="st-embed" src="${esc(url)}" title="Διδαγμένο Κείμενο — Επεξεργαστής" loading="lazy"></iframe>`;
+  }
   if (cid && M.loadingCid === cid) return `${crumb()}<div class="cc-note">Loading content for <b>${esc(gm.label)}</b>…</div>`;
   const data = gameData(cid);
   if (!data) {
