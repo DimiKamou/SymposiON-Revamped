@@ -1,0 +1,73 @@
+/* ════════════════════════════════════════════════════════════════════
+   theory-neg.css — Έκθεση & Λογοτεχνία (kind:'neg') — NEG-only bits.
+   The engine reuses .tr-* / .syx-* from theory-syntax.css; here live
+   only the new pieces: passage blocks, match columns, cite lines.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── απόσπασμα κειμένου (stem των ασκήσεων passage/choice) ── */
+.neg-passage {
+  font-family: var(--f-serif);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--bone);
+  border-left: 2px solid var(--line-hi);
+  padding: 4px 0 4px 18px;
+  margin: 10px 0 14px;
+  max-width: 780px;
+}
+.neg-passage b { color: var(--gold); font-weight: 600; }
+.neg-cite {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--stone);
+  margin-top: 8px;
+}
+
+/* ── αντιστοίχιση (match) ── */
+.neg-match {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 780px;
+  margin-top: 10px;
+}
+.neg-mcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.neg-mhead {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stone);
+  margin-bottom: 2px;
+}
+.neg-mitem {
+  font-family: var(--f-sans);
+  font-size: 14.5px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--bone);
+  background: var(--inset);
+  border: 1px solid var(--line-hi);
+  border-radius: 8px;
+  padding: 10px 13px;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, opacity .15s ease;
+}
+.neg-mitem:hover { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 6%, transparent); }
+.neg-mitem.sel { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.neg-mitem.locked {
+  border-color: var(--sage);
+  color: var(--sage);
+  background: color-mix(in srgb, var(--sage) 8%, transparent);
+  cursor: default;
+  opacity: .85;
+}
+
+/* worked example: τα chunks της έκθεσης είναι φράσεις, όχι λέξεις */
+.neg-worked .syx-chunk { font-size: 17.5px; line-height: 2.1; }
+
+@media (max-width: 640px) {
+  .neg-match { grid-template-columns: 1fr; }
+  .neg-passage { font-size: 16.5px; }
+}

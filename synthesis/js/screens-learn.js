@@ -83,11 +83,27 @@
                meta: { gr: m, en: m } };
     });
   }
-  // theory list for a track = ported grammar-table lessons + (Αρχαία only)
-  // the live Συντακτικό registry.
+  /* ── Έκθεση & Λογοτεχνία (kind:'neg') — same pattern as Συντακτικό: its
+     49 lessons register into window.NEG at load; surface them as theory
+     cards in the Έκθεση (gram-neo) track. Auto-scaling — any lesson added
+     to the registry appears here with no extra wiring. They open through
+     the shared openTheoryLesson(), which dispatches kind:'neg' → the engine. */
+  function negTheoryLessons() {
+    if (!(window.NEG && typeof window.NEG.all === 'function')) return [];
+    return window.NEG.all().filter(Boolean).map(function (Lx) {
+      var title = ((Lx.title || '') + (Lx.titleEm || '')).trim() || Lx.id;
+      var m = Lx.subtitle || Lx.section || 'Έκθεση';
+      return { id: Lx.id, gr: title, en: title, illu: 'book',
+               meta: { gr: m, en: m } };
+    });
+  }
+  // theory list for a track = ported grammar-table lessons + the live
+  // Συντακτικό (Αρχαία) / Έκθεση (Νέα Ελληνικά) registries.
   function theoryListFor(trackId) {
     var base = THEORY_TRACKS[trackId] || [];
-    return (trackId === 'gram-archaia') ? base.concat(syntaxTheoryLessons()) : base;
+    if (trackId === 'gram-archaia') return base.concat(syntaxTheoryLessons());
+    if (trackId === 'gram-neo')     return base.concat(negTheoryLessons());
+    return base;
   }
 
   // Ensure the theory subsystem CSS is present, lazy-load the dataset's
