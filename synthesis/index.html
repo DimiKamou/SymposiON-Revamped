@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="css/student.css"/>
 <!-- ══ THEORY lesson subsystem (ported from Ver1) ══ -->
 <link rel="stylesheet" href="css/theory-lessons.css"/>
+<link rel="stylesheet" href="css/theory-syntax.css"/>
 <link rel="stylesheet" href="css/system.css"/>
 <link rel="stylesheet" href="css/auth-skin.css"/>
 <!-- Shared game-overlay container chrome (restored from Ver1 main.css so
@@ -342,6 +343,15 @@
 <script src="js/parallel-roles.js"></script>
 <script src="js/theory-parallel.js"></script>
 <script src="js/theory-qa.js"></script>
+<!-- ══ Συντακτικό (Ancient Greek syntax) — built-in, client-side course.
+     data → data2/data3 (register into window.SYNTAX) → mastery → engine.
+     theory-syntax-theory.js + theory-syntax-banks.js are lazy-loaded by the
+     engine on first open (ensureExtras), so they are NOT script-tagged here. -->
+<script src="js/theory-syntax-data.js"></script>
+<script src="js/theory-syntax-data2.js"></script>
+<script src="js/theory-syntax-data3.js"></script>
+<script src="js/theory-syntax-mastery.js"></script>
+<script src="js/theory-syntax.js"></script>
 
 <!-- ══════════ SITE BANNERS (announcement strip) ══════════
      banner-bar.js: live sticky bar at the top of the page (reads Firestore
