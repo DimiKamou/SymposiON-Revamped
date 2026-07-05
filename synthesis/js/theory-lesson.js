@@ -341,4 +341,13 @@
 
   window.openTheoryLesson = openTheoryLesson;
   window.closeTheoryLesson = closeTheoryLesson;
+
+  // Register with the syn-launch manifest so ASSIGNED theory tiles
+  // (syn-assignments.js → synLaunch('openTheoryLesson', datasetId)) can dispatch.
+  // Without an entry, synLaunch bails with "no manifest entry" and the tile is
+  // inert. This file is eager-loaded (the theory library calls openTheoryLesson
+  // directly), so the entry needs no lazy js/css — synLaunch just calls the global.
+  window.SYN_GAMES = Object.assign(window.SYN_GAMES || {}, {
+    openTheoryLesson: { js: [], css: [], overlay: null }
+  });
 })();

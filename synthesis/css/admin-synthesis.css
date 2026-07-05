@@ -36,9 +36,11 @@
 .sc-admin2__pane .sc-cfg,
 .sc-admin2__pane .sc-anodos { max-width: none; }
 
-/* The single-grant form (Grant Access / Grant Kleos) becomes a responsive
-   auto-fit grid instead of a narrow vertical stack. */
-.sc-admin2__pane .sc-form {
+/* The single-grant forms (Grant Access / Grant Kleos) become a responsive
+   auto-fit grid instead of a narrow vertical stack. Scoped to the --grid
+   modifier so it does NOT clobber the other .sc-form users in the pane
+   (Messages compose, Pricing plan cards, etc.). */
+.sc-admin2__pane .sc-form--grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
