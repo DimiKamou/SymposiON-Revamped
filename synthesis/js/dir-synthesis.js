@@ -340,8 +340,9 @@
             title: nm + (owned?'':' · ⌾'+price.toLocaleString('en-US')), 'aria-label': nm,
             onclick:(e)=>{ e.stopPropagation();
               if(owned){ apply(e.currentTarget); return; }
-              const k = SS?SS.get('kleos',0):0;
-              if(k>=price){ SS.set('kleos', k-price); const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SS.get(key,def).slice(); ow.push(id); SS.set(key,ow); e.currentTarget.classList.remove('locked'); const pr=e.currentTarget.querySelector('.syn-theme__curprice'); if(pr) pr.remove(); apply(e.currentTarget); }
+              const afford = window.symSpendKleos ? window.symSpendKleos(price)
+                : (SS && SS.get('kleos',0) >= price ? (SS.set('kleos', SS.get('kleos',0)-price), true) : false);
+              if(afford){ const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SS.get(key,def).slice(); ow.push(id); SS.set(key,ow); e.currentTarget.classList.remove('locked'); const pr=e.currentTarget.querySelector('.syn-theme__curprice'); if(pr) pr.remove(); apply(e.currentTarget); }
               else { e.currentTarget.classList.add('shake'); setTimeout(()=>e.currentTarget.classList.remove('shake'),420); } } },
             [ gl ]);
           if(!owned) b.appendChild(el('span', { class:'syn-theme__curprice' }, '⌾'+price.toLocaleString('en-US')));
