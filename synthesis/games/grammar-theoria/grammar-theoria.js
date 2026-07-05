@@ -143,7 +143,11 @@ var GT_CSS = `
 .gt-ed .b.warn{border-color:var(--no);color:#e0a890;background:rgba(185,96,62,.1)}
 .gt-ed .st{font-family:var(--sans);font-size:12.5px;margin-top:10px;min-height:16px}
 .gt-ed .st.ok{color:#bcd9a0}
-.gt-ed .st.err{color:#e0a890}`;
+.gt-ed .st.err{color:#e0a890}
+.gt-newlesson{display:block;margin:0 0 18px;font-family:var(--sans);font-size:12.5px;color:#E6B968;background:rgba(156,130,56,.12);border:1px dashed var(--gold-deep);border-radius:9px;padding:9px 15px;cursor:pointer}
+.gt-newlesson:hover{background:rgba(156,130,56,.2)}
+.gt-ed select{width:100%;font-family:var(--serif);font-size:15px;color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;outline:none}
+.gt-ed select:focus{border-color:var(--gold)}`;
 var GT_ROOT = null, GT_SR = null, GT_APP = null, _gtPrevOverflow = "";
 function gtScrollTop(){ if (GT_ROOT) GT_ROOT.scrollTop = 0; }
 function gtEsc(e){ if (e.key === "Escape") { e.preventDefault(); var _ed = GT_SR && GT_SR.querySelector(".gt-editor"); if (_ed) { gtCloseEditor(); } else { gtClose(); } } }
@@ -401,18 +405,31 @@ function examView(v,L){
    Overrides: Firestore lesson_overrides/__grammar__ {overrides:{id:lesson},updatedAt}
    (reuses the deployed rule: read=public, write=can('content')) + SymStore mirror. */
 
-var LESSONS_DEFAULT = null;
+var LESSONS_DEFAULT = null, REGISTRY_DEFAULT = null;
 var _gtEditInit = false, _gtBaseRender = null, _gtRefreshed = false;
 
 function gtCloneDefaults() {
   if (LESSONS_DEFAULT) return;
   LESSONS_DEFAULT = {};
   for (var k in LESSONS) LESSONS_DEFAULT[k] = JSON.parse(JSON.stringify(LESSONS[k]));
+  REGISTRY_DEFAULT = JSON.parse(JSON.stringify(REGISTRY));
+}
+// ensure a launcher tile exists for a custom (admin-added) lesson id
+function gtEnsureTile(id, lesson) {
+  var fam = lesson.family || 'Άλλα', entry = null, i;
+  for (i = 0; i < REGISTRY.length; i++) if (REGISTRY[i].family === fam) { entry = REGISTRY[i]; break; }
+  if (!entry) { entry = { family: fam, units: [] }; REGISTRY.push(entry); }
+  var title = ((lesson.title || '') + (lesson.titleEm || '')).trim() || id;
+  for (i = 0; i < entry.units.length; i++) if (entry.units[i].id === id) { entry.units[i].title = title; return; }
+  entry.units.push({ id: id, title: title });
 }
 function gtApplyOverrides(ov) {
   gtCloneDefaults();
-  for (var k in LESSONS_DEFAULT) LESSONS[k] = JSON.parse(JSON.stringify(LESSONS_DEFAULT[k]));
-  if (ov) for (var id in ov) { if (ov[id] && LESSONS_DEFAULT[id]) { var o = ov[id]; o.id = id; LESSONS[id] = o; } }
+  var k;
+  for (k in LESSONS) if (!LESSONS_DEFAULT[k]) delete LESSONS[k];            // drop prior custom lessons
+  for (k in LESSONS_DEFAULT) LESSONS[k] = JSON.parse(JSON.stringify(LESSONS_DEFAULT[k]));
+  REGISTRY.length = 0; REGISTRY_DEFAULT.forEach(function (f) { REGISTRY.push(JSON.parse(JSON.stringify(f))); });
+  if (ov) for (var id in ov) { var o = ov[id]; if (!o) continue; o.id = id; LESSONS[id] = o; if (!LESSONS_DEFAULT[id]) gtEnsureTile(id, o); }
 }
 function gtFsReady() { try { return typeof firebase !== 'undefined' && !!(firebase && firebase.firestore); } catch (_) { return false; } }
 function gtSSget() { try { var s = window.SymStore; return (s && s.get) ? (s.get('gt_overrides', {}) || {}) : {}; } catch (_) { return {}; } }
@@ -447,16 +464,37 @@ function gtIsOverridden(id) { var ov = gtSSget(); return !!ov[id]; }
 function gtInitEditing() {
   if (_gtEditInit) return; _gtEditInit = true;
   _gtBaseRender = render;
-  render = function () { _gtBaseRender(); try { gtAfterRender(); } catch (_) {} };
+  render = function () { if (CURRENT && !LESSONS[CURRENT]) { CURRENT = null; EX_DONE = {}; } _gtBaseRender(); try { gtAfterRender(); } catch (_) {} };
 }
 function gtAfterRender() {
-  if (!CURRENT || !gtIsCurator() || !GT_APP) return;
-  var bar = GT_APP.querySelector('.bar'); if (!bar || bar.querySelector('.gt-edit')) return;
-  var b = document.createElement('button');
-  b.className = 'gt-edit'; b.type = 'button';
-  b.textContent = '✎ Επεξεργασία' + (gtIsOverridden(CURRENT) ? ' •' : '');
-  b.onclick = function () { gtOpenEditor(CURRENT); };
-  bar.appendChild(b);
+  if (!gtIsCurator() || !GT_APP) return;
+  if (CURRENT) {
+    var bar = GT_APP.querySelector('.bar'); if (!bar || bar.querySelector('.gt-edit')) return;
+    var b = document.createElement('button');
+    b.className = 'gt-edit'; b.type = 'button';
+    b.textContent = '✎ Επεξεργασία' + (gtIsOverridden(CURRENT) ? ' •' : '');
+    b.onclick = function () { gtOpenEditor(CURRENT); };
+    bar.appendChild(b);
+    return;
+  }
+  // HOME (launcher): "+ Νέο μάθημα" for curators
+  if (GT_APP.querySelector('.gt-newlesson')) return;
+  var lh = GT_APP.querySelector('.lh');
+  var nb = document.createElement('button');
+  nb.className = 'gt-newlesson'; nb.type = 'button'; nb.textContent = '＋ Νέο μάθημα';
+  nb.onclick = gtNewLesson;
+  if (lh && lh.parentNode) lh.parentNode.insertBefore(nb, lh.nextSibling);
+  else GT_APP.insertBefore(nb, GT_APP.firstChild);
+}
+function gtNewLesson() {
+  var id = 'custom-' + (Date.now());
+  var fams = (REGISTRY_DEFAULT || []).map(function (f) { return f.family; });
+  var fam = fams[0] || 'Ρήμα';
+  LESSONS[id] = { id: id, family: fam, eyebrow: fam + ' · Νέο μάθημα', title: 'Νέο ', titleEm: 'μάθημα',
+    subtitle: '', level: '', stats: [{ k: '', v: '' }, { k: '', v: '' }, { k: '', v: '' }],
+    intro: '', theory: [{ h: 'Ενότητα 1', body: '' }], worked: { tokens: [{ w: '—', role: '', fam: 'CORE' }], note: '' },
+    exercises: [], exam: { sentence: '', placeholder: '' }, examModel: { summary: '', claims: [] } };
+  gtOpenEditor(id, true);
 }
 
 /* ---- editor overlay ---- */
@@ -476,7 +514,7 @@ function _E(tag, props, kids) {
 }
 function gtCloseEditor() { var ed = GT_SR && GT_SR.querySelector('.gt-editor'); if (ed) ed.remove(); }
 
-function gtOpenEditor(id) {
+function gtOpenEditor(id, isNew) {
   gtCloseEditor();
   var W = JSON.parse(JSON.stringify(LESSONS[id]));   // working copy (single source of truth)
   var st;                                             // status line
@@ -493,6 +531,14 @@ function gtOpenEditor(id) {
   }
 
   fInput('Eyebrow (κατηγορία)', function () { return W.eyebrow; }, function (v) { W.eyebrow = v; });
+  (function () {                                       // family = which launcher group the tile lives in
+    var sel = _E('select', { onchange: function () { W.family = sel.value; } });
+    var fams = (REGISTRY_DEFAULT || []).map(function (f) { return f.family; });
+    if (W.family && fams.indexOf(W.family) < 0) fams.push(W.family);
+    fams.forEach(function (f) { sel.appendChild(_E('option', { value: f, text: f })); });
+    sel.value = W.family || fams[0] || '';
+    fields.push(_E('div', {}, [_E('label', { text: 'Οικογένεια (ομάδα launcher)' }), sel]));
+  })();
   var t = _E('div', { class: 'row2' }, [
     _E('div', {}, [_E('label', { text: 'Τίτλος' }), _E('input', { value: W.title || '', oninput: function (e) { W.title = e.target.value; } })]),
     _E('div', {}, [_E('label', { text: 'Τίτλος (χρυσό)' }), _E('input', { value: W.titleEm || '', oninput: function (e) { W.titleEm = e.target.value; } })]),
@@ -567,8 +613,8 @@ function gtOpenEditor(id) {
   function rebuild() { /* re-open with the current W (after JSON apply) */ jsonTa.value = JSON.stringify(W, null, 2); }
 
   var panel = _E('div', { class: 'gt-ed' }, [
-    _E('h2', { text: 'Επεξεργασία μαθήματος' }),
-    _E('p', { class: 'gt-sub', text: (W.eyebrow || id) + ' · οι αλλαγές αποθηκεύονται για όλους (Firestore) + τοπικά.' }),
+    _E('h2', { text: isNew ? 'Νέο μάθημα' : 'Επεξεργασία μαθήματος' }),
+    _E('p', { class: 'gt-sub', text: isNew ? 'Συμπλήρωσε τα πεδία και «Αποθήκευση» — θα εμφανιστεί ως νέο μάθημα στην οικογένεια που θα διαλέξεις.' : ((W.eyebrow || id) + ' · οι αλλαγές αποθηκεύονται για όλους (Firestore) + τοπικά.') }),
   ].concat(fields).concat([st, bar2]));
 
   var ov = _E('div', { class: 'gt-editor' }, [panel]);
