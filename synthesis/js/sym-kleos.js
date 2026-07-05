@@ -20,7 +20,10 @@
       if (typeof isAdmin !== 'undefined' && isAdmin) return true;
     } catch (_) {}
     try {
-      if (window.currentUser && window.currentUser.email === 'dimikamou@gmail.com') return true;
+      // currentUser in auth.js is a top-level `let` (NOT on window) — the
+      // reliable cross-script source of the signed-in user is firebase.auth().
+      var fu = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
+      if (fu && fu.email === 'dimikamou@gmail.com') return true;
     } catch (_) {}
     try {
       if (document.body && document.body.classList.contains('is-admin')) return true;
@@ -77,16 +80,23 @@
   window.symClaimKleosGrants = function () {
     try {
       if (!(window.firebase && firebase.firestore)) return;
-      var u = window.currentUser;
+      // Signed-in user comes from firebase.auth() — auth.js's `currentUser` is a
+      // top-level let, not a window property, so window.currentUser is undefined.
+      var u = (firebase.auth && firebase.auth().currentUser) || null;
       if (!u || !u.email) return;
-      var ref = firebase.firestore().collection('kleosGrants').doc(String(u.email).toLowerCase());
-      ref.get().then(function (d) {
-        var v = (d && d.exists && d.data()) || {};
-        var pending = +v.pending || 0;
-        if (pending > 0) {
-          window.symAddKleos(pending);
-          ref.set({ pending: 0 }, { merge: true }).catch(function () {});
-        }
+      var db = firebase.firestore();
+      var ref = db.collection('kleosGrants').doc(String(u.email).toLowerCase());
+      // Transaction so two tabs / rapid auth events can't both drain `pending`
+      // (a get→credit→set race would double-credit). Exactly one client reads a
+      // positive pending; it credits locally and zeroes the counter atomically.
+      db.runTransaction(function (tx) {
+        return tx.get(ref).then(function (d) {
+          var pending = +(((d && d.exists && d.data()) || {}).pending) || 0;
+          if (pending > 0) tx.set(ref, { pending: 0 }, { merge: true });
+          return pending;
+        });
+      }).then(function (pending) {
+        if (pending > 0) window.symAddKleos(pending);
       }).catch(function () {});
     } catch (_) {}
   };

@@ -403,13 +403,16 @@ service cloud.firestore {
       allow update: if request.auth != null
                  && (
                    isDuelHost()
-                   // guest claims the still-empty seat (only sets guestUid to self)
-                   || (resource.data.get('guestUid', null) == null
+                   // A guest write may change ONLY guestUid (to self) — not the
+                   // bank/config/status/host. The client only ever sends
+                   // update({guestUid}) from the guest side; host start/close go
+                   // through the isDuelHost() branch. Without hasOnly, a PIN-holder
+                   // could rewrite the shared bank or flip status in the same write.
+                   || (request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['guestUid'])
                        && request.resource.data.guestUid == request.auth.uid
-                       && request.resource.data.hostUid   == resource.data.hostUid)
-                   // the seated guest may keep writing but can't steal the host seat
-                   || (resource.data.get('guestUid', null) == request.auth.uid
-                       && request.resource.data.hostUid    == resource.data.hostUid)
+                       && (resource.data.get('guestUid', null) == null
+                           || resource.data.get('guestUid', null) == request.auth.uid))
                  );
       allow delete: if isSuper();
 

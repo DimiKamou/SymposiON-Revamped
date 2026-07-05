@@ -589,7 +589,7 @@
   window.SymCurriculum = {
     openPanel: function () { _pvp = false; _live = false; window.symGo('curriculum'); },
     openForPvp: function () {
-      _pvp = true; _live = false;
+      _pvp = true; _live = false; _duel = false;
       _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
       window.symGo('curriculum');
     },
@@ -597,6 +597,7 @@
     // it feeds the merged bank into the host lobby instead of the PvP arena.
     openForLiveHost: function () {
       _live = true; _pvp = false; _duel = false; _liveStep = 'content'; _liveBank = null;
+      _liveMode = 'krypteia';   // reset: a prior Friendly-Battle visit leaves a duel-only id here
       _pvpSel = new Map(); _pvpSearch = ''; _pvpTag = null; _pvpCat = [];
       window.symGo('curriculum');
     },
