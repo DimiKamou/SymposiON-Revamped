@@ -988,7 +988,7 @@
       var classSel = rowSel(L({ gr: 'Τάξη', en: 'Class' }), ['Όλες', 'Β΄ Γυμνασίου', 'Γ΄ Λυκείου', 'Λατινικά']);
       var tierSel = rowSel(L({ gr: 'Πακέτο', en: 'Tier' }), grantTiers());
       var durSel = rowSel(L({ gr: 'Διάρκεια', en: 'Duration' }), ['1m', '3m', '12m', 'perm']);
-      pane.appendChild(el('div', { class: 'sc-form' }, [
+      pane.appendChild(el('div', { class: 'sc-form sc-form--grid' }, [
         emailFld, roleSel, classSel, tierSel, durSel,
         el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:6px', onclick: function (e) {
           var email = (emailFld.querySelector('input') || {}).value || '';
@@ -1179,7 +1179,7 @@
       try { amountFld.querySelector('input').type = 'number'; amountFld.querySelector('input').min = '1'; } catch (_e) {}
       var reasonFld = field2(L({ gr: 'Αιτιολογία (προαιρετικό)', en: 'Reason (optional)' }), L({ gr: 'π.χ. βραβείο διαγωνισμού', en: 'e.g. contest prize' }));
 
-      pane.appendChild(el('div', { class: 'sc-form' }, [
+      pane.appendChild(el('div', { class: 'sc-form sc-form--grid' }, [
         emailFld, amountFld, reasonFld,
         el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', style: 'margin-top:6px', onclick: function (e) {
           var email = ((emailFld.querySelector('input') || {}).value || '').trim();

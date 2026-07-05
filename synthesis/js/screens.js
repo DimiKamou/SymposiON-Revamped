@@ -219,10 +219,12 @@
     openOlympus:     { mode:'sym', closeFn:'closeOlympus' },
     openHippodrome:  { mode:'sym', closeFn:'closeHippodrome' },
     openErinyes:     { mode:'sym', closeFn:'closeErinyes' },
-    openLabyrinth:   { mode:'config' },
-    openInvaders:    { mode:'sym', closeFn:'closeInvaders' },
-    openMythMemory:  { mode:'sym', closeFn:'closeMythMemory' },
-    openEpicPuzzle:  { mode:'sym', closeFn:'closeEpicPuzzle' }
+    openLabyrinth:   { mode:'config' }
+    // NOTE: invaders / myth-memory / epic-puzzle are self-contained arcades with
+    // their own built-in pack menus — they do NOT read the injected SYM_QUESTIONS
+    // bank, so routing them through the "Διάλεξε ύλη" picker would silently discard
+    // the user's selection (a false promise). Omit them → S.level falls through to
+    // the honest direct-launch card. Re-add only once each grows a bank adapter.
   };
   // Resolve the injection descriptor for an openFn: a real SymMix entry wins,
   // else the panel default above. Returns null for engines we know nothing about
