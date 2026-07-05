@@ -158,6 +158,7 @@
   /* ── public: which datasets this view can render ────────────────── */
   function canTheoryLesson(id) {
     if (typeof window.canSyntaxLesson === 'function' && window.canSyntaxLesson(id)) return true;
+    if (typeof window.canNegLesson === 'function' && window.canNegLesson(id)) return true;
     return !!((THEORY_META[id] && THEORY_META[id].build) || _authoredDoc(id));
   }
 
