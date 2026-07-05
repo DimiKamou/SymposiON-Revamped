@@ -53,6 +53,69 @@
     div.innerHTML = '<svg viewBox="0 0 198 15" width="198" height="15" fill="none" stroke="currentColor" stroke-width="1.6"><path d="' + d + '"/></svg>';
     return div;
   }
+  // ── procedural emblem glyphs (inline SVG, stroke/fill = currentColor) ──
+  //  olive  → calm difficulty (an olive sprig)
+  //  flame  → normal difficulty (a lit torch)
+  //  horns  → nightmare difficulty & defeat (Minoan horns of consecration)
+  //  laurel → victory (a laurel wreath)
+  function laurelSvg() {
+    // left branch: cubic from the top gap (16,5) down to the tie (22,39);
+    // the right branch is its mirror across x=36. Leaf pairs are laid
+    // parametrically along the curve, splayed off the tangent, pointing
+    // up toward the wreath's opening — a proper feathered laurel.
+    const P = [[16, 5], [8, 15], [8, 28], [22, 39]];
+    function at(t) {
+      const u = 1 - t;
+      const x = u * u * u * P[0][0] + 3 * u * u * t * P[1][0] + 3 * u * t * t * P[2][0] + t * t * t * P[3][0];
+      const y = u * u * u * P[0][1] + 3 * u * u * t * P[1][1] + 3 * u * t * t * P[2][1] + t * t * t * P[3][1];
+      const dx = 3 * u * u * (P[1][0] - P[0][0]) + 6 * u * t * (P[2][0] - P[1][0]) + 3 * t * t * (P[3][0] - P[2][0]);
+      const dy = 3 * u * u * (P[1][1] - P[0][1]) + 6 * u * t * (P[2][1] - P[1][1]) + 3 * t * t * (P[3][1] - P[2][1]);
+      return { x, y, a: Math.atan2(dy, dx) * 180 / Math.PI };
+    }
+    let s = '<svg viewBox="0 0 72 44" width="66" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">' +
+      '<path d="M16 5C8 15 8 28 22 39"/><path d="M56 5C64 15 64 28 50 39"/>';
+    for (let i = 0; i < 5; i++) {
+      const p = at(0.15 + i * 0.175);
+      for (let sd = -1; sd <= 1; sd += 2) {
+        const ang = p.a + 180 + sd * 40;      // leaves sweep up toward the gap
+        const r = ang * Math.PI / 180;
+        const cx = p.x + Math.cos(r) * 4.1, cy = p.y + Math.sin(r) * 4.1;
+        const mang = 180 - ang, mcx = 72 - cx;
+        s += '<ellipse cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" rx="4.6" ry="2.1" transform="rotate(' + ang.toFixed(1) + ' ' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ')" fill="currentColor" fill-opacity=".62" stroke="none"/>';
+        s += '<ellipse cx="' + mcx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" rx="4.6" ry="2.1" transform="rotate(' + mang.toFixed(1) + ' ' + mcx.toFixed(1) + ' ' + cy.toFixed(1) + ')" fill="currentColor" fill-opacity=".62" stroke="none"/>';
+      }
+    }
+    return s + '</svg>';
+  }
+  const EMBLEMS = {
+    olive:
+      '<svg viewBox="0 0 44 44" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">' +
+      '<path d="M10 37C17 30 24 21 33 8"/>' +
+      '<ellipse cx="14" cy="27" rx="5.5" ry="2.2" transform="rotate(-55 14 27)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '<ellipse cx="23" cy="28" rx="5.5" ry="2.2" transform="rotate(-10 23 28)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '<ellipse cx="19" cy="18" rx="5.5" ry="2.2" transform="rotate(-60 19 18)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '<ellipse cx="29" cy="19" rx="5.5" ry="2.2" transform="rotate(-15 29 19)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '<ellipse cx="26" cy="10" rx="5" ry="2" transform="rotate(-65 26 10)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '<ellipse cx="35" cy="12" rx="5" ry="2" transform="rotate(-20 35 12)" fill="currentColor" fill-opacity=".4" stroke="none"/>' +
+      '</svg>',
+    flame:
+      '<svg viewBox="0 0 44 44" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M22 40V30"/><path d="M17 40h10"/><path d="M15 27h14"/>' +
+      '<path d="M22 4c4.5 5.5 8 8.6 8 13.4A8 8 0 0 1 14 17.4C14 12.6 17.5 9.5 22 4Z"/>' +
+      '<path d="M22 12.5c2 2.6 3.6 4 3.6 6.2a3.6 3.6 0 0 1-7.2 0c0-2.2 1.6-3.6 3.6-6.2Z" fill="currentColor" fill-opacity=".35" stroke="none"/>' +
+      '</svg>',
+    horns:
+      '<svg viewBox="0 0 44 44" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+      '<path d="M8 7c-1 12 5 21 14 23 9-2 15-11 14-23"/>' +
+      '<path d="M10 37h24"/><path d="M14 32h16" stroke-opacity=".5"/>' +
+      '</svg>',
+  };
+  function emblemEl(kind, cls) {
+    const div = E('div', cls || 'lb-emblem');
+    div.setAttribute('aria-hidden', 'true');
+    div.innerHTML = kind === 'laurel' ? laurelSvg() : (EMBLEMS[kind] || '');
+    return div;
+  }
   // eased count-up for the result score (respects reduced motion)
   function countUp(el, target) {
     if (!el) return;
@@ -161,6 +224,7 @@
     '<div class="lb-pane lb-dim" id="lb-pause">' +
       '<div class="lb-pause-inner">' +
         '<div class="lb-pause-t" data-gr="Παύση" data-en="Paused">Παύση</div>' +
+        '<div class="lb-pause-stats" id="lb-pause-stats"></div>' +
         '<div class="lb-btn-row">' +
           '<button class="lb-btn" id="lb-pause-resume" type="button" data-gr="Συνέχεια" data-en="Resume">Συνέχεια</button>' +
           '<button class="lb-btn ghost" id="lb-pause-menu" type="button" data-gr="Μενού" data-en="Menu">Μενού</button>' +
@@ -175,6 +239,7 @@
         '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>' +
       '</div>' +
       '<div class="lb-res-inner">' +
+        '<div class="lb-res-emblem" id="lb-res-emblem" aria-hidden="true"></div>' +
         '<div class="lb-res-title" id="lb-res-title"></div>' +
         '<div class="lb-res-sub" id="lb-res-sub"></div>' +
         '<div class="lb-res-stats" id="lb-res-stats"></div>' +
@@ -222,7 +287,9 @@
     D.qOpts       = wrap.querySelector('#lb-q-opts');
     D.qRes        = wrap.querySelector('#lb-q-res');
     D.pause       = wrap.querySelector('#lb-pause');
+    D.pauseStats  = wrap.querySelector('#lb-pause-stats');
     D.result      = wrap.querySelector('#lb-result');
+    D.resEmblem   = wrap.querySelector('#lb-res-emblem');
     D.resTitle    = wrap.querySelector('#lb-res-title');
     D.resSub      = wrap.querySelector('#lb-res-sub');
     D.resStats    = wrap.querySelector('#lb-res-stats');
@@ -231,6 +298,9 @@
     // carved-stele ornament between the result title and the stats
     const resInner = D.result.querySelector('.lb-res-inner');
     if (resInner) resInner.insertBefore(meanderEl(), D.resStats);
+    // and one under the pause title, above the run stats
+    const pauseInner = D.pause.querySelector('.lb-pause-inner');
+    if (pauseInner && D.pauseStats) pauseInner.insertBefore(meanderEl(), D.pauseStats);
 
     // HUD buttons
     D.mute.addEventListener('click', function () {
@@ -301,11 +371,13 @@
     renderSubjects(inner);
 
     const DIFF = (window.LabEngine && LabEngine.DIFF) || {};
+    const EMBLEM_FOR = { calm: 'olive', normal: 'flame', nightmare: 'horns' };
     const row = E('div', 'lb-diff-row');
     ['calm', 'normal', 'nightmare'].forEach(function (key) {
       const d = DIFF[key]; if (!d) return;
       const card = E('button', 'lb-diff lb-diff-' + key); card.type = 'button';
 
+      card.appendChild(emblemEl(EMBLEM_FOR[key], 'lb-diff-ic'));
       const nm = E('div', 'lb-diff-name'); setBi(nm, d.label, d.en); card.appendChild(nm);
       const meta = E('div', 'lb-diff-meta');
       const metaGr = d.baseCols + '×' + d.baseRows + ' · ' + d.lives + '♥ · ' + d.maxDepth + ' κύκλοι';
@@ -518,7 +590,19 @@
   // ── pause ─────────────────────────────────────────────────
   function onPause(paused) {
     if (!wrap) return;
-    if (paused) showPane('#lb-pause');
+    if (paused) {
+      // snapshot of the run so far, carved into a small stele strip
+      if (D.pauseStats) {
+        D.pauseStats.innerHTML = '';
+        const st = window.LabEngine && LabEngine.state;
+        if (st && st.d) {
+          addStat(D.pauseStats, 'ΚΥΚΛΟΣ', 'CIRCLE', toRoman(st.depth) + '/' + toRoman(st.d.maxDepth));
+          addStat(D.pauseStats, 'ΣΚΟΡ', 'SCORE', st.score | 0);
+          addStat(D.pauseStats, 'ΧΡΟΝΟΣ', 'TIME', fmtTime(st.runTime));
+        }
+      }
+      showPane('#lb-pause');
+    }
     else D.pause.classList.remove('on');
   }
 
@@ -540,6 +624,11 @@
 
     D.result.classList.toggle('win', !!res.win);
     D.result.classList.toggle('lose', !res.win);
+    if (D.resEmblem) {
+      D.resEmblem.innerHTML = '';
+      D.resEmblem.className = 'lb-res-emblem ' + (res.win ? 'win' : 'lose');
+      D.resEmblem.appendChild(emblemEl(res.win ? 'laurel' : 'horns', 'lb-emblem'));
+    }
     D.resTitle.className = 'lb-res-title ' + (res.win ? 'win' : 'lose');
     setBi(D.resTitle, res.win ? 'ΕΞΟΔΟΣ' : 'ΧΑΘΗΚΕΣ', res.win ? 'ESCAPED' : 'LOST');
     setBi(D.resSub,

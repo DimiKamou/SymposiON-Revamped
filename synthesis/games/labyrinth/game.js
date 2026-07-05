@@ -242,6 +242,9 @@
   const TEXPAD = 24;
   function bakeMazeTexture() {
     const t = S.tile, cols = S.cols, rows = S.rows;
+    // how deep into the descent we are (0 = first circle, 1 = the last) —
+    // the palette smoulders hotter the deeper you go (presentation only)
+    const dk = clamp((S.depth - 1) / Math.max(1, S.d.maxDepth - 1), 0, 1);
     const tex = document.createElement('canvas');
     tex.width = S.mazeW + TEXPAD * 2; tex.height = S.mazeH + TEXPAD * 2;
     const g = tex.getContext('2d');
@@ -260,7 +263,7 @@
         const warm = 15 + hash2(c * sub + i, r * sub + j) * 14;
         const pick = hash2(r * sub + j + 57, c * sub + i + 91);
         if (pick > 0.968)      g.fillStyle = 'rgba(122,86,38,0.85)';
-        else if (pick < 0.018) g.fillStyle = 'rgba(50,58,70,0.8)';
+        else if (pick < 0.018) g.fillStyle = 'rgba(' + Math.round(50 + 104 * dk) + ',' + Math.round(58 - 14 * dk) + ',' + Math.round(70 - 40 * dk) + ',0.8)';
         else g.fillStyle = 'rgb(' + ((warm + 9) | 0) + ',' + ((warm * 0.7 + 6) | 0) + ',' + ((warm * 0.42 + 3) | 0) + ')';
         g.fillRect(x + i * gsz + 0.7, y + j * gsz + 0.7, gsz - 1.4, gsz - 1.4);
       }
@@ -317,6 +320,28 @@
     g.fillStyle = 'rgba(0,0,0,0.35)';
     for (const rc of S.rects) g.fillRect(rc.x, rc.y + rc.h - 1.2, rc.w, 1.2);
     g.restore();
+
+    // ── the descent smoulders: deeper circles take a hot ember cast ──
+    if (dk > 0.01) {
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalCompositeOperation = 'multiply';
+      g.fillStyle = 'rgb(' + Math.round(255 - 22 * dk) + ',' + Math.round(255 - 58 * dk) + ',' + Math.round(255 - 76 * dk) + ')';
+      g.fillRect(0, 0, tex.width, tex.height);
+      // faint heat pooling up between the tesserae (baked, static)
+      g.globalCompositeOperation = 'lighter';
+      const pools = 2 + Math.round(dk * 6);
+      for (let i = 0; i < pools; i++) {
+        const gx = TEXPAD + hash2(i * 7 + 3, S.depth * 13) * S.mazeW;
+        const gy = TEXPAD + hash2(S.depth * 31, i * 11 + 5) * S.mazeH;
+        const gr = S.tile * (0.9 + hash2(i, 99) * 1.5);
+        const rad = g.createRadialGradient(gx, gy, 0, gx, gy, gr);
+        rad.addColorStop(0, 'rgba(150,38,14,' + (0.05 + dk * 0.09).toFixed(3) + ')');
+        rad.addColorStop(1, 'rgba(150,38,14,0)');
+        g.fillStyle = rad;
+        g.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+      }
+      g.globalCompositeOperation = 'source-over';
+    }
     return tex;
   }
   function fillVein(g, rc) { g.fillRect(rc.x + rc.w / 2 - 0.6, rc.y + 1, 1.2, rc.h - 2); }
@@ -533,9 +558,12 @@
     const stepNow = Math.floor(p.bob / Math.PI);
     if (stepNow !== S.stepPh) {
       S.stepPh = stepNow;
-      if (spd > 80 && !reduced()) {
-        spawn({ x: p.x, y: p.y + S.tile * 0.18, vx: 0, vy: 0, life: 0.42, size: 3.2,
-          ring: true, grow: 2.8, col: 'rgba(232,196,120,1)', alpha: 0.2, lw: 1.2 });
+      if (spd > 80) {
+        window.LabAudio && LabAudio.stepSelf && LabAudio.stepSelf();
+        if (!reduced()) {
+          spawn({ x: p.x, y: p.y + S.tile * 0.18, vx: 0, vy: 0, life: 0.42, size: 3.2,
+            ring: true, grow: 2.8, col: 'rgba(232,196,120,1)', alpha: 0.2, lw: 1.2 });
+        }
       }
     }
 
@@ -862,10 +890,38 @@
     ctx.restore();
 
     drawDarkness();
+    drawTorchRays();
     drawFog();
     drawDreadEyes();
     drawFlash();
     drawGrain();
+  }
+
+  // faint god-rays wheeling slowly around the torch — dust catching the
+  // light. Screen-space, additive, whisper-quiet alphas; skipped under
+  // reduced motion and when the torch is out.
+  function drawTorchRays() {
+    if (reduced() || S.fuel <= 0.02) return;
+    const R = torchRadius();
+    const face = S.player.face || 0;
+    const lx = S.player.x - S.cam.x + Math.cos(face) * R * 0.14;
+    const ly = S.player.y - S.cam.y + Math.sin(face) * R * 0.14;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const spin = S.vignettePulse * 0.16;
+    for (let i = 0; i < 6; i++) {
+      const a = spin + i * TAU / 6;
+      const wob = 0.15 + 0.06 * Math.sin(S.vignettePulse * 0.9 + i * 2.4);
+      const al = (0.015 + 0.012 * Math.sin(S.vignettePulse * 0.6 + i * 1.9)) * (0.3 + S.fuel * 0.7);
+      if (al <= 0.004) continue;
+      ctx.fillStyle = 'rgba(255,206,130,' + al.toFixed(4) + ')';
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.arc(lx, ly, R * 1.02, a - wob, a + wob);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   // expanding ring of light when a brazier is lit — a wave of knowledge

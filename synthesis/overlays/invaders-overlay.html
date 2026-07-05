@@ -12,9 +12,9 @@
         (function(){
           const t = window.INVADERS_THEMES, n = t[(t.indexOf(window.getInvadersTheme())+1)%t.length];
           window.setInvadersTheme(n);
-          this.textContent = ({nyx:'✦ Νυκτομαχία',melan:'⚱ Μελανόμορφος',abyssos:'≈ Ἄβυσσος'})[n];
-        }).call(this)">✦ Νυκτομαχία</button>
-      <div id="invaders-score-display" class="inv-scorechip">Score: 0 | Lives: ♥♥♥</div>
+          this.textContent = (window.INVADERS_THEME_LABELS||{})[n] || n;
+        }).call(this)">▚ Φωσφόρος</button>
+      <div id="invaders-score-display" class="inv-scorechip"><span class="inv-hud-lbl">SCORE</span><span class="inv-hud-score">0</span><span class="inv-hud-sep">·</span><span class="inv-hud-hearts">♥♥♥</span></div>
     </div>
   </div>
 

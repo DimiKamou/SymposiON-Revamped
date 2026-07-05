@@ -11,6 +11,18 @@ import { mat, toon, glow, mesh } from './gfx.js';
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
 const cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, s);
 
+/* triangular prism whose face looks down the road (±Z), apex up.
+   width = full base width, height = apex above base, depth = thickness */
+function pedimentGeo(width, height, depth) {
+  const g = new THREE.CylinderGeometry(1, 1, depth, 3, 1);
+  g.rotateX(Math.PI / 2);        // triangle face now in the XY plane
+  g.rotateZ(Math.PI);            // apex up, base horizontal
+  // 3-gon: apex at y=+1, base at y=-0.5, half-width 0.866
+  g.scale(width / 1.732, height / 1.5, 1);
+  g.translate(0, height / 3, 0); // base sits on y=0
+  return g;
+}
+
 /* ── Doric column (side scenery; tall & elegant) ───────────────── */
 export function buildColumn(height = 5.5) {
   const g = new THREE.Group();
@@ -70,10 +82,95 @@ export function buildTemple() {
     g.add(col);
   }
   const arch = mesh(box(stepW, 0.6, 1.2), stone, 0, 0.8 + 3.7, stepD / 2 - 0.5);
-  const ped = mesh(new THREE.CylinderGeometry(0.01, stepW / 2, 1.4, 3), toon(PAL.roofTile), 0, 0.8 + 4.8, stepD / 2 - 0.5);
-  ped.rotation.y = Math.PI / 2; ped.scale.set(1, 1, 0.18);
+  const ped = mesh(pedimentGeo(stepW, 1.4, 1.0), toon(PAL.roofTile), 0, 0.8 + 4.0, stepD / 2 - 0.5);
   g.add(arch, ped);
   g.scale.setScalar(1.0);
+  return g;
+}
+
+/* ── Propylaea — monumental gate spanning the whole road ────────
+   Pure scenery (no collision): you run beneath it. Passing under a
+   marble gateway every few hundred metres gives the endless road a
+   sense of place and rhythm — the Subway-Surfers "tunnel" beat.    */
+export function buildPropylaea() {
+  const g = new THREE.Group();
+  const stone = toon(PAL.column);
+  const stoneDk = toon(PAL.columnDk);
+  const cream = toon(PAL.pediment);
+  const tile = toon(PAL.roofTile);
+
+  // twin column pairs flanking the road, just outside the kerbs
+  for (const side of [-1, 1]) {
+    for (const off of [5.15, 6.35]) {
+      const x = side * off;
+      g.add(mesh(box(1.0, 0.34, 1.0), stoneDk, x, 0.17, 0));
+      g.add(mesh(cyl(0.34, 0.42, 5.3, 12), stone, x, 2.99, 0));
+      g.add(mesh(cyl(0.48, 0.38, 0.2, 12), stone, x, 5.72, 0));
+      g.add(mesh(box(0.9, 0.18, 0.9), stoneDk, x, 5.9, 0));
+    }
+  }
+  // architrave + frieze across the full span
+  const architrave = mesh(box(14.1, 0.62, 1.3), stone, 0, 6.3, 0);
+  const frieze = mesh(box(14.1, 0.44, 1.36), cream, 0, 6.83, 0);
+  g.add(architrave, frieze);
+  for (let i = 0; i < 9; i++) {                      // triglyph rhythm
+    g.add(mesh(box(0.42, 0.44, 0.06), stoneDk, -6.4 + i * 1.6, 6.83, 0.72));
+  }
+  // central pediment (front-facing triangular prism) + geison + acroterion
+  const ped = mesh(pedimentGeo(7.2, 1.35, 1.0), cream, 0, 7.05, 0);
+  const cap = mesh(box(7.6, 0.18, 1.2), tile, 0, 7.08, 0);
+  const acro = mesh(new THREE.ConeGeometry(0.3, 0.55, 6), tile, 0, 8.65, 0);
+  g.add(ped, cap, acro);
+  // festival garland — pennants strung beneath the architrave
+  const rope = mesh(box(11.6, 0.045, 0.045), toon(PAL.trunk), 0, 5.9, 0.4);
+  g.add(rope);
+  const cols = [PAL.sash, PAL.terra, PAL.drachma, PAL.olive];
+  for (let i = 0; i < 8; i++) {
+    const p = mesh(box(0.42, 0.5, 0.045), toon(cols[i % 4]), -4.9 + i * 1.4, 5.62, 0.4);
+    p.rotation.x = rand(-0.1, 0.1);
+    p.rotation.z = rand(-0.08, 0.08);
+    g.add(p);
+  }
+  g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  return g;
+}
+
+/* ── Herm — square marble pillar topped with a bearded head ────── */
+export function buildHerm() {
+  const g = new THREE.Group();
+  const marbleM = toon(PAL.column);
+  const marbleDk = toon(PAL.columnDk);
+  const pillar = mesh(box(0.44, 1.9, 0.4), marbleM, 0, 0.95, 0);
+  const base = mesh(box(0.66, 0.22, 0.6), marbleDk, 0, 0.11, 0);
+  const shoulders = mesh(box(0.68, 0.14, 0.42), marbleM, 0, 1.94, 0);
+  const head = mesh(new THREE.SphereGeometry(0.21, 10, 8), marbleM, 0, 2.2, 0);
+  head.scale.set(0.92, 1.1, 0.95);
+  const beard = mesh(new THREE.ConeGeometry(0.13, 0.3, 6), marbleDk, 0, 2.02, 0.13);
+  beard.rotation.x = 0.5;
+  g.add(base, pillar, shoulders, head, beard);
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+/* ── Amphora cluster resting on the verge (scenery, off-road) ──── */
+export function buildVergeAmphorae() {
+  const g = new THREE.Group();
+  const clay = [PAL.roofTile, PAL.roofTileDk, PAL.drachmaDk];
+  const n = 2 + (Math.random() * 3 | 0);
+  for (let i = 0; i < n; i++) {
+    const a = new THREE.Group();
+    const c = toon(choice(clay));
+    const bodyM = mesh(new THREE.SphereGeometry(0.3, 10, 8), c, 0, 0.44, 0);
+    bodyM.scale.set(1, 1.3, 1);
+    const neck = mesh(cyl(0.1, 0.16, 0.34, 8), c, 0, 0.88, 0);
+    const foot = mesh(cyl(0.14, 0.09, 0.18, 8), c, 0, 0.09, 0);
+    a.add(bodyM, neck, foot);
+    a.position.set(rand(-0.8, 0.8), 0, rand(-0.5, 0.5));
+    a.scale.setScalar(rand(0.7, 1.0));
+    if (Math.random() < 0.3) { a.rotation.z = 1.35; a.position.y = 0.12; }  // one toppled
+    g.add(a);
+  }
+  g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
   return g;
 }
 

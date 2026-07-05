@@ -635,9 +635,14 @@ window.SymLoader = (function () {
       mark.appendChild(brandMark('sym-loader__svg'));
     }
   }
-  let _safety = 0;
+  let _safety = 0, _showTok = 0;
   function show(msg) {
-    const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on'));
+    const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…');
+    // Token guards the deferred class-add: if hide() lands before this rAF
+    // fires (instant cache-hit relaunches), the stale add must NOT run — it
+    // would re-veil the UI with the safety timer already cleared.
+    const tok = ++_showTok;
+    requestAnimationFrame(() => { if (tok === _showTok) o.classList.add('on'); });
     // Safety net: the loader has pointer-events:auto while .on, so if a lazy-load
     // ever HANGS (e.g. a game engine + Firebase that never resolves), synLaunch's
     // finally→hide never runs and the loader silently blocks EVERY click. Force a
@@ -645,6 +650,6 @@ window.SymLoader = (function () {
     clearTimeout(_safety); _safety = setTimeout(hide, 10000);
     return o;
   }
-  function hide() { clearTimeout(_safety); if (ov) ov.classList.remove('on'); }
+  function hide() { _showTok++; clearTimeout(_safety); if (ov) ov.classList.remove('on'); }
   return { show, hide };
 })();

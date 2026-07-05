@@ -6,10 +6,14 @@
    front-page theme (--sym-*).
    ============================================================ */
 #labyrinth-wrap {
-  /* Chrome derives from the live front-page theme (--sym-*) so the game
-     background + surfaces + gold accent follow the chosen theme. Gameplay
-     colours (terra/aegean player + depth markers) stay fixed for legibility. */
-  --lb-bg:var(--sym-bg, #0C0806);
+  /* The dungeon interior is ALWAYS torch-lit dark (the canvas floor and the
+     dim panes are baked dark), so surfaces + text are pinned to warm obsidian
+     values that stay legible on every site theme — light themes included.
+     The GOLD accent still follows the live theme via --sym-gold, keeping the
+     chrome theme-aware without ever going dark-text-on-dark. */
+  --sym-bg-card:color-mix(in srgb, #16100A 93%, var(--sym-gold, #C49028) 7%);
+  --sym-fg:color-mix(in srgb, #ECDFBE 90%, var(--sym-gold, #C49028) 10%);
+  --lb-bg:#0C0806;
   --lb-panel:var(--sym-bg-card, #14100A);
   --lb-raised:color-mix(in srgb, var(--sym-bg-card, #1E1710) 82%, var(--sym-fg, #fff) 7%);
   --lb-gold:var(--sym-gold, #C49028);
@@ -225,6 +229,12 @@
 }
 .lb-diff:hover::after{ transform:translateX(120%); }
 .lb-diff:active{ transform:translateY(-1px) scale(.99); }
+.lb-diff-ic{
+  color:var(--lb-diffc, var(--lb-gold)); opacity:.8; line-height:0; margin-bottom:3px;
+  filter:drop-shadow(0 0 7px color-mix(in srgb, var(--lb-diffc, var(--lb-gold)) 38%, transparent));
+  transition:.22s var(--lb-ease); transform-origin:left center;
+}
+.lb-diff:hover .lb-diff-ic{ opacity:1; transform:translateY(-2px) scale(1.07); }
 .lb-diff-name{ font-family:var(--f-serif); font-size:26px; font-weight:500; line-height:1; }
 .lb-diff-meta{ font-family:var(--f-mono); font-size:9px; letter-spacing:1.5px; color:var(--lb-muted); }
 .lb-diff-best{ font-family:var(--f-mono); font-size:9px; letter-spacing:.5px; color:var(--lb-gold); margin-top:3px; }
@@ -379,6 +389,15 @@
   font-family:var(--f-serif); font-weight:300; font-size:clamp(40px,8vw,68px); color:var(--lb-gold-lt);
   text-shadow:0 0 26px color-mix(in srgb, var(--sym-gold, #C49028) 30%, transparent);
 }
+/* run snapshot on the pause screen — a small carved strip */
+.lb-pause-stats{ display:flex; gap:1px; background:var(--lb-bdr); border:1px solid var(--lb-bdr); }
+.lb-pause-stats:empty{ display:none; }
+.lb-pause-stats>div{
+  background:color-mix(in srgb, var(--sym-bg-card, #14100A) 90%, transparent);
+  padding:10px 22px; display:flex; flex-direction:column; gap:4px; align-items:center;
+}
+.lb-pause-stats span{ font-family:var(--f-mono); font-size:8px; letter-spacing:2px; color:var(--lb-muted); }
+.lb-pause-stats b{ font-family:var(--f-serif); font-size:22px; font-weight:400; color:var(--lb-text); font-variant-numeric:tabular-nums; }
 .lb-res-inner{ width:min(520px,100%); position:relative; z-index:2; }
 
 /* result ambience — cool aegean rise on escape, red smoulder on defeat */
@@ -397,6 +416,17 @@
 #lb-result.lose .lb-res-fx i{
   background:#ff7a4c; box-shadow:0 0 6px 1px rgba(224,90,40,.75);
   animation-duration:10s;
+}
+/* victory laurel / defeat horns above the verdict */
+.lb-res-emblem{ line-height:0; margin-bottom:-6px; }
+.lb-res-emblem svg{ width:84px; height:auto; }
+.lb-res-emblem.win{ color:var(--lb-aegean-lt); filter:drop-shadow(0 0 16px rgba(127,182,204,.55)); }
+.lb-res-emblem.lose{ color:var(--lb-terra-lt); filter:drop-shadow(0 0 16px rgba(224,122,76,.5)); }
+.lb-pane.on .lb-res-emblem{ animation:lb-emblemin .9s var(--lb-ease) both; }
+@keyframes lb-emblemin{
+  from{ opacity:0; transform:translateY(-12px) scale(.66); }
+  60%{ transform:translateY(0) scale(1.06); }
+  to{ opacity:1; transform:scale(1); }
 }
 .lb-res-title{ font-family:var(--f-serif); font-weight:300; font-size:clamp(52px,10vw,96px); line-height:1; }
 .lb-pane.on .lb-res-title{ animation:lb-titlein .8s var(--lb-ease) both; }
@@ -474,6 +504,7 @@
   .lb-pane.on .lb-pause-inner,
   .lb-pane.on .lb-res-inner,
   .lb-pane.on .lb-res-title,
+  .lb-pane.on .lb-res-emblem,
   .lb-pane.on .lb-res-stats>div,
   .lb-pane.on .lb-quiz-box,
   .lb-depth-banner.on .lb-depth-big,
@@ -526,7 +557,8 @@
 .lb-frame-gr {
   font-family: var(--sym-font-serif, 'Cormorant Garamond', serif);
   font-size: 22px; font-weight: 500; line-height: 1;
-  color: var(--sym-fg, #EFE9DC); letter-spacing: -.3px;
+  /* the frame bar is hardcoded dark → fixed parchment, not theme fg */
+  color: #EFE9DC; letter-spacing: -.3px;
 }
 .lb-frame-en {
   font-family: var(--sym-font-mono, 'JetBrains Mono', monospace);
@@ -544,7 +576,7 @@
 .lb-close-btn:hover {
   background: color-mix(in srgb, var(--ac, var(--lb-terra)) 10%, transparent) !important;
   border-color: var(--ac, var(--lb-terra)) !important;
-  color: var(--sym-fg, #EFE9DC) !important;
+  color: #EFE9DC !important;
   transform: none !important;
 }
 .lb-stage { flex: 1; overflow: hidden; padding: 0 !important; position: relative; }

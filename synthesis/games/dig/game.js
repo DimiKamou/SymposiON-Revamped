@@ -155,26 +155,66 @@ function _digBuild() {
 <!-- MENU -->
 <div id="dg-menu-scr" class="dg-screen active">
   <svg class="dg-scene" viewBox="0 0 900 230" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <path d="M0 72 Q150 52 300 68 T600 62 T900 74 L900 230 L0 230 Z" fill="#26170A" opacity=".85"/>
-    <path d="M0 118 Q180 98 360 110 T720 106 T900 114 L900 230 L0 230 Z" fill="#1E1207" opacity=".95"/>
-    <path d="M0 162 Q220 146 440 156 T900 158 L900 230 L0 230 Z" fill="#130B04"/>
-    <g fill="#0C0702" opacity=".9">
-      <path d="M652 128 c-20 0 -32 16 -29 40 c3 22 15 36 29 36 c14 0 26 -14 29 -36 c3 -24 -9 -40 -29 -40 z"/>
-      <rect x="642" y="118" width="20" height="12"/>
-      <path d="M640 124 q-12 6 -6 18 l6 2 q-6 -10 4 -16 z"/>
-      <path d="M664 124 q12 6 6 18 l-6 2 q6 -10 -4 -16 z"/>
-      <ellipse cx="230" cy="176" rx="34" ry="8"/>
-      <ellipse cx="230" cy="168" rx="30" ry="7"/>
-      <path d="M430 190 a18 18 0 0 1 36 0 z"/>
+    <defs>
+      <radialGradient id="dg-glow-g" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"  stop-color="#FFC873" stop-opacity=".5"/>
+        <stop offset="45%" stop-color="#E79A3C" stop-opacity=".2"/>
+        <stop offset="100%" stop-color="#E79A3C" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <g class="dg-sc-far">
+      <path d="M0 72 Q150 52 300 68 T600 62 T900 74 L900 230 L0 230 Z" fill="#26170A" opacity=".85"/>
     </g>
-    <g stroke="#3A2712" stroke-width="1" opacity=".5" fill="none">
-      <path d="M0 90 Q200 74 420 84 T900 88"/>
-      <path d="M0 138 Q240 122 480 132 T900 134"/>
+    <g class="dg-sc-mid">
+      <path d="M0 118 Q180 98 360 110 T720 106 T900 114 L900 230 L0 230 Z" fill="#1E1207" opacity=".95"/>
+      <g stroke="#3A2712" stroke-width="1" opacity=".5" fill="none">
+        <path d="M0 90 Q200 74 420 84 T900 88"/>
+        <path d="M0 138 Q240 122 480 132 T900 134"/>
+      </g>
+      <g fill="#0C0702" opacity=".9">
+        <path d="M652 128 c-20 0 -32 16 -29 40 c3 22 15 36 29 36 c14 0 26 -14 29 -36 c3 -24 -9 -40 -29 -40 z"/>
+        <rect x="642" y="118" width="20" height="12"/>
+        <path d="M640 124 q-12 6 -6 18 l6 2 q-6 -10 4 -16 z"/>
+        <path d="M664 124 q12 6 6 18 l-6 2 q6 -10 -4 -16 z"/>
+        <ellipse cx="230" cy="176" rx="34" ry="8"/>
+        <ellipse cx="230" cy="168" rx="30" ry="7"/>
+        <path d="M430 190 a18 18 0 0 1 36 0 z"/>
+      </g>
+      <g opacity=".85">
+        <path d="M96 156 q48 -15 96 0 l-7 36 q-41 11 -82 0 z" fill="#0E0803"/>
+        <g stroke="#2B1B0C" stroke-width="2" opacity=".8" fill="none">
+          <path d="M112 152 l-4 36"/><path d="M130 149 l-2 40"/><path d="M146 148 l0 42"/><path d="M162 149 l2 40"/><path d="M180 152 l4 36"/>
+        </g>
+      </g>
+    </g>
+    <g class="dg-sc-near">
+      <path d="M0 162 Q220 146 440 156 T900 158 L900 230 L0 230 Z" fill="#130B04"/>
+      <g class="dg-sc-twine">
+        <path d="M40 178 L860 168" stroke="#C89A46" stroke-width="1" opacity=".38" stroke-dasharray="1 7"/>
+        <g fill="#C89A46" opacity=".5">
+          <rect x="38" y="173" width="3" height="13" rx="1"/>
+          <rect x="446" y="168" width="3" height="13" rx="1"/>
+          <rect x="855" y="163" width="3" height="13" rx="1"/>
+        </g>
+      </g>
+      <g class="dg-sc-lantern">
+        <circle class="dg-sc-glow" cx="784" cy="118" r="92" fill="url(#dg-glow-g)"/>
+        <rect x="781" y="130" width="5" height="70" fill="#0A0501"/>
+        <path d="M769 130 h29 l-4 -28 h-21 z" fill="#0A0501"/>
+        <rect x="773" y="100" width="21" height="4" fill="#0A0501"/>
+        <path d="M779 124 q4.5 -13 9 0 q-4.5 7 -9 0 z" fill="#FFD98A" class="dg-sc-flame"/>
+      </g>
+      <g opacity=".92" fill="none">
+        <path d="M60 216 L128 184" stroke="#0A0501" stroke-width="6" stroke-linecap="round"/>
+        <path d="M114 170 q28 -5 42 18" stroke="#0A0501" stroke-width="9" stroke-linecap="round"/>
+        <path d="M86 192 L140 214" stroke="#0A0501" stroke-width="5" stroke-linecap="round"/>
+        <path d="M140 214 l24 7 -9 -19 z" fill="#0A0501" stroke="none"/>
+      </g>
     </g>
   </svg>
   <div class="dg-menu-wrap">
     <div class="dg-kicker dg-up" style="--d:0">ΑΡΧΑΙΟΛΟΓΙΚΗ ΑΠΟΣΤΟΛΗ · FIELD EXPEDITION</div>
-    <div class="dg-logo dg-up" style="--d:1">Ανασκαφή<em>.</em></div>
+    <div class="dg-logo dg-up" style="--d:1">${'Ανασκαφή'.split('').map((ch, i) => `<span class="dg-lg" style="--li:${i}">${ch}</span>`).join('')}<em>.</em></div>
     <div class="dg-logo-sub dg-up" style="--d:2">Archaeological Dig — Ιστορική Αποκάλυψη</div>
     <div class="dg-meander dg-up" style="--d:3" aria-hidden="true"></div>
     <div class="dg-rule dg-up" style="--d:4">
@@ -203,6 +243,7 @@ function _digBuild() {
         <span class="dg-hud-val" id="dg-scan-cnt">0</span>
       </div>
     </div>
+    <div class="dg-progress" aria-hidden="true"><div class="dg-progress-fill" id="dg-prog-fill"></div></div>
     <div class="dg-status-msg" id="dg-status">Κλικ σε τετράγωνο για να σκάψεις. Σάρωσε γραμμή/στήλη για ανίχνευση.</div>
     <div class="dg-grid-outer">
       <div class="dg-site">
@@ -237,7 +278,9 @@ function _digBuild() {
     <div class="dg-art-box">
       <div class="dg-art-stamp" aria-hidden="true">ΕΥΡΕΘΗ · RECOVERED</div>
       <div class="dg-art-spot" aria-hidden="true"></div>
+      <div class="dg-art-shine" aria-hidden="true"></div>
       <div class="dg-art-stage">
+        <div class="dg-art-rays" aria-hidden="true"></div>
         <div class="dg-art-icon" id="dg-art-icon"></div>
         <div class="dg-art-plinth" aria-hidden="true"></div>
       </div>
@@ -274,6 +317,38 @@ function _digBuild() {
 <div class="dg-vignette" aria-hidden="true"></div>`;
 
   _digInitDustCanvas();
+  _digInitParallax();
+}
+
+/* Pointer-driven ambience (presentation only):
+   · --px/--py on #dig-wrap drive a gentle parallax of the menu scene layers
+     and the lantern glow (skipped entirely under reduced motion).
+   · --lx/--ly on .dg-pit position a warm hand-held-lantern light that follows
+     the cursor over the trench (pure light, no motion — always on). */
+function _digInitParallax() {
+  const wrap = document.getElementById('dig-wrap');
+  if (!wrap || wrap._digParallax) return;
+  wrap._digParallax = true;
+
+  wrap.addEventListener('pointermove', (e) => {
+    if (_digRM()) return;
+    const r = wrap.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const px = ((e.clientX - r.left) / r.width - 0.5) * 2;
+    const py = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    wrap.style.setProperty('--px', px.toFixed(3));
+    wrap.style.setProperty('--py', py.toFixed(3));
+  });
+
+  const pit = wrap.querySelector('.dg-pit');
+  if (pit) {
+    pit.addEventListener('pointermove', (e) => {
+      const r = pit.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      pit.style.setProperty('--lx', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
+      pit.style.setProperty('--ly', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
+    });
+  }
 }
 
 function _digShowScr(id) {
@@ -400,6 +475,10 @@ function _digUpdateHUD() {
   _digSetVal(document.getElementById('dg-dug-cnt'),   `${_dig.dugCount}/64`);
   _digSetVal(document.getElementById('dg-scan-cnt'),  String(_dig.scanCount));
 
+  // Excavation progress strata-bar under the HUD
+  const pf = document.getElementById('dg-prog-fill');
+  if (pf) pf.style.width = ((_dig.dugCount / 64) * 100).toFixed(1) + '%';
+
   // Ignite the relic glyphs for fully recovered artifacts
   const row = document.getElementById('dg-found-icons');
   if (row && _dig) {
@@ -514,8 +593,24 @@ function _digDoScan(axis, index) {
     }
   }
 
-  // Radar sweep: staggered ping travelling along the row/col, then a hold
-  // glow — amber when something is buried there, olive when clear.
+  // Radar sweep: a light beam races along the row/col ahead of a staggered
+  // per-cell ping, then a hold glow — amber when something is buried there,
+  // olive when clear.
+  const pit = document.querySelector('#dig-wrap .dg-pit');
+  if (pit && !_digRM()) {
+    const beam = document.createElement('div');
+    beam.className = 'dg-beam ' + (axis === 'row' ? 'dg-beam-row' : 'dg-beam-col') + (hasArtifact ? ' hit' : '');
+    if (axis === 'row') {
+      beam.style.top    = `calc(6px + (100% - 12px) * ${index / 8})`;
+      beam.style.height = 'calc((100% - 12px) / 8)';
+    } else {
+      beam.style.left  = `calc(6px + (100% - 12px) * ${index / 8})`;
+      beam.style.width = 'calc((100% - 12px) / 8)';
+    }
+    pit.appendChild(beam);
+    setTimeout(() => beam.remove(), 950);
+  }
+
   const grid = document.getElementById('dg-grid');
   if (grid) {
     const stag = _digRM() ? 0 : 45;
@@ -702,12 +797,23 @@ function _digEndGame() {
       ? `You uncovered ${_dig.dugCount} tiles, used ${_dig.scanCount} radar scans, and retrieved all 4 ancient artifacts. The museum thanks you.`
       : `Ανέσκαψες ${_dig.dugCount} τετράγωνα, χρησιμοποίησες ${_dig.scanCount} σαρώσεις ραντάρ και ανέσυρες και τα 4 αρχαία ευρήματα. Το μουσείο σε ευχαριστεί.`;
   }
-  _digStopDust();
   if(typeof awardGameRewards==='function' && _dig.foundCount > 0){ awardGameRewards('dig', { score: _dig.foundCount, perfect: false }); }
   setTimeout(() => {
     _digShowScr('dg-result-scr');
     _digCountUp('dg-res-dug',   _dig.dugCount);
     _digCountUp('dg-res-scans', _dig.scanCount);
+    // Celebration: keep the lantern motes drifting and let off a few
+    // staggered fountains of gold sparks over the trophy wall.
+    const cnv = document.getElementById('dg-dust-cnv');
+    if (cnv && !_digRM()) {
+      for (let k = 0; k < 5; k++) {
+        setTimeout(() => _digBurstSparks(
+          cnv.width  * (0.18 + Math.random() * 0.64),
+          cnv.height * (0.16 + Math.random() * 0.34),
+          16
+        ), 260 + k * 340);
+      }
+    }
   }, 400);
 }
 

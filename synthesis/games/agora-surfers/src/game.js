@@ -233,6 +233,7 @@ export class Game {
     $('start').classList.add('hidden');
     $('gameover').classList.add('hidden');
     $('pause').classList.add('hidden');
+    $('qwrap').classList.remove('visible');   // no stale quiz card from a prior run
     this.clock.getDelta();
   }
   toMenu() {
@@ -360,7 +361,9 @@ export class Game {
     this._chaser(dt);
     this.ground.update(this.distance);
 
-    if (!this.quizActive && this.queue.length && this.runTime() > this.nextQuizAt) this._openQuiz();
+    // (phase guard: _chaser above may have flipped us into 'caught' this
+    // very frame — never raise the quiz card over the grab cine)
+    if (this.phase === 'playing' && !this.quizActive && this.queue.length && this.runTime() > this.nextQuizAt) this._openQuiz();
     if (this.quizActive) this._tickQuiz(dt);
 
     // coin-chain melody window
@@ -547,10 +550,12 @@ export class Game {
 
     const prox = clamp(1 - (this.chaseGap - G.CHASE_CAUGHT) / (G.CHASE_MAX - G.CHASE_CAUGHT), 0, 1);
     this._prox = prox;
-    let tz = 6.6 - prox * 4.4;
-    // he closes in on your inside shoulder, not dead-centre — keeps the
-    // runner readable even when he's breathing down your neck
-    const side = (this.px >= 0 ? -1 : 1) * (0.4 + prox * 0.9);
+    // presence escalation: safe → he sinks below the frame edge; mid →
+    // full body looming behind; danger → right on your heels.
+    let tz = 7.4 - prox * 5.2;
+    // he closes in on your inside shoulder, not dead-centre — the offset
+    // grows when he's near the camera so he never eclipses the runner
+    const side = (this.px >= 0 ? -1 : 1) * (0.55 + (1 - prox) * 1.25);
     let lam = 5, tx = this.px * 0.5 + side;
 
     // quiz gate: he creeps up over your inside shoulder while the question

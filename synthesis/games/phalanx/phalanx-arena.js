@@ -89,10 +89,15 @@
       this.flares = [];      // {idx, t, dur}
       this.glides = [];      // {from,to,unit,gallop,t,dur,cb,hop}
       this.ripples = [];     // {idx, t, rgb, amp} — formation ripple waves
+      this.fades = [];       // {idx, unit, t, dur} — fallen units sinking as shades
       this.motes = [];
       this.clouds = [];
       this.ridges = [];
+      this.stars = [];       // pre-dawn stars, fading toward the horizon
+      this.birds = [];       // carrion birds wheeling above the ridges
       this.shakeAmt = 0; this.shakeMag = 0;
+      this.flash = 0;        // warm full-screen impact flash
+      this.hoverIdx = -1;    // tile under the cursor (mouse affordance)
       this.vict = 0; this.victWin = false;
       this.phase = 0;
       this._alive = false; this._raf = null; this._last = 0;
@@ -104,6 +109,8 @@
       }));
 
       this._onClick = (e) => this._handleClick(e);
+      this._onMove = (e) => this._handleMove(e);
+      this._onLeave = () => { this.hoverIdx = -1; this.canvas.style.cursor = ''; };
       this._attached = false;
       this._attach();
       this._resize();
@@ -117,6 +124,8 @@
     _attach() {
       if (!this._attached) {
         this.canvas.addEventListener('pointerdown', this._onClick);
+        this.canvas.addEventListener('pointermove', this._onMove);
+        this.canvas.addEventListener('pointerleave', this._onLeave);
         this._attached = true;
       }
       if (!this._ro) {
@@ -136,10 +145,13 @@
       if (this._raf) cancelAnimationFrame(this._raf);
       if (this._ro) { this._ro.disconnect(); this._ro = null; }
       this.canvas.removeEventListener('pointerdown', this._onClick);
+      this.canvas.removeEventListener('pointermove', this._onMove);
+      this.canvas.removeEventListener('pointerleave', this._onLeave);
+      this.canvas.style.cursor = '';
       this._attached = false;
       if (window.PhalanxAudio) window.PhalanxAudio.stopDrone();
     }
-    reset() { this.parts = []; this.flares = []; this.glides = []; this.ripples = []; this.vict = 0; this.shakeAmt = 0; }
+    reset() { this.parts = []; this.flares = []; this.glides = []; this.ripples = []; this.fades = []; this.vict = 0; this.shakeAmt = 0; this.flash = 0; this.hoverIdx = -1; }
 
     shake(mag) { this.shakeAmt = 1; this.shakeMag = mag || 5; }
 
@@ -152,14 +164,24 @@
     clashAt(idx, cb) {
       this.flares.push({ idx, t: 0, dur: 38 });
       this.shake(6);
+      if (!RM.matches) this.flash = 0.85;
       this._ripple(idx, [255, 220, 150], 0.10);
       const c = this._cellCenter(idx);
       for (let i = 0; i < 26; i++) this.parts.push(new Particle(c.x, c.y, { color: i % 2 ? PAL.goldHi : '#ffd98a', spd: 2 + Math.random() * 5, lift: 1, size: 1 + Math.random() * 2 }));
       if (window.PhalanxAudio) window.PhalanxAudio.clash();
       if (cb) setTimeout(cb, 620);
     }
-    burst(idx, kind) {
+    // the ranks dress their line — a gold wave rolls out from the centre
+    rally() {
+      this._ripple(14, [240, 200, 120], 0.13);
+      this._ripple(21, [240, 200, 120], 0.13);
+    }
+    burst(idx, kind, unit) {
       const c = this._cellCenter(idx);
+      // a slain unit lingers as a sinking shade instead of blinking away
+      if (unit && (kind === 'win' || kind === 'lose')) {
+        this.fades.push({ idx, unit: { owner: unit.owner, type: unit.type, revealed: true }, t: 0, dur: RM.matches ? 6 : 40 });
+      }
       if (kind === 'win') {
         this._ripple(idx, [240, 200, 120], 0.22);   // the line strengthens
         for (let i = 0; i < 30; i++) this.parts.push(new Particle(c.x, c.y, { color: i % 3 ? PAL.gold : PAL.goldHi, spd: 2 + Math.random() * 5, lift: 1.5 }));
@@ -231,6 +253,28 @@
         }
         this.ridges.push({ pts, base: this.horizonY, col: L ? 'rgba(44,26,26,0.9)' : 'rgba(30,18,24,0.92)' });
       }
+
+      // last stars of the night, dissolving toward the ember horizon
+      const sr = mulberry(4210);
+      this.stars = [];
+      const ns = Math.round(W / 30);
+      for (let i = 0; i < ns; i++) this.stars.push({
+        x: sr() * W, y: sr() * this.horizonY * 0.7,
+        r: 0.5 + sr() * 1.1, tw: sr() * 6.283, sp: 0.5 + sr() * 1.8,
+      });
+
+      // carrion birds wheeling over the field
+      this.birds = [];
+      if (W > 380) for (let i = 0; i < 3; i++) this.birds.push({
+        cx: W * (0.22 + i * 0.27), cy: Math.max(18, this.horizonY - 46 - i * 18),
+        r: 24 + i * 15, ph: i * 2.4, sp: (0.011 + i * 0.004) * (i % 2 ? -1 : 1),
+        fl: i * 1.7,
+      });
+
+      // cinematic vignette, cached per layout
+      const vg = this.ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.max(W, H) * 0.72);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.40)');
+      this._vig = vg;
     }
     _cellRect(idx) { const r = (idx / 6) | 0, c = idx % 6; return { x: this.ox + c * this.tile, y: this.oy + r * this.tile, s: this.tile }; }
     _cellCenter(idx) { const r = this._cellRect(idx); return { x: r.x + r.s / 2, y: r.y + r.s / 2 }; }
@@ -243,6 +287,29 @@
       if (window.PhalanxAudio) window.PhalanxAudio._init();
       this.opts.onTileClick(r * 6 + c);
     }
+    // rows a side may deploy on (mirrors the engine's zones, presentation only)
+    _inPlaceZone(idx) {
+      const r = (idx / 6) | 0;
+      return this.state.placeSide === 'ai' ? r < 3 : r >= 3;
+    }
+    _handleMove(e) {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const c = Math.floor((x - this.ox) / this.tile), r = Math.floor((y - this.oy) / this.tile);
+      const idx = (c < 0 || c > 5 || r < 0 || r > 5) ? -1 : r * 6 + c;
+      this.hoverIdx = idx;
+      let act = false;
+      if (idx >= 0) {
+        const st = this.state;
+        if (st.placement) act = this._inPlaceZone(idx) && !st.cells[idx] && st.terrain[idx] !== 'rock';
+        else {
+          const cell = st.cells[idx];
+          act = st.validMoves.indexOf(idx) !== -1 || st.rangedTargets.indexOf(idx) !== -1 ||
+                idx === st.selected || !!(cell && cell.owner === st.turn);
+        }
+      }
+      this.canvas.style.cursor = act ? 'pointer' : 'default';
+    }
 
     // ── loop ─────────────────────────────────────────────
     _tick(now) {
@@ -254,9 +321,12 @@
     _update(dt) {
       this.phase += 0.025 * dt;
       if (this.shakeAmt > 0) this.shakeAmt = Math.max(0, this.shakeAmt - 0.06 * dt);
+      if (this.flash > 0) this.flash = Math.max(0, this.flash - 0.055 * dt);
       for (let i = this.parts.length - 1; i >= 0; i--) { this.parts[i].update(); if (this.parts[i].dead()) this.parts.splice(i, 1); }
       for (let i = this.flares.length - 1; i >= 0; i--) { this.flares[i].t += dt; if (this.flares[i].t >= this.flares[i].dur) this.flares.splice(i, 1); }
       for (let i = this.ripples.length - 1; i >= 0; i--) { this.ripples[i].t += dt; if (this.ripples[i].t > 56) this.ripples.splice(i, 1); }
+      for (let i = this.fades.length - 1; i >= 0; i--) { this.fades[i].t += dt; if (this.fades[i].t >= this.fades[i].dur) this.fades.splice(i, 1); }
+      if (!RM.matches) for (const b of this.birds) b.ph += b.sp * dt;
       for (let i = this.glides.length - 1; i >= 0; i--) {
         const g = this.glides[i]; g.t += dt;
         if (g.t >= g.dur) { const cb = g.cb; this.glides.splice(i, 1); if (cb) cb(); }
@@ -303,6 +373,14 @@
       this._drawParticles();
       ctx.restore();
 
+      // cinematic vignette pulls the eye to the battlefield
+      if (this._vig) { ctx.fillStyle = this._vig; ctx.fillRect(0, 0, W, H); }
+      // warm bronze flash on impact
+      if (this.flash > 0) {
+        ctx.fillStyle = `rgba(255,205,140,${(this.flash * 0.07).toFixed(3)})`;
+        ctx.fillRect(0, 0, W, H);
+      }
+
       if (this.vict > 0) this._drawVictory();
     }
 
@@ -325,12 +403,40 @@
       rg.addColorStop(0.35, 'rgba(214,124,54,0.07)');
       rg.addColorStop(1, 'rgba(214,124,54,0)');
       ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      // last stars, dissolving as dawn climbs
+      ctx.fillStyle = '#ffeed8';
+      for (const st of this.stars) {
+        const tw = RM.matches ? 0.55 : 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(this.phase * st.sp + st.tw));
+        const fade = 1 - st.y / Math.max(1, hor * 0.85);
+        ctx.globalAlpha = Math.max(0, tw * fade * 0.5);
+        ctx.fillRect(st.x, st.y, st.r, st.r);
+      }
+      ctx.globalAlpha = 1;
       // banked dawn haze
       for (const cl of this.clouds) {
         ctx.fillStyle = `rgba(140,84,60,${(cl.a * 0.55).toFixed(3)})`;
         ctx.beginPath(); ctx.ellipse(cl.x, cl.y, cl.w, cl.h, 0, 0, 6.283); ctx.fill();
         ctx.fillStyle = `rgba(170,104,70,${(cl.a * 0.4).toFixed(3)})`;
         ctx.beginPath(); ctx.ellipse(cl.x, cl.y - cl.h * 0.2, cl.w * 0.55, cl.h * 0.55, 0, 0, 6.283); ctx.fill();
+      }
+      // the sun itself, breaching the ridgeline in the open western sky
+      // (drawn in the left gutter so the board plinth never hides it)
+      const sunR = Math.max(12, Math.min(W, H) * 0.045);
+      if (this.ox - this.frameW > sunR * 3) {
+        const sunP = RM.matches ? 0 : Math.sin(this.phase * 0.8) * 0.04;
+        const sx0 = (this.ox - this.frameW) * 0.5, sy0 = hor - sunR * 0.2;
+        const sg = ctx.createRadialGradient(sx0, sy0, 1, sx0, sy0, sunR * (1.9 + sunP));
+        sg.addColorStop(0, 'rgba(255,233,189,0.9)');
+        sg.addColorStop(0.32, 'rgba(255,192,110,0.55)');
+        sg.addColorStop(1, 'rgba(255,140,60,0)');
+        ctx.fillStyle = sg;
+        ctx.beginPath(); ctx.arc(sx0, sy0, sunR * (1.9 + sunP), 0, 6.283); ctx.fill();
+        ctx.fillStyle = '#ffd9a0';
+        ctx.beginPath(); ctx.arc(sx0, sy0, sunR * 0.55, 0, 6.283); ctx.fill();
+        // smoke slits banding the disc
+        ctx.fillStyle = 'rgba(64,34,26,0.5)';
+        ctx.fillRect(sx0 - sunR * 1.1, sy0 - sunR * 0.26, sunR * 2.2, Math.max(1.5, sunR * 0.09));
+        ctx.fillRect(sx0 - sunR * 0.85, sy0 + sunR * 0.06, sunR * 1.7, Math.max(1.2, sunR * 0.07));
       }
       // mountain silhouettes
       for (const R of this.ridges) {
@@ -340,6 +446,21 @@
         R.pts.forEach(p => ctx.lineTo(p.x, p.y));
         ctx.lineTo(W + 4, R.base + 3);
         ctx.closePath(); ctx.fill();
+      }
+      // carrion birds wheeling over the field
+      if (this.birds.length) {
+        ctx.strokeStyle = 'rgba(24,13,11,0.75)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+        for (const b of this.birds) {
+          const bx = b.cx + Math.cos(b.ph) * b.r;
+          const by = b.cy + Math.sin(b.ph) * b.r * 0.22;
+          const flap = RM.matches ? 1.2 : Math.sin(this.phase * 6.5 + b.fl) * 2.6;
+          const w = 5.5;
+          ctx.beginPath();
+          ctx.moveTo(bx - w, by + flap);
+          ctx.quadraticCurveTo(bx - w * 0.35, by - 1.6, bx, by);
+          ctx.quadraticCurveTo(bx + w * 0.35, by - 1.6, bx + w, by + flap);
+          ctx.stroke();
+        }
       }
       // low battle-dust bands drifting over the plain
       const drift = RM.matches ? 0 : this.phase;
@@ -487,13 +608,17 @@
     _drawHighlights() {
       const ctx = this.ctx, t = this.tile;
       const pulse = RM.matches ? 0.5 : 0.5 + 0.5 * Math.sin(this.phase * 4);
-      // placement zone
+      // placement zone — tinted for whichever side is deploying (hot-seat
+      // Team B musters on the TOP half, in terracotta)
       if (this.state.placement) {
-        for (let i = 18; i < 36; i++) {
+        const top = this.state.placeSide === 'ai';
+        const lo = top ? 0 : 18, hi = top ? 18 : 36;
+        const zc = top ? '217,105,74' : '94,168,216';
+        for (let i = lo; i < hi; i++) {
           if (this.state.terrain[i] === 'rock' || this.state.cells[i]) continue;
           const { x, y, s } = this._cellRect(i);
-          ctx.fillStyle = 'rgba(94,168,216,0.10)'; ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
-          ctx.strokeStyle = 'rgba(94,168,216,0.4)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.strokeRect(x + 3, y + 3, s - 6, s - 6); ctx.setLineDash([]);
+          ctx.fillStyle = `rgba(${zc},0.10)`; ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
+          ctx.strokeStyle = `rgba(${zc},0.4)`; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.strokeRect(x + 3, y + 3, s - 6, s - 6); ctx.setLineDash([]);
         }
       }
       // valid moves
@@ -503,6 +628,24 @@
         ctx.strokeStyle = 'rgba(201,164,74,0.55)'; ctx.lineWidth = 1.4; ctx.setLineDash([5, 5]); ctx.strokeRect(x + 4, y + 4, s - 8, s - 8); ctx.setLineDash([]);
         if (!this.state.cells[i]) { ctx.fillStyle = `rgba(201,164,74,${0.4 + pulse * 0.3})`; ctx.beginPath(); ctx.arc(x + s / 2, y + s / 2, 3.5, 0, 6.283); ctx.fill(); }
       });
+      // hover affordance — a gilt pre-highlight where the cursor rests
+      const hv = this.hoverIdx;
+      if (hv >= 0 && hv !== this.state.selected && !this.glides.length) {
+        const { x, y, s } = this._cellRect(hv);
+        const isTarget = this.state.validMoves.indexOf(hv) !== -1 || this.state.rangedTargets.indexOf(hv) !== -1;
+        const canPlace = this.state.placement && this._inPlaceZone(hv) && !this.state.cells[hv] && this.state.terrain[hv] !== 'rock';
+        if (isTarget || canPlace) {
+          ctx.fillStyle = 'rgba(240,200,120,0.13)'; ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
+          ctx.strokeStyle = 'rgba(240,200,120,0.8)'; ctx.lineWidth = 1.6;
+          ctx.strokeRect(x + 3, y + 3, s - 6, s - 6);
+        } else if (!this.state.placement) {
+          const cell = this.state.cells[hv];
+          if (cell && cell.owner === this.state.turn) {
+            ctx.strokeStyle = 'rgba(240,200,120,0.35)'; ctx.lineWidth = 1.2;
+            ctx.strokeRect(x + 2.5, y + 2.5, s - 5, s - 5);
+          }
+        }
+      }
       // ranged targets (archer)
       this.state.rangedTargets.forEach(i => {
         const { x, y, s } = this._cellRect(i); const cx = x + s / 2, cy = y + s / 2, r = s * 0.34;
@@ -556,6 +699,22 @@
       // suppress tiles currently in flight
       const sup = new Set();
       this.glides.forEach(g => g.suppress.forEach(s => sup.add(s)));
+      // fallen units sink into the dust as fading shades (drawn under the living)
+      const ctx = this.ctx;
+      this.fades.forEach(f => {
+        const c = this._cellCenter(f.idx);
+        const p = Math.min(1, f.t / f.dur);
+        const e = p * p;                     // ease-in: lingers, then goes
+        const sink = e * this.tile * 0.20;
+        ctx.save();
+        ctx.globalAlpha = (1 - e) * 0.9;
+        ctx.translate(c.x, c.y + sink);
+        ctx.rotate((f.unit.owner === 'player' ? -1 : 1) * e * 0.20);
+        ctx.translate(-c.x, -(c.y + sink));
+        this._drawUnit(c.x, c.y + sink, this.tile * (1 - e * 0.14), f.unit, 0, f.idx);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      });
       // resting units — subtle idle breathing keeps the ranks alive
       this.state.cells.forEach((cell, i) => {
         if (!cell || sup.has(i)) return;

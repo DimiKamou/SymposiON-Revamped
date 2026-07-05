@@ -3,12 +3,16 @@
 //
 //  A thunderstorm over a crashing sea, behind the quiz:
 //   · sky: drifting storm clouds (darken with charge), slanting rain,
-//     procedural forked lightning, charge glow, overdrive vignette
+//     procedural forked lightning, charge glow, overdrive vignette,
+//     twinkling stars that the storm swallows, ambient in-cloud
+//     sheet lightning that breathes with the intensity
 //   · sea: layered rolling swell + a periodic FOREGROUND BREAKING WAVE
 //     that curls, caps with foam and throws spray; lightning reflects
-//     and shimmers on the water; a distant coastal colonnade on the horizon
+//     and shimmers on the water; a distant coastal colonnade on the
+//     horizon and a lone trireme riding the swell (stern lantern lit)
 //
-//  API (unchanged):
+//  API (unchanged — opts gained an optional `ambient:true` flag that
+//  fires occasional distant bolts on menu / end screens):
 //    const a = new StormArena('storm-canvas', {});
 //    a.start(); a.stop();
 //    a.strike(intensity 0..1)  · a.setCharge(0..1) · a.setOverdrive(bool)

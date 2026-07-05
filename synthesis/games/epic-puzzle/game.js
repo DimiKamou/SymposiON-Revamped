@@ -162,7 +162,7 @@ function _epBuild() {
   wrap.innerHTML = `
 <div id="ep-screen-menu" class="ep-screen">
   <div class="ep-kicker" id="ep-menu-kicker">ΑΙΘΟΥΣΑ ΤΩΝ ΕΠΩΝ</div>
-  <div class="ep-title">Χρονολόγιο</div>
+  <div class="ep-title" aria-label="Χρονολόγιο"><span aria-hidden="true">${_epKinetic('Χρονολόγιο')}</span></div>
   <div class="ep-meander" aria-hidden="true">${_epMeander(7)}</div>
   <div class="ep-subtitle" id="ep-menu-sub">ΕΠΙΛΕΞΕ ΕΚΘΕΜΑ</div>
   <div class="ep-pack-grid" id="ep-pack-grid"></div>
@@ -175,11 +175,13 @@ function _epBuild() {
   </div>
   <div class="ep-progress-row" id="ep-progress-row"></div>
   <div class="ep-instruction" id="ep-instruction"></div>
+  <div class="ep-slot-rail" id="ep-slot-rail" aria-hidden="true"></div>
   <div class="ep-cards" id="ep-cards"></div>
   <div class="ep-actions" id="ep-actions"></div>
 </div>
 <div id="ep-screen-end" class="ep-screen">
   <div class="ep-end-plaque">
+    <div class="ep-end-kicker" id="ep-end-kicker"></div>
     <div class="ep-end-medal">
       <div class="ep-end-icon" id="ep-end-icon"></div>
       <div class="ep-end-score" id="ep-end-score"></div>
@@ -190,6 +192,7 @@ function _epBuild() {
     <div class="ep-end-btns" id="ep-end-btns"></div>
   </div>
 </div>`;
+  _epBindFx(wrap);
   _epPopulateMenu();
 }
 
@@ -202,8 +205,10 @@ function _epPopulateMenu() {
   if (kicker) kicker.textContent = l === 'en' ? 'HALL OF THE EPICS' : 'ΑΙΘΟΥΣΑ ΤΩΝ ΕΠΩΝ';
   const sub = document.getElementById('ep-menu-sub');
   if (sub) sub.textContent = l === 'en' ? 'CHOOSE AN EXHIBIT' : 'ΕΠΙΛΕΞΕ ΕΚΘΕΜΑ';
+  const tags = l === 'en' ? ['I', 'II', 'III', 'IV'] : ['Α', 'Β', 'Γ', 'Δ'];
   grid.innerHTML = EP_PACKS.map((p, i) => `
     <div class="ep-pack-card" onclick="_epSelectPack(${i})" style="--ep-d:${i * 120}ms">
+      <div class="ep-pack-tag">${l === 'en' ? 'Exhibit' : 'Έκθεμα'} ${tags[i] || (i + 1)}</div>
       <div class="ep-pack-icon">${_epPackIcon(p.id)}</div>
       <div class="ep-pack-name">${l === 'en' ? p.nameEn : p.name}</div>
       <div class="ep-pack-desc">${l === 'en' ? p.descEn : p.desc}</div>
@@ -245,6 +250,9 @@ function _epStartRound() {
 
   // Progress dots
   _epRenderDots();
+
+  // Timeline slot frieze (presentation only)
+  _epRenderSlots();
 
   // Instruction
   document.getElementById('ep-instruction').textContent =
@@ -306,6 +314,21 @@ window._epClickCard = function (displayIdx) {
       num.classList.add('ep-stamp');
       _epBurst(num, ['#E8C97A', '#C9A44A', '#9C7433'], 8);
     }
+    // stamp the matching frieze slot
+    const slot = document.getElementById('ep-slot-' + (_ep.placed.length - 1));
+    if (slot) {
+      slot.classList.remove('ep-slot-stamp');
+      void slot.offsetWidth;
+      slot.classList.add('ep-slot-stamp');
+    }
+  } else {
+    // deselected while pointer still hovers → restore the ghost preview
+    const card = document.getElementById('ep-card-' + displayIdx);
+    const num = document.getElementById('ep-card-num-' + displayIdx);
+    if (card && num && card.matches && card.matches(':hover')) {
+      num.textContent = _ep.placed.length + 1;
+      num.classList.add('ep-num-ghost');
+    }
   }
 };
 
@@ -314,6 +337,7 @@ function _epUpdateNums() {
     const numEl = document.getElementById('ep-card-num-' + d);
     const card  = document.getElementById('ep-card-' + d);
     if (!numEl || !card) continue;
+    numEl.classList.remove('ep-num-ghost');
     const pos = _ep.placed.indexOf(d);
     if (pos !== -1) {
       numEl.textContent = pos + 1;
@@ -324,6 +348,12 @@ function _epUpdateNums() {
       numEl.classList.remove('ep-num-placed');
       card.classList.remove('ep-card-placed');
     }
+  }
+  // frieze slots fill in step with placements
+  for (let i = 0; i < 5; i++) {
+    const slot = document.getElementById('ep-slot-' + i);
+    if (!slot) continue;
+    slot.classList.toggle('ep-slot-filled', i < _ep.placed.length);
   }
 }
 
@@ -389,7 +419,15 @@ window._epCheck = function () {
     <div class="ep-round-pts"><span class="ep-pts-num" id="ep-pts-num">0</span>${ptsTail} <span class="ep-total-sep">·</span> <span class="ep-total-pts">${l === 'en' ? 'Total' : 'Σύνολο'}: <span id="ep-total-num">${_ep.score - pts}</span></span></div>
     <button class="ep-next-btn" onclick="_epNext()">${nextLabel}</button>`;
 
-  // Presentation only: count-ups + perfect-round celebration
+  // Presentation only: frieze verdicts, curator light-sweep, count-ups + celebration
+  results.forEach(r => {
+    const s = document.getElementById('ep-slot-' + r.position);
+    if (!s) return;
+    s.style.transitionDelay = (0.08 + r.position * 0.11).toFixed(2) + 's';
+    s.classList.remove('ep-slot-filled');
+    s.classList.add(r.ok ? 'ep-slot-ok' : 'ep-slot-bad');
+  });
+  _epSweep();
   _epCountUp(document.getElementById('ep-pts-num'), 0, pts, '', 700);
   _epCountUp(document.getElementById('ep-total-num'), _ep.score - pts, _ep.score, '', 900);
   _epCountUp(document.getElementById('ep-score-badge'), _ep.score - pts, _ep.score, ' pts', 900);
@@ -427,10 +465,16 @@ function _epShowEnd() {
 
   document.getElementById('ep-end-icon').innerHTML = _epWreath(stars);
 
-  document.getElementById('ep-end-title').textContent =
+  const endKicker = document.getElementById('ep-end-kicker');
+  if (endKicker) endKicker.textContent = l === 'en' ? 'THE TOUR IS COMPLETE' : 'Η ΠΕΡΙΗΓΗΣΗ ΟΛΟΚΛΗΡΩΘΗΚΕ';
+
+  const endTitleText =
     pct >= 0.8 ? (l === 'en' ? 'Excellent!' : 'Εξαιρετικό!') :
     pct >= 0.5 ? (l === 'en' ? 'Well done!'  : 'Μπράβο!') :
                  (l === 'en' ? 'Keep practicing!' : 'Συνέχισε την εξάσκηση!');
+  const endTitleEl = document.getElementById('ep-end-title');
+  endTitleEl.setAttribute('aria-label', endTitleText);
+  endTitleEl.innerHTML = `<span aria-hidden="true">${_epKinetic(endTitleText)}</span>`;
 
   document.getElementById('ep-end-score').innerHTML =
     `<span class="ep-final-num" id="ep-final-num">0</span><span class="ep-final-max"> / ${maxScore}</span>`;
@@ -480,6 +524,96 @@ function _epShuffle(arr) {
 function _epReduced() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
   catch (_) { return false; }
+}
+
+// Kinetic typography — staggered letter spans grouped in non-wrapping words.
+function _epKinetic(text) {
+  let i = 0;
+  return String(text).split(' ').map(word =>
+    `<span class="ep-t-w">${word.split('').map(c =>
+      `<span class="ep-t-ch" style="--ep-i:${i++}">${c}</span>`).join('')}</span>`
+  ).join(' ');
+}
+
+// Timeline frieze — five numbered marble slots that fill as events are sequenced.
+function _epRenderSlots() {
+  const rail = document.getElementById('ep-slot-rail');
+  if (!rail) return;
+  const nums = _ep.lang === 'en' ? ['I', 'II', 'III', 'IV', 'V'] : ['Α', 'Β', 'Γ', 'Δ', 'Ε'];
+  rail.innerHTML = nums.map((n, i) =>
+    `<span class="ep-slot" id="ep-slot-${i}" style="--ep-sd:${i * 60}ms"><span class="ep-slot-num">${n}</span></span>`
+  ).join('<span class="ep-slot-link"></span>');
+}
+
+// Pointer-driven plaque tilt + ghost "next seal" preview (event delegation,
+// survives every innerHTML re-render; presentation only).
+function _epBindFx(wrap) {
+  if (wrap._epFxBound) return;
+  wrap._epFxBound = true;
+
+  wrap.addEventListener('pointermove', (e) => {
+    if (_epReduced()) return;
+    const card = e.target.closest && e.target.closest('.ep-card, .ep-pack-card');
+    if (!card || card.classList.contains('ep-card-correct') || card.classList.contains('ep-card-wrong')) return;
+    const big = card.classList.contains('ep-pack-card');
+    const r = card.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    card.classList.add('ep-tilt');
+    card.style.setProperty('--ep-rx', (-ny * (big ? 5 : 2.4)).toFixed(2) + 'deg');
+    card.style.setProperty('--ep-ry', (nx * (big ? 6 : 2.0)).toFixed(2) + 'deg');
+  });
+
+  wrap.addEventListener('pointerover', (e) => {
+    if (_ep.phase !== 'play') return;
+    const card = e.target.closest && e.target.closest('.ep-card');
+    if (!card || !card.id || card.id.indexOf('ep-card-') !== 0) return;
+    const d = parseInt(card.id.slice(8), 10);
+    if (isNaN(d) || _ep.placed.indexOf(d) !== -1) return;
+    const num = document.getElementById('ep-card-num-' + d);
+    if (num) { num.textContent = _ep.placed.length + 1; num.classList.add('ep-num-ghost'); }
+  });
+
+  wrap.addEventListener('pointerout', (e) => {
+    const card = e.target.closest && e.target.closest('.ep-card, .ep-pack-card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    card.classList.remove('ep-tilt');
+    card.style.removeProperty('--ep-rx');
+    card.style.removeProperty('--ep-ry');
+    if (card.id && card.id.indexOf('ep-card-') === 0) {
+      const d = parseInt(card.id.slice(8), 10);
+      if (!isNaN(d) && _ep.placed.indexOf(d) === -1) {
+        const num = document.getElementById('ep-card-num-' + d);
+        if (num) { num.textContent = '?'; num.classList.remove('ep-num-ghost'); }
+      }
+    }
+  });
+}
+
+// Curator light-sweep down the plaques on the reveal cascade.
+function _epSweep() {
+  if (_epReduced()) return;
+  const fx = document.getElementById('ep-fx');
+  const stage = document.getElementById('ep-stage');
+  const cards = document.getElementById('ep-cards');
+  if (!fx || !stage || !cards) return;
+  const s = stage.getBoundingClientRect();
+  const c = cards.getBoundingClientRect();
+  const bar = document.createElement('div');
+  bar.className = 'ep-sweepline';
+  bar.style.left = (c.left - s.left) + 'px';
+  bar.style.width = c.width + 'px';
+  bar.style.top = (c.top - s.top) + 'px';
+  fx.appendChild(bar);
+  if (!bar.animate) { bar.remove(); return; }
+  const anim = bar.animate([
+    { transform: 'translateY(-14px)', opacity: 0 },
+    { opacity: 0.85, offset: 0.22 },
+    { transform: `translateY(${Math.max(60, c.height).toFixed(0)}px)`, opacity: 0 }
+  ], { duration: 720, easing: 'cubic-bezier(.3,.1,.3,1)' });
+  anim.onfinish = () => bar.remove();
+  setTimeout(() => { if (bar.parentNode) bar.remove(); }, 1400);
 }
 
 // Greek-key (meander) divider — n key units, stroked gold.
@@ -567,8 +701,8 @@ function _epWreath(stars) {
   </svg>`;
 }
 
-// ── Ambient dust motes (canvas, reduced-motion aware) ──
-const _epAmb = { on: false, raf: 0, motes: [], resize: null };
+// ── Ambient dust motes + hall parallax (canvas, reduced-motion aware) ──
+const _epAmb = { on: false, raf: 0, motes: [], resize: null, parallax: null };
 
 function _epAmbientStart() {
   if (_epAmb.on) return;
@@ -588,6 +722,16 @@ function _epAmbientStart() {
   size();
   _epAmb.resize = size;
   window.addEventListener('resize', size);
+
+  // gentle spotlight parallax following the pointer
+  const parallax = (e) => {
+    const r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    stage.style.setProperty('--ep-px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+    stage.style.setProperty('--ep-py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+  };
+  stage.addEventListener('pointermove', parallax);
+  _epAmb.parallax = parallax;
 
   if (!_epAmb.motes.length) {
     for (let i = 0; i < 46; i++) {
@@ -631,6 +775,12 @@ function _epAmbientStop() {
   if (_epAmb.raf) cancelAnimationFrame(_epAmb.raf);
   _epAmb.raf = 0;
   if (_epAmb.resize) { window.removeEventListener('resize', _epAmb.resize); _epAmb.resize = null; }
+  const stage = document.getElementById('ep-stage');
+  if (_epAmb.parallax) {
+    if (stage) stage.removeEventListener('pointermove', _epAmb.parallax);
+    _epAmb.parallax = null;
+  }
+  if (stage) { stage.style.removeProperty('--ep-px'); stage.style.removeProperty('--ep-py'); }
   const cv = document.getElementById('ep-dust');
   if (cv) { const c = cv.getContext('2d'); if (c) c.clearRect(0, 0, cv.width, cv.height); }
 }

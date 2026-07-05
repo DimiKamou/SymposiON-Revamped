@@ -3,15 +3,16 @@
    Drop-in replacement for games/invaders/game.js
 
    Same engine & mechanic as v2 (front-row word options; shoot the form
-   the question names). ONLY the rendering layer is re-skinned into three
+   the question names). ONLY the rendering layer is re-skinned into four
    art directions, switchable at runtime:
 
-     'nyx'      Α · Νυκτομαχία   — constellation fleet on a night sky
-     'melan'    Β · Μελανόμορφος — black-figure frieze on terracotta
-     'abyssos'  Γ · Ἄβυσσος      — luminous creatures in the deep
+     'arcade'   Α · Φωσφόρος     — phosphor-CRT pixel fleet (chunky sprites)
+     'nyx'      Β · Νυκτομαχία   — constellation fleet on a night sky
+     'melan'    Γ · Μελανόμορφος — black-figure frieze on terracotta
+     'abyssos'  Δ · Ἄβυσσος      — luminous creatures in the deep
 
    Switch with:  window.setInvadersTheme('melan')   (persists to localStorage)
-   Default theme read from localStorage('invadersTheme') || 'nyx'.
+   Default theme read from localStorage('invadersTheme') || 'arcade'.
 
    Depends on: games/invaders/data.js  (INVADERS_DB)
    CONTROLS:  ←/→ or A/D = move · Space = shoot · Enter = restart
@@ -23,6 +24,22 @@
    § 0  THEMES  — the only thing that changes the look
 ───────────────────────────────────────────────────────────── */
 const THEMES = {
+  arcade: {
+    bg: ['#141c30', '#0a0e1c', '#04060c'],   // deep-space navy
+    stars: true, nebula: true, rays: false, meander: false,
+    enemyStyle: 'pixel',
+    playerStyle: 'cannon',
+    bulletStyle: 'pixel',
+    front: '#7dffa0', frontDim: '#2fae5f', idle: '#3d6653',
+    word: '#b6ffd0', wordIdle: '#8296a8',
+    bullet: '#8dff7a', bulletGlow: '#5ef578',
+    accent: '#ffd166',
+    spark: ['#8dffb0', '#ffd166', '#7fd4ff', '#ffffff'],
+    sparkBad: ['#ff6b6b', '#ff9a6e', '#ffd166', '#ffffff'],
+    panelBg: 'rgba(5,9,16,0.92)', panelLine: 'rgba(94,245,120,0.35)',
+    panelKey: '#5c7d8f', panelTitle: '#7fd4ff', prompt: '#86a0b2', label: '#8dffb0', labelGlow: '#2fae5f',
+    danger: 'rgba(94,245,120,0.22)', wrong: '#ff5e5e',
+  },
   nyx: {
     bg: ['#15212b', '#0a0f15', '#06080b'],   // radial: inner → mid → outer
     stars: true, nebula: true, rays: false, meander: false,
@@ -73,9 +90,9 @@ const THEMES = {
   },
 };
 let THEME_NAME = (function () {
-  try { return localStorage.getItem('invadersTheme') || 'nyx'; } catch (_) { return 'nyx'; }
+  try { return localStorage.getItem('invadersTheme') || 'arcade'; } catch (_) { return 'arcade'; }
 })();
-if (!THEMES[THEME_NAME]) THEME_NAME = 'nyx';
+if (!THEMES[THEME_NAME]) THEME_NAME = 'arcade';
 const T = () => THEMES[THEME_NAME];
 
 window.setInvadersTheme = function (name) {
@@ -87,6 +104,13 @@ window.setInvadersTheme = function (name) {
 };
 window.getInvadersTheme = () => THEME_NAME;
 window.INVADERS_THEMES = Object.keys(THEMES);
+// Display labels for the overlay theme button (Greek — acute accents only)
+window.INVADERS_THEME_LABELS = {
+  arcade: '▚ Φωσφόρος',
+  nyx: '✦ Νυκτομαχία',
+  melan: '⚱ Μελανόμορφος',
+  abyssos: '≈ Ἄβυσσος',
+};
 
 /* ─────────────────────────────────────────────────────────────
    § 1  CONFIG
@@ -311,6 +335,10 @@ class Projectile {
       ctx.beginPath(); ctx.moveTo(this.x, this.y - 14); ctx.lineTo(this.x - 4, this.y - 7); ctx.lineTo(this.x + 4, this.y - 7); ctx.closePath(); ctx.fill();
       ctx.globalAlpha = 0.6;
       ctx.beginPath(); ctx.moveTo(this.x, this.y + 6); ctx.lineTo(this.x - 3, this.y + 1); ctx.moveTo(this.x, this.y + 6); ctx.lineTo(this.x + 3, this.y + 1); ctx.stroke();
+    } else if (th.bulletStyle === 'pixel') {
+      // chunky zigzag bolt — classic CRT zap
+      ctx.shadowColor = th.bulletGlow; ctx.shadowBlur = 9; ctx.fillStyle = th.bullet;
+      for (let i = 0; i < 4; i++) ctx.fillRect(this.x - 2 + ((i & 1) ? 1.5 : -1.5), this.y - 14 + i * 3.5, 4, 3);
     } else if (th.bulletStyle === 'wave') {
       ctx.strokeStyle = th.bullet; ctx.shadowColor = th.bulletGlow; ctx.shadowBlur = 12; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(this.x, this.y, 7, 0, Math.PI * 2); ctx.stroke();
@@ -435,6 +463,101 @@ function drawLuminous(ctx, cx, cy, S, th, isFront, word, frame) {
   ctx.restore();
 }
 
+/* ── 'arcade' theme: chunky phosphor pixel sprites ──────────
+   Bitmaps: 'X' = body pixel, 'o' = accent pixel (eyes / tip).
+   Two walk frames each; eyes blink on a desynced timer.      */
+const PIX = {
+  crab: [[
+    '..X.....X..',
+    '...X...X...',
+    '..XXXXXXX..',
+    '.XXoXXXoXX.',
+    'XXXXXXXXXXX',
+    'X.XXXXXXX.X',
+    'X.X.....X.X',
+    '...XX.XX...',
+  ], [
+    '..X.....X..',
+    'X..X...X..X',
+    'X.XXXXXXX.X',
+    'XXXoXXXoXXX',
+    'XXXXXXXXXXX',
+    '.XXXXXXXXX.',
+    '..X.....X..',
+    '.X.......X.',
+  ]],
+  squid: [[
+    '...XX...',
+    '..XXXX..',
+    '.XXXXXX.',
+    'XXoXXoXX',
+    'XXXXXXXX',
+    '..X..X..',
+    '.X.XX.X.',
+    'X.X..X.X',
+  ], [
+    '...XX...',
+    '..XXXX..',
+    '.XXXXXX.',
+    'XXoXXoXX',
+    'XXXXXXXX',
+    '.X.XX.X.',
+    'X......X',
+    '.X....X.',
+  ]],
+  octo: [[
+    '....XXXX....',
+    '.XXXXXXXXXX.',
+    'XXXXXXXXXXXX',
+    'XXXooXXooXXX',
+    'XXXXXXXXXXXX',
+    '...XX..XX...',
+    '..XX.XX.XX..',
+    'XX........XX',
+  ], [
+    '....XXXX....',
+    '.XXXXXXXXXX.',
+    'XXXXXXXXXXXX',
+    'XXXooXXooXXX',
+    'XXXXXXXXXXXX',
+    '..XXX..XXX..',
+    '.XX..XX..XX.',
+    '..XX....XX..',
+  ]],
+};
+const PIX_KEYS = ['crab', 'squid', 'octo'];
+const _pixCache = {};
+function _pixSprite(sp, f, isFront, blink, th) {
+  const key = `${THEME_NAME}|${sp}|${f}|${isFront ? 1 : 0}|${blink ? 1 : 0}`;
+  let c = _pixCache[key];
+  if (c) return c;
+  const grid = PIX[sp][f];
+  const px = 3, pad = 8;
+  c = document.createElement('canvas');
+  c.width = grid[0].length * px + pad * 2;
+  c.height = grid.length * px + pad * 2;
+  const g = c.getContext('2d');
+  const body = isFront ? th.front : th.idle;
+  const eye = blink ? body : (isFront ? (th.accent || '#ffd166') : 'rgba(255,209,102,0.4)');
+  if (isFront) { g.shadowColor = th.front; g.shadowBlur = 7; }
+  for (let r = 0; r < grid.length; r++) {
+    for (let col = 0; col < grid[r].length; col++) {
+      const ch = grid[r][col]; if (ch === '.') continue;
+      g.fillStyle = ch === 'o' ? eye : body;
+      g.fillRect(pad + col * px, pad + r * px, px, px);
+    }
+  }
+  _pixCache[key] = c;
+  return c;
+}
+function drawPixelInvader(ctx, cx, cy, S, th, isFront, word, frame) {
+  const sp = PIX_KEYS[speciesIdx(word, 3)];
+  const f = (frame >> 4) & 1;                       // 2-frame march
+  const blink = (frame % 236) < 8;                  // occasional eye blink
+  const spr = _pixSprite(sp, f, isFront, blink, th);
+  ctx.drawImage(spr, Math.round(cx - spr.width / 2), Math.round(cy - spr.height / 2 + (f ? 1 : 0)));
+}
+
 /* ─────────────────────────────────────────────────────────────
    § 8  ENEMY  — dispatches to theme renderer
 ───────────────────────────────────────────────────────────── */
@@ -452,6 +575,7 @@ class Enemy {
     if (wrong) { ctx.globalAlpha = (this._frame & 2) ? 1 : 0.35; }
     if (th.enemyStyle === 'constellation') drawConstellation(ctx, cx, cy, S, th, this.isFront, this.word);
     else if (th.enemyStyle === 'blackfigure') drawBlackFigure(ctx, cx, cy, S, th, this.isFront, this.word, this._frame);
+    else if (th.enemyStyle === 'pixel') drawPixelInvader(ctx, cx, cy, S, th, this.isFront, this.word, this._frame);
     else drawLuminous(ctx, cx, cy, S, th, this.isFront, this.word, this._frame);
     ctx.restore();
 
@@ -483,6 +607,7 @@ class Player {
     ctx.save();
     if (th.playerStyle === 'archer') drawArcher(ctx, cx, cy, w, h, th);
     else if (th.playerStyle === 'lyre') drawLyre(ctx, cx, cy, w, h, th, this._frame);
+    else if (th.playerStyle === 'cannon') drawCannon(ctx, cx, cy, w, h, th, this._frame);
     else drawTrireme(ctx, cx, cy, w, h, th, this._frame);
     ctx.restore();
     // muzzle flash — short additive bloom at the launch point
@@ -521,6 +646,34 @@ function drawArcher(ctx, cx, cy, w, h, th) {
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(cx - 14, cy - h * 0.42); ctx.quadraticCurveTo(cx - 26, cy, cx - 14, cy + h * 0.42); ctx.stroke();
   ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(cx - 14, cy - h * 0.42); ctx.lineTo(cx - 2, cy); ctx.lineTo(cx - 14, cy + h * 0.42); ctx.stroke();
+}
+const CANNON = [
+  '.....o.....',
+  '.....X.....',
+  '....XXX....',
+  '....XXX....',
+  '.XXXXXXXXX.',
+  'XXXXXXXXXXX',
+  'XXXXXXXXXXX',
+];
+function drawCannon(ctx, cx, cy, w, h, th, frame) {
+  const px = 3, gw = CANNON[0].length, gh = CANNON.length;
+  const x0 = Math.round(cx - gw * px / 2), y0 = Math.round(cy - gh * px / 2);
+  ctx.shadowColor = th.bulletGlow; ctx.shadowBlur = 12;
+  for (let r = 0; r < gh; r++) {
+    for (let c = 0; c < gw; c++) {
+      const ch = CANNON[r][c]; if (ch === '.') continue;
+      if (ch === 'o') { ctx.fillStyle = th.accent || '#ffd166'; ctx.globalAlpha = 0.6 + 0.4 * Math.abs(Math.sin(frame * 0.18)); }
+      else { ctx.fillStyle = th.front; ctx.globalAlpha = 1; }
+      ctx.fillRect(x0 + c * px, y0 + r * px, px, px);
+    }
+  }
+  // soft phosphor exhaust under the hull
+  ctx.globalAlpha = 0.35 + 0.2 * Math.sin(frame * 0.2);
+  const g = ctx.createLinearGradient(cx, y0 + gh * px, cx, y0 + gh * px + 9);
+  g.addColorStop(0, th.bulletGlow); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(x0 + 3, y0 + gh * px, gw * px - 6, 9);
+  ctx.globalAlpha = 1;
 }
 function drawLyre(ctx, cx, cy, w, h, th, frame) {
   ctx.strokeStyle = th.glowAccent; ctx.shadowColor = th.bulletGlow; ctx.shadowBlur = 12;
@@ -648,7 +801,9 @@ class Game {
     if (!this.scoreEl) return;
     const n = Math.max(0, this.lives);
     const hearts = '♥'.repeat(n) + '♡'.repeat(Math.max(0, 3 - n));
-    this.scoreEl.textContent = `Score: ${Math.round(this.scoreShown)} | Lives: ${hearts}`;
+    this.scoreEl.innerHTML =
+      `<span class="inv-hud-lbl">SCORE</span><span class="inv-hud-score">${Math.round(this.scoreShown)}</span>` +
+      `<span class="inv-hud-sep">·</span><span class="inv-hud-hearts">${hearts}</span>`;
   }
 
   _loop(ts) { this.rafId = requestAnimationFrame(t => this._loop(t)); const dt = Math.min((ts - this.lastTime) / 1000, 0.05); this.lastTime = ts; this._update(dt); this._draw(); }
@@ -742,6 +897,8 @@ class Game {
 
   _loseLife() {
     this.lives = Math.max(0, this.lives - 1); sfxError(); this.shakeFrames = CFG.SHAKE_FRAMES; this.errorFlash = 10; this._updateHUD();
+    // HUD chip hurt shake (presentation only)
+    if (this.scoreEl) { this.scoreEl.classList.remove('inv-chip-hurt'); void this.scoreEl.offsetWidth; this.scoreEl.classList.add('inv-chip-hurt'); }
     if (this.lives === 0) {
       this.state = 'gameover'; this.shakeFrames = 0; this.errorFlash = 0; this.goT = 0;
       this.newBest = this.score > 0 && this.score > this.best;
@@ -758,7 +915,8 @@ class Game {
     this.state = 'levelup'; this.lvlTimer = 2.6; this.enemies.filter(e => e.alive).forEach(e => { e.alive = false; this._spawnParticles(e.x, e.y, true); });
   }
   _spawnParticles(x, y, ok) {
-    const th = T(); const palette = ok ? th.spark : th.sparkBad; const shard = th.enemyStyle === 'blackfigure';
+    const th = T(); const palette = ok ? th.spark : th.sparkBad;
+    const shard = th.enemyStyle === 'blackfigure' || th.enemyStyle === 'pixel';   // square debris for ink & pixel art
     const glowTheme = th.enemyStyle !== 'blackfigure';   // ink debris shouldn't glow
     const n = (ok ? 14 : 10) + randInt(0, 5);
     // main debris burst
@@ -1069,6 +1227,11 @@ let _instance = null;
 window.openInvaders = function () {
   const overlay = document.getElementById('invaders-overlay'); if (!overlay) return;
   overlay.style.display = 'flex';
+  // sync the theme button label with the persisted theme
+  const themeBtn = document.getElementById('inv-theme-btn');
+  if (themeBtn && window.INVADERS_THEME_LABELS && window.INVADERS_THEME_LABELS[THEME_NAME]) {
+    themeBtn.textContent = window.INVADERS_THEME_LABELS[THEME_NAME];
+  }
   const touchBar = document.getElementById('invaders-touch');
   if (touchBar) { const hasTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window; touchBar.style.display = hasTouch ? 'flex' : 'none'; }
   if (typeof orientHint !== 'undefined') orientHint.request();

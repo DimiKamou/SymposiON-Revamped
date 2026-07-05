@@ -98,6 +98,28 @@
     o.start(t); o.stop(t + 0.18);
   }
 
+  // ── the hero's own footfall — a barely-there leather scuff ──
+  let stepAlt = false;
+  function stepSelf() {
+    if (!ensure() || muted) return;
+    const t = ctx.currentTime;
+    stepAlt = !stepAlt;
+    const dur = 0.07;
+    const n = ctx.createBufferSource();
+    const buf = ctx.createBuffer(1, Math.max(1, (ctx.sampleRate * dur) | 0), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    n.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = stepAlt ? 350 : 300;
+    f.Q.value = 1.1;
+    const g = ctx.createGain();
+    g.gain.value = 0.03;
+    n.connect(f); f.connect(g); g.connect(master);
+    n.start(t);
+  }
+
   // ── generic sting helper ──
   function tone(type, freq, dur, gain, slideTo, when) {
     if (!ensure() || muted) return;
@@ -182,7 +204,7 @@
       if (droneGain && ctx) droneGain.gain.setTargetAtTime(0.04 + tension * 0.16, ctx.currentTime, 0.3);
       if (droneFilt && ctx) droneFilt.frequency.setTargetAtTime(160 + tension * 320, ctx.currentTime, 0.3);
     },
-    footstep, sting,
+    footstep, stepSelf, sting,
     setMuted(m) { muted = m; if (master && ctx) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05); },
     isMuted() { return muted; },
     get tension() { return tension; },

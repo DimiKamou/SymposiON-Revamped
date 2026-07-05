@@ -27,15 +27,56 @@
   --mm-rosette: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23D9B45F' stroke-width='2'%3E%3Ccircle cx='60' cy='60' r='54' opacity='.4'/%3E%3Ccircle cx='60' cy='60' r='47' opacity='.85'/%3E%3Ccircle cx='60' cy='60' r='12' opacity='.85'/%3E%3Cg opacity='.8'%3E%3Cellipse cx='60' cy='32' rx='9' ry='17'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(45 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(90 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(135 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(180 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(225 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(270 60 60)'/%3E%3Cellipse cx='60' cy='32' rx='9' ry='17' transform='rotate(315 60 60)'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='60' cy='60' r='4' fill='%23D9B45F' opacity='.9'/%3E%3C/svg%3E");
 
   /* Deep lacquer backdrop with a warm shrine-glow from above and
-     a terracotta ember from below — overrides the flat chrome bg. */
+     a deck-tinted ember from below — overrides the flat chrome bg. */
+  --mm-ember: rgba(197, 87, 47, 0.08);
   background:
     radial-gradient(95% 70% at 50% -12%, rgba(217, 180, 95, 0.11), transparent 62%),
-    radial-gradient(130% 90% at 50% 118%, rgba(197, 87, 47, 0.08), transparent 58%),
+    radial-gradient(130% 90% at 50% 118%, var(--mm-ember), transparent 58%),
     linear-gradient(180deg, #170F06 0%, #120C05 100%);
 }
+/* the lower ember quietly takes the colour of the chosen deck */
+#myth-memory-overlay[data-pack="iliada"]   { --mm-ember: rgba(197, 87, 47, 0.13); }
+#myth-memory-overlay[data-pack="odysseia"] { --mm-ember: rgba(72, 129, 143, 0.14); }
+#myth-memory-overlay[data-pack="theoi"]    { --mm-ember: rgba(217, 180, 95, 0.11); }
 /* keep chrome + game content above the ambient dust layer */
 #myth-memory-overlay .overlay-topbar,
 #myth-memory-overlay .overlay-frame { position: relative; z-index: 1; }
+
+/* ── Overlay chrome, dressed in the deck's lacquer-and-gold ── */
+#myth-memory-overlay .overlay-topbar {
+  background: rgba(16, 10, 4, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(217, 180, 95, 0.2);
+}
+#myth-memory-overlay .overlay-title {
+  font-family: var(--mm-serif);
+  color: color-mix(in srgb, var(--mm-gold) 85%, #fff 10%);
+  text-shadow: 0 0 18px rgba(217, 180, 95, 0.3);
+  letter-spacing: 0.4px;
+}
+#myth-memory-overlay .overlay-back {
+  border-color: rgba(217, 180, 95, 0.22);
+  color: rgba(246, 242, 235, 0.55);
+}
+#myth-memory-overlay .overlay-back:hover {
+  color: var(--mm-gold-hi);
+  border-color: rgba(217, 180, 95, 0.55);
+  background: rgba(217, 180, 95, 0.08);
+  box-shadow: 0 0 16px -6px rgba(217, 180, 95, 0.45);
+}
+
+/* ── Timer-danger vignette: the walls close in ── */
+#myth-memory-overlay.mm-danger::after {
+  content: ''; position: absolute; inset: 0;
+  pointer-events: none; z-index: 3;
+  box-shadow: inset 0 0 140px 12px rgba(210, 64, 52, 0.24);
+  animation: mm-danger-vign 1s ease-in-out infinite;
+}
+@keyframes mm-danger-vign {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
 
 /* ── Ambient gold dust ── */
 .mm-ambient {
@@ -82,11 +123,28 @@
 }
 
 /* ════════════════════════════ MENU ════════════════════════════ */
-.mm-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 2.2rem; }
+.mm-hero { display: flex; flex-direction: column; align-items: center; margin-bottom: 2.2rem; position: relative; }
+/* colossal engraved rosette watermark, turning like a potter's wheel */
+.mm-hero::before {
+  content: ''; position: absolute; left: 50%; top: 46%; z-index: -1;
+  width: clamp(260px, 42vw, 430px); aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: var(--mm-rosette) center / contain no-repeat;
+  opacity: 0.05; pointer-events: none;
+  animation: mm-rosette-spin 90s linear infinite;
+}
+@keyframes mm-rosette-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 .mm-eyebrow {
   font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
   color: color-mix(in srgb, var(--mm-gold) 62%, transparent);
   margin-bottom: 0.9rem;
+  animation: mm-eyebrow-in 1.1s 0.1s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+@keyframes mm-eyebrow-in {
+  from { opacity: 0; letter-spacing: 9px; }
+  to   { opacity: 1; letter-spacing: 4px; }
 }
 .mm-title {
   font-family: var(--mm-serif);
@@ -97,9 +155,19 @@
 }
 .mm-title em {
   font-style: italic; font-weight: 500;
-  background: linear-gradient(175deg, var(--mm-gold-hi) 10%, var(--mm-gold) 55%, #B98A2E 95%);
+  background: linear-gradient(115deg,
+    #B98A2E 0%, var(--mm-gold) 30%, var(--mm-gold-hi) 46%,
+    #FFF6DC 50%, var(--mm-gold-hi) 54%, var(--mm-gold) 70%, #B98A2E 100%);
+  background-size: 250% 100%;
+  background-position: 115% 0;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: var(--mm-gold);
+  animation: mm-gold-gleam 7s ease-in-out infinite;
+}
+/* a slow gleam wanders across the gold lettering every few breaths */
+@keyframes mm-gold-gleam {
+  0%, 58%   { background-position: 115% 0; }
+  88%, 100% { background-position: -15% 0; }
 }
 .mm-divider {
   display: flex; align-items: center; gap: 14px;
@@ -236,7 +304,13 @@
   transform: translateX(-120%);
   transition: transform 0.7s cubic-bezier(0.3, 0.7, 0.3, 1);
 }
-.mm-start-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 26px -6px rgba(217, 180, 95, 0.6), inset 0 1px 0 rgba(255, 245, 215, 0.7); }
+/* once armed, the seal breathes until pressed */
+.mm-start-btn:not(:disabled) { animation: mm-start-breathe 2.8s ease-in-out infinite; }
+@keyframes mm-start-breathe {
+  0%, 100% { box-shadow: 0 6px 20px -6px rgba(217, 180, 95, 0.45), inset 0 1px 0 rgba(255, 245, 215, 0.7); }
+  50%      { box-shadow: 0 6px 24px -4px rgba(217, 180, 95, 0.7), 0 0 34px -6px rgba(217, 180, 95, 0.5), inset 0 1px 0 rgba(255, 245, 215, 0.7); }
+}
+.mm-start-btn:hover:not(:disabled) { animation: none; transform: translateY(-2px); box-shadow: 0 10px 26px -6px rgba(217, 180, 95, 0.6), inset 0 1px 0 rgba(255, 245, 215, 0.7); }
 .mm-start-btn:hover:not(:disabled)::before { transform: translateX(120%); }
 .mm-start-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
 .mm-start-btn:disabled {
@@ -345,8 +419,17 @@
   animation-delay: calc(var(--i, 0) * 42ms);
 }
 @keyframes mm-deal {
-  from { opacity: 0; transform: translateY(20px) scale(0.88); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(26px) rotate(-3deg) scale(0.85); }
+  60%  { opacity: 1; }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+}
+/* pointer-tracked 3D tilt on face-down cards (fine pointers only;
+   the JS resets --tiltx/--tilty the instant a card flips) */
+@media (hover: hover) and (pointer: fine) {
+  .mm-card {
+    transform: perspective(760px) rotateX(var(--tiltx, 0deg)) rotateY(var(--tilty, 0deg));
+    transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
 }
 .mm-card-inner {
   width: 100%; height: 100%;
@@ -597,8 +680,24 @@
 #mm-screen-win.active { justify-content: center; min-height: 52vh; }
 .mm-win-wreath {
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.2rem; position: relative;
 }
+/* slow engraved sunburst wheeling behind the wreath */
+.mm-win-wreath::before {
+  content: ''; position: absolute; left: 50%; top: 50%; z-index: -1;
+  width: clamp(260px, 40vw, 380px); aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg,
+    rgba(217, 180, 95, 0.1) 0deg 5deg, transparent 5deg 15deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 66%);
+  mask-image: radial-gradient(circle, #000 0%, transparent 66%);
+  animation: mm-rays-spin 44s linear infinite;
+  pointer-events: none;
+}
+@keyframes mm-rays-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+#mm-screen-win.timeout .mm-win-wreath::before { opacity: 0.3; }
 .mm-laurel { width: 58px; height: 108px; color: var(--mm-gold); flex: none; filter: drop-shadow(0 0 8px rgba(217, 180, 95, 0.3)); }
 .mm-laurel-r { transform: scaleX(-1); }
 .mm-win-icon {
@@ -706,4 +805,10 @@
   .mm-hud-val.mm-pop { animation: none; }
   .mm-card.matched .mm-card-seal { animation: none; opacity: 1; transform: scale(1); }
   .mm-start-btn::before { display: none; }
+  .mm-hero::before, .mm-win-wreath::before { animation: none; }
+  .mm-eyebrow { animation: none; }
+  .mm-title em { animation: none; }
+  .mm-start-btn:not(:disabled) { animation: none; }
+  #myth-memory-overlay.mm-danger::after { animation: none; }
+  .mm-card { transform: none; transition: none; }
 }

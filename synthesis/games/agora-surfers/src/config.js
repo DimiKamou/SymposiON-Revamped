@@ -128,10 +128,11 @@ export const G = {
   PU_CHARIOT:   8.5,
   MAGNET_RADIUS: 6,
 
-  // camera
-  CAM_Y: 5.8,
-  CAM_Z: 11.0,
-  CAM_LOOK_Y: 1.0,
+  // camera — low & tight for the Subway-Surfers punch (runner reads big,
+  // road fills the lower frame, horizon rides high)
+  CAM_Y: 4.9,
+  CAM_Z: 9.8,
+  CAM_LOOK_Y: 1.35,
   CAM_LOOK_Z: -24,
 };
 

@@ -91,6 +91,7 @@ window.openMythMemory = function () {
   if (!ov) return;
   ov.style.display = 'flex';
   ov.classList.add('active');
+  ov.removeAttribute('data-pack');          // presentation: neutral ember on the menu
   document.body.style.overflow = 'hidden';
   if (!document.getElementById('mm-screen-menu')) _mmBuild();
   _mmMotes();
@@ -267,6 +268,11 @@ function _mmStart() {
     el.onclick = () => _mmFlip(c.id);
     grid.appendChild(el);
   });
+  _mmTiltInit(grid);
+
+  // Presentation: the backdrop ember takes the colour of the chosen deck.
+  const ovEl = document.getElementById('myth-memory-overlay');
+  if (ovEl) { ovEl.dataset.pack = _mm.pack.id; ovEl.classList.remove('mm-danger'); }
 
   // Trophy rail — one empty slot per pair, filled as pairs are won
   const rail = document.getElementById('mm-rail');
@@ -315,12 +321,17 @@ function _mmTickTimer() {
   const cls = _mm.timer <= 10 ? 'danger' : _mm.timer <= 20 ? 'warning' : '';
   arc.className = 'mm-timer-arc' + (cls ? ' ' + cls : '');
   text.className = 'mm-timer-text' + (cls ? ' ' + cls : '');
+  // presentation: red vignette closes in during the final seconds
+  const ovEl = document.getElementById('myth-memory-overlay');
+  if (ovEl) ovEl.classList.toggle('mm-danger', cls === 'danger' && _mm.timer > 0);
   if (_mm.timer <= 0) { _mmStopTimer(); _mmTimeOut(); return; }
   _mm.timer--;
 }
 
 function _mmStopTimer() {
   if (_mm.timerInterval) { clearInterval(_mm.timerInterval); _mm.timerInterval = null; }
+  const ovEl = document.getElementById('myth-memory-overlay');
+  if (ovEl) ovEl.classList.remove('mm-danger');
 }
 
 function _mmTimeOut() {
@@ -339,6 +350,7 @@ function _mmFlip(cardId) {
   if (!el || el.classList.contains('flipped') || el.classList.contains('matched')) return;
 
   el.classList.add('flipped');
+  _mmTiltReset(el);   // presentation: flatten the tilt so the 3D flip reads clean
   _mm.flipped.push(card);
 
   if (_mm.flipped.length === 2) {
@@ -379,6 +391,33 @@ function _mmFlip(cardId) {
 }
 
 // ── PRESENTATION FX (no gameplay effect) ──
+
+/* Pointer-tracked 3D tilt on face-down cards (fine pointers only). */
+function _mmTiltInit(grid) {
+  if (!grid || grid.dataset.tilt || _MM_REDUCE) return;
+  if (!(typeof window.matchMedia === 'function' &&
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
+  grid.dataset.tilt = '1';
+  grid.addEventListener('pointermove', (e) => {
+    const el = e.target.closest ? e.target.closest('.mm-card') : null;
+    if (!el || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const px = (e.clientX - r.left) / r.width  - 0.5;
+    const py = (e.clientY - r.top)  / r.height - 0.5;
+    el.style.setProperty('--tiltx', (-py * 8).toFixed(2) + 'deg');
+    el.style.setProperty('--tilty', (px * 10).toFixed(2) + 'deg');
+  });
+  grid.addEventListener('pointerout', (e) => {
+    const el = e.target.closest ? e.target.closest('.mm-card') : null;
+    if (!el || (e.relatedTarget && el.contains(e.relatedTarget))) return;
+    _mmTiltReset(el);
+  });
+}
+function _mmTiltReset(el) {
+  el.style.setProperty('--tiltx', '0deg');
+  el.style.setProperty('--tilty', '0deg');
+}
 
 /* Gold spark burst at a fixed-viewport point. WAAPI so it works even if rAF throttles. */
 function _mmSparks(x, y, opts = {}) {

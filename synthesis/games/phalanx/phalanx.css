@@ -436,7 +436,8 @@
 /* ───────── QUIZ / CLASH MODAL ───────── */
 .ph-quiz {
   position:absolute; inset:0; z-index:80; display:none; align-items:center; justify-content:center; padding:1.25rem;
-  background:radial-gradient(130% 100% at 50% 40%, rgba(20,12,6,.92), rgba(4,3,1,.96));
+  background:radial-gradient(130% 100% at 50% 40%, rgba(20,12,6,.84), rgba(4,3,1,.93));
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
 }
 .ph-quiz.active { display:flex; animation:phFadeIn .28s ease; }
 .ph-quiz-box {
@@ -447,6 +448,16 @@
 }
 .ph-quiz-box::before { content:''; position:absolute; left:18px; right:18px; top:0; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); opacity:.6; }
 @keyframes phBoxIn { from { opacity:0; transform:translateY(14px) scale(.97); } to { opacity:1; transform:none; } }
+/* gilded fret band inlaid across the top of the clash tablet */
+.ph-quiz-meander {
+  height:8px; margin:-4px auto 14px; width:74%;
+  background:repeating-linear-gradient(90deg,
+    rgba(201,164,74,.55) 0 2px, transparent 2px 5px,
+    rgba(201,164,74,.55) 5px 7px, transparent 7px 16px,
+    rgba(201,164,74,.26) 16px 18px, transparent 18px 21px);
+  -webkit-mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent);
+  mask:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent);
+}
 .ph-clash-row { display:flex; align-items:center; gap:.7rem; margin-bottom:1.05rem; padding-bottom:1.05rem; border-bottom:1px solid var(--line-soft); }
 .ph-clash-side { flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; }
 .ph-clash-emb {
@@ -620,6 +631,45 @@
 .ph-res-stat:nth-child(2) { animation-delay:.45s; }
 .ph-res-stat:nth-child(3) { animation-delay:.55s; }
 .ph-res-btns { animation:phRise .55s .7s cubic-bezier(.2,.7,.2,1) both; }
+
+/* polished-bronze shimmer slowly crossing the display titles */
+.ph-pick-title, .ph-l-title {
+  background:linear-gradient(100deg,
+    #8a6f2c 0%, #C9A44A 22%, #F6DDA0 40%, #FFF3CF 50%,
+    #F6DDA0 60%, #C9A44A 78%, #8a6f2c 100%);
+  background-size:230% 100%;
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  animation:phTitleSheen 8s ease-in-out infinite;
+}
+@keyframes phTitleSheen { 0%,100% { background-position:0% 0; } 50% { background-position:100% 0; } }
+
+/* shield crest breathes on the still air */
+.ph-pick-crest svg { animation:phCrestFloat 6s ease-in-out 1.2s infinite; }
+@keyframes phCrestFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+
+/* the battle order glows with a slow war-drum pulse */
+#ph-lobby.active .ph-start-btn:not(.sec) {
+  animation:phRise .55s .34s cubic-bezier(.2,.7,.2,1) both,
+            phStartBeat 3.4s 1.6s ease-in-out infinite;
+}
+@keyframes phStartBeat {
+  0%,100% { box-shadow:0 12px 34px -12px rgba(201,164,74,.75), inset 0 1px 0 rgba(255,248,220,.6), inset 0 -2px 6px rgba(90,60,10,.5); }
+  50%     { box-shadow:0 14px 46px -10px rgba(201,164,74,.95), 0 0 26px -4px rgba(240,200,120,.4), inset 0 1px 0 rgba(255,248,220,.6), inset 0 -2px 6px rgba(90,60,10,.5); }
+}
+
+/* bronze sheen sweep across the mode cards on hover */
+.ph-mode::before {
+  content:''; position:absolute; inset:0; transform:translateX(-130%); pointer-events:none;
+  background:linear-gradient(105deg, transparent 32%, rgba(240,200,120,.09) 50%, transparent 68%);
+  transition:transform .7s ease;
+}
+.ph-mode:hover::before { transform:translateX(130%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ph-pick-title, .ph-l-title, .ph-pick-crest svg { animation:none; }
+  #ph-lobby.active .ph-start-btn:not(.sec) { animation:none; }
+  .ph-mode::before { display:none; }
+}
 
 /* small-screen tuning */
 @media (max-width:560px) {

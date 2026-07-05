@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { G, ACT, rand, choice } from './config.js';
 import {
   buildColumn, buildBrokenColumn, buildOlive, buildCypress, buildCloud, buildTemple,
+  buildPropylaea, buildHerm, buildVergeAmphorae,
   OBSTACLES,
 } from './builders-world.js';
 import { buildCoin, buildPowerup, PU_TYPES } from './builders-actors.js';
@@ -24,6 +25,7 @@ export class World {
     this.contentFrontier = 0;
     this.lastPuDist = 0;
     this.rowsSinceObstacle = 0;
+    this.nextGateAt = 120;
 
     this._initClouds();
     this._initTemples();
@@ -74,6 +76,7 @@ export class World {
     this.contentFrontier = 28;     // small grace gap before first obstacle
     this.lastPuDist = 0;
     this.rowsSinceObstacle = 0;
+    this.nextGateAt = 120;
   }
 
   /* ── per-frame ─────────────────────────────────────────────── */
@@ -133,18 +136,30 @@ export class World {
   }
 
   _spawnScenery(wz) {
+    // monumental propylaea gate spanning the road every few hundred metres
+    if (wz >= this.nextGateAt) {
+      this.nextGateAt = wz + rand(240, 400);
+      const gate = this._get('gate', buildPropylaea);
+      gate.userData.poolKey = 'gate';
+      gate.userData.wz = wz + 3;
+      gate.position.set(0, 0, distanceless(wz));
+      gate.rotation.y = 0;
+      this.scenery.push(gate);
+    }
     for (const side of [-1, 1]) {
       const r = Math.random();
-      let key, factory;
-      if (r < 0.5) { key = 'col'; factory = () => buildColumn(rand(4.5, 6.5)); }
-      else if (r < 0.7) { key = 'broken'; factory = buildBrokenColumn; }
-      else if (r < 0.88) { key = 'olive'; factory = buildOlive; }
+      let key, factory, near = false;
+      if (r < 0.42) { key = 'col'; factory = () => buildColumn(rand(4.5, 6.5)); }
+      else if (r < 0.58) { key = 'broken'; factory = buildBrokenColumn; }
+      else if (r < 0.70) { key = 'herm'; factory = buildHerm; near = true; }
+      else if (r < 0.78) { key = 'pots'; factory = buildVergeAmphorae; near = true; }
+      else if (r < 0.92) { key = 'olive'; factory = buildOlive; }
       else { key = 'cypress'; factory = buildCypress; }
       const o = this._get(key, factory);
       o.userData.poolKey = key;
       o.userData.wz = wz;
-      o.position.set(side * rand(6.6, 9.5), 0, distanceless(wz));
-      o.rotation.y = rand(0, Math.PI * 2);
+      o.position.set(side * (near ? rand(6.1, 7.4) : rand(6.6, 9.5)), 0, distanceless(wz));
+      o.rotation.y = key === 'herm' ? (side > 0 ? -Math.PI / 2 : Math.PI / 2) + rand(-0.3, 0.3) : rand(0, Math.PI * 2);
       this.scenery.push(o);
     }
   }

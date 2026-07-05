@@ -164,6 +164,16 @@ const BladeSfx = {
     const k = Math.min(1.6, 0.6 + v * 0.5);
     try { this._noiseHit(t0, 0.15, 500 * k, 2400 * k, 0.13 * k, 'bandpass'); } catch (e) {}
   },
+  // metallic "shing" — the blade biting through
+  slice() {
+    if (!this.ctx || this.muted) return;
+    const t0 = this.ctx.currentTime;
+    try {
+      this._noiseHit(t0, 0.07, 2600, 5600, 0.15, 'bandpass');
+      this._tone(t0, 0.11, 2350, 1620, 0.085, 'triangle');
+      this._tone(t0 + 0.012, 0.08, 3520, 2800, 0.05, 'sine');
+    } catch (e) {}
+  },
   splat(pottery) {
     if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime;
@@ -483,6 +493,7 @@ function bladeEaseOutBack(t) {
 // ══════════════════════════════════════════════════════════
 class BladeGame {
   constructor(containerEl) {
+    try { window.__blade = this; } catch (e) {}   // debug/testing handle
     this.container = containerEl;
     this.canvas = null; this.ctx = null; this.raf = null;
     this.alive = true;
@@ -506,6 +517,7 @@ class BladeGame {
     this.tokens = []; this.shards = []; this.parts = [];
     this.decals = []; this.callouts = []; this.popups = [];
     this.rings = []; this.stamps = []; this.ambient = [];
+    this.slashes = [];
     this.menuItems = []; this.overItems = [];
     this.uiLock = false;
 
@@ -883,11 +895,17 @@ class BladeGame {
       });
     }
     if (this.shards.length > 26) this.shards.splice(0, this.shards.length - 26);
-    // juice burst + splash decal
+    // juice sprays perpendicular to the cut (both sides), like a real melon
     const juice = tk.sprite.juice;
-    this._burst(tk.x, tk.y, juice, tk.sprite.pottery ? '#8a5a30' : '#e88a96',
-                tk.sprite.pottery ? 16 : 26, tk.sprite.pottery ? 'shard' : 'dot');
+    const alt = tk.sprite.pottery ? '#8a5a30' : '#e88a96';
+    const jn = tk.sprite.pottery ? 9 : 14;
+    const jt = tk.sprite.pottery ? 'shard' : 'dot';
+    this._burst(tk.x, tk.y, juice, alt, jn, jt,  nx * 2.6,  ny * 2.6);
+    this._burst(tk.x, tk.y, juice, alt, jn, jt, -nx * 2.6, -ny * 2.6);
     this._burst(tk.x, tk.y, juice, juice, 8, 'dot');
+    // white-hot cut flash along the stroke
+    this.slashes.push({ x: tk.x, y: tk.y, th: theta, len: (tk.r || 50) * 2.7, t0: this.now, dur: 170 });
+    if (this.slashes.length > 8) this.slashes.shift();
     this.decals.push({
       cv: bladeMakeSplat(juice, 90 + Math.random() * 70, this.dpr),
       x: tk.x, y: tk.y, rot: Math.random() * Math.PI * 2,
@@ -896,6 +914,7 @@ class BladeGame {
     if (this.decals.length > 12) this.decals.shift();
     // slice flash line
     this.rings.push({ x: tk.x, y: tk.y, r0: 2, r1: tk.r * 1.3, t0: this.now, dur: 200, c: 'rgba(255,248,225,0.8)', lw: 2 });
+    BladeSfx.slice();
   }
 
   // ── Slice results ────────────────────────────────────────
@@ -903,6 +922,12 @@ class BladeGame {
     if (tk.correct) {
       let pts = 1;
       const crit = this.bladeV > 2.1 || Math.random() < 0.08;
+      // hit feedback: tiny screen kick, brief hit-stop on criticals
+      if (!BLADE_REDUCED) {
+        this.shakeF = Math.max(this.shakeF, 4);
+        this.shakeA = Math.max(this.shakeA, crit ? 7 : 3.2);
+        if (crit) this.tsPulses.push({ v: 0.35, until: this.now + 100 });
+      }
       if (crit) {
         pts += 2;
         this._burst(px, py, '#f6d678', '#fff3c8', 30, 'spark');
@@ -980,15 +1005,16 @@ class BladeGame {
   }
 
   // ── Particles ────────────────────────────────────────────
-  _burst(px, py, c1, c2, n, type) {
+  _burst(px, py, c1, c2, n, type, bx, by) {
     if (this.parts.length > 340) return;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = 1.2 + Math.random() * 5.4;
+      const bk = (bx || by) ? 0.5 + Math.random() * 0.9 : 0;
       this.parts.push({
         type: type || 'dot',
         x: px, y: py,
-        vx: Math.cos(a) * s, vy: Math.sin(a) * s - 1.6,
+        vx: Math.cos(a) * s + (bx || 0) * bk, vy: Math.sin(a) * s - 1.6 + (by || 0) * bk,
         ay: type === 'smoke' ? -0.03 : 0.19,
         life: 1, decay: (type === 'smoke' ? 0.02 : 0.024) + Math.random() * 0.026,
         r: type === 'smoke' ? 6 + Math.random() * 9 : 1.4 + Math.random() * 2.6,
@@ -1186,7 +1212,7 @@ class BladeGame {
     this.scene = 'menu';
     this.running = false; this.gameOver = false; this.uiLock = false;
     this.tokens = []; this.shards = []; this.callouts = []; this.popups = [];
-    this.rings = []; this.stamps = []; this.decals = [];
+    this.rings = []; this.stamps = []; this.decals = []; this.slashes = [];
     this._clearTimers();
     if (!this.canvas) this._build();
     this._layoutMenu();
@@ -1315,7 +1341,7 @@ class BladeGame {
     this.gameOver = false; this.running = true; this.uiLock = false;
     this.tokens = []; this.shards = []; this.parts = []; this.decals = [];
     this.callouts = []; this.popups = []; this.rings = []; this.stamps = [];
-    this.pts = []; this.frenzy = false;
+    this.slashes = []; this.pts = []; this.frenzy = false;
     this.shakeF = 0; this.shakeA = 0; this.flashA = 0;
     this.timeScale = 1; this.tsPulses = [];
     this.best = parseInt(localStorage.getItem('blade_best_' + this.mode) || '0', 10);
@@ -1440,8 +1466,9 @@ class BladeGame {
     }
     // callouts expire
     this.callouts = this.callouts.filter(c => t - c.t0 < c.dur);
-    // rings
+    // rings + cut flashes
     this.rings = this.rings.filter(rg => t - rg.t0 < rg.dur);
+    this.slashes = this.slashes.filter(s => t - s.t0 < s.dur);
     // stamps
     for (let i = this.stamps.length - 1; i >= 0; i--) {
       this.stamps[i].a -= 0.012 * rawF;
@@ -1556,6 +1583,25 @@ class BladeGame {
     }
     ctx.globalAlpha = 1;
 
+    // white-hot cut flashes along each slice
+    for (const s of this.slashes) {
+      const p = (t - s.t0) / s.dur;
+      if (p >= 1) continue;
+      const L = s.len * (0.55 + 0.55 * p) * 0.5;
+      ctx.save();
+      ctx.translate(s.x, s.y); ctx.rotate(s.th);
+      ctx.globalCompositeOperation = 'lighter';
+      const sg = ctx.createLinearGradient(-L, 0, L, 0);
+      sg.addColorStop(0, 'rgba(255,240,200,0)');
+      sg.addColorStop(0.5, 'rgba(255,252,238,' + (0.9 * (1 - p)).toFixed(3) + ')');
+      sg.addColorStop(1, 'rgba(255,240,200,0)');
+      ctx.strokeStyle = sg;
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 1 + 3.4 * (1 - p);
+      ctx.beginPath(); ctx.moveTo(-L, 0); ctx.lineTo(L, 0); ctx.stroke();
+      ctx.restore();
+    }
+
     // X stamps
     for (const st of this.stamps) {
       ctx.save();
@@ -1636,9 +1682,13 @@ class BladeGame {
 
   _drawBlade(ctx, t) {
     const n = this.pts.length;
-    if (n < 2 || !this.ptrDown) return;
+    if (n < 2) return;
+    // linger + fade after the finger lifts (the signature FN stroke)
+    const tipAge = t - this.pts[n - 1].t;
+    const fade = this.ptrDown ? 1 : Math.max(0, 1 - tipAge / 160);
+    if (fade <= 0.02) return;
     const vNorm = Math.max(0.35, Math.min(1.6, this.bladeV));
-    const maxW = 13 * vNorm;
+    const maxW = 11 * vNorm * (0.35 + 0.65 * fade);   // remnant thins as it fades
     // build ribbon polygon
     const left = [], right = [];
     for (let i = 0; i < n; i++) {
@@ -1652,18 +1702,24 @@ class BladeGame {
       left.push({ x: p.x - dy * wgt, y: p.y + dx * wgt });
       right.push({ x: p.x + dy * wgt, y: p.y - dx * wgt });
     }
-    // glow pass
     ctx.save();
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.globalAlpha = 0.20;
-    ctx.strokeStyle = '#e8c25a';
-    ctx.lineWidth = maxW * 2.6;
+    // additive bronze-gold halo, two widths
+    ctx.globalCompositeOperation = 'lighter';
     ctx.beginPath();
     ctx.moveTo(this.pts[0].x, this.pts[0].y);
     for (let i = 1; i < n; i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
+    ctx.globalAlpha = 0.10 * fade;
+    ctx.strokeStyle = '#e8a63c';
+    ctx.lineWidth = maxW * 3.4;
     ctx.stroke();
-    // core ribbon
-    ctx.globalAlpha = 0.94;
+    ctx.globalAlpha = 0.16 * fade;
+    ctx.strokeStyle = '#ffd873';
+    ctx.lineWidth = maxW * 1.8;
+    ctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    // core ribbon — hot white tip melting into gold vapor
+    ctx.globalAlpha = 0.95 * fade;
     ctx.beginPath();
     ctx.moveTo(left[0].x, left[0].y);
     for (let i = 1; i < n; i++) ctx.lineTo(left[i].x, left[i].y);
@@ -1671,13 +1727,14 @@ class BladeGame {
     ctx.closePath();
     const tip = this.pts[n - 1], tail = this.pts[0];
     const rg = ctx.createLinearGradient(tail.x, tail.y, tip.x, tip.y);
-    rg.addColorStop(0, 'rgba(232,194,90,0.06)');
-    rg.addColorStop(0.55, 'rgba(255,244,214,0.65)');
+    rg.addColorStop(0, 'rgba(232,194,90,0.03)');
+    rg.addColorStop(0.45, 'rgba(255,232,178,0.38)');
+    rg.addColorStop(0.8, 'rgba(255,250,235,0.9)');
     rg.addColorStop(1, '#ffffff');
     ctx.fillStyle = rg;
     ctx.fill();
     // edge glint
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 0.4 * fade;
     ctx.strokeStyle = 'rgba(255,238,180,0.8)';
     ctx.lineWidth = 1;
     ctx.stroke();

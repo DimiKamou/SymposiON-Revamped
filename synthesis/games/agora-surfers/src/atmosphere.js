@@ -9,6 +9,7 @@
 ════════════════════════════════════════════════════════════════ */
 import * as THREE from 'three';
 import { mesh } from './gfx.js';
+import { G } from './config.js';
 import { QUALITY } from './quality.js';
 
 const C = (hex) => new THREE.Color(hex);
@@ -106,16 +107,19 @@ export class Atmosphere {
     this.scene.add(sky);
   }
 
-  /* ── travelling celestial body (sun by day, moon by night) ────── */
+  /* ── travelling celestial body (sun by day, moon by night) ──────
+     Additive-blended: the disc ADDS to the sky-shader glow instead of
+     occluding it, so it can never render darker than the halo around
+     it (the old "eclipse" artifact). */
   _buildCelestial() {
     const g = new THREE.Group();
-    this.disc = mesh(new THREE.CircleGeometry(20, 40),
-      new THREE.MeshBasicMaterial({ color: 0xfff6da, transparent: true, depthWrite: false, fog: false }), 0, 0, 0);
+    this.disc = mesh(new THREE.CircleGeometry(14, 40),
+      new THREE.MeshBasicMaterial({ color: 0xfff6da, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }), 0, 0, 0);
     g.add(this.disc);
     this.halos = [];
     for (let i = 1; i <= 3; i++) {
-      const h = mesh(new THREE.CircleGeometry(20 + i * 13, 40),
-        new THREE.MeshBasicMaterial({ color: 0xfff2cf, transparent: true, opacity: 0.12 / i, depthWrite: false, fog: false }), 0, 0, -i);
+      const h = mesh(new THREE.CircleGeometry(14 + i * 10, 40),
+        new THREE.MeshBasicMaterial({ color: 0xfff2cf, transparent: true, opacity: 0.12 / i, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }), 0, 0, -i);
       g.add(h); this.halos.push(h);
     }
     g.renderOrder = -9;
@@ -197,7 +201,7 @@ export class Atmosphere {
 
     // celestial disc rides the sun direction, faces the camera
     this.celestial.position.set(dir.x * 300, dir.y * 300, G_CAM_Z + dir.z * 300);
-    this.celestial.lookAt(0, 5.8, G_CAM_Z);
+    this.celestial.lookAt(0, G.CAM_Y, G_CAM_Z);
     this.disc.material.color.copy(T.disc);
     this.disc.scale.setScalar(discSize);
     for (const h of this.halos) { h.material.color.copy(T.disc); h.material.opacity = (0.13 * glow / 0.16) * (1 - night * 0.6); }
@@ -226,7 +230,7 @@ export class Atmosphere {
   }
 }
 
-const G_CAM_Z = 11.0;
+const G_CAM_Z = G.CAM_Z;
 const BACK_Y = 4.0;
 const BACK_H = 220;
 const lerp = (a, b, t) => a + (b - a) * t;

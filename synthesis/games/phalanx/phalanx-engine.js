@@ -171,6 +171,7 @@
           </div>
           <div class="ph-quiz" id="ph-quiz">
             <div class="ph-quiz-box">
+              <div class="ph-quiz-meander" aria-hidden="true"></div>
               <div class="ph-clash-row">
                 <div class="ph-clash-side"><div class="ph-clash-emb" id="ph-qa-emb"></div><div class="ph-clash-nm" id="ph-qa-nm"></div><div class="ph-clash-edge" id="ph-qa-edge"></div></div>
                 <div class="ph-clash-mid"><div class="ph-clash-vs">⚔</div><div class="ph-clash-fore" id="ph-fore"></div></div>
@@ -542,6 +543,7 @@
     document.getElementById('ph-pbar').innerHTML = '';
     document.getElementById('ph-pbar').style.display = 'none';
     setupKeys();
+    if (arena && arena.rally) arena.rally();   // the ranks dress the line
     beginTurn();
   }
 
@@ -812,20 +814,21 @@
     document.getElementById('ph-quiz').classList.remove('active');
     const cl = S.clash; const { from, to, ranged } = cl;
     const attacker = cl.atkOwner;
-    // determine winner/loser tiles
+    // determine winner/loser tiles (the fallen unit is handed to the arena
+    // so it can sink away as a fading shade — presentation only)
     if (outcome === 'win') {
       if (a.ansIsAtk) {           // attacker wins
-        arena.burst(to, 'win'); S.stats.kills++;
+        arena.burst(to, 'win', S.cells[to]); S.stats.kills++;
         S.cells[to] = null;       // remove defender
         if (!ranged) { advance(from, to); } else { pushArena(); }
       } else {                    // defender wins → kill attacker
-        arena.burst(from, 'win'); S.cells[from] = null; pushArena();
+        arena.burst(from, 'win', S.cells[from]); S.cells[from] = null; pushArena();
       }
     } else if (outcome === 'standoff') {
       arena.burst(ranged ? to : midTile(from, to), 'standoff'); pushArena();  // nobody dies
     } else { // lose
-      if (a.ansIsAtk) { arena.burst(from, 'lose'); S.cells[from] = null; pushArena(); }
-      else { arena.burst(to, 'lose'); S.cells[to] = null; advance(from, to); S.stats.kills++; }
+      if (a.ansIsAtk) { arena.burst(from, 'lose', S.cells[from]); S.cells[from] = null; pushArena(); }
+      else { arena.burst(to, 'lose', S.cells[to]); S.cells[to] = null; advance(from, to); S.stats.kills++; }
     }
     S.lastMove = { from, to }; S.clash = null;
     setTimeout(() => { if (!checkWin()) endTurn(); }, 520);

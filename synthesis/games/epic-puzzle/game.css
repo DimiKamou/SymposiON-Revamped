@@ -42,22 +42,33 @@
 
 .ep-ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
 .ep-amb-glow {
-  position: absolute; inset: 0;
+  position: absolute; inset: -3%;
   background:
     radial-gradient(60% 46% at 50% 0%, rgba(224, 178, 95, 0.14), rgba(224, 178, 95, 0.04) 55%, transparent 78%),
     linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+  transform: translate(calc(var(--ep-px, 0) * 18px), calc(var(--ep-py, 0) * 10px));
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.3, 1);
+  will-change: transform;
 }
-/* faint fluted museum columns at the hall edges */
+/* faint fluted museum columns at the hall edges — counter-parallax */
 .ep-amb-cols::before, .ep-amb-cols::after {
   content: ''; position: absolute; top: 0; bottom: 0; width: min(13vw, 120px);
   background: repeating-linear-gradient(90deg,
     rgba(214, 178, 110, 0.05) 0 9px, transparent 9px 21px);
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 78%, transparent);
           mask-image: linear-gradient(180deg, transparent, #000 18%, #000 78%, transparent);
+  transform: translateX(calc(var(--ep-px, 0) * -10px));
+  transition: transform 1.1s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 .ep-amb-cols::before { left: 0; }
 .ep-amb-cols::after  { right: 0; }
 #ep-dust { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* museum-after-dark film grain (procedural SVG noise) */
+.ep-amb-grain {
+  position: absolute; inset: 0; opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
 .ep-amb-vignette {
   position: absolute; inset: 0;
   box-shadow: inset 0 0 190px 30px rgba(0, 0, 0, 0.6);
@@ -84,7 +95,7 @@
   color: color-mix(in srgb, var(--ep-gold) 62%, transparent);
   text-transform: uppercase; text-align: center;
   margin-bottom: 0.9rem;
-  animation: ep-rise 0.7s cubic-bezier(0.16, 0.84, 0.3, 1) backwards;
+  animation: ep-track 1s cubic-bezier(0.16, 0.84, 0.3, 1) backwards;
 }
 .ep-title {
   font-family: var(--ep-serif);
@@ -92,8 +103,16 @@
   color: var(--ep-parch); text-align: center;
   letter-spacing: 0.5px; line-height: 1.05;
   margin-bottom: 1.1rem;
-  text-shadow: 0 0 34px rgba(224, 178, 95, 0.22);
-  animation: ep-rise 0.7s cubic-bezier(0.16, 0.84, 0.3, 1) 0.08s backwards;
+  filter: drop-shadow(0 0 26px rgba(224, 178, 95, 0.22));
+}
+/* kinetic letters — gilded gradient fill, staggered blur-in */
+.ep-t-w { display: inline-block; white-space: nowrap; }
+.ep-t-ch {
+  display: inline-block;
+  background-image: linear-gradient(180deg, #FAF2DE 8%, #EFE6D4 46%, #D8BC86 92%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  animation: ep-ch-in 0.85s cubic-bezier(0.16, 0.84, 0.3, 1) calc(0.1s + var(--ep-i, 0) * 0.05s) backwards;
 }
 .ep-meander {
   color: color-mix(in srgb, var(--ep-gold) 55%, transparent);
@@ -146,7 +165,7 @@
   opacity: 0.5; transition: opacity 0.3s;
 }
 .ep-pack-card:hover {
-  transform: translateY(-5px);
+  transform: perspective(900px) rotateX(var(--ep-rx, 0deg)) rotateY(var(--ep-ry, 0deg)) translateY(-5px);
   border-color: color-mix(in srgb, var(--ep-gold) 45%, transparent);
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.5),
@@ -154,9 +173,22 @@
     0 22px 44px -18px rgba(0, 0, 0, 0.95),
     0 0 42px -8px rgba(201, 164, 74, 0.28);
 }
+.ep-pack-card.ep-tilt {
+  transition: transform 0.1s ease-out, border-color 0.3s, box-shadow 0.35s;
+}
 .ep-pack-card:hover::before { border-color: rgba(201, 164, 74, 0.3); }
 .ep-pack-card:hover::after  { opacity: 1; }
 .ep-pack-card:active { transform: translateY(-2px) scale(0.99); }
+
+.ep-pack-tag {
+  font-family: var(--ep-sans);
+  font-size: 9px; font-weight: 600; letter-spacing: 3px;
+  color: color-mix(in srgb, var(--ep-gold) 60%, transparent);
+  text-transform: uppercase;
+  border: 1px solid rgba(201, 164, 74, 0.24);
+  background: rgba(201, 164, 74, 0.05);
+  padding: 3px 11px; margin-bottom: 6px;
+}
 
 .ep-pack-icon { width: 92px; height: 92px; line-height: 0; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6)); transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
 .ep-pack-icon svg { width: 100%; height: 100%; }
@@ -242,6 +274,53 @@
 }
 .ep-instruction::after { background: linear-gradient(90deg, rgba(201, 164, 74, 0.4), transparent); }
 
+/* ── Timeline frieze: five marble slots that fill as you sequence ── */
+.ep-slot-rail {
+  width: 100%; max-width: 430px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem; padding: 2px 0;
+  animation: ep-rise 0.55s cubic-bezier(0.16, 0.84, 0.3, 1) 0.14s backwards;
+}
+.ep-slot-link {
+  flex: 1; max-width: 52px; height: 1px;
+  background: linear-gradient(90deg, rgba(201, 164, 74, 0.1), rgba(201, 164, 74, 0.38), rgba(201, 164, 74, 0.1));
+}
+.ep-slot {
+  position: relative; width: 30px; height: 30px; flex-shrink: 0;
+  transform: rotate(45deg);
+  border: 1px solid rgba(201, 164, 74, 0.3);
+  background: rgba(11, 8, 5, 0.65);
+  box-shadow: inset 0 1px 0 rgba(232, 201, 122, 0.06);
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.35s, background 0.35s, box-shadow 0.35s, transform 0.3s;
+  animation: ep-slot-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) calc(0.18s + var(--ep-sd, 0ms)) backwards;
+}
+.ep-slot-num {
+  transform: rotate(-45deg);
+  font-family: var(--ep-serif); font-size: 13px; font-weight: 600;
+  color: var(--ep-faint); line-height: 1;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+.ep-slot.ep-slot-filled {
+  border-color: var(--ep-gold-lt);
+  background: linear-gradient(135deg, rgba(201, 164, 74, 0.3), rgba(156, 116, 51, 0.14));
+  box-shadow: 0 0 14px rgba(224, 178, 95, 0.35), inset 0 1px 0 rgba(232, 201, 122, 0.15);
+}
+.ep-slot.ep-slot-filled .ep-slot-num { color: var(--ep-gold-lt); text-shadow: 0 0 10px rgba(224, 178, 95, 0.6); }
+.ep-slot.ep-slot-stamp { animation: ep-slot-pop 0.38s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.ep-slot.ep-slot-ok {
+  border-color: var(--ep-laurel);
+  background: rgba(124, 154, 98, 0.22);
+  box-shadow: 0 0 12px rgba(124, 154, 98, 0.4);
+}
+.ep-slot.ep-slot-ok .ep-slot-num { color: #CFE0BD; text-shadow: 0 0 8px rgba(124, 154, 98, 0.7); }
+.ep-slot.ep-slot-bad {
+  border-color: var(--ep-terra);
+  background: rgba(194, 91, 69, 0.18);
+  box-shadow: 0 0 12px rgba(194, 91, 69, 0.35);
+}
+.ep-slot.ep-slot-bad .ep-slot-num { color: #F0CBBE; text-shadow: 0 0 8px rgba(194, 91, 69, 0.6); }
+
 /* ── Event plaques on the timeline spine ── */
 .ep-cards {
   position: relative;
@@ -287,13 +366,16 @@
   opacity: 0.6; transition: opacity 0.25s;
 }
 .ep-card:hover:not(.ep-card-correct):not(.ep-card-wrong) {
-  transform: translateY(-2px) rotate(-0.25deg);
+  transform: perspective(760px) rotateX(var(--ep-rx, 0deg)) rotateY(var(--ep-ry, 0deg)) translateY(-2px);
   border-color: color-mix(in srgb, var(--ep-gold) 40%, transparent);
   border-left-color: var(--ep-gold);
   box-shadow:
     inset 0 1px 0 rgba(232, 201, 122, 0.09),
     0 14px 28px -14px rgba(0, 0, 0, 0.9),
     0 0 26px -8px rgba(201, 164, 74, 0.25);
+}
+.ep-card.ep-tilt {
+  transition: transform 0.1s ease-out, border-color 0.25s, background 0.25s, box-shadow 0.3s;
 }
 .ep-card:hover:not(.ep-card-correct):not(.ep-card-wrong)::after { opacity: 1; }
 .ep-card:active:not(.ep-card-correct):not(.ep-card-wrong) { transform: scale(0.988); }
@@ -331,6 +413,13 @@
   text-shadow: 0 1px 0 rgba(255, 240, 200, 0.4);
 }
 .ep-card-num.ep-stamp { animation: ep-stamp 0.34s cubic-bezier(0.2, 1.5, 0.4, 1); }
+/* ghost preview of the next seal number while hovering an unplaced plaque */
+.ep-card-num.ep-num-ghost:not(.ep-num-placed) {
+  color: color-mix(in srgb, var(--ep-gold) 80%, transparent);
+  border-color: rgba(201, 164, 74, 0.55);
+  border-style: dashed;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.55), 0 0 12px rgba(224, 178, 95, 0.18);
+}
 .ep-card-num.ep-num-correct {
   border-color: var(--ep-laurel); color: #E9F0DF;
   background: radial-gradient(circle at 34% 28%, #55703F, #3A4E2B 80%);
@@ -418,7 +507,9 @@
     inset 0 1px 0 rgba(255, 240, 200, 0.55),
     inset 0 -2px 5px rgba(90, 60, 20, 0.4);
   transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 0.25s, filter 0.2s;
-  animation: ep-pop 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  animation:
+    ep-pop 0.42s cubic-bezier(0.2, 1.4, 0.4, 1) backwards,
+    ep-btn-breathe 2.6s ease-in-out 0.7s infinite;
 }
 .ep-check-btn > span { position: relative; z-index: 1; }
 .ep-check-btn::after {
@@ -483,6 +574,14 @@
   border: 1px solid rgba(201, 164, 74, 0.14);
   pointer-events: none;
 }
+.ep-end-kicker {
+  font-family: var(--ep-sans);
+  font-size: 9.5px; font-weight: 600; letter-spacing: 4px;
+  color: color-mix(in srgb, var(--ep-gold) 58%, transparent);
+  text-transform: uppercase; text-align: center;
+  margin-bottom: 1rem;
+  animation: ep-track 1s cubic-bezier(0.16, 0.84, 0.3, 1) 0.15s backwards;
+}
 .ep-end-medal { position: relative; width: 208px; height: 196px; margin-bottom: 0.4rem; }
 .ep-end-icon { position: absolute; inset: 0; line-height: 0; filter: drop-shadow(0 0 18px rgba(224, 178, 95, 0.25)); }
 .ep-end-icon svg { width: 100%; height: 100%; }
@@ -504,8 +603,11 @@
   font-family: var(--ep-serif);
   font-size: clamp(30px, 5vw, 44px); font-weight: 500;
   color: var(--ep-gold-lt); text-align: center; margin-bottom: 0.6rem;
-  text-shadow: 0 0 26px rgba(224, 178, 95, 0.25);
-  animation: ep-rise 0.6s cubic-bezier(0.16, 0.84, 0.3, 1) 0.25s backwards;
+  filter: drop-shadow(0 0 22px rgba(224, 178, 95, 0.25));
+}
+.ep-end-title .ep-t-ch {
+  background-image: linear-gradient(180deg, #F7E7BF 6%, var(--ep-gold-lt) 48%, var(--ep-gold) 94%);
+  animation-delay: calc(0.3s + var(--ep-i, 0) * 0.035s);
 }
 .ep-end-stars { display: flex; gap: 18px; margin-bottom: 0.6rem; }
 .ep-star {
@@ -548,6 +650,16 @@
 .ep-confetti {
   position: absolute; width: 7px; height: 12px;
   pointer-events: none; opacity: 0.95;
+}
+/* curator's light passing down the plaques on reveal */
+.ep-sweepline {
+  position: absolute; height: 46px; pointer-events: none;
+  background: linear-gradient(180deg,
+    transparent, rgba(232, 201, 122, 0.1) 35%,
+    rgba(245, 227, 181, 0.22) 50%,
+    rgba(232, 201, 122, 0.1) 65%, transparent);
+  mix-blend-mode: screen;
+  filter: blur(1px);
 }
 
 /* ── Keyframes ── */
@@ -596,6 +708,38 @@
   70%  { opacity: 1; transform: scale(1.3) rotate(8deg); }
   100% { opacity: 1; transform: scale(1) rotate(0deg); }
 }
+@keyframes ep-track {
+  from { opacity: 0; letter-spacing: 11px; }
+  to   { opacity: 1; }
+}
+@keyframes ep-ch-in {
+  from { opacity: 0; transform: translateY(0.38em) rotate(3deg) scale(0.9); filter: blur(7px); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); filter: blur(0); }
+}
+@keyframes ep-slot-in {
+  0%   { opacity: 0; transform: rotate(45deg) scale(0.4); }
+  70%  { opacity: 1; transform: rotate(45deg) scale(1.15); }
+  100% { opacity: 1; transform: rotate(45deg) scale(1); }
+}
+@keyframes ep-slot-pop {
+  0%   { transform: rotate(45deg) scale(1.45); }
+  100% { transform: rotate(45deg) scale(1); }
+}
+@keyframes ep-btn-breathe {
+  0%, 100% {
+    box-shadow:
+      0 10px 26px -10px rgba(201, 164, 74, 0.55),
+      inset 0 1px 0 rgba(255, 240, 200, 0.55),
+      inset 0 -2px 5px rgba(90, 60, 20, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 12px 30px -9px rgba(201, 164, 74, 0.72),
+      0 0 26px -4px rgba(232, 201, 122, 0.35),
+      inset 0 1px 0 rgba(255, 240, 200, 0.55),
+      inset 0 -2px 5px rgba(90, 60, 20, 0.4);
+  }
+}
 
 /* ── Reduced motion: everything appears instantly, stage stays calm ── */
 @media (prefers-reduced-motion: reduce) {
@@ -618,4 +762,8 @@
   .ep-amb-cols::before, .ep-amb-cols::after { display: none; }
   .ep-end-plaque { padding: 2rem 1.2rem 1.8rem; }
   .ep-instruction { font-size: 12.5px; }
+  .ep-slot-rail { max-width: 300px; margin-bottom: 1.2rem; }
+  .ep-slot { width: 25px; height: 25px; }
+  .ep-slot-num { font-size: 11px; }
+  .ep-slot-link { max-width: 34px; }
 }
