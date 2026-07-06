@@ -168,7 +168,14 @@
     var cs = { idx: 0, flipped: false, mastered: [] };
 
     function mnemoBtn() {
-      return (typeof navToStudy === 'function')
+      // Only offer the "full Mnemosyne deck" handoff when this lesson id is an
+      // actually-registered GP dataset — otherwise navToStudy(L.id) dead-ends in
+      // a "Content module not found" toast (e.g. 'epitheta', which has curated
+      // cards but no GP_DATASETS deck). Mirrors navToStudy's own resolution.
+      var hasDeck = (typeof navToStudy === 'function')
+        && (typeof GP_DATASETS !== 'undefined')
+        && GP_DATASETS.some(function (d) { return d && d.id === L.id; });
+      return hasDeck
         ? '<div class="tr-cap" style="margin-top:22px;text-align:center"><button class="tr-btn tr-btn--ghost" data-act="full">▶ Πλήρης μελέτη (Μνημοσύνη)</button></div>'
         : '';
     }

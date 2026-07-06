@@ -376,8 +376,12 @@ window.SYM.AVATARS = [
 ];
 window.SYM.AVATAR_CATS = [ {k:'myth',t:{gr:'Μυθολογία',en:'Myth'}}, {k:'history',t:{gr:'Ιστορία',en:'History'}}, {k:'roman',t:{gr:'Ρωμαϊκά',en:'Roman'}} ];
 
-/* ── Hero titles — level-earned ranks (mirrors progression titles) ── */
-window.SYM.TITLES = [
+/* ── Hero titles — level-earned ranks (mirrors progression titles) ──
+   NOTE: kept on its OWN global (RANK_TITLES). window.SYM.TITLES is reassigned
+   further below to the Agora *shop* titles (rank/price), which is what every
+   consumer (screens.js, screens-2.js) reads — so putting the level-earned list
+   on SYM.TITLES here would just be silently clobbered. ── */
+window.SYM.RANK_TITLES = [
   { id:'t-neophyte', gr:'Νεόφυτος',          en:'Neophyte',           lv:1 },
   { id:'t-student',  gr:'Μαθητὴς τῆς Ἀγορᾶς',en:'Student of the Agora',lv:3 },
   { id:'t-rhetor',   gr:'Ρήτωρ τῆς Ἀγορᾶς',  en:'Orator of the Agora', lv:6 },
