@@ -142,6 +142,8 @@ a{color:var(--gold-lt); text-decoration:none}
 }
 .verse.mono .seg .gr{border-right:none}
 .verse.mono .seg .mod{display:none}
+/* phones: stack original above translation instead of two cramped ~150px columns */
+@media(max-width:560px){ .verse{grid-template-columns:1fr} .seg .gr{border-right:none} }
 .seg .mod{font-size:14.5px; color:color-mix(in srgb,var(--txt) 82%,var(--bg)); line-height:1.62}
 .seg:hover .gr{background:color-mix(in srgb,var(--gold) 7%,transparent)}
 .verse.hide-mod .seg .mod{

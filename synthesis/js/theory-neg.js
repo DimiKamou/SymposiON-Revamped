@@ -495,13 +495,20 @@
     var L = S.lesson, mount = document.getElementById('theory-neg-mount');
     if (!L || !mount) return;
     mount.innerHTML = '';
+    var _cur = (typeof window.theoryIsCurator === 'function') ? window.theoryIsCurator() : (typeof isAdmin !== 'undefined' && isAdmin);
     var head = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px"><div>' +
       '<div class="tr-eyebrow">' + esc(L.eyebrow || 'Έκθεση') + ' · ' + esc(L.level || '') + '</div>' +
       '<div style="margin-top:10px"><div class="tr-lemma" style="font-size:52px;line-height:1.05">' +
         esc(L.title) + '<em>' + esc(L.titleEm || '') + '</em></div>' +
         (L.subtitle ? '<div class="tr-meaning" style="font-size:21px;margin-top:6px">' + esc(L.subtitle) + '</div>' : '') +
-      '</div></div></div>';
+      '</div></div>' +
+      (_cur ? '<button class="tr-btn tr-btn--ghost" data-edit style="flex-shrink:0" title="Επεξεργασία μαθήματος">✎ Επεξεργασία</button>' : '') +
+      '</div>';
     mount.appendChild(el(head));
+    if (_cur) { var _eb = mount.querySelector('[data-edit]'); if (_eb) _eb.onclick = function () {
+      if (typeof window.openNegLessonEditor === 'function') window.openNegLessonEditor(L.id, function () { render(); });
+      else toast('Ο συντάκτης δεν φορτώθηκε.');
+    }; }
 
     var MODES = [['theory', 'Θεωρία'], ['practice', 'Άσκηση'], ['exam', 'Εξέταση']];
     var seg = el('<div class="seg" style="margin-top:26px">' + MODES.map(function (m) {

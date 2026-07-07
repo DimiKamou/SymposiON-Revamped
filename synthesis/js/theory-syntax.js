@@ -541,7 +541,7 @@
         esc(L.title) + '<em>' + esc(L.titleEm || '') + '</em></div>' +
         (L.subtitle ? '<div class="tr-meaning" style="font-size:21px;margin-top:6px">' + esc(L.subtitle) + '</div>' : '') +
       '</div></div>';
-    if (isCurator()) head += '<button class="tr-btn tr-btn--ghost" data-edit style="flex-shrink:0" title="Σύντομα">✎ Επεξεργασία</button>';
+    if (isCurator()) head += '<button class="tr-btn tr-btn--ghost" data-edit style="flex-shrink:0" title="Επεξεργασία μαθήματος">✎ Επεξεργασία</button>';
     head += '</div>';
     mount.appendChild(el(head));
 
@@ -558,7 +558,10 @@
 
     var body = (S.mode === 'practice') ? viewPractice(L) : (S.mode === 'exam') ? viewExam(L) : viewTheory(L);
     mount.appendChild(body);
-    var eb = mount.querySelector('[data-edit]'); if (eb) eb.onclick = function () { toast('Ο συντάκτης Συντακτικού έρχεται σύντομα'); };
+    var eb = mount.querySelector('[data-edit]'); if (eb) eb.onclick = function () {
+      if (typeof window.openSyntaxLessonEditor === 'function') window.openSyntaxLessonEditor(L.id, function () { render(); });
+      else toast('Ο συντάκτης δεν φορτώθηκε.');
+    };
   }
 
   function _openSyntaxLessonNow(idOrDs) {
