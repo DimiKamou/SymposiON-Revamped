@@ -2414,6 +2414,42 @@
         });
         pane.appendChild(mwrap);
 
+        // ── Μαθήματα Συντακτικού & Έκθεσης — per-lesson content editor ─────
+        // window.SYNTAX / window.NEG registries; ✎ opens the same overlay
+        // editor as the in-lesson button (theory-syx-editor.js). Text/theory
+        // only — interactive exercises stay code-defined.
+        (function () {
+          var groups = [
+            { reg: window.SYNTAX, opener: 'openSyntaxLessonEditor', gr: 'Συντακτικό', en: 'Syntax', ic: '⌖' },
+            { reg: window.NEG, opener: 'openNegLessonEditor', gr: 'Έκθεση · Νεοελληνική Γλώσσα', en: 'Composition · Modern Greek', ic: '¶' },
+          ];
+          var any = groups.some(function (g) { return g.reg && g.reg.all && g.reg.all().length; });
+          pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Μαθήματα Συντακτικού & Έκθεσης', en: 'Syntax & Composition lessons' })));
+          pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Επεξεργάσου το κείμενο κάθε μαθήματος (τίτλος, εισαγωγή, ενότητες θεωρίας, στατιστικά). Οι αλλαγές αποθηκεύονται ως override και υπερισχύουν του προεπιλεγμένου. Οι διαδραστικές ασκήσεις μένουν ως έχουν.', en: 'Edit each lesson’s text (title, intro, theory sections, stats). Changes save as an override. Interactive exercises stay as-is.' })));
+          if (!any) {
+            pane.appendChild(el('p', { class: 'sc-hint' }, L({ gr: 'Δεν φορτώθηκαν μαθήματα (window.SYNTAX / window.NEG).', en: 'No lessons loaded (window.SYNTAX / window.NEG).' })));
+          } else {
+            groups.forEach(function (g) {
+              if (!g.reg || !g.reg.all) return;
+              var lessons = g.reg.all().filter(Boolean);
+              if (!lessons.length) return;
+              pane.appendChild(el('div', { class: 'sc-sec-lbl', style: 'margin:6px 0 8px' }, L({ gr: g.gr, en: g.en }) + ' · ' + lessons.length));
+              var lw = el('div', { class: 'sc-voyadmin', style: 'margin:0 0 18px' });
+              lessons.forEach(function (Lx) {
+                lw.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+                  el('span', { class: 'sc-voyadmin__ic', style: 'display:flex;align-items:center;justify-content:center;font-size:18px' }, Lx.icon || g.ic),
+                  el('div', { class: 'sc-voyadmin__b' }, [
+                    el('div', { class: 'sc-voyadmin__nm' }, (Lx.title || '') + (Lx.titleEm || '')),
+                    el('div', { class: 'sc-voyadmin__m' }, (Lx.section || '') + (Lx.level ? ' · ' + Lx.level : '')),
+                  ]),
+                  el('button', { class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: (function (opener, lid) { return function () { if (typeof window[opener] === 'function') window[opener](lid, function () { paint(); }); else if (typeof showToast === 'function') showToast(L({ gr: 'Ο συντάκτης δεν φορτώθηκε.', en: 'Editor not loaded.' })); }; })(g.opener, Lx.id) }, L({ gr: '✎ Επεξεργασία', en: '✎ Edit' })),
+                ]));
+              });
+              pane.appendChild(lw);
+            });
+          }
+        })();
+
         // ── Assign a template to a class + subject → student tile ──────────
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ανάθεση προτύπου σε τάξη / μάθημα', en: 'Assign template to class / subject' })));
         pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Διάλεξε τύπο, τάξη & μάθημα — το πρότυπο εμφανίζεται ως πλακίδιο στη σελίδα του μαθήματος (όπως ο Ζωφόρος Ιλιάδας).', en: 'Pick type, class & subject — the template appears as a tile on that subject page (like the Iliad Frieze).' })));
