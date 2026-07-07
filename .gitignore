@@ -5,5 +5,9 @@ Thumbs.db
 .cache/
 .playwright/
 
-# Claude agent worktrees / internals
-.claude/
+# Claude agent worktrees / internals — but KEEP committed agent/skill definitions
+.claude/*
+!.claude/agents/
+!.claude/agents/**
+!.claude/skills/
+!.claude/skills/**
