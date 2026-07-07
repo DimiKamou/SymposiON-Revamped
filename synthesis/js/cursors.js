@@ -61,7 +61,9 @@
   };
 
   const cache = new Map();
-  let ring, glyph, enabled = false, shape = 'circle', icon = 'none', season = null;
+  // Default cursor is the CLASSIC system pointer (shape:'none' + icon:'none').
+  // Users can still opt into the ring/glyph cursor from the theme·cursor panel.
+  let ring, glyph, enabled = false, shape = 'none', icon = 'none', season = null;
   let qRx, qRy, qGx, qGy;
 
   function loadGlyph(g) {

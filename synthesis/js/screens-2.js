@@ -128,7 +128,7 @@
       { key:'theme',  t:{gr:'Θέματα',en:'Themes'},  blurb:{gr:'Ὅλη ἡ παλέτα · συγχρονίζεται ἀπ’ τὸ admin',en:'The full palette · syncs from admin'}, illu:'column', items:themeItems,
         cur:()=>window.STATE.theme, apply:(id)=>{ window.STATE.theme=id; window.STATE.season=null; if(window.SymSeasons) SymSeasons.apply(null); SymStore.set('theme',id); } },
       { key:'cursor_shape', t:{gr:'Δείκτης · Σχῆμα',en:'Cursor · Shape'}, blurb:{gr:'Σχῆμα δείκτη — ίδιο μὲ τὸ πάνελ θεμάτων', en:'Cursor shape — same as the theme panel'}, illu:'quill', items:shapeItems,
-        cur:()=>SymStore.get('cursor_shape', (window.STATE&&STATE.cursorShape)||'circle'), apply:(id)=>{ if(window.STATE) STATE.cursorShape=id; SymStore.set('cursor_shape',id); if(window.SymCursor) SymCursor.setShape(id); } },
+        cur:()=>SymStore.get('cursor_shape', (window.STATE&&STATE.cursorShape)||'none'), apply:(id)=>{ if(window.STATE) STATE.cursorShape=id; SymStore.set('cursor_shape',id); if(window.SymCursor) SymCursor.setShape(id); } },
       { key:'cursor_icon', t:{gr:'Δείκτης · Εἰκονίδιο',en:'Cursor · Icon'}, blurb:{gr:'Εἰκονίδιο δείκτη — ξεκλειδώνει κι ἐδῶ κι ἀπ’ τὰ θέματα',en:'Cursor icon — unlocks here and from themes'}, illu:'owl', items:iconItems,
         cur:()=>SymStore.get('cursor_icon', (window.STATE&&STATE.cursorIcon)||'none'), apply:(id)=>{ if(window.STATE) STATE.cursorIcon=id; SymStore.set('cursor_icon',id); if(window.SymCursor) SymCursor.setIcon(id); } },
       { key:'mousefx',t:{gr:'Ἐφὲ Δείκτη',en:'Mouse FX'}, blurb:{gr:'Ἴχνος ποντικιοῦ: χιόνι, αὐγά, κομφετί & ἐποχικά…',en:'Pointer trail: snow, eggs, confetti & seasonal…'}, illu:'lightning-bolt', items:mfxItems,
