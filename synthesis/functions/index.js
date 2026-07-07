@@ -1358,3 +1358,213 @@ exports.askTutor = functions.https.onCall(async (data, context) => {
 // HTTPS function defined in ./tts.js, served at /api/tts via firebase.json rewrite.
 // Requires the Cloud Text-to-Speech API enabled + the @google-cloud/text-to-speech dep.
 exports.tts = require('./tts').tts;
+
+
+// ════════════════════════════════════════════════════════════════════
+//  TEXT / Q&A TUTOR — «Κείμενα · Μεταφράσεις» reader (theory-text.js) and
+//  the Q&A comprehension grader (theory-qa.js). Five callables the clients
+//  invoke. The reference translation/syntax and the Q&A model answers live
+//  in server-only PRIVATE subdocs that firestore.rules deny to clients
+//  (texts/{id}/private/answer, authored_lessons/{id}/private/answers) — the
+//  answer never lands in the student payload and is reached ONLY here, via
+//  the Admin SDK. Auth + per-user rate-limit + AI shape mirror askTutor.
+//
+//  Client contracts (do not change without updating the readers):
+//    revealTextReference({textId, mode:'trans'|'syntax'})        -> {reference}
+//    gradeTranslation   ({textId, mode, attempt})                -> {verdict,score,feedback}
+//    translationHint    ({textId, mode, attempt, level})         -> {hint}
+//    revealQAItem       ({lessonId, itemIndex})                  -> {answer}
+//    gradeQAItem        ({lessonId, itemIndex, attempt})         -> {verdict,score,feedback}
+//  verdict is one of exactly: 'σωστό' | 'κοντά' | 'χρειάζεται δουλειά'
+// ════════════════════════════════════════════════════════════════════
+
+// Clamp the model's free-text verdict to the three values the client renders.
+function _clampTextVerdict(v, score) {
+  const s = String(v || '').toLowerCase().trim();
+  if (s.indexOf('σωστ') === 0) return 'σωστό';
+  if (s.indexOf('κοντ') === 0) return 'κοντά';
+  if (s.indexOf('χρειάζ') === 0 || s.indexOf('δουλει') >= 0) return 'χρειάζεται δουλειά';
+  // Fall back to the numeric band if the label is unexpected.
+  const n = parseInt(score, 10) || 0;
+  return n >= 80 ? 'σωστό' : n >= 50 ? 'κοντά' : 'χρειάζεται δουλειά';
+}
+
+// Shared Anthropic call → parsed {score, verdict, feedback}. Throws HttpsError.
+async function _aiGradeAgainstReference(userPrompt) {
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) throw new functions.https.HttpsError('failed-precondition', 'grader-unconfigured');
+  let resp;
+  try {
+    resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 700,
+        system: GRADER_SYSTEM,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+  } catch (err) {
+    console.error('[textGrader] network', err);
+    throw new functions.https.HttpsError('internal', 'grader-failed');
+  }
+  if (!resp.ok) {
+    console.error('[textGrader] upstream', resp.status, await resp.text().catch(() => ''));
+    throw new functions.https.HttpsError('internal', 'grader-upstream');
+  }
+  const d = await resp.json();
+  const text = (d.content || []).map((b) => b.text || '').join('').trim();
+  let s = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  let r;
+  try { r = JSON.parse(s); } catch (_) { throw new functions.https.HttpsError('internal', 'grader-parse'); }
+  const score = Math.max(0, Math.min(100, parseInt(r.score, 10) || 0));
+  return { score, verdict: _clampTextVerdict(r.verdict, score), feedback: String(r.feedback || '') };
+}
+
+// Fetch the student-safe text doc + its private reference. Throws if missing.
+async function _loadTextAndRef(textId, mode) {
+  const id = String(textId || '').replace(/^tx:/, '').trim();
+  if (!id || id.indexOf('/') >= 0) throw new functions.https.HttpsError('invalid-argument', 'textId required');
+  const pubSnap = await admin.firestore().doc(`texts/${id}`).get();
+  if (!pubSnap.exists) throw new functions.https.HttpsError('not-found', 'text-not-found');
+  const pub = pubSnap.data() || {};
+  const privSnap = await admin.firestore().doc(`texts/${id}/private/answer`).get();
+  const priv = privSnap.exists ? (privSnap.data() || {}) : {};
+  const reference = (mode === 'syntax') ? String(priv.syntax || '') : String(priv.ref || '');
+  const original = (Array.isArray(pub.srcLines) ? pub.srcLines : []).filter(Boolean).join('\n');
+  return { id, pub, reference, original };
+}
+
+// —— 1. revealTextReference: return the model translation / syntax (study aid) ——
+exports.revealTextReference = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in to view the reference.');
+  const mode = (data && data.mode === 'syntax') ? 'syntax' : 'trans';
+  const { reference } = await _loadTextAndRef(data && data.textId, mode);
+  return { reference };
+});
+
+// —— 2. gradeTranslation: AI-grade the student's translation / syntax analysis ——
+exports.gradeTranslation = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in to submit.');
+  const mode = (data && data.mode === 'syntax') ? 'syntax' : 'trans';
+  const attempt = String((data && data.attempt) || '').trim();
+  if (attempt.length < 2)    throw new functions.https.HttpsError('invalid-argument', 'attempt required');
+  if (attempt.length > 4000) throw new functions.https.HttpsError('invalid-argument', 'attempt too long');
+  try {
+    if (!(await _graderRateOk('text_' + context.auth.uid))) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Πάρα πολλές υποβολές — δοκίμασε αργότερα.');
+    }
+  } catch (e) { if (e instanceof functions.https.HttpsError) throw e; }
+
+  const { reference, original } = await _loadTextAndRef(data && data.textId, mode);
+  if (!reference) throw new functions.https.HttpsError('failed-precondition', 'no-reference');
+  const kind = mode === 'syntax' ? 'συντακτική ανάλυση' : 'μετάφραση/απόδοση';
+  const prompt =
+    `Αξιολογείς τη ${kind} μαθητή για ένα αρχαιοελληνικό κείμενο. Σύγκρινε ΣΗΜΑΣΙΟΛΟΓΙΚΑ ` +
+    `(με βάση το νόημα, ΟΧΙ λέξη προς λέξη) την απάντηση του μαθητή με την ενδεικτική.\n\n` +
+    `ΠΡΩΤΟΤΥΠΟ ΚΕΙΜΕΝΟ:\n"""\n${original}\n"""\n\n` +
+    `ΕΝΔΕΙΚΤΙΚΗ ${mode === 'syntax' ? 'ΣΥΝΤΑΚΤΙΚΗ ΑΝΑΛΥΣΗ' : 'ΑΠΟΔΟΣΗ'} (αναφορά):\n"""\n${reference}\n"""\n\n` +
+    `ΑΠΑΝΤΗΣΗ ΜΑΘΗΤΗ:\n"""\n${attempt}\n"""\n\n` +
+    `Επίστρεψε ΜΟΝΟ έγκυρο JSON χωρίς markdown, με ΑΚΡΙΒΩΣ αυτή τη μορφή:\n` +
+    `{"score": <ακέραιος 0-100>, "verdict": "<σωστό | κοντά | χρειάζεται δουλειά>", "feedback": "<1-2 προτάσεις στα ελληνικά>"}`;
+  return _aiGradeAgainstReference(prompt);
+});
+
+// —— 3. translationHint: a leveled nudge that never gives the full answer ——
+exports.translationHint = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in to get a hint.');
+  const mode = (data && data.mode === 'syntax') ? 'syntax' : 'trans';
+  const level = Math.max(1, Math.min(3, parseInt(data && data.level, 10) || 1));
+  const attempt = String((data && data.attempt) || '').trim().slice(0, 4000);
+  try {
+    if (!(await _graderRateOk('hint_' + context.auth.uid))) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Πάρα πολλές υποδείξεις — δοκίμασε αργότερα.');
+    }
+  } catch (e) { if (e instanceof functions.https.HttpsError) throw e; }
+
+  const { reference, original } = await _loadTextAndRef(data && data.textId, mode);
+  if (!reference) throw new functions.https.HttpsError('failed-precondition', 'no-reference');
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) throw new functions.https.HttpsError('failed-precondition', 'grader-unconfigured');
+  const kind = mode === 'syntax' ? 'συντακτική ανάλυση' : 'μετάφραση';
+  const prompt =
+    `Ο μαθητής προσπαθεί να κάνει ${kind} του παρακάτω αρχαιοελληνικού κειμένου. Δώσε ΜΙΑ σύντομη ` +
+    `υπόδειξη επιπέδου ${level}/3 (1=γενική κατεύθυνση, 3=πιο συγκεκριμένη) που τον καθοδηγεί ` +
+    `ΧΩΡΙΣ να αποκαλύπτεις ολόκληρη την απάντηση ή τη μετάφραση αυτούσια.\n\n` +
+    `ΠΡΩΤΟΤΥΠΟ:\n"""\n${original}\n"""\n\n` +
+    `ΕΝΔΕΙΚΤΙΚΗ ΑΝΑΦΟΡΑ (μόνο για σένα — μην την παραθέσεις):\n"""\n${reference}\n"""\n\n` +
+    `ΜΕΧΡΙ ΤΩΡΑ Ο ΜΑΘΗΤΗΣ ΕΓΡΑΨΕ:\n"""\n${attempt || '(τίποτα ακόμη)'}\n"""\n\n` +
+    `Επίστρεψε ΜΟΝΟ έγκυρο JSON: {"hint": "<μία πρόταση στα ελληνικά>"}`;
+  let resp;
+  try {
+    resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 300, system: GRADER_SYSTEM,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+  } catch (err) { console.error('[translationHint] network', err); throw new functions.https.HttpsError('internal', 'hint-failed'); }
+  if (!resp.ok) { console.error('[translationHint] upstream', resp.status); throw new functions.https.HttpsError('internal', 'hint-upstream'); }
+  const d = await resp.json();
+  const raw = (d.content || []).map((b) => b.text || '').join('').trim();
+  let s = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  let hint = '';
+  try { hint = String((JSON.parse(s) || {}).hint || ''); } catch (_) { hint = raw.slice(0, 300); }
+  return { hint };
+});
+
+// Fetch a QA lesson's public question + its private reference answer by index.
+async function _loadQAItem(lessonId, itemIndex) {
+  const id = String(lessonId || '').replace(/^qa:/, '').trim();
+  const i = parseInt(itemIndex, 10);
+  if (!id || id.indexOf('/') >= 0) throw new functions.https.HttpsError('invalid-argument', 'lessonId required');
+  if (!(i >= 0)) throw new functions.https.HttpsError('invalid-argument', 'itemIndex required');
+  const pubSnap = await admin.firestore().doc(`authored_lessons/${id}`).get();
+  if (!pubSnap.exists) throw new functions.https.HttpsError('not-found', 'lesson-not-found');
+  const pub = pubSnap.data() || {};
+  const item = (Array.isArray(pub.items) ? pub.items : [])[i] || {};
+  const ansSnap = await admin.firestore().doc(`authored_lessons/${id}/private/answers`).get();
+  const answers = ansSnap.exists ? (ansSnap.data() || {}).answers : null;
+  const answer = (Array.isArray(answers) ? answers : [])[i] || '';
+  return { id, question: String(item.q || ''), note: String(item.note || ''), answer: String(answer || '') };
+}
+
+// —— 4. revealQAItem: return the model answer for one Q&A item (Κάρτες mode) ——
+exports.revealQAItem = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in to view the answer.');
+  const { answer } = await _loadQAItem(data && data.lessonId, data && data.itemIndex);
+  return { answer };
+});
+
+// —— 5. gradeQAItem: AI-grade a typed Q&A answer vs the reference (Εξέταση) ——
+exports.gradeQAItem = functions.https.onCall(async (data, context) => {
+  if (!context.auth) throw new functions.https.HttpsError('unauthenticated', 'Sign in to submit.');
+  const attempt = String((data && data.attempt) || '').trim();
+  if (attempt.length < 2)    throw new functions.https.HttpsError('invalid-argument', 'attempt required');
+  if (attempt.length > 4000) throw new functions.https.HttpsError('invalid-argument', 'attempt too long');
+  try {
+    if (!(await _graderRateOk('qa_' + context.auth.uid))) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Πάρα πολλές υποβολές — δοκίμασε αργότερα.');
+    }
+  } catch (e) { if (e instanceof functions.https.HttpsError) throw e; }
+
+  const { question, answer } = await _loadQAItem(data && data.lessonId, data && data.itemIndex);
+  if (!answer) throw new functions.https.HttpsError('failed-precondition', 'no-reference');
+  const prompt =
+    `Αξιολογείς την απάντηση μαθητή σε ερώτηση κατανόησης/ερμηνείας. Σύγκρινε ΣΗΜΑΣΙΟΛΟΓΙΚΑ ` +
+    `(με βάση το νόημα) την απάντηση με την ενδεικτική.\n\n` +
+    `ΕΡΩΤΗΣΗ:\n"""\n${question}\n"""\n\n` +
+    `ΕΝΔΕΙΚΤΙΚΗ ΑΠΑΝΤΗΣΗ (αναφορά):\n"""\n${answer}\n"""\n\n` +
+    `ΑΠΑΝΤΗΣΗ ΜΑΘΗΤΗ:\n"""\n${attempt}\n"""\n\n` +
+    `Επίστρεψε ΜΟΝΟ έγκυρο JSON χωρίς markdown, με ΑΚΡΙΒΩΣ αυτή τη μορφή:\n` +
+    `{"score": <ακέραιος 0-100>, "verdict": "<σωστό | κοντά | χρειάζεται δουλειά>", "feedback": "<1-2 προτάσεις στα ελληνικά>"}`;
+  return _aiGradeAgainstReference(prompt);
+});

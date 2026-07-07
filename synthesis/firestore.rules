@@ -187,6 +187,38 @@ service cloud.firestore {
       allow write: if can('content');
     }
 
+    // ── THEORY TEXT READER («Κείμενα · Μεταφράσεις», theory-text.js) ──
+    // The public doc is the STUDENT-SAFE text (srcLines, glosses, meter,
+    // commentary, hasRef/hasSyntax) — world-readable like the other content
+    // collections. The reference translation/syntax lives in the private
+    // subdoc below, which is DENIED to every client: it is read ONLY by the
+    // revealTextReference / gradeTranslation / translationHint Cloud
+    // Functions via the Admin SDK (which bypasses these rules). Content-admins
+    // author both the public doc and the private reference from the in-place
+    // curator editor, so writes are gated to can('content').
+    match /texts/{id} {
+      allow read:  if true;
+      allow write: if can('content');
+      match /private/{doc} {
+        allow read:  if false;            // reference never reaches a client
+        allow write: if can('content');   // curator authors it; read via Fn
+      }
+    }
+
+    // ── AUTHORED THEORY LESSONS (Q&A + Παράλληλο Κείμενο) ──
+    // Public doc holds only student-safe fields (Q&A kind:'qa' → {q,note};
+    // parallel → index-aligned segments). Reference Q&A answers live in the
+    // private/answers subdoc, denied to clients and reached ONLY by the
+    // revealQAItem / gradeQAItem Cloud Functions.
+    match /authored_lessons/{id} {
+      allow read:  if true;
+      allow write: if can('content');
+      match /private/{doc} {
+        allow read:  if false;
+        allow write: if can('content');
+      }
+    }
+
     match /banners/{bannerId} {
       allow read:  if true;
       allow write: if can('content');
