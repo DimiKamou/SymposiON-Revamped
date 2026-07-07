@@ -5,6 +5,13 @@ Thumbs.db
 .cache/
 .playwright/
 
+# Secrets — real Cloud Functions env (ANTHROPIC_KEY etc.). Never commit these;
+# only functions/.env.example (the template) is tracked.
+.env
+.env.local
+.env.*.local
+**/.env
+
 # Claude agent worktrees / internals
 .claude/
 .firebase/
