@@ -111,6 +111,39 @@ For an unseen (αδίδακτο) line, the agent produces, in order:
 *(Calibration pending: exact terminology, how exhaustive the συντακτικό should
 be, the teacher's Τράπεζα marking split, and their preferred θέμα wording.)*
 
+### 7.2 Έκθεση / Νεοελληνική Γλώσσα — pipeline template (calibrating FIRST)
+
+Source material: **`materials/ekthesi/`** (repo-root, not deployed). The teacher
+adds a Τράπεζα Θεμάτων PDF (or own text); the agent ingests it, reuses any
+existing θέματα, and generates new ones.
+
+Standard exam shape (as understood — the teacher confirms exact marks/word-limits
+from their PDF):
+
+**Πανελλήνιες — Νεοελληνική Γλώσσα & Λογοτεχνία**
+- 2–3 μη-λογοτεχνικά κείμενα + 1 λογοτεχνικό.
+- **Θέμα Α** — περίληψη / συμπύκνωση νοήματος (word-limit: `?`, μονάδες: `?`).
+- **Θέμα Β** — κατανόηση / δομή / τρόποι & μέσα πειθούς / λεξιλογικά
+  (Β1, Β2, Β3…; μονάδες: `?`).
+- **Θέμα Γ** — ερμηνεία λογοτεχνικού κειμένου (word-limit: `?`, μονάδες: `?`).
+- **Θέμα Δ** — παραγωγή λόγου, ορισμένο επικοινωνιακό πλαίσιο
+  (άρθρο/ομιλία/επιστολή; word-limit: `?`, μονάδες: `?`).
+
+**Τράπεζα Θεμάτων (Α΄/Β΄ Λυκείου)** — 4-θεμα δομή προσαρμοσμένη ανά τάξη; exact
+θέματα/marks taken from the PDF.
+
+**Calibration checklist (fill from the teacher's real PDF + corrections):**
+- [ ] Exact θέματα layout + μονάδες split for each profile.
+- [ ] Word-limits (περίληψη, παραγωγή λόγου).
+- [ ] Preferred phrasing/register of θέμα prompts (the teacher's voice).
+- [ ] What a **model answer** + **rubric points** look like (these feed
+      `gradeAnswer` for auto-scoring).
+- [ ] Difficulty targeting + how distractors/traps are chosen.
+- [ ] Types of παραγωγή-λόγου prompts the teacher favours.
+
+Output → `examContent` doc (schema `exam`, subject `ekthesi`, profile
+`trapeza`|`panellinies`), `status:'draft'`.
+
 ## 8. Open questions (resolve with the teacher)
 
 - Grades/tracks in scope first? (Γ΄ Λυκείου Πανελλήνιες vs Γυμνάσιο Τράπεζα?)
