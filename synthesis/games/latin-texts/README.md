@@ -1,0 +1,46 @@
+# Λατινικά · Κείμενα — Text Analysis Panels
+
+Per-Ενότητα Latin text-analysis panels for Λατινικά Προσανατολισμού (Γ΄ Λυκείου).
+A self-contained **React 18** app (isolated in an overlay iframe, no build step to
+serve, no CDN) that renders **7 parts** from one data file per text:
+
+1. **Κείμενο** — the Latin text; hover/tap a word for full syntactic + grammatical
+   analysis. "Ανάλυση σύνταξης" overlays clause brackets `[ κύριες ]` / `( δευτ. )`,
+   per-word role chips, connection colours, annotation marks; "Βελάκια εξάρτησης"
+   draws dependency arrows; "Πλήρης ανάλυση" lists the numbered syntactic analysis.
+2. **Μετάφραση** — Latin ↔ Greek aligned columns, with a hide-and-reveal practice mode.
+3. **Ουσιαστικά & Επίθετα** — nouns/adjectives grouped by κλίση (declension) & γένος.
+4. **Παραθετικά** — adjective degrees (θετικός/συγκριτικός/υπερθετικός) by κλίση.
+5. **Αντωνυμίες** — pronouns.
+6. **Ρήματα** — principal parts grouped by συζυγία (conjugation).
+7. **SOS** — syntax "gotchas".
+
+Two visual **directions** (Α · Κώδικας / Β · Εφαρμογή), each with a **dark** variant.
+Teacher (admin) mode enables in-place editing + PDF/print; students get read-only.
+
+## Files
+
+```
+games/latin-texts/
+  enotita.html         ← shell (opened as ?unit=NN); loads vendor libs + panel.js + fonts.css
+  app/panel.jsx        ← SOURCE of the React component (edit this)
+  app/panel.js         ← COMPILED output (served) — regenerate after editing panel.jsx
+  app/build.md         ← how to recompile panel.jsx → panel.js
+  fonts.css, fonts/    ← vendored web fonts (Commissioner, EB Garamond, IBM Plex *)
+  vendor/              ← react + react-dom (UMD, production)
+  units/unitNN.js      ← ONE data module per text (the work)
+```
+
+## Adding a text (per Ενότητα)
+
+1. Copy `units/unit16.js` → `units/unit17.js`; keep `dataVersion`. Fill `periods`
+   (the text as the clause/word tree), `alignment` (phrase pairs), and the five word
+   tables + `sos`. Every field is documented in `unit16.js`.
+2. Register the unit in **`../../js/latin-texts-launchers.js`** → the `UNITS` map
+   (`17: 'Λατινικά · Ενότητα 17 — …'`). This auto-creates `openLatinText17` and its
+   manifest/launch-map entries.
+3. Add a tile in **`../../js/data.js`** (subsection `gl-texts`, subject `gram-latin`):
+   `g('Ενότητα 17','Unit 17','…','scroll',{fn:'openLatinText17'})`.
+
+The data schema is the reusable core — the same categorised fields (nouns / verbs /
+adjectives / pronouns / comparatives) feed the grammar exercise games.
