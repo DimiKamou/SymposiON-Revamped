@@ -59,7 +59,7 @@
   .fchip.on{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.08);}
   .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--shale);}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:14px;}
   .tcard{background:linear-gradient(180deg,var(--surface),rgba(34,28,22,.6));border:1px solid var(--border-soft);border-radius:14px;
     padding:17px 18px;display:flex;flex-direction:column;gap:0;transition:.15s;position:relative;overflow:hidden;}
   .tcard:hover{border-color:var(--border);transform:translateY(-2px);box-shadow:0 16px 38px -18px rgba(0,0,0,.7);}

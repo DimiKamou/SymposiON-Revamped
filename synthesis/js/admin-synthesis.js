@@ -2377,6 +2377,43 @@
         });
         pane.appendChild(twrap);
 
+        // ── Επεξεργαστές Ενοτήτων — self-contained module editors ──────────
+        // Διδαγμένο / Συντακτικό / Αδίδακτο each ship their own curator editor,
+        // and Γραμματική Θεωρία has in-place ✎/＋. They were previously only
+        // reachable from the student catalogue; surface them here so the admin
+        // opens them straight from the panel. Launchers are eager-loaded from
+        // index.html (grammar-theoria is lazy — load it on demand).
+        pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Επεξεργαστές Ενοτήτων', en: 'Module editors' })));
+        pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Άνοιξε τον διαχειριστή κάθε αυτόνομης ενότητας (Αρχαία Γ΄ Λυκείου & γραμματική). Οι αλλαγές αποθηκεύονται/εξάγονται από το ίδιο το εργαλείο.', en: 'Open each self-contained module’s manager (Ancient Greek + grammar). Changes persist/export within the tool itself.' })));
+        var mwrap = el('div', { class: 'sc-voyadmin', style: 'margin:0 0 22px' });
+        [
+          { ic: '📕', gr: 'Διδαγμένο Κείμενο', en: 'Seen Text', mgr: 'Ενότητες, μετάφραση, σχόλια & ασκήσεις (Γ΄ Λυκείου)', men: 'Units, translation, notes & exercises (Γ′)', fn: 'openGnwstoAdmin' },
+          { ic: '✎', gr: 'Συντακτικό', en: 'Syntax', mgr: 'Θεωρία, ασκήσεις & κατανόηση ανά θέμα', men: 'Theory, exercises & comprehension per topic', fn: 'openSyntaktikoAdmin' },
+          { ic: '🏛', gr: 'Αδίδακτο · Ανθολόγιο', en: 'Unseen · Corpus', mgr: 'Διαχείριση αδίδακτων κειμένων & ερωτήσεων εξέτασης', men: 'Manage unseen passages & exam questions', fn: 'openAdidaktoAdmin' },
+          { ic: '📐', gr: 'Γραμματική Θεωρία', en: 'Grammar Theory', mgr: 'Επεξεργασία & προσθήκη μαθημάτων γραμματικής (✎ / ＋)', men: 'Edit & add grammar lessons (✎ / ＋)', fn: 'openGrammarTheoria', lazy: 'games/grammar-theoria/grammar-theoria.js' },
+        ].forEach(function (t) {
+          mwrap.appendChild(el('div', { class: 'sc-voyadmin__row' }, [
+            el('span', { class: 'sc-voyadmin__ic', style: 'display:flex;align-items:center;justify-content:center;font-size:18px' }, t.ic),
+            el('div', { class: 'sc-voyadmin__b' }, [
+              el('div', { class: 'sc-voyadmin__nm' }, t.gr + ' · ' + t.en),
+              el('div', { class: 'sc-voyadmin__m' }, L({ gr: t.mgr, en: t.men })),
+            ]),
+            el('button', {
+              class: 'sc-cta sc-cta--solid sc-cta--sm', onclick: (function (fn, lazy) {
+                return function () {
+                  if (typeof window[fn] === 'function') { window[fn](); return; }
+                  if (lazy && typeof window.lazyLoad === 'function') {
+                    window.lazyLoad([lazy]).then(function () { if (typeof window[fn] === 'function') window[fn](); }).catch(function () {});
+                    return;
+                  }
+                  if (typeof window.showToast === 'function') window.showToast(L({ gr: 'Η ενότητα δεν φορτώθηκε.', en: 'Module not loaded.' }));
+                };
+              })(t.fn, t.lazy),
+            }, L({ gr: 'Άνοιγμα →', en: 'Open →' })),
+          ]));
+        });
+        pane.appendChild(mwrap);
+
         // ── Assign a template to a class + subject → student tile ──────────
         pane.appendChild(el('div', { class: 'sc-panel__h' }, L({ gr: 'Ανάθεση προτύπου σε τάξη / μάθημα', en: 'Assign template to class / subject' })));
         pane.appendChild(el('p', { class: 'sc-hint', style: 'margin:0 0 12px' }, L({ gr: 'Διάλεξε τύπο, τάξη & μάθημα — το πρότυπο εμφανίζεται ως πλακίδιο στη σελίδα του μαθήματος (όπως ο Ζωφόρος Ιλιάδας).', en: 'Pick type, class & subject — the template appears as a tile on that subject page (like the Iliad Frieze).' })));
