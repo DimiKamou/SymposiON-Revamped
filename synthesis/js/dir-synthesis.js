@@ -195,7 +195,7 @@
     function showDetail(a){
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(x=>x.owned).map(x=>x.id));
       const equipped = SymStore.get('acro_equipped', 'parthenon');
-      const isOwned = owned.indexOf(a.id)>=0, isEq = equipped===a.id;
+      const isOwned = (window.symAllUnlocked&&window.symAllUnlocked()) || owned.indexOf(a.id)>=0, isEq = equipped===a.id;
       detail.innerHTML='';
       detail.appendChild(el('span',{class:'acro-detail__art'+(isOwned?'':' locked')},[ el('span',{class:'acro-detail__illu','data-illu':a.illu}) ]));
       detail.appendChild(el('div',{class:'acro-detail__b'},[
@@ -225,7 +225,7 @@
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(a=>a.owned).map(a=>a.id));
       const equipped = SymStore.get('acro_equipped', 'parthenon');
       window.SYM.ACROTERIA.forEach(a=>{
-        const isOwned = owned.indexOf(a.id)>=0, isEq = equipped===a.id;
+        const isOwned = (window.symAllUnlocked&&window.symAllUnlocked()) || owned.indexOf(a.id)>=0, isEq = equipped===a.id;
         const card = el('div', { class:'acro-card'+(isOwned?'':' locked')+(isEq?' eq':'')+(a.id===selectedId?' sel':'')+(a.premium?' acro-card--premium':''), onclick:()=>{ selectedId=a.id; paintGrid(); showDetail(a); } }, [
           el('span', { class:'acro-card__art' }, [ el('span',{class:'acro-card__illu','data-illu':a.illu}), a.premium?el('span',{class:'acro-card__prem'},'★'):null ]),
           el('span', { class:'acro-card__nm' }, L(a)),
@@ -322,8 +322,8 @@
       const SS = window.SymStore;
       const CUR_PREMIUM = ['monsterball','invader','ghost','mushroom','pixelheart','joystick','skull','katana'];
       const curPrice = (kind,id)=> id==='none'?0 : (kind==='shape'&&id==='circle')?0 : (kind==='icon'&&CUR_PREMIUM.indexOf(id)>=0)?1800:600;
-      const curOwned = (kind,id)=>{ if(curPrice(kind,id)===0) return true; const def=kind==='shape'?['none','circle']:['none']; return ((SS&&SS.get('own_cursor_'+kind,def))||[]).indexOf(id)>=0; };
-      const curNow = (kind)=> kind==='shape' ? (SymCursor.shape||'circle') : (SymCursor.icon||'none');
+      const curOwned = (kind,id)=>{ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; if(curPrice(kind,id)===0) return true; const def=kind==='shape'?['none','circle']:['none']; return ((SS&&SS.get('own_cursor_'+kind,def))||[]).indexOf(id)>=0; };
+      const curNow = (kind)=> kind==='shape' ? (SymCursor.shape||'none') : (SymCursor.icon||'none');
       function curRow(kind, label, opts){
         menu.appendChild(el('div', { class:'syn-theme__sec' }, L(label)));
         const row = el('div', { class:'syn-theme__cur' });
@@ -840,6 +840,33 @@
     ])));
     eng.appendChild(scroller);
     home.appendChild(eng);
+    // Gentle auto-advance so the engines band "transitions" on its own (like the
+    // subject marquee, which is pure CSS). Ping-pongs across the overflow; pauses
+    // on hover / touch / manual scroll and resumes after a short idle; slower
+    // under reduced-motion; self-stops once the node leaves the DOM.
+    (function(sc){
+      if(!sc) return;
+      sc.style.scrollSnapType = 'none';            // let it glide instead of snapping
+      // accumulate in a float — sub-pixel scrollLeft increments otherwise round to
+      // 0 and never move (so the slow reduced-motion speed still drifts visibly).
+      var speed = reduceMotion() ? 0.28 : 0.55, dir = 1, paused = false, idle = 0, raf = 0, pos = 0;
+      function hold(ms){ paused = true; clearTimeout(idle); idle = setTimeout(function(){ paused = false; }, ms); }
+      function loop(){
+        if(!document.body.contains(sc)){ cancelAnimationFrame(raf); return; }
+        var max = sc.scrollWidth - sc.clientWidth;
+        if(paused){ pos = sc.scrollLeft; }         // resync so it resumes where the user left off
+        else if(max > 4){
+          pos += speed * dir;
+          if(pos >= max){ pos = max; dir = -1; } else if(pos <= 0){ pos = 0; dir = 1; }
+          sc.scrollLeft = pos;
+        }
+        raf = requestAnimationFrame(loop);
+      }
+      sc.addEventListener('pointerenter', function(){ paused = true; clearTimeout(idle); }, { passive:true });
+      sc.addEventListener('pointerleave', function(){ hold(900); }, { passive:true });
+      ['wheel','touchstart','pointerdown'].forEach(function(ev){ sc.addEventListener(ev, function(){ hold(1600); }, { passive:true }); });
+      raf = requestAnimationFrame(loop);
+    })(scroller);
 
     /* JOIN */
     home.appendChild(el('section', { class:'syn-join' }, [

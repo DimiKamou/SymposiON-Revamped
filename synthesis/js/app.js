@@ -20,7 +20,7 @@ const STATE = {
   ornament: 'rich',
   accent: 'soft',
   cursor: 'laurel',
-  cursorShape: 'circle',
+  cursorShape: 'none',   // classic system cursor by default (opt into the ring in the theme·cursor panel)
   cursorIcon: 'none',
   display: 'grid',
   hero: 'monogram',
@@ -340,7 +340,7 @@ function buildHarness() {
   // cursor picker — TWO selections: geometric SHAPE (frame) + inner ICON
   const CUR_PREMIUM = ['monsterball','invader','ghost','mushroom','pixelheart','joystick','skull','katana'];
   function cursorPrice(kind, id){ if(id==='none') return 0; if(kind==='shape' && id==='circle') return 0; if(kind==='icon' && CUR_PREMIUM.indexOf(id)>=0) return 1800; return 600; }
-  function cursorOwned(kind, id){ if(cursorPrice(kind,id)===0) return true; const def = kind==='shape'?['none','circle']:['none']; return (SymStore.get('own_cursor_'+kind, def)||[]).indexOf(id)>=0; }
+  function cursorOwned(kind, id){ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; if(cursorPrice(kind,id)===0) return true; const def = kind==='shape'?['none','circle']:['none']; return (SymStore.get('own_cursor_'+kind, def)||[]).indexOf(id)>=0; }
   function cursorRow(kind, opts){
     menu.appendChild(el('div',{class:'theme-menu__sec theme-menu__sec--cursor'}, kind==='shape'?'Δείκτης · Σχῆμα · Shape':'Δείκτης · Εικονίδιο · Icon'));
     const row = el('div',{class:'theme-menu__cursors'});
@@ -385,7 +385,7 @@ function buildHarness() {
 
   function themePrice(t){ return t.lock ? 2600 : (t.group==='neon' ? 2200 : (t.group==='combo' ? 1800 : (t.group==='vivid' ? 1400 : 0))); }
   function freeThemeIds(){ return THEMES.filter(t=>themePrice(t)===0).map(t=>t.id); }
-  function themeOwned(id){ const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true;
+  function themeOwned(id){ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true;
     // Member perk: themes granted to signed-up users live in STATE.unlocked.
     if (window.STATE && Array.isArray(STATE.unlocked) && STATE.unlocked.indexOf(id)>=0) return true;
     return (SymStore.get('own_theme', freeThemeIds())||[]).indexOf(id)>=0; }
@@ -582,7 +582,7 @@ function boot(){
   // PREVIEW: optionally auto-open the theme/cursor picker (used by the overview panel)
   try { const q = new URLSearchParams(location.search); if (q.get('menu') === 'themes') setTimeout(()=>{ const m=document.querySelector('.theme-menu'); if(m) m.classList.add('open'); }, 60); } catch(_){}
   if(window.SymSeasons){ SymSeasons.apply(STATE.season); SymSeasons.applyCosmetic(SymStore.get('cosm_particle', null)); }
-  if(window.SymCursor){ SymCursor.init(); SymCursor.setShape(STATE.cursorShape); SymCursor.setIcon(STATE.cursorIcon); }
+  if(window.SymCursor){ SymCursor.init(); SymCursor.setShape(STATE.cursorShape || 'none'); SymCursor.setIcon(STATE.cursorIcon || 'none'); }
   if(window.SymMouseFX){ SymMouseFX.init(); SymMouseFX.set(SymStore.get('mousefx','none')); }
   // STUDENT layer: mount the Guide FAB; run consent gate → first-visit onboarding (suppressed in ?screen= preview mode)
   if (window.SymGuide) SymGuide.mount();

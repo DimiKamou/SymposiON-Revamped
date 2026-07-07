@@ -47,6 +47,13 @@ function _gpCanAccessTier(requiredTier) {
 window.symCurrentTier  = symCurrentTier;
 window._gpCanAccessTier = _gpCanAccessTier;
 
+// Admin owns everything: the admin account should never see cosmetics (themes,
+// cursors, acroteria) as locked/purchasable. Content/games are already unlocked
+// via _gpCanAccessTier above; this covers the Kleos-gated cosmetic pickers. Read
+// live so it reflects `isAdmin` the moment auth resolves. (Teachers keep the
+// normal shop — this is an admin-only preview convenience.)
+window.symAllUnlocked = function () { return isAdmin === true; };
+
 // ── FIREBASE INIT ─────────────────────────────────────────────
 // IMPORTANT — keep initializeApp() SYNCHRONOUS.
 // Scripts that load after auth.js (favorites.js, scores.js, etc.)
