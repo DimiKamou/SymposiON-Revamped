@@ -172,6 +172,8 @@ const SUBJECTS = {
     { id:'archaia-kat', roman:'III', illu:'scroll', gr:'Αρχαία Κατεύθυνσης', en:'Ancient Greek (Advanced)', sub:'Authored corpus',
       summary:{ gr:'Διδαγμένο κείμενο, παράλληλη μετάφραση και σύνταξη.', en:'Seen text, parallel translation and syntax.' },
       games:[ g('Διδαγμένο Κείμενο','Seen Text','22 ενότητες + εισαγωγή · μετάφραση · ερμηνεία · ασκήσεις','scroll',{fn:'openGnwsto'}),
+              g('Αδίδακτο · Εξάσκηση','Unseen Text','Ανάλυση · μετάφραση · λεξιλόγιο ανά περίοδο','scroll',{fn:'openAdidakto'}),
+              g('Προσομοίωση Πανελληνίων','Exam Simulator','Πλήρες διαγώνισμα · χρονόμετρο · βαθμολόγηση','column',{fn:'openExamSim'}),
               g('Κείμενα · Μεταφράσεις','Texts · Translations','Παράλληλο κείμενο · σύνταξη','scroll',{fn:'openParallelLesson',args:['texts-lyk-c']}) ] },
     { id:'istoria-kat', roman:'V', illu:'acropolis', gr:'Ιστορία Κατεύθυνσης', en:'History (Advanced)', sub:'History',
       summary:{ gr:'Πανελλήνιες — πηγές, χρονολόγιο και ανάλυση.', en:'National exams — sources, timeline, analysis.' },
@@ -245,9 +247,9 @@ Object.assign(SUBJECTS, {
               g('Αντωνυμίες','Pronouns','Match · τύποι','amphora',{fn:'openAntonymies'}) ] },
     { id:'ga-syntax', roman:'III', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
       summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
-      games:[ gSoon('Πτώσεις & Λειτουργίες','Cases & Functions','Σύνταξη · ρόλοι','scroll'),
-              gSoon('Μετοχές','Participles','Επιθετική / επιρρηματική','column'),
-              gSoon('Δευτερεύουσες Προτάσεις','Clauses','Maze · σύνταξη','labyrinth') ] },
+      games:[ g('Πτώσεις & Λειτουργίες','Cases & Functions','Θεωρία · ασκήσεις · κατανόηση','scroll',{fn:'openSyntaktiko',args:['ptoseis']}),
+              g('Μετοχές','Participles','Επιθετική / κατηγορηματική / επιρρηματική','column',{fn:'openSyntaktiko',args:['metoxes']}),
+              g('Δευτερεύουσες Προτάσεις','Clauses','Ονοματικές & επιρρηματικές','labyrinth',{fn:'openSyntaktiko',args:['protaseis']}) ] },
   ],
   'gram-latin': [
     // ── Latin grammar — explicit {fn} launches for every wired Latin game.
