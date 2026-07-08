@@ -17,7 +17,8 @@
 
   // Registry of published Ενότητες → header title used on the overlay topbar.
   var UNITS = {
-    16: 'Λατινικά · Ενότητα 16 — Η τελευταία μάχη του Καίσαρα στη Γαλατία'
+    16: 'Λατινικά · Ενότητα 16 — Η τελευταία μάχη του Καίσαρα στη Γαλατία',
+    17: 'Λατινικά · Ενότητα 17 — Φόβος μπροστά στο άγνωστο'
   };
 
   function _appBase() { return window.APP_BASE || (new URL('./', location.href).href); }

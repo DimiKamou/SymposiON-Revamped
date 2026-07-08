@@ -266,7 +266,8 @@ Object.assign(SUBJECTS, {
     //    grammar games above). One tile → one link per text. ──
     { id:'gl-texts', roman:'IV', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
       summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
-      games:[ g('Ενότητα 16','Unit 16','Η μάχη του Καίσαρα · σύνταξη & μετάφραση','scroll',{fn:'openLatinText16'}) ] },
+      games:[ g('Ενότητα 16','Unit 16','Η μάχη του Καίσαρα · σύνταξη & μετάφραση','scroll',{fn:'openLatinText16'}),
+              g('Ενότητα 17','Unit 17','Φόβος μπροστά στο άγνωστο · σύνταξη & μετάφραση','scroll',{fn:'openLatinText17'}) ] },
   ],
   'gram-neo': [
     { id:'gn-gram', roman:'I', illu:'book', gr:'Γραμματική', en:'Grammar', sub:'Modern Greek',
