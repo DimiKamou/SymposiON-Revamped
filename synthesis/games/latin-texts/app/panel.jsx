@@ -605,7 +605,8 @@
                         <div style={s("font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 10px")}>{sz.syz}</div>
                         {sz.hasRows && (
                           <div style={s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")}>
-                            <table style={s("width:100%;border-collapse:collapse;min-width:520px")}>
+                            <table style={s("width:100%;border-collapse:collapse;min-width:520px;table-layout:fixed")}>
+                              <colgroup><col style={s("width:20%")} /><col style={s("width:20%")} /><col style={s("width:18%")} /><col style={s("width:20%")} /><col style={s("width:22%")} /></colgroup>
                               <thead><tr>
                                 <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--panel2)")}>Ενεστ.</th>
                                 <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--panel2)")}>Παρακ.</th>
@@ -616,10 +617,10 @@
                               <tbody>
                                 {sz.rows.map((r,ri) => (
                                   <tr key={ri} className="lt-hovr">
-                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);white-space:nowrap")}><button onClick={r.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15px;color:var(--accent);padding:0")}>{r.pres}</button></td>
-                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")}>{r.perf}</td>
-                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")}>{r.sup}</td>
-                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")}>{r.inf}</td>
+                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);word-break:break-word")}><button onClick={r.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15px;color:var(--accent);padding:0")}>{r.pres}</button></td>
+                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")}>{r.perf}</td>
+                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")}>{r.sup}</td>
+                                    <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")}>{r.inf}</td>
                                     <td style={s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:12.5px;color:var(--muted)")}>{r.note}</td>
                                   </tr>
                                 ))}

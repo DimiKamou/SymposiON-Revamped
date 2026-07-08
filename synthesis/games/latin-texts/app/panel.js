@@ -1937,8 +1937,18 @@
       }, sz.syz), sz.hasRows && /*#__PURE__*/React.createElement("div", {
         style: s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")
       }, /*#__PURE__*/React.createElement("table", {
-        style: s("width:100%;border-collapse:collapse;min-width:520px")
-      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
+        style: s("width:100%;border-collapse:collapse;min-width:520px;table-layout:fixed")
+      }, /*#__PURE__*/React.createElement("colgroup", null, /*#__PURE__*/React.createElement("col", {
+        style: s("width:20%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:20%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:18%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:20%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:22%")
+      })), /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--panel2)")
       }, "\u0395\u03BD\u03B5\u03C3\u03C4."), /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:10px 14px;background:var(--panel2)")
@@ -1952,17 +1962,17 @@
         key: ri,
         className: "lt-hovr"
       }, /*#__PURE__*/React.createElement("td", {
-        style: s("padding:9px 14px;border-top:1px solid var(--line2);white-space:nowrap")
+        style: s("padding:9px 14px;border-top:1px solid var(--line2);word-break:break-word")
       }, /*#__PURE__*/React.createElement("button", {
         onClick: r.onJump,
         className: "lt-hovu",
         style: s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15px;color:var(--accent);padding:0")
       }, r.pres)), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")
+        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")
       }, r.perf), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")
+        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")
       }, r.sup), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);white-space:nowrap")
+        style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-latin);font-style:italic;font-size:14.5px;color:var(--fg);word-break:break-word")
       }, r.inf), /*#__PURE__*/React.createElement("td", {
         style: s("padding:9px 14px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:12.5px;color:var(--muted)")
       }, r.note)))))), sz.empty && /*#__PURE__*/React.createElement("div", {
