@@ -16,19 +16,48 @@ HS.Controls = function (camera, dom) {
   this.spectate = false;            // screenshot mode: free camera
   const keys = {};
 
-  /* ---------- pointer lock ---------- */
-  this.lock = function () { dom.requestPointerLock && dom.requestPointerLock(); };
+  /* ---------- pointer lock (with click-drag fallback) ----------
+     Embedded viewers (iframes without allow="pointer-lock") may deny
+     the lock; in that case fall back to hold-and-drag mouse look so
+     the museum stays navigable anywhere. */
+  let dragMode = false, dragging = false, dx0 = 0, dy0 = 0;
+  function enableDrag() {
+    if (dragMode) return;
+    dragMode = true;
+    self.enabled = true;
+    if (HS.onLockChange) HS.onLockChange(true);
+  }
+  this.lock = function () {
+    if (dragMode) return;
+    if (dom.requestPointerLock) {
+      try { dom.requestPointerLock(); } catch (e) { enableDrag(); return; }
+      setTimeout(() => {
+        if (document.pointerLockElement !== dom && !HS.touchMode) enableDrag();
+      }, 650);
+    } else enableDrag();
+  };
+  document.addEventListener('pointerlockerror', () => { if (!HS.touchMode) enableDrag(); });
   document.addEventListener('pointerlockchange', () => {
-    self.enabled = document.pointerLockElement === dom;
-    document.body.classList.toggle('locked', self.enabled);
-    if (HS.onLockChange) HS.onLockChange(self.enabled);
+    const locked = document.pointerLockElement === dom;
+    if (!dragMode) self.enabled = locked;
+    document.body.classList.toggle('locked', locked);
+    if (HS.onLockChange) HS.onLockChange(dragMode || locked);
   });
   document.addEventListener('mousemove', e => {
-    if (!self.enabled) return;
-    self.yaw -= e.movementX * 0.0021;
-    self.pitch -= e.movementY * 0.0021;
-    self.pitch = Math.max(-1.45, Math.min(1.45, self.pitch));
+    if (document.pointerLockElement === dom) {
+      self.yaw -= e.movementX * 0.0021;
+      self.pitch -= e.movementY * 0.0021;
+      self.pitch = Math.max(-1.45, Math.min(1.45, self.pitch));
+    } else if (dragMode && dragging) {
+      self.yaw -= (e.clientX - dx0) * 0.005;
+      self.pitch = Math.max(-1.45, Math.min(1.45, self.pitch - (e.clientY - dy0) * 0.005));
+      dx0 = e.clientX; dy0 = e.clientY;
+    }
   });
+  dom.addEventListener('mousedown', e => {
+    if (dragMode) { dragging = true; dx0 = e.clientX; dy0 = e.clientY; }
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
 
   document.addEventListener('keydown', e => {
     if (e.code === 'Escape') return;
