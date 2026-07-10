@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Basileia: The Byzantine Chronicles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  window.tailwind = window.tailwind || {};
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Cinzel', 'serif'],
+          body: ['"Plus Jakarta Sans"', 'sans-serif'],
+        },
+        boxShadow: {
+          'glow-cyan': '0 0 24px rgba(34,211,238,0.25), 0 0 60px rgba(34,211,238,0.08)',
+          'glow-tyrian': '0 0 24px rgba(192,132,252,0.25), 0 0 60px rgba(192,132,252,0.08)',
+          'glow-ivory': '0 0 24px rgba(232,217,160,0.22), 0 0 60px rgba(232,217,160,0.07)',
+        },
+        colors: {
+          marble: { 100: '#f6f2e7', 200: '#e9e3d1', 300: '#d9d0b6', 400: '#c4b78f' },
+          laurel: { 300: '#e8d9a0', 400: '#d9c47c' },
+        },
+      },
+    },
+  };
+</script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+  /* lucide-react's UMD factory expects lowercase `global.react` — alias it before it loads */
+  window.react = window.React; window['react-dom'] = window.ReactDOM;
+</script>
+<script src="https://unpkg.com/framer-motion@10.18.0/dist/framer-motion.js"></script>
+<script src="https://unpkg.com/lucide-react@0.294.0/dist/umd/lucide-react.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body {
+    background-color: #060a13; /* aegean ink */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.07), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(168,85,247,0.06), transparent),
+      radial-gradient(ellipse 40% 30% at 6% 100%, rgba(232,217,160,0.04), transparent);
+    background-attachment: fixed;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #e2e8f0;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #060a13; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; border: 2px solid #060a13; }
+  ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
+  .glass-card {
+    background: linear-gradient(160deg, rgba(15,23,42,0.82), rgba(6,10,19,0.9));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(103,232,249,0.16);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 24px 70px rgba(0,0,0,0.65), 0 0 42px rgba(34,211,238,0.05) inset;
+  }
+  .map-frame {
+    background: radial-gradient(ellipse at center, rgba(15,23,42,0.9), rgba(6,10,19,0.95));
+    border: 1px solid rgba(103,232,249,0.2);
+  }
+  .greek-key-border {
+    border-image: repeating-linear-gradient(90deg, rgba(233,227,209,0.5) 0 12px, transparent 12px 20px) 1;
+  }
+  @keyframes pulseGlow { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+  .anim-pulse-glow { animation: pulseGlow 2.6s ease-in-out infinite; }
+  @keyframes dashFlow { to { stroke-dashoffset: -40; } }
+  .anim-dash { animation: dashFlow 2.2s linear infinite; }
+  .font-display { letter-spacing: 0.04em; }
+  #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"><div id="boot-fallback">Raising the Queen of Cities&hellip; / Έγερση της Βασιλεύουσας&hellip;</div></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useCallback } = React;
+
+/* ============================================================
+   FRAMER MOTION BINDING (with graceful shim so the app always boots)
+   ============================================================ */
+const __FM = window.Motion || window.FramerMotion || window.framerMotion || null;
+let motion, AnimatePresence;
+if (__FM && __FM.motion && __FM.AnimatePresence) {
+  motion = __FM.motion;
+  AnimatePresence = __FM.AnimatePresence;
+} else {
+  const MOTION_ONLY_PROPS = ['initial','animate','exit','transition','variants','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onAnimationComplete','viewport'];
+  const shimFactory = (tag) => React.forwardRef((props, ref) => {
+    const clean = { ...props };
+    MOTION_ONLY_PROPS.forEach((k) => delete clean[k]);
+    const animStyle = props.animate && typeof props.animate === 'object'
+      ? { width: props.animate.width, transition: 'all 0.6s ease' } : {};
+    clean.style = { ...(clean.style || {}), ...animStyle };
+    return React.createElement(tag, { ...clean, ref });
+  });
+  const shimCache = {};
+  motion = new Proxy({}, { get: (_, tag) => shimCache[tag] || (shimCache[tag] = shimFactory(tag)) });
+  AnimatePresence = ({ children }) => React.createElement(React.Fragment, null, children);
+}
+
+/* ============================================================
+   LUCIDE REACT ICONS (with inline SVG fallbacks — zero placeholders)
+   ============================================================ */
+const __LUCIDE = window.LucideReact || window.lucideReact || window['lucide-react'] || null;
+const ICON_FALLBACK_PATHS = {
+  Scroll: '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
+  Map: '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>',
+  Swords: '<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>',
+  Shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  Landmark: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  Anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+  Crown: '<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.735H5.81a1 1 0 0 1-.957-.735L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>',
+  Flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  Languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  ChevronRight: '<polyline points="9 18 15 12 9 6"/>',
+  RotateCcw: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  TrendingUp: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  BookOpen: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  Trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  Play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  Ship: '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/>',
+  AlertTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  Compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+  Hourglass: '<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  Columns: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>',
+};
+function Icon({ name, size = 18, className = '', strokeWidth = 2 }) {
+  if (__LUCIDE && __LUCIDE[name]) {
+    return React.createElement(__LUCIDE[name], { size, className, strokeWidth });
+  }
+  const inner = ICON_FALLBACK_PATHS[name] || ICON_FALLBACK_PATHS.Shield;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+      className={className} dangerouslySetInnerHTML={{ __html: inner }} />
+  );
+}
+
+/* ============================================================
+   BILINGUAL UI STRINGS
+   ============================================================ */
+const UI = {
+  en: {
+    appTitle: 'BASILEIA',
+    appSubtitle: 'The Byzantine Chronicles',
+    hubTagline: 'An interactive strategic chronicle of the 2nd Year Gymnasio (IEP) medieval history curriculum — govern the thousand-year empire from the birth of the themes to the walls of 1453.',
+    grandCampaign: 'Full Grand Campaign',
+    grandCampaignDesc: 'All 9 scenarios in historical sequence — from the themes to the Fall. Your Cohesion and Imperial Power carry across every era.',
+    scenariosLabel: 'Scenarios',
+    standaloneLabel: 'Standalone Era',
+    beginCampaign: 'Begin the Grand Campaign',
+    playEra: 'Command this Era',
+    unity: 'Imperial Cohesion',
+    power: 'Imperial Power',
+    step1Title: 'Step I — Primary Source Analysis',
+    step2Title: 'Step II — Strategic Choice & Terrain',
+    step3Title: 'Step III — Historical Outcome',
+    analyzeSource: 'Analyze Source',
+    theSourceSays: 'The Chronicler Records',
+    dilemmaTitle: 'Geopolitical & Terrain Assessment',
+    mapTitle: 'Tactical Map Schematic',
+    choicePrompt: 'Issue your command, Basileus:',
+    optionA: 'DIRECTIVE ALPHA',
+    optionB: 'DIRECTIVE BETA',
+    outcomeTriumph: 'Strategic Consequence — Advantage Secured',
+    outcomeSetback: 'Strategic Consequence — Grave Setback',
+    metricShift: 'Geopolitical Shift',
+    nextScenario: 'Advance to Next Crisis',
+    concludePhase: 'Conclude the Era',
+    concludeCampaign: 'Witness the Final Verdict',
+    continueCampaign: 'March into the Next Era',
+    phaseComplete: 'Era Concluded',
+    campaignComplete: 'Grand Campaign Concluded',
+    finalStanding: 'Final Geopolitical Standing',
+    verdict: 'Verdict of History',
+    chronicleOfDecisions: 'Chronicle of Your Decisions',
+    returnHub: 'Return to the Hall of Eras',
+    replay: 'Replay',
+    scenarioOf: (a, b) => `Crisis ${a} of ${b}`,
+    era: 'Era',
+    langToggle: 'Ελληνικά',
+    year: (y) => `${y} CE`,
+    location: 'Theatre',
+    unityDelta: 'Cohesion',
+    powerDelta: 'Imperial Power',
+    briefing: 'Strategic Briefing',
+    keyTerms: 'Key Terms',
+    histNote: "Historian's Note",
+    rankLabel: 'Title Earned',
+    hubFooter: 'Curriculum alignment: History of 2nd Year Gymnasio (IEP) — The Themes · The Crusades · The Fall. Sources: Theophanes, Anna Komnene, Niketas Choniates, Doukas, Sphrantzes.',
+  },
+  el: {
+    appTitle: 'ΒΑΣΙΛΕΙΑ',
+    appSubtitle: 'Τα Βυζαντινά Χρονικά',
+    hubTagline: 'Διαδραστικό στρατηγικό χρονικό βασισμένο στην ύλη Ιστορίας της Β΄ Γυμνασίου (ΙΕΠ) — κυβερνήστε τη χιλιόχρονη αυτοκρατορία από τη γέννηση των θεμάτων ώς τα τείχη του 1453.',
+    grandCampaign: 'Πλήρης Μεγάλη Εκστρατεία',
+    grandCampaignDesc: 'Και τα 9 σενάρια σε ιστορική αλληλουχία — από τα θέματα έως την Άλωση. Η Συνοχή και η Αυτοκρατορική Ισχύς μεταφέρονται σε κάθε εποχή.',
+    scenariosLabel: 'Σενάρια',
+    standaloneLabel: 'Αυτοτελής Εποχή',
+    beginCampaign: 'Έναρξη Μεγάλης Εκστρατείας',
+    playEra: 'Ανάληψη Διοίκησης',
+    unity: 'Αυτοκρατορική Συνοχή',
+    power: 'Αυτοκρατορική Ισχύς',
+    step1Title: 'Βήμα Ι — Ανάλυση Πρωτογενούς Πηγής',
+    step2Title: 'Βήμα ΙΙ — Στρατηγική Επιλογή & Ανάγλυφο',
+    step3Title: 'Βήμα ΙΙΙ — Ιστορική Έκβαση',
+    analyzeSource: 'Ανάλυση Πηγής',
+    theSourceSays: 'Ο Χρονικογράφος Καταγράφει',
+    dilemmaTitle: 'Γεωπολιτική & Τοπογραφική Εκτίμηση',
+    mapTitle: 'Τακτικό Σχεδιάγραμμα Χάρτη',
+    choicePrompt: 'Δώσε τη διαταγή σου, Βασιλεύ:',
+    optionA: 'ΕΝΤΟΛΗ ΑΛΦΑ',
+    optionB: 'ΕΝΤΟΛΗ ΒΗΤΑ',
+    outcomeTriumph: 'Στρατηγική Συνέπεια — Εξασφάλιση Πλεονεκτήματος',
+    outcomeSetback: 'Στρατηγική Συνέπεια — Βαρύ Πλήγμα',
+    metricShift: 'Γεωπολιτική Μεταβολή',
+    nextScenario: 'Προέλαση στην Επόμενη Κρίση',
+    concludePhase: 'Ολοκλήρωση της Εποχής',
+    concludeCampaign: 'Η Τελική Ετυμηγορία',
+    continueCampaign: 'Πορεία προς την Επόμενη Εποχή',
+    phaseComplete: 'Η Εποχή Ολοκληρώθηκε',
+    campaignComplete: 'Η Μεγάλη Εκστρατεία Ολοκληρώθηκε',
+    finalStanding: 'Τελική Γεωπολιτική Θέση',
+    verdict: 'Η Ετυμηγορία της Ιστορίας',
+    chronicleOfDecisions: 'Το Χρονικό των Αποφάσεών σου',
+    returnHub: 'Επιστροφή στην Αίθουσα των Εποχών',
+    replay: 'Νέα Απόπειρα',
+    scenarioOf: (a, b) => `Κρίση ${a} από ${b}`,
+    era: 'Εποχή',
+    langToggle: 'English',
+    year: (y) => `${y} μ.Χ.`,
+    location: 'Θέατρο Επιχειρήσεων',
+    unityDelta: 'Συνοχή',
+    powerDelta: 'Αυτοκρ. Ισχύς',
+    briefing: 'Στρατηγική Ενημέρωση',
+    keyTerms: 'Όροι-Κλειδιά',
+    histNote: 'Σημείωμα του Ιστορικού',
+    rankLabel: 'Τίτλος που Απονεμήθηκε',
+    hubFooter: 'Ευθυγράμμιση με την ύλη: Ιστορία Β΄ Γυμνασίου (ΙΕΠ) — Τα Θέματα · Οι Σταυροφορίες · Η Άλωση. Πηγές: Θεοφάνης, Άννα Κομνηνή, Νικήτας Χωνιάτης, Δούκας, Σφραντζής.',
+  },
+};
+
+/* ============================================================
+   PHASE (ERA) DEFINITIONS
+   ============================================================ */
+const PHASES = [
+  {
+    key: 'phase1',
+    icon: 'Shield',
+    accent: 'cyan',
+    range: { en: '650–1071 CE', el: '650–1071 μ.Χ.' },
+    name: { en: 'The Age of the Themes', el: 'Η Εποχή των Θεμάτων' },
+    blurb: {
+      en: 'Soldier-farmers, sea-fire and triple walls hold the line of civilization against caliphs and khans.',
+      el: 'Στρατιώτες-αγρότες, υγρόν πυρ και τριπλά τείχη κρατούν τη γραμμή του πολιτισμού απέναντι σε χαλίφηδες και χάνους.',
+    },
+  },
+  {
+    key: 'phase2',
+    icon: 'Swords',
+    accent: 'marble',
+    range: { en: '1096–1204 CE', el: '1096–1204 μ.Χ.' },
+    name: { en: 'The Crusades', el: 'Οι Σταυροφορίες' },
+    blurb: {
+      en: 'The West marches east through the empire — first as sworn instrument, at last as conqueror of the City itself.',
+      el: 'Η Δύση βαδίζει ανατολικά μέσα από την αυτοκρατορία — πρώτα ως ένορκο όργανο, στο τέλος ως κατακτήτρια της ίδιας της Πόλης.',
+    },
+  },
+  {
+    key: 'phase3',
+    icon: 'Crown',
+    accent: 'tyrian',
+    range: { en: '1261–1453 CE', el: '1261–1453 μ.Χ.' },
+    name: { en: 'The Fall', el: 'Η Άλωση' },
+    blurb: {
+      en: 'From the miracle of 1261 to the guns of Mehmed — the last century of the Marble Throne, and its choice of ending.',
+      el: 'Από το θαύμα του 1261 ώς τα κανόνια του Μωάμεθ — ο τελευταίος αιώνας του Μαρμάρινου Θρόνου, και η επιλογή του τέλους του.',
+    },
+  },
+];
+
+/* ============================================================
+   HISTORICAL DATABASE — 9 BYZANTINE SCENARIOS, BILINGUAL
+   ============================================================ */
+const SCENARIOS = [
+  /* ---------------- PHASE 1: THE AGE OF THE THEMES ---------------- */
+  {
+    id: 'themes',
+    phase: 'phase1',
+    year: 650,
+    mapId: 'themes',
+    title: { en: 'The Birth of the Themes', el: 'Η Γέννηση των Θεμάτων' },
+    location: { en: 'Asia Minor', el: 'Μικρά Ασία' },
+    source: {
+      author: { en: 'Constantine VII Porphyrogennetos, On the Themes', el: 'Κωνσταντίνος Ζ΄ Πορφυρογέννητος, Περί Θεμάτων' },
+      quote: {
+        en: '“The themes took their names from the armies stationed within them; each soldier holds his land as he holds his shield — for the defence of the Romans.”',
+        el: '«Τα θέματα πήραν τα ονόματά τους από τα στρατεύματα που στάθμευαν σε αυτά· κάθε στρατιώτης κρατά τη γη του όπως κρατά την ασπίδα του — για την άμυνα των Ρωμαίων.»',
+      },
+    },
+    context: {
+      en: 'The old Roman world is gone: Slavs hold the Balkans, and in a single generation the Arab conquests have torn away Syria, Egypt and Africa — the empire\'s richest provinces. The gold that once paid professional field armies no longer exists, yet Arab raiding columns burn through Anatolia every summer.',
+      el: 'Ο παλαιός ρωμαϊκός κόσμος χάθηκε: οι Σλάβοι κατέχουν τα Βαλκάνια, και μέσα σε μία γενιά οι αραβικές κατακτήσεις απέσπασαν τη Συρία, την Αίγυπτο και την Αφρική — τις πλουσιότερες επαρχίες. Ο χρυσός που πλήρωνε τους επαγγελματικούς στρατούς δεν υπάρχει πια, όμως αραβικές επιδρομές πυρπολούν τη Μικρά Ασία κάθε καλοκαίρι.',
+    },
+    terms: [
+      { term: { en: 'Themes (Themata)', el: 'Θέματα' }, def: { en: 'Military provinces where the army was settled, each under a strategos.', el: 'Στρατιωτικές επαρχίες όπου εγκαταστάθηκε ο στρατός, καθεμία υπό έναν στρατηγό.' } },
+      { term: { en: 'Soldiers\' Estates', el: 'Στρατιωτικά Κτήματα' }, def: { en: 'Hereditary farms granted in exchange for hereditary military service.', el: 'Κληρονομικά αγροκτήματα που παραχωρούνταν με αντάλλαγμα κληρονομική στρατιωτική υπηρεσία.' } },
+      { term: { en: 'Akritai', el: 'Ακρίτες' }, def: { en: 'The frontier guardians of the eastern marches, heroes of Byzantine epic song.', el: 'Οι φύλακες των ανατολικών συνόρων, ήρωες του ακριτικού έπους.' } },
+    ],
+    dilemma: {
+      en: 'The treasury cannot sustain paid field armies, and every summer the raids reach deeper. Two paths lie open: settle the surviving armies on the land itself — soldiers who farm in peace and muster in war, defending their own homes — or concentrate the remaining gold on elite professional regiments around the capital, leaving the provinces to militias and prayer.',
+      el: 'Το θησαυροφυλάκιο δεν μπορεί να συντηρήσει έμμισθους στρατούς, και κάθε καλοκαίρι οι επιδρομές φτάνουν βαθύτερα. Δύο δρόμοι ανοίγονται: εγκατάσταση των στρατών στην ίδια τη γη — στρατιώτες που καλλιεργούν εν ειρήνη και επιστρατεύονται εν πολέμω, υπερασπιζόμενοι τα σπίτια τους — ή συγκέντρωση του χρυσού σε επίλεκτα επαγγελματικά τάγματα γύρω από την πρωτεύουσα, αφήνοντας τις επαρχίες σε πολιτοφυλακές και προσευχές.',
+    },
+    choices: [
+      {
+        unity: 15, power: 15,
+        text: {
+          en: 'Institute the theme system: divide Asia Minor into military provinces, settle the soldiers on hereditary estates in exchange for hereditary service, and place each theme under a strategos who answers directly to the emperor.',
+          el: 'Θεσμοθέτηση του συστήματος των θεμάτων: διαίρεση της Μικράς Ασίας σε στρατιωτικές επαρχίες, εγκατάσταση των στρατιωτών σε κληρονομικά κτήματα με αντάλλαγμα κληρονομική υπηρεσία, και ένας στρατηγός ανά θέμα, υπόλογος απευθείας στον αυτοκράτορα.',
+        },
+        outcome: {
+          en: 'The reform that saves the empire. Defence becomes self-funding and self-motivated — men fight for their own fields. For four centuries the themes will absorb every invasion and give Byzantium the deepest military reserve in Christendom.',
+          el: 'Η μεταρρύθμιση που σώζει την αυτοκρατορία. Η άμυνα γίνεται αυτοχρηματοδοτούμενη και αυτοκινητοποιούμενη — οι άνδρες πολεμούν για τα δικά τους χωράφια. Επί τέσσερις αιώνες τα θέματα θα απορροφούν κάθε εισβολή, δίνοντας στο Βυζάντιο τη βαθύτερη στρατιωτική εφεδρεία της χριστιανοσύνης.',
+        },
+      },
+      {
+        unity: -10, power: -15,
+        text: {
+          en: 'Preserve the old professional model: concentrate all remaining gold on elite paid regiments quartered around Constantinople, and hire barbarian mercenaries for the frontiers as needed.',
+          el: 'Διατήρηση του παλαιού επαγγελματικού μοντέλου: συγκέντρωση του χρυσού σε επίλεκτα έμμισθα τάγματα γύρω από την Κωνσταντινούπολη, και μίσθωση βαρβάρων μισθοφόρων για τα σύνορα κατά περίπτωση.',
+        },
+        outcome: {
+          en: 'The provinces are bled white. Undefended Anatolia empties as peasants flee the raids, the tax base collapses further, and mercenary captains learn that Constantinople\'s gold — and throne — can be bargained for.',
+          el: 'Οι επαρχίες αφαιμάσσονται. Η ανυπεράσπιστη Μικρά Ασία ερημώνει καθώς οι χωρικοί φεύγουν από τις επιδρομές, η φορολογική βάση καταρρέει, και οι αρχηγοί των μισθοφόρων μαθαίνουν ότι ο χρυσός — και ο θρόνος — της Κωνσταντινούπολης είναι διαπραγματεύσιμα.',
+        },
+      },
+    ],
+    note: {
+      en: 'Theme soldiers passed land and duty from father to son — a Byzantine innovation with no Roman precedent. The frontier culture they created produced the great epic of Digenes Akritas, the "two-blooded border lord", still the oldest surviving work of modern Greek literature.',
+      el: 'Οι θεματικοί στρατιώτες κληροδοτούσαν γη και καθήκον από πατέρα σε γιο — βυζαντινή καινοτομία χωρίς ρωμαϊκό προηγούμενο. Η ακριτική κουλτούρα που δημιούργησαν γέννησε το έπος του Διγενή Ακρίτα, το αρχαιότερο σωζόμενο έργο της νεοελληνικής λογοτεχνίας.',
+    },
+  },
+  {
+    id: 'siege717',
+    phase: 'phase1',
+    year: 717,
+    mapId: 'siege717',
+    title: { en: 'The Great Siege of Constantinople', el: 'Η Μεγάλη Πολιορκία της Κωνσταντινούπολης' },
+    location: { en: 'Constantinople', el: 'Κωνσταντινούπολη' },
+    source: {
+      author: { en: 'Theophanes the Confessor, Chronicle', el: 'Θεοφάνης ο Ομολογητής, Χρονογραφία' },
+      quote: {
+        en: '“With the God-guarded fire the Romans burned the fleet of the enemy, and the sea received them still burning.”',
+        el: '«Με το θεοφύλακτο πυρ οι Ρωμαίοι κατέκαυσαν τον στόλο των εχθρών, και η θάλασσα τους δέχθηκε φλεγόμενους.»',
+      },
+    },
+    context: {
+      en: 'The Caliphate has resolved to end the Roman Empire outright: Maslama marches 120,000 men through Anatolia while a fleet of 1,800 ships closes on the Bosporus. Leo III the Isaurian, a soldier-emperor crowned only months before, prepares the city for the storm as winter — and the Bulgars of Khan Tervel — wait in the wings.',
+      el: 'Το Χαλιφάτο αποφάσισε να τελειώσει οριστικά τη Ρωμαϊκή Αυτοκρατορία: ο Μασλαμάς προελαύνει με 120.000 άνδρες μέσω της Μικράς Ασίας, ενώ στόλος 1.800 πλοίων κλείνει τον Βόσπορο. Ο Λέων Γ΄ ο Ίσαυρος, στρατιώτης-αυτοκράτορας στεμμένος μόλις πριν λίγους μήνες, ετοιμάζει την Πόλη για τη θύελλα, ενώ ο χειμώνας — και οι Βούλγαροι του χάνου Τέρβελ — καραδοκούν.',
+    },
+    terms: [
+      { term: { en: 'Greek Fire', el: 'Υγρόν Πυρ' }, def: { en: 'Incendiary weapon sprayed from siphons; it burned even on water. Its formula was a state secret.', el: 'Εμπρηστικό όπλο εκτοξευόμενο από σίφωνες· έκαιγε ακόμη και πάνω στο νερό. Η σύνθεσή του ήταν κρατικό μυστικό.' } },
+      { term: { en: 'Theodosian Walls', el: 'Θεοδοσιανά Τείχη' }, def: { en: 'The triple land walls of Constantinople — unbreached for a thousand years.', el: 'Τα τριπλά χερσαία τείχη της Κωνσταντινούπολης — απαραβίαστα επί χίλια χρόνια.' } },
+      { term: { en: 'The Chain', el: 'Η Αλυσίδα του Κεράτιου' }, def: { en: 'Great boom of iron links barring enemy fleets from the Golden Horn.', el: 'Τεράστιος σιδερένιος φραγμός που έκλεινε τον Κεράτιο Κόλπο στους εχθρικούς στόλους.' } },
+    ],
+    dilemma: {
+      en: 'The Arab host outnumbers the garrison many times over, but the city has three shields: the triple land walls, the chain across the Golden Horn, and the fire-siphon dromons in the harbour. Some officers urge a sortie in strength before the enemy entrenches — smash the siege lines while morale is high, rather than gamble everything on walls, winter and diplomacy.',
+      el: 'Η αραβική στρατιά υπερτερεί της φρουράς πολλαπλάσια, όμως η Πόλη έχει τρεις ασπίδες: τα τριπλά χερσαία τείχη, την αλυσίδα του Κεράτιου και τους πυρφόρους δρόμωνες του λιμανιού. Ορισμένοι αξιωματικοί πιέζουν για ισχυρή έξοδο πριν οχυρωθεί ο εχθρός — να συντριβούν οι γραμμές της πολιορκίας όσο το ηθικό είναι υψηλό, αντί να παιχτούν όλα στα τείχη, στον χειμώνα και στη διπλωματία.',
+    },
+    choices: [
+      {
+        unity: 10, power: 25,
+        text: {
+          en: 'Fight the siege as a system: hold the walls, keep the chain down until the Arab fleet crowds the strait, then unleash the fire-dromons; let the brutal winter starve the siege camp while Bulgar cavalry — bought by treaty — hunts its foragers.',
+          el: 'Αντιμετώπιση της πολιορκίας ως σύστημα: άμυνα στα τείχη, η αλυσίδα κατεβασμένη ώσπου ο αραβικός στόλος να συνωστιστεί στο στενό, και τότε εξαπόλυση των πυρφόρων δρομώνων· ο βαρύς χειμώνας να λιμοκτονήσει το στρατόπεδο, ενώ το βουλγαρικό ιππικό — εξασφαλισμένο με συνθήκη — κυνηγά τους τροφοσυλλέκτες του.',
+        },
+        outcome: {
+          en: 'Catastrophe for the Caliphate. Greek fire devours the fleet, snow buries the siege camp, and Tervel\'s Bulgars slaughter 22,000 at Constantinople\'s gates. Of 1,800 ships, a handful return — Islam\'s advance into Europe is stopped at the Bosporus for seven centuries.',
+          el: 'Καταστροφή για το Χαλιφάτο. Το υγρόν πυρ καταβροχθίζει τον στόλο, το χιόνι θάβει το στρατόπεδο, και οι Βούλγαροι του Τέρβελ σφάζουν 22.000 προ των πυλών. Από τα 1.800 πλοία επιστρέφει μια χούφτα — η προέλαση του Ισλάμ προς την Ευρώπη σταματά στον Βόσπορο για επτά αιώνες.',
+        },
+      },
+      {
+        unity: -20, power: -30,
+        text: {
+          en: 'Launch the grand sortie: mass the garrison and the tagmata, throw open the gates and give battle on the plain before the walls, staking the city on one decisive field engagement.',
+          el: 'Εξαπόλυση της μεγάλης εξόδου: συγκέντρωση της φρουράς και των ταγμάτων, άνοιγμα των πυλών και μάχη στην πεδιάδα προ των τειχών, με την Πόλη στοίχημα σε μία αποφασιστική αναμέτρηση.',
+        },
+        outcome: {
+          en: 'The one battle Maslama wants. In open ground his fivefold numbers wrap around the Roman flanks; the survivors stream back through gates that can barely be closed. The walls still hold — but the field army that should defend Anatolia for a generation lies dead before them.',
+          el: 'Η μόνη μάχη που θέλει ο Μασλαμάς. Στο ανοιχτό πεδίο η πενταπλάσια δύναμή του τυλίγει τα ρωμαϊκά πλευρά· οι επιζώντες συρρέουν πίσω από πύλες που μετά βίας κλείνουν. Τα τείχη κρατούν ακόμη — αλλά ο στρατός που θα υπερασπιζόταν τη Μικρά Ασία για μια γενιά κείτεται νεκρός μπροστά τους.',
+        },
+      },
+    ],
+    note: {
+      en: 'The formula of Greek fire was guarded so absolutely that it remains unknown to this day — historians can only guess at petroleum, resin and quicklime. Historians rank 717–718 with the Battle of Tours among the decisive moments that shaped Europe.',
+      el: 'Η σύνθεση του υγρού πυρός φυλασσόταν τόσο απόλυτα ώστε παραμένει άγνωστη ώς σήμερα — οι ιστορικοί μόνο εικάζουν πετρέλαιο, ρητίνη και ασβέστη. Η πολιορκία του 717–718 κατατάσσεται δίπλα στη μάχη του Πουατιέ ως καθοριστική στιγμή για τη διαμόρφωση της Ευρώπης.',
+    },
+  },
+  {
+    id: 'manzikert',
+    phase: 'phase1',
+    year: 1071,
+    mapId: 'manzikert',
+    title: { en: 'The Disaster at Manzikert', el: 'Η Καταστροφή στο Ματζικέρτ' },
+    location: { en: 'Manzikert, Armenia', el: 'Ματζικέρτ, Αρμενία' },
+    source: {
+      author: { en: 'Michael Attaleiates, History', el: 'Μιχαήλ Ατταλειάτης, Ιστορία' },
+      quote: {
+        en: '“It was like an earthquake — shouting, sweat, dread, dust — the whole Roman order shaken; the army of the East was no more.”',
+        el: '«Ήταν σαν σεισμός — κραυγές, ιδρώτας, τρόμος, σκόνη — ολόκληρη η ρωμαϊκή τάξη κλονισμένη· ο στρατός της Ανατολής δεν υπήρχε πια.»',
+      },
+    },
+    context: {
+      en: 'The theme system has decayed: the great landowning dynatoi have swallowed the soldiers\' estates, and the army is now a patchwork of unpaid levies and foreign mercenaries. Emperor Romanos IV Diogenes marches east to reclaim the Armenian fortresses from Alp Arslan\'s Seljuk Turks — with rival Doukas princes commanding his own rearguard.',
+      el: 'Το σύστημα των θεμάτων έχει παρακμάσει: οι μεγάλοι γαιοκτήμονες δυνατοί έχουν καταπιεί τα στρατιωτικά κτήματα, και ο στρατός είναι πλέον συνονθύλευμα απλήρωτων κληρωτών και ξένων μισθοφόρων. Ο αυτοκράτορας Ρωμανός Δ΄ Διογένης εκστρατεύει ανατολικά να ανακτήσει τα αρμενικά φρούρια από τους Σελτζούκους του Αλπ Αρσλάν — με αντίπαλους πρίγκιπες Δούκες να διοικούν την ίδια του την οπισθοφυλακή.',
+    },
+    terms: [
+      { term: { en: 'Seljuk Turks', el: 'Σελτζούκοι' }, def: { en: 'Nomadic Turkish power whose horse archers mastered the feigned retreat.', el: 'Νομαδική τουρκική δύναμη· οι ιπποτοξότες της κατείχαν τέλεια την προσποιητή υποχώρηση.' } },
+      { term: { en: 'Kataphraktoi', el: 'Κατάφρακτοι' }, def: { en: 'Byzantine heavy cavalry, man and horse armored head to foot.', el: 'Το βαρύ βυζαντινό ιππικό, με θωρακισμένους ιππείς και ίππους.' } },
+      { term: { en: 'Dynatoi', el: 'Δυνατοί' }, def: { en: 'The powerful magnates whose land-grabbing hollowed out the theme armies.', el: 'Οι ισχυροί γαιοκτήμονες που η αρπαγή γης τους αποδυνάμωσε τα θεματικά στρατεύματα.' } },
+    ],
+    dilemma: {
+      en: 'At dusk the Seljuk centre melts away yet again, luring the tired line forward across ground perfect for encirclement. Alp Arslan has already offered honorable terms — a truce and border adjustments — for he fears fighting a Roman emperor. Press the pursuit into the darkness trusting Andronikos Doukas\' reserve to cover the rear, or take the treaty, keep the army intact, and rebuild the rotten themes first?',
+      el: 'Το σούρουπο, το σελτζουκικό κέντρο διαλύεται ξανά, παρασύροντας την κουρασμένη γραμμή σε έδαφος ιδανικό για κύκλωση. Ο Αλπ Αρσλάν έχει ήδη προσφέρει έντιμους όρους — εκεχειρία και συνοριακές ρυθμίσεις — γιατί φοβάται να πολεμήσει Ρωμαίο αυτοκράτορα. Συνέχιση της καταδίωξης μέσα στο σκοτάδι με εμπιστοσύνη στην εφεδρεία του Ανδρόνικου Δούκα, ή αποδοχή της συνθήκης, διατήρηση του στρατού ακέραιου και πρώτα ανοικοδόμηση των σαθρών θεμάτων;',
+    },
+    choices: [
+      {
+        unity: -25, power: -25,
+        text: {
+          en: 'Press the pursuit at dusk: sound the general advance, run the horse archers down before they can reform, and trust the Doukas reserve to guard the rear of the overextended line.',
+          el: 'Συνέχιση της καταδίωξης στο σούρουπο: γενική προέλαση, καταδίωξη των ιπποτοξοτών πριν ανασυνταχθούν, και εμπιστοσύνη στην εφεδρεία των Δουκών να καλύψει τα νώτα της υπερεκτεταμένης γραμμής.',
+        },
+        outcome: {
+          en: 'The trap closes and the treachery completes it: Andronikos Doukas marches the reserve off the field, crying that the emperor has fallen. Romanos fights until captured — the first Roman emperor taken alive in battle in seven centuries. Within a decade, civil war throws Anatolia to the Turks.',
+          el: 'Η παγίδα κλείνει και η προδοσία την ολοκληρώνει: ο Ανδρόνικος Δούκας αποσύρει την εφεδρεία φωνάζοντας ότι ο αυτοκράτορας έπεσε. Ο Ρωμανός μάχεται ώσπου αιχμαλωτίζεται — ο πρώτος Ρωμαίος αυτοκράτορας αιχμάλωτος σε μάχη επί επτά αιώνες. Μέσα σε μια δεκαετία, ο εμφύλιος παραδίδει τη Μικρά Ασία στους Τούρκους.',
+        },
+      },
+      {
+        unity: 10, power: -5,
+        text: {
+          en: 'Accept the sultan\'s terms: a truce sealed by marriage alliance, minor border concessions, and an orderly withdrawal — then purge the Doukas faction and pour everything into restoring the soldiers\' estates.',
+          el: 'Αποδοχή των όρων του σουλτάνου: εκεχειρία σφραγισμένη με συμμαχία γάμου, μικρές συνοριακές παραχωρήσεις και συντεταγμένη αποχώρηση — και έπειτα εκκαθάριση της φατρίας των Δουκών και ανοικοδόμηση των στρατιωτικών κτημάτων.',
+        },
+        outcome: {
+          en: 'The army — the last real army — comes home whole. The peace is humbling and the court seethes, but the eastern defences gain a decade to heal; Anatolia, the empire\'s granary of soldiers, is not yet lost.',
+          el: 'Ο στρατός — ο τελευταίος πραγματικός στρατός — επιστρέφει ακέραιος. Η ειρήνη είναι ταπεινωτική και η αυλή κοχλάζει, αλλά η ανατολική άμυνα κερδίζει μια δεκαετία για να επουλωθεί· η Μικρά Ασία, το σιτοβολώνας στρατιωτών της αυτοκρατορίας, δεν έχει ακόμη χαθεί.',
+        },
+      },
+    ],
+    note: {
+      en: 'Alp Arslan treated the captive Romanos with courtesy and released him for a modest ransom — asking first: "What would you have done, were I your prisoner?" It was his own people who destroyed Romanos: blinded by the Doukai, he died of his wounds. Byzantines called Manzikert "the dreadful day".',
+      el: 'Ο Αλπ Αρσλάν φέρθηκε στον αιχμάλωτο Ρωμανό με ευγένεια και τον απελευθέρωσε με μέτρια λύτρα — ρωτώντας πρώτα: «Τι θα έκανες εσύ, αν ήμουν εγώ αιχμάλωτός σου;». Τον Ρωμανό τον κατέστρεψαν οι δικοί του: τυφλωμένος από τους Δούκες, πέθανε από τις πληγές του. Οι Βυζαντινοί ονόμασαν το Ματζικέρτ «τη φοβερή ημέρα».',
+    },
+  },
+  /* ---------------- PHASE 2: THE CRUSADES ---------------- */
+  {
+    id: 'crusade1',
+    phase: 'phase2',
+    year: 1097,
+    mapId: 'crusade1',
+    title: { en: 'The First Crusade at the Bosporus', el: 'Η Α΄ Σταυροφορία στον Βόσπορο' },
+    location: { en: 'Constantinople & Nicaea', el: 'Κωνσταντινούπολη & Νίκαια' },
+    source: {
+      author: { en: 'Anna Komnene, Alexiad', el: 'Άννα Κομνηνή, Αλεξιάς' },
+      quote: {
+        en: '“All the West, and as much of the barbarian world as lies beyond the Adriatic, was set in motion — and was marching through our lands into Asia.”',
+        el: '«Όλη η Δύση, και όσος βαρβαρικός κόσμος απλώνεται πέρα από την Αδριατική, είχε ξεσηκωθεί — και βάδιζε μέσα από τα εδάφη μας προς την Ασία.»',
+      },
+    },
+    context: {
+      en: 'Alexios I Komnenos asked the Pope for a few hundred Western knights to help retake Anatolia. What arrives is something else entirely: first Peter the Hermit\'s starving mob, then the armies of Godfrey, Bohemond and Raymond — perhaps 60,000 armed Latins camped before the walls, led by lords who include the empire\'s old Norman enemies.',
+      el: 'Ο Αλέξιος Α΄ Κομνηνός ζήτησε από τον Πάπα μερικές εκατοντάδες δυτικούς ιππότες για την ανάκτηση της Μικράς Ασίας. Αυτό που φτάνει είναι κάτι εντελώς άλλο: πρώτα ο πεινασμένος όχλος του Πέτρου του Ερημίτη, έπειτα οι στρατιές του Γοδεφρείδου, του Βοημούνδου και του Ραϋμόνδου — ίσως 60.000 ένοπλοι Λατίνοι στρατοπεδευμένοι προ των τειχών, με αρχηγούς που περιλαμβάνουν τους παλιούς Νορμανδούς εχθρούς της αυτοκρατορίας.',
+    },
+    terms: [
+      { term: { en: 'Crusade', el: 'Σταυροφορία' }, def: { en: 'Latin holy war preached by the Pope; its goal was Jerusalem — its route, Byzantium.', el: 'Λατινικός ιερός πόλεμος που κήρυξε ο Πάπας· στόχος του η Ιερουσαλήμ — δρόμος του, το Βυζάντιο.' } },
+      { term: { en: 'Oath of Fealty', el: 'Όρκος Πίστεως' }, def: { en: 'Feudal pledge binding the crusader lords to return former imperial lands.', el: 'Φεουδαρχική δέσμευση των σταυροφόρων να επιστρέψουν τα πρώην αυτοκρατορικά εδάφη.' } },
+      { term: { en: 'Pronoia', el: 'Πρόνοια' }, def: { en: 'Grant of state revenues for service — Byzantium\'s own answer to feudal ties.', el: 'Παραχώρηση κρατικών προσόδων έναντι υπηρεσίας — η βυζαντινή απάντηση στους φεουδαρχικούς δεσμούς.' } },
+    ],
+    dilemma: {
+      en: 'Sixty thousand armed pilgrims cannot camp beside the world\'s richest city for long without catastrophe. Alexios can bind the lords with oaths, gold and markets — ferrying them swiftly into Asia to fight the Turks as unwitting instruments of reconquest — or refuse this dangerous flood outright and bar the crossing, treating the crusade as the invasion it may well become.',
+      el: 'Εξήντα χιλιάδες ένοπλοι προσκυνητές δεν μπορούν να μείνουν πλάι στην πλουσιότερη πόλη του κόσμου χωρίς καταστροφή. Ο Αλέξιος μπορεί να δέσει τους άρχοντες με όρκους, χρυσάφι και αγορές — περνώντας τους γρήγορα στην Ασία να πολεμήσουν τους Τούρκους ως ασυναίσθητα όργανα της ανάκτησης — ή να αρνηθεί την επικίνδυνη πλημμύρα και να κλείσει το πέρασμα, αντιμετωπίζοντας τη σταυροφορία ως την εισβολή που ίσως γίνει.',
+    },
+    choices: [
+      {
+        unity: 15, power: 10,
+        text: {
+          en: 'Master the flood: exact the oath of fealty from every lord, supply the host through controlled markets, ferry it across the Bosporus in escorted convoys — and attach imperial officers to reclaim each recaptured city, starting with Nicaea.',
+          el: 'Δάμασε την πλημμύρα: όρκος πίστεως από κάθε άρχοντα, ανεφοδιασμός μέσω ελεγχόμενων αγορών, μεταφορά της στρατιάς απέναντι με συνοδευόμενες νηοπομπές — και αυτοκρατορικοί αξιωματούχοι σε κάθε ανακτημένη πόλη, αρχίζοντας από τη Νίκαια.',
+        },
+        outcome: {
+          en: 'Statecraft of the first order. Nicaea returns to the empire without a sack — imperial banners rise on its walls at dawn while the crusaders sleep — and in the crusade\'s wake Alexios recovers the whole Aegean coast of Anatolia. The oaths, however, plant a seed of Latin resentment.',
+          el: 'Υψηλή τέχνη διακυβέρνησης. Η Νίκαια επιστρέφει στην αυτοκρατορία χωρίς λεηλασία — οι αυτοκρατορικές σημαίες υψώνονται στα τείχη της την αυγή ενώ οι σταυροφόροι κοιμούνται — και στο πέρασμα της σταυροφορίας ο Αλέξιος ανακτά όλα τα αιγαιακά παράλια της Μικράς Ασίας. Οι όρκοι όμως φυτεύουν σπόρο λατινικής μνησικακίας.',
+        },
+      },
+      {
+        unity: -15, power: -10,
+        text: {
+          en: 'Bar the crossing: refuse provisions, close the Bosporus, and deploy the Varangian Guard and the fleet to disperse the encampments before this "pilgrimage" decides the City itself is a worthier prize than Jerusalem.',
+          el: 'Κλείσε το πέρασμα: άρνηση εφοδίων, αποκλεισμός του Βοσπόρου, και ανάπτυξη της Βαράγγειας Φρουράς και του στόλου για διάλυση των στρατοπέδων, πριν το «προσκύνημα» αποφασίσει ότι η ίδια η Πόλη είναι λάφυρο αξιότερο από την Ιερουσαλήμ.',
+        },
+        outcome: {
+          en: 'War with all the West at once. The starving host storms the suburbs and burns the countryside of Thrace; whether or not the walls hold, Christendom\'s two halves are now open enemies — and the Turks watch, delighted, from Nicaea.',
+          el: 'Πόλεμος με όλη τη Δύση ταυτόχρονα. Η πεινασμένη στρατιά εφορμά στα προάστια και πυρπολεί τη θρακική ύπαιθρο· είτε κρατήσουν τα τείχη είτε όχι, τα δύο μισά της χριστιανοσύνης είναι πλέον ανοιχτοί εχθροί — και οι Τούρκοι παρακολουθούν καταχαρούμενοι από τη Νίκαια.',
+        },
+      },
+    ],
+    note: {
+      en: 'Our chief source for these events, the Alexiad, was written by the emperor\'s own daughter Anna Komnene — the first great work of history authored by a woman. Her portrait of the giant Norman Bohemond, whom she both feared and admired, is one of medieval literature\'s most vivid.',
+      el: 'Η κύρια πηγή μας για τα γεγονότα, η Αλεξιάς, γράφτηκε από την ίδια την κόρη του αυτοκράτορα, την Άννα Κομνηνή — το πρώτο μεγάλο έργο ιστορίας από γυναίκα. Το πορτρέτο του γιγαντόσωμου Νορμανδού Βοημούνδου, που τον φοβόταν και τον θαύμαζε συνάμα, είναι από τα πιο ζωντανά της μεσαιωνικής γραμματείας.',
+    },
+  },
+  {
+    id: 'crusade4',
+    phase: 'phase2',
+    year: 1203,
+    mapId: 'crusade4',
+    title: { en: 'The Fourth Crusade Diverted', el: 'Η Εκτροπή της Δ΄ Σταυροφορίας' },
+    location: { en: 'The Golden Horn', el: 'Ο Κεράτιος Κόλπος' },
+    source: {
+      author: { en: 'Niketas Choniates, History', el: 'Νικήτας Χωνιάτης, Χρονική Διήγησις' },
+      quote: {
+        en: '“The young Alexios promised the Latins mountains of gold if they would seat him upon his father\'s throne.”',
+        el: '«Ο νεαρός Αλέξιος υποσχέθηκε στους Λατίνους βουνά χρυσάφι, αν τον καθίσουν στον θρόνο του πατέρα του.»',
+      },
+    },
+    context: {
+      en: 'A crusade bound for Egypt cannot pay Venice for its fleet. The blind nonagenarian Doge Enrico Dandolo redirects the debt: first to sack Christian Zara, then — when the exiled prince Alexios IV promises 200,000 silver marks, union of the churches and 10,000 soldiers — to Constantinople itself, to "restore the rightful emperor". The city within the walls wants none of him.',
+      el: 'Μια σταυροφορία με προορισμό την Αίγυπτο αδυνατεί να πληρώσει τη Βενετία για τον στόλο της. Ο τυφλός ενενηντάχρονος δόγης Ερρίκος Δάνδολος αναπροσανατολίζει το χρέος: πρώτα στη λεηλασία της χριστιανικής Ζάρας, κι έπειτα — όταν ο εξόριστος πρίγκιπας Αλέξιος Δ΄ υπόσχεται 200.000 ασημένια μάρκα, ένωση των εκκλησιών και 10.000 στρατιώτες — στην ίδια την Κωνσταντινούπολη, «για την αποκατάσταση του νόμιμου αυτοκράτορα». Η Πόλη μέσα από τα τείχη δεν τον θέλει καθόλου.',
+    },
+    terms: [
+      { term: { en: 'Doge of Venice', el: 'Δόγης της Βενετίας' }, def: { en: 'Elected ruler of the merchant republic whose fleet carried — and steered — the crusade.', el: 'Ο αιρετός ηγεμόνας της εμπορικής δημοκρατίας, της οποίας ο στόλος μετέφερε — και κατηύθυνε — τη σταυροφορία.' } },
+      { term: { en: 'Usurper\'s Pact', el: 'Συμφωνία του Σφετεριστή' }, def: { en: 'Alexios IV\'s impossible promises: 200,000 marks, church union, 10,000 troops.', el: 'Οι ανέφικτες υποσχέσεις του Αλεξίου Δ΄: 200.000 μάρκα, ένωση εκκλησιών, 10.000 στρατιώτες.' } },
+      { term: { en: 'Zara', el: 'Ζάρα' }, def: { en: 'Christian city sacked for the fleet-debt — the whole crusade was excommunicated for it.', el: 'Χριστιανική πόλη που λεηλατήθηκε για το χρέος του στόλου — όλη η σταυροφορία αφορίστηκε γι\' αυτό.' } },
+    ],
+    dilemma: {
+      en: 'The Venetian fleet has broken the chain and stands in the Golden Horn; the sea walls — the city\'s one weak face — are within ladder\'s reach of the ships\' masts. The court can resist: man every parapet, launch fire-ships downwind into the anchored fleet, and refuse the pretender utterly. Or it can yield: accept Alexios IV, pay what can be paid, and pray the Latins sail away satisfied.',
+      el: 'Ο βενετικός στόλος έσπασε την αλυσίδα και στέκεται μέσα στον Κεράτιο· τα θαλάσσια τείχη — η μόνη αδύναμη όψη της Πόλης — βρίσκονται σε απόσταση σκάλας από τα κατάρτια. Η αυλή μπορεί να αντισταθεί: επάνδρωση κάθε έπαλξης, εξαπόλυση πυρπολικών με τον άνεμο πάνω στον αγκυροβολημένο στόλο, και απόλυτη άρνηση του σφετεριστή. Ή μπορεί να υποχωρήσει: αποδοχή του Αλεξίου Δ΄, πληρωμή όσων πληρώνονται, και προσευχή να αποπλεύσουν ικανοποιημένοι οι Λατίνοι.',
+    },
+    choices: [
+      {
+        unity: 10, power: -10,
+        text: {
+          en: 'Refuse and resist: reject the pretender before the walls, mass the Varangians on the sea-wall towers, and send fire-ships down the night wind into the crowded Venetian anchorage.',
+          el: 'Άρνηση και αντίσταση: απόρριψη του σφετεριστή προ των τειχών, συγκέντρωση των Βαράγγων στους πύργους των θαλάσσιων τειχών, και πυρπολικά με τον νυχτερινό άνεμο μέσα στο συνωστισμένο βενετικό αγκυροβόλιο.',
+        },
+        outcome: {
+          en: 'The city holds — barely, and at a price. Dandolo loses ships but not resolve; raids and fires scar the Horn\'s shore through a grim winter. Yet no puppet sits on the throne, no impossible debt is signed, and the crusade, unpaid and mauled, begins to argue with itself.',
+          el: 'Η Πόλη κρατά — μετά βίας, και με τίμημα. Ο Δάνδολος χάνει πλοία αλλά όχι αποφασιστικότητα· επιδρομές και πυρκαγιές σημαδεύουν την ακτή του Κεράτιου έναν βαρύ χειμώνα. Όμως κανένα ανδρείκελο δεν κάθεται στον θρόνο, κανένα ανέφικτο χρέος δεν υπογράφεται, και η σταυροφορία, απλήρωτη και χτυπημένη, αρχίζει να τρώγεται με τον εαυτό της.',
+        },
+      },
+      {
+        unity: -25, power: -15,
+        text: {
+          en: 'Open the gates on promises: accept Alexios IV as co-emperor, strip the churches and melt the icons to raise his 200,000 marks, and quarter the Latin host across the Horn until the debt is paid.',
+          el: 'Άνοιγμα των πυλών με υποσχέσεις: αποδοχή του Αλεξίου Δ΄ ως συναυτοκράτορα, απογύμνωση των εκκλησιών και λιώσιμο των εικόνων για τα 200.000 μάρκα του, και στρατωνισμός των Λατίνων απέναντι στον Κεράτιο ώσπου να εξοφληθεί το χρέος.',
+        },
+        outcome: {
+          en: 'Everything the promises touch, they poison. The treasury empties, the mob lynches the puppet emperors, a usurper burns the pact — and outside the walls stands a betrayed, unpaid, battle-hardened army with nowhere to go and a fleet that owns the sea. The catastrophe is now only a matter of season.',
+          el: 'Ό,τι αγγίζουν οι υποσχέσεις, το δηλητηριάζουν. Το θησαυροφυλάκιο αδειάζει, ο όχλος λιντσάρει τους αυτοκράτορες-ανδρείκελα, ένας σφετεριστής καίει τη συμφωνία — και έξω από τα τείχη στέκεται ένας προδομένος, απλήρωτος, εμπειροπόλεμος στρατός χωρίς πού να πάει, με στόλο που ορίζει τη θάλασσα. Η καταστροφή είναι πλέον ζήτημα εποχής.',
+        },
+      },
+    ],
+    note: {
+      en: 'Enrico Dandolo was over ninety and completely blind — yet he stood armored on the prow of his galley, the banner of St Mark before him, and was among the first ashore beneath the sea walls. He lies buried today inside Hagia Sophia; his tomb slab can still be seen in the upper gallery.',
+      el: 'Ο Ερρίκος Δάνδολος ήταν άνω των ενενήντα και εντελώς τυφλός — κι όμως στάθηκε αρματωμένος στην πλώρη της γαλέρας του, με το λάβαρο του Αγίου Μάρκου μπροστά του, από τους πρώτους που πάτησαν στεριά κάτω από τα θαλάσσια τείχη. Είναι θαμμένος μέσα στην Αγία Σοφία· η ταφική του πλάκα σώζεται στον γυναικωνίτη.',
+    },
+  },
+  {
+    id: 'sack1204',
+    phase: 'phase2',
+    year: 1204,
+    mapId: 'sack1204',
+    title: { en: 'The Sack of the City', el: 'Η Άλωση του 1204' },
+    location: { en: 'Constantinople', el: 'Κωνσταντινούπολη' },
+    source: {
+      author: { en: 'Niketas Choniates, History', el: 'Νικήτας Χωνιάτης, Χρονική Διήγησις' },
+      quote: {
+        en: '“O City, City, eye of all cities! You have drunk to the dregs the cup of the fury of the Lord.”',
+        el: '«Ω Πόλις, Πόλις, οφθαλμέ πασών των πόλεων! Ήπιες ώς την τρύγα το ποτήρι της οργής του Κυρίου.»',
+      },
+    },
+    context: {
+      en: 'April 1204. The pact is dead, the puppet emperors are dead, and the crusade has voted to take for itself what it was promised. Venetian ships lash themselves to the sea-wall towers; flying bridges drop from mastheads onto the parapets. The Warriors of the Fourth Crusade become the first enemy in nine hundred years to breach the Queen of Cities.',
+      el: 'Απρίλιος 1204. Η συμφωνία νεκρή, οι αυτοκράτορες-ανδρείκελα νεκροί, και η σταυροφορία ψήφισε να πάρει μόνη της όσα της υποσχέθηκαν. Τα βενετικά πλοία δένονται στους πύργους των θαλάσσιων τειχών· κρεμαστές γέφυρες πέφτουν από τα κατάρτια στις επάλξεις. Οι πολεμιστές της Δ΄ Σταυροφορίας γίνονται ο πρώτος εχθρός εδώ και εννιακόσια χρόνια που παραβιάζει τη Βασιλεύουσα.',
+    },
+    terms: [
+      { term: { en: 'Latin Occupation', el: 'Λατινοκρατία' }, def: { en: 'The 57-year Latin Empire imposed on Constantinople (1204–1261).', el: 'Η 57χρονη Λατινική Αυτοκρατορία που επιβλήθηκε στην Κωνσταντινούπολη (1204–1261).' } },
+      { term: { en: 'Partitio Romaniae', el: 'Διαμελισμός της Ρωμανίας' }, def: { en: 'The treaty carving the empire among Venice and the crusader lords.', el: 'Η συνθήκη που μοίρασε την αυτοκρατορία σε Βενετία και σταυροφόρους άρχοντες.' } },
+      { term: { en: 'Empire of Nicaea', el: 'Αυτοκρατορία της Νίκαιας' }, def: { en: 'The Greek successor state that kept the imperial idea alive in exile.', el: 'Το ελληνικό κράτος-διάδοχος που κράτησε ζωντανή την αυτοκρατορική ιδέα στην εξορία.' } },
+    ],
+    dilemma: {
+      en: 'The wall is breached in three places and fire is spreading; organized defence of the whole circuit is finished. What remains is a choice about the future: fight on street by street for honor\'s sake and bleed the last regiments white — or break out now in force, carrying the treasury, the patriarch, the archives and the army\'s cadres east to Nicaea, to build an empire-in-exile that can one day return.',
+      el: 'Το τείχος έχει παραβιαστεί σε τρία σημεία και η φωτιά απλώνεται· η οργανωμένη άμυνα όλου του περιβόλου τελείωσε. Ό,τι απομένει είναι επιλογή για το μέλλον: μάχη σώμα με σώμα σε κάθε δρόμο για την τιμή, με αφαίμαξη των τελευταίων ταγμάτων — ή έξοδος τώρα με τάξη, με το θησαυροφυλάκιο, τον πατριάρχη, τα αρχεία και τα στελέχη του στρατού ανατολικά στη Νίκαια, για μια αυτοκρατορία-στην-εξορία που μπορεί μια μέρα να επιστρέψει.',
+    },
+    choices: [
+      {
+        unity: 15, power: -20,
+        text: {
+          en: 'Save the seed of the empire: fight a rearguard only, evacuate court, church, treasury and officer corps across to Asia, and proclaim the legitimate empire at Nicaea under Theodore Laskaris.',
+          el: 'Διάσωση του σπόρου της αυτοκρατορίας: μάχη μόνο οπισθοφυλακής, εκκένωση αυλής, εκκλησίας, θησαυροφυλακίου και αξιωματικών προς την Ασία, και ανακήρυξη της νόμιμης αυτοκρατορίας στη Νίκαια υπό τον Θεόδωρο Λάσκαρη.',
+        },
+        outcome: {
+          en: 'The City burns for three days — but the empire does not die. At Nicaea the laws, the church and the army survive in miniature; within a generation it out-governs and out-fights every Latin lord, and in 1261 its soldiers will walk back into Constantinople through an unguarded gate.',
+          el: 'Η Πόλη καίγεται τρεις ημέρες — αλλά η αυτοκρατορία δεν πεθαίνει. Στη Νίκαια οι νόμοι, η εκκλησία και ο στρατός επιβιώνουν σε σμίκρυνση· μέσα σε μια γενιά κυβερνά και πολεμά καλύτερα από κάθε Λατίνο άρχοντα, και το 1261 οι στρατιώτες της θα ξαναμπούν στην Κωνσταντινούπολη από μια αφύλακτη πύλη.',
+        },
+      },
+      {
+        unity: -20, power: -25,
+        text: {
+          en: 'Die with the City: barricade the fora, turn every church into a fortress, and make the Latins pay for the Queen of Cities one street at a time — no retreat, no exile government, no surrender.',
+          el: 'Θάνατος μαζί με την Πόλη: οδοφράγματα στις αγορές, κάθε εκκλησία φρούριο, και οι Λατίνοι να πληρώσουν τη Βασιλεύουσα δρόμο τον δρόμο — καμία υποχώρηση, καμία εξόριστη κυβέρνηση, καμία παράδοση.',
+        },
+        outcome: {
+          en: 'Heroism that history cannot use. The last regiments and half the population perish in the fires; there is no Nicaea, no rallying point, no restoration of 1261. The Latin lords partition a corpse, and the Roman idea dies not in legend but in the smoke.',
+          el: 'Ηρωισμός που η ιστορία δεν μπορεί να αξιοποιήσει. Τα τελευταία τάγματα και ο μισός πληθυσμός χάνονται στις φλόγες· δεν υπάρχει Νίκαια, δεν υπάρχει σημείο συσπείρωσης, δεν υπάρχει ανάκτηση του 1261. Οι Λατίνοι άρχοντες μοιράζουν ένα πτώμα, και η ρωμαϊκή ιδέα πεθαίνει όχι στον θρύλο αλλά στον καπνό.',
+        },
+      },
+    ],
+    note: {
+      en: 'The four bronze horses that crowned the Hippodrome were carried off to Venice, where they still stand over the door of St Mark\'s. In 2001 Pope John Paul II formally expressed sorrow for 1204; in 2004, on its 800th anniversary, Patriarch Bartholomew accepted the apology.',
+      el: 'Τα τέσσερα χάλκινα άλογα του Ιπποδρόμου μεταφέρθηκαν στη Βενετία, όπου στέκουν ακόμη πάνω από την πύλη του Αγίου Μάρκου. Το 2001 ο πάπας Ιωάννης Παύλος Β΄ εξέφρασε επίσημα τη θλίψη του για το 1204· το 2004, στην 800ή επέτειο, ο πατριάρχης Βαρθολομαίος αποδέχθηκε τη συγγνώμη.',
+    },
+  },
+  /* ---------------- PHASE 3: THE FALL ---------------- */
+  {
+    id: 'recovery1261',
+    phase: 'phase3',
+    year: 1261,
+    mapId: 'recovery1261',
+    title: { en: 'The Recovery of the City', el: 'Η Ανάκτηση της Πόλης' },
+    location: { en: 'Constantinople', el: 'Κωνσταντινούπολη' },
+    source: {
+      author: { en: 'George Akropolites, History', el: 'Γεώργιος Ακροπολίτης, Χρονική Συγγραφή' },
+      quote: {
+        en: '“With eight hundred men, and through a hidden way, Strategopoulos gave the Queen of Cities back to the Romans.”',
+        el: '«Με οκτακόσιους άνδρες, κι από κρυφό πέρασμα, ο Στρατηγόπουλος ξανάδωσε τη Βασιλεύουσα στους Ρωμαίους.»',
+      },
+    },
+    context: {
+      en: 'The Latin Empire is a starving shell: its emperor has sold the lead from his palace roof and pawned relics to Venice. Nicaea, under the ambitious Michael VIII Palaiologos, has retaken most of the Balkans and Asia Minor around the City. General Alexios Strategopoulos, passing Thrace with a small force, learns from local farmers — the thelematarioi — that the Venetian fleet and most of the garrison have sailed off to raid Daphnousia on the Black Sea.',
+      el: 'Η Λατινική Αυτοκρατορία είναι ένα λιμοκτονούν κέλυφος: ο αυτοκράτοράς της πούλησε το μολύβι της στέγης του παλατιού και ενεχυρίασε λείψανα στη Βενετία. Η Νίκαια, υπό τον φιλόδοξο Μιχαήλ Η΄ Παλαιολόγο, έχει ανακτήσει το μεγαλύτερο μέρος των Βαλκανίων και της Μικράς Ασίας γύρω από την Πόλη. Ο στρατηγός Αλέξιος Στρατηγόπουλος, περνώντας από τη Θράκη με μικρή δύναμη, μαθαίνει από ντόπιους αγρότες — τους θεληματάριους — ότι ο βενετικός στόλος και το μεγαλύτερο μέρος της φρουράς απέπλευσαν για επιδρομή στη Δαφνουσία του Εύξεινου.',
+    },
+    terms: [
+      { term: { en: 'Palaiologoi', el: 'Παλαιολόγοι' }, def: { en: 'The last imperial dynasty (1261–1453), restorers and final defenders of the City.', el: 'Η τελευταία αυτοκρατορική δυναστεία (1261–1453), αναστηλωτές και τελευταίοι υπερασπιστές της Πόλης.' } },
+      { term: { en: 'Gate of the Spring', el: 'Πύλη της Πηγής' }, def: { en: 'The land-wall gate beside which the 800 slipped into the City by night.', el: 'Η πύλη των χερσαίων τειχών δίπλα στην οποία οι 800 γλίστρησαν νύχτα στην Πόλη.' } },
+      { term: { en: 'Thelematarioi', el: 'Θεληματάριοι' }, def: { en: 'Greek farmers living outside the walls who guided and fought "by their own will".', el: 'Έλληνες αγρότες έξω από τα τείχη που οδήγησαν και πολέμησαν «με τη θέλησή τους».' } },
+    ],
+    dilemma: {
+      en: 'The chance is now — but so is the risk. Strategopoulos has 800 men; the walls are the mightiest on earth even when thinly held, and if the coup fails, the Latins will be warned forever after. Slip a party through the hidden postern by night and open the Gate of the Spring from within — or refuse the gamble, march home, and prepare a proper siege for next year with the whole Nicaean army and a hired Genoese fleet?',
+      el: 'Η ευκαιρία είναι τώρα — αλλά τώρα είναι και ο κίνδυνος. Ο Στρατηγόπουλος έχει 800 άνδρες· τα τείχη είναι τα ισχυρότερα της γης ακόμη κι όταν φυλάσσονται αραιά, κι αν το εγχείρημα αποτύχει, οι Λατίνοι θα είναι για πάντα προειδοποιημένοι. Να περάσει ομάδα από την κρυφή πυλίδα τη νύχτα και να ανοίξει την Πύλη της Πηγής από μέσα — ή να αρνηθεί το στοίχημα, να γυρίσει πίσω, και να ετοιμάσει κανονική πολιορκία του χρόνου με όλο τον νικαϊκό στρατό και μισθωμένο γενουατικό στόλο;',
+    },
+    choices: [
+      {
+        unity: 20, power: 20,
+        text: {
+          en: 'Take the City tonight: send climbers through the postern the thelematarioi know, overpower the sleeping gate-watch, throw open the Gate of the Spring — and fire the Venetian quarter so the returning fleet finds its families in boats and no beachhead to retake.',
+          el: 'Πάρε την Πόλη απόψε: αναρριχητές από την πυλίδα που ξέρουν οι θεληματάριοι, αιφνιδιασμός της κοιμισμένης σκοπιάς, άνοιγμα της Πύλης της Πηγής — και πυρπόληση της βενετικής συνοικίας, ώστε ο στόλος που επιστρέφει να βρει τις οικογένειές του στις βάρκες και κανένα προγεφύρωμα.',
+        },
+        outcome: {
+          en: 'One of history\'s great coups de main. The Latin emperor flees in his nightshirt; the returning Venetians can only take their people aboard and sail away. On 15 August 1261 Michael VIII enters on foot behind the icon of the Hodegetria — the empire is home after fifty-seven years.',
+          el: 'Ένα από τα μεγάλα πραξικοπήματα της στρατιωτικής ιστορίας. Ο Λατίνος αυτοκράτορας φεύγει με το νυχτικό· οι Βενετοί που επιστρέφουν προλαβαίνουν μόνο να παραλάβουν τους δικούς τους και να αποπλεύσουν. Στις 15 Αυγούστου 1261 ο Μιχαήλ Η΄ εισέρχεται πεζός πίσω από την εικόνα της Οδηγήτριας — η αυτοκρατορία γύρισε σπίτι της μετά από πενήντα επτά χρόνια.',
+        },
+      },
+      {
+        unity: -10, power: -20,
+        text: {
+          en: 'Refuse the gamble: withdraw to Nicaea, spend the winter massing the army and hiring the Genoese fleet, and take the City next summer by formal siege — overwhelming, methodical, and announced to all the world.',
+          el: 'Άρνηση του στοιχήματος: επιστροφή στη Νίκαια, χειμώνας συγκέντρωσης στρατού και μίσθωσης του γενουατικού στόλου, και κατάληψη της Πόλης το επόμενο καλοκαίρι με κανονική πολιορκία — συντριπτική, μεθοδική, και προαναγγελθείσα σε όλο τον κόσμο.',
+        },
+        outcome: {
+          en: 'The moment does not wait. Warned by the near-miss, the Pope preaches a new crusade for the Latin Empire\'s defence, Venice doubles the garrison, and the "methodical" siege becomes years of blockade against the greatest walls on earth — spending Nicaea\'s strength on what one August night had offered for free.',
+          el: 'Η στιγμή δεν περιμένει. Προειδοποιημένοι από το παρ\' ολίγον, ο Πάπας κηρύσσει νέα σταυροφορία υπέρ της Λατινικής Αυτοκρατορίας, η Βενετία διπλασιάζει τη φρουρά, και η «μεθοδική» πολιορκία γίνεται χρόνια αποκλεισμού απέναντι στα ισχυρότερα τείχη της γης — ξοδεύοντας τη δύναμη της Νίκαιας για ό,τι μια αυγουστιάτικη νύχτα πρόσφερε δωρεάν.',
+        },
+      },
+    ],
+    note: {
+      en: 'Michael VIII deliberately entered the reclaimed City on the feast of the Dormition, walking humbly behind the Hodegetria icon — said to be painted by St Luke himself. Yet the blessing had a shadow: to fund the wars ahead he stripped the Asian frontier, and the themes that had once saved Byzantium were never rebuilt.',
+      el: 'Ο Μιχαήλ Η΄ εισήλθε σκόπιμα στην ανακτημένη Πόλη ανήμερα της Κοιμήσεως, βαδίζοντας ταπεινά πίσω από την εικόνα της Οδηγήτριας — που λεγόταν ότι τη ζωγράφισε ο ίδιος ο Ευαγγελιστής Λουκάς. Όμως η ευλογία είχε σκιά: για να χρηματοδοτήσει τους πολέμους που έρχονταν απογύμνωσε το μικρασιατικό σύνορο, και τα θέματα που κάποτε έσωσαν το Βυζάντιο δεν ξαναχτίστηκαν ποτέ.',
+    },
+  },
+  {
+    id: 'varna',
+    phase: 'phase3',
+    year: 1444,
+    mapId: 'varna',
+    title: { en: 'The Last Crusade — Varna', el: 'Η Τελευταία Σταυροφορία — Βάρνα' },
+    location: { en: 'Varna, Black Sea coast', el: 'Βάρνα, ακτή Εύξεινου Πόντου' },
+    source: {
+      author: { en: 'Doukas, Turco-Byzantine History', el: 'Δούκας, Βυζαντινοτουρκική Ιστορία' },
+      quote: {
+        en: '“The oath sworn upon the Gospel was broken; and God gave the victory to him who had kept his word.”',
+        el: '«Ο όρκος που δόθηκε επάνω στο Ευαγγέλιο πατήθηκε· και ο Θεός έδωσε τη νίκη σε εκείνον που κράτησε τον λόγο του.»',
+      },
+    },
+    context: {
+      en: 'Byzantium is a city-state ringed by the Ottoman tide, surviving on diplomacy and the memory of walls. Then, a miracle: Hungarian-Polish king Władysław III and the great captain John Hunyadi smash the Ottomans and force on Murad II the Truce of Szeged — ten years of peace, sworn by both sides on Gospel and Quran. Murad abdicates to a life of contemplation. The papal legate Cardinal Cesarini declares that an oath to an infidel is void — and urges the young king to strike now, while the Ottoman army is in Asia.',
+      el: 'Το Βυζάντιο είναι μια πόλη-κράτος κυκλωμένη από την οθωμανική παλίρροια, που επιβιώνει με διπλωματία και με τη μνήμη των τειχών. Και τότε, ένα θαύμα: ο Ούγγρος-Πολωνός βασιλιάς Βλαδίσλαος Γ΄ και ο μέγας στρατηλάτης Ιωάννης Ουνυάδης συντρίβουν τους Οθωμανούς και επιβάλλουν στον Μουράτ Β΄ την Εκεχειρία του Σεγκεντίν — δέκα χρόνια ειρήνης, ορκισμένα και στα δύο στρατόπεδα σε Ευαγγέλιο και Κοράνι. Ο Μουράτ παραιτείται για βίο περισυλλογής. Ο παπικός λεγάτος καρδινάλιος Τσεζαρίνι διακηρύσσει ότι όρκος προς άπιστο δεν δεσμεύει — και πιέζει τον νεαρό βασιλιά να χτυπήσει τώρα, όσο ο οθωμανικός στρατός βρίσκεται στην Ασία.',
+    },
+    terms: [
+      { term: { en: 'Crusade of Varna', el: 'Σταυροφορία της Βάρνας' }, def: { en: 'The last great Western attempt to save the Balkans — and Constantinople.', el: 'Η τελευταία μεγάλη δυτική απόπειρα να σωθούν τα Βαλκάνια — και η Κωνσταντινούπολη.' } },
+      { term: { en: 'Truce of Szeged', el: 'Εκεχειρία του Σεγκεντίν' }, def: { en: 'The sworn ten-year peace of 1444, broken within weeks at the legate\'s urging.', el: 'Η ένορκη δεκαετής ειρήνη του 1444, που πατήθηκε μέσα σε εβδομάδες με προτροπή του λεγάτου.' } },
+      { term: { en: 'John Hunyadi', el: 'Ιωάννης Ουνυάδης' }, def: { en: 'Hungary\'s greatest general, the "White Knight" feared by the Ottomans.', el: 'Ο μεγαλύτερος στρατηγός της Ουγγαρίας, ο «Λευκός Ιππότης» που έτρεμαν οι Οθωμανοί.' } },
+    ],
+    dilemma: {
+      en: 'Byzantine counsel is asked, for the empire\'s fate rides with the answer. Advise the alliance to keep the sworn truce — use the ten years to rebuild the Hexamilion wall, refill arsenals and let a divided Ottoman court decay — or bless the immediate march to Varna, gambling everything on catching the Ottomans leaderless before Murad can return from Anatolia with the main army.',
+      el: 'Ζητείται η βυζαντινή γνώμη, γιατί με την απάντηση παίζεται η τύχη της αυτοκρατορίας. Να συμβουλεύσει την τήρηση της ένορκης εκεχειρίας — αξιοποίηση της δεκαετίας για ανοικοδόμηση του Εξαμιλίου, αναπλήρωση των οπλοστασίων και αποσύνθεση μιας διχασμένης οθωμανικής αυλής — ή να ευλογήσει την άμεση πορεία προς τη Βάρνα, ποντάροντας τα πάντα στο να πιαστούν οι Οθωμανοί ακέφαλοι πριν ο Μουράτ επιστρέψει από την Ανατολία με τον κύριο στρατό;',
+    },
+    choices: [
+      {
+        unity: 10, power: 5,
+        text: {
+          en: 'Keep the sworn peace: counsel Władysław to honor the Gospel oath, garrison the Danube line, rebuild the Hexamilion across the Isthmus, and let ten quiet years and Ottoman succession quarrels do the crusade\'s work.',
+          el: 'Τήρηση της ένορκης ειρήνης: συμβουλή στον Βλαδίσλαο να τιμήσει τον όρκο του Ευαγγελίου, επάνδρωση της γραμμής του Δούναβη, ανοικοδόμηση του Εξαμιλίου στον Ισθμό, και ας δουλέψουν για τη σταυροφορία δέκα ήσυχα χρόνια και οι οθωμανικές έριδες διαδοχής.',
+        },
+        outcome: {
+          en: 'Honor preserved, time gained. The Danube stays Christian-held, trade revives, and Murad remains in contemplative retirement while his son\'s regency stumbles. The reprieve is real — though the Ottoman tide, when it returns, will find the same small city behind the same old walls.',
+          el: 'Η τιμή διαφυλάσσεται, ο χρόνος κερδίζεται. Ο Δούναβης μένει σε χριστιανικά χέρια, το εμπόριο αναζωογονείται, και ο Μουράτ παραμένει στην αποτραβηγμένη περισυλλογή του όσο η αντιβασιλεία του γιου του παραπατά. Η ανάπαυλα είναι πραγματική — αν και η οθωμανική παλίρροια, όταν επιστρέψει, θα βρει την ίδια μικρή πόλη πίσω από τα ίδια γερασμένα τείχη.',
+        },
+      },
+      {
+        unity: -20, power: -20,
+        text: {
+          en: 'Bless the broken oath: endorse Cesarini\'s dispensation and the march to Varna — a lightning campaign along the Black Sea while the Venetian fleet, it is promised, will bar the straits against Murad\'s return.',
+          el: 'Ευλογία του πατημένου όρκου: στήριξη της άφεσης του Τσεζαρίνι και της πορείας προς τη Βάρνα — αστραπιαία εκστρατεία κατά μήκος του Εύξεινου, ενώ ο βενετικός στόλος, όπως υπόσχονται, θα κλείσει τα στενά στην επιστροφή του Μουράτ.',
+        },
+        outcome: {
+          en: 'The fleet does not bar the straits — Genoese ferries carry Murad\'s army across at a ducat a head. At Varna the young king charges the janissaries and dies; Cesarini dies in the rout; Hunyadi barely escapes. Christendom\'s last field army is gone, and between the Ottomans and Constantinople now stand only walls.',
+          el: 'Ο στόλος δεν κλείνει τα στενά — γενουατικά πορθμεία περνούν τον στρατό του Μουράτ με ένα δουκάτο το κεφάλι. Στη Βάρνα ο νεαρός βασιλιάς εφορμά στους γενίτσαρους και σκοτώνεται· ο Τσεζαρίνι χάνεται στη φυγή· ο Ουνυάδης μόλις που ξεφεύγει. Ο τελευταίος στρατός εκστρατείας της χριστιανοσύνης χάθηκε, και ανάμεσα στους Οθωμανούς και στην Κωνσταντινούπολη στέκουν πλέον μόνο τείχη.',
+        },
+      },
+    ],
+    note: {
+      en: 'Władysław III\'s body was never found on the field of Varna; his tomb at Wawel Cathedral in Kraków stands empty, and legends of the "survived king" wandered Europe for a century. Mehmed II, the boy-sultan of those regency years, learned the lesson: nine years later he came for the City himself.',
+      el: 'Το σώμα του Βλαδισλάου Γ΄ δεν βρέθηκε ποτέ στο πεδίο της Βάρνας· ο τάφος του στον καθεδρικό του Βάβελ στην Κρακοβία είναι κενός, και θρύλοι για τον «επιζήσαντα βασιλιά» πλανιόνταν στην Ευρώπη έναν αιώνα. Ο Μωάμεθ Β΄, ο ανήλικος σουλτάνος εκείνης της αντιβασιλείας, πήρε το μάθημα: εννέα χρόνια αργότερα ήρθε ο ίδιος για την Πόλη.',
+    },
+  },
+  {
+    id: 'fall1453',
+    phase: 'phase3',
+    year: 1453,
+    mapId: 'fall1453',
+    title: { en: 'The Fall of Constantinople', el: 'Η Άλωση της Κωνσταντινούπολης' },
+    location: { en: 'The Theodosian Walls', el: 'Τα Θεοδοσιανά Τείχη' },
+    source: {
+      author: { en: 'Constantine XI Palaiologos, reply to Mehmed II (Sphrantzes)', el: 'Κωνσταντίνος ΙΑ΄ Παλαιολόγος, απάντηση στον Μωάμεθ Β΄ (Σφραντζής)' },
+      quote: {
+        en: '“To surrender the City is neither mine to give nor any man\'s who dwells in it; of one mind, we shall all die of our own free will, and we shall not spare our lives.”',
+        el: '«Το δε την πόλιν σοι δούναι ούτ\' εμόν εστίν ούτ\' άλλου των κατοικούντων εν ταύτη· κοινή γαρ γνώμη πάντες αυτοπροαιρέτως αποθανούμεν και ου φεισόμεθα της ζωής ημών.»',
+      },
+    },
+    context: {
+      en: 'April 1453. Mehmed II, twenty-one years old, has ringed the City with perhaps 80,000 men and the largest cannon ever built — Urban\'s bombard, whose stone balls weigh half a ton. Within the walls: some 7,000 defenders, Greek and Italian, under Constantine XI and the Genoese captain Giustiniani. The Golden Horn is chained — so Mehmed drags seventy ships overland, on greased timbers across the hills of Galata, into the harbour behind it.',
+      el: 'Απρίλιος 1453. Ο Μωάμεθ Β΄, είκοσι ενός ετών, έχει κυκλώσει την Πόλη με περίπου 80.000 άνδρες και το μεγαλύτερο πυροβόλο που κατασκευάστηκε ποτέ — τη βομβάρδα του Ουρβανού, με λίθινα βλήματα μισού τόνου. Μέσα στα τείχη: περίπου 7.000 υπερασπιστές, Έλληνες και Ιταλοί, υπό τον Κωνσταντίνο ΙΑ΄ και τον Γενουάτη Ιουστινιάνη. Ο Κεράτιος είναι αλυσοδεμένος — γι\' αυτό ο Μωάμεθ σέρνει εβδομήντα πλοία από τη στεριά, πάνω σε λιπασμένα μαδέρια στους λόφους του Γαλατά, μέσα στο λιμάνι πίσω της.',
+    },
+    terms: [
+      { term: { en: 'Urban\'s Bombard', el: 'Η Βομβάρδα του Ουρβανού' }, def: { en: 'The 8-metre siege gun that ended the age of walls; it fired seven times a day.', el: 'Το πολιορκητικό πυροβόλο των 8 μέτρων που τερμάτισε την εποχή των τειχών· έβαλλε επτά φορές την ημέρα.' } },
+      { term: { en: 'Kerkoporta', el: 'Κερκόπορτα' }, def: { en: 'The small postern found open at the final assault — chance or treason, never known.', el: 'Η μικρή πυλίδα που βρέθηκε ανοιχτή στην τελική έφοδο — τύχη ή προδοσία, δεν μαθεύτηκε ποτέ.' } },
+      { term: { en: 'Unionists / Anti-Unionists', el: 'Ενωτικοί / Ανθενωτικοί' }, def: { en: 'The bitter split over union with Rome as the price of Western aid.', el: 'Ο πικρός διχασμός για την ένωση με τη Ρώμη ως αντίτιμο της δυτικής βοήθειας.' } },
+    ],
+    dilemma: {
+      en: 'On 26 May Mehmed offers final terms: surrender the City, and Constantine may rule the Morea as his vassal, the people spared, property respected. The alternative is the general assault everyone knows is coming — 7,000 exhausted men against 80,000, on walls the bombard has been chewing for seven weeks. An emperor may buy his people\'s lives with the last throne of Rome — or refuse, and make the ending mean something for centuries.',
+      el: 'Στις 26 Μαΐου ο Μωάμεθ προσφέρει τελικούς όρους: παράδοση της Πόλης, και ο Κωνσταντίνος να ηγεμονεύει στον Μοριά ως υποτελής του, ο λαός να φεισθεί, οι περιουσίες να γίνουν σεβαστές. Η εναλλακτική είναι η γενική έφοδος που όλοι ξέρουν ότι έρχεται — 7.000 εξαντλημένοι άνδρες απέναντι σε 80.000, σε τείχη που η βομβάρδα μασά επτά εβδομάδες. Ένας αυτοκράτορας μπορεί να αγοράσει τις ζωές του λαού του με τον τελευταίο θρόνο της Ρώμης — ή να αρνηθεί, και να δώσει στο τέλος νόημα για αιώνες.',
+    },
+    choices: [
+      {
+        unity: 15, power: -25,
+        text: {
+          en: 'Refuse, and stand at the walls: answer that the City is not his to give, take his place with Giustiniani at the Gate of St Romanos where the breach is widest, and meet the final assault as the last Roman emperor — sword in hand.',
+          el: 'Άρνηση, και άμυνα στα τείχη: απάντηση ότι η Πόλη δεν είναι δική του να τη δώσει, θέση δίπλα στον Ιουστινιάνη στην Πύλη του Αγίου Ρωμανού όπου το ρήγμα είναι πλατύτερο, και υποδοχή της τελικής εφόδου ως ο τελευταίος Ρωμαίος αυτοκράτορας — με το σπαθί στο χέρι.',
+        },
+        outcome: {
+          en: 'Before dawn on Tuesday, 29 May 1453, the janissaries find the Kerkoporta open and Giustiniani falls wounded; the emperor casts off the purple and dies fighting, his body never surely found. The City falls — but the last stand becomes the founding legend of a nation: the Marble Emperor who will wake.',
+          el: 'Πριν από την αυγή της Τρίτης, 29 Μαΐου 1453, οι γενίτσαροι βρίσκουν την Κερκόπορτα ανοιχτή και ο Ιουστινιάνης πέφτει λαβωμένος· ο αυτοκράτορας πετά την πορφύρα και πέφτει πολεμώντας, το σώμα του δεν βρέθηκε ποτέ με βεβαιότητα. Η Πόλη πέφτει — αλλά η ύστατη άμυνα γίνεται ο ιδρυτικός θρύλος ενός έθνους: ο Μαρμαρωμένος Βασιλιάς που θα ξυπνήσει.',
+        },
+      },
+      {
+        unity: -20, power: -5,
+        text: {
+          en: 'Accept vassalage: surrender the City intact to spare its people, march out with the icons and archives, and rule the Morea under the sultan\'s shadow — a Roman government in miniature, awaiting better days.',
+          el: 'Αποδοχή της υποτέλειας: παράδοση της Πόλης ακέραιης για να σωθεί ο λαός, έξοδος με τις εικόνες και τα αρχεία, και ηγεμονία στον Μοριά κάτω από τη σκιά του σουλτάνου — μια ρωμαϊκή διοίκηση σε σμίκρυνση, εν αναμονή καλύτερων ημερών.',
+        },
+        outcome: {
+          en: 'The people are spared the sack — and history is denied its ending. The Morea despotate lasts seven years before Mehmed absorbs it anyway; the last emperor dies a pensioner, and no legend guards the long night of the Ottomans. What was saved in lives is paid in the currency of memory.',
+          el: 'Ο λαός γλιτώνει τη λεηλασία — και η ιστορία στερείται το τέλος της. Το δεσποτάτο του Μοριά κρατά επτά χρόνια πριν το απορροφήσει ούτως ή άλλως ο Μωάμεθ· ο τελευταίος αυτοκράτορας πεθαίνει συνταξιούχος, και κανένας θρύλος δεν φρουρεί τη μακριά νύχτα της Οθωμανοκρατίας. Ό,τι σώθηκε σε ζωές, πληρώνεται στο νόμισμα της μνήμης.',
+        },
+      },
+    ],
+    note: {
+      en: 'The City fell on a Tuesday — and Tuesday is held an unlucky day in the Greek world to this day. Legend says the emperor was turned to marble by an angel and sleeps beneath the Golden Gate. Greek scholars fleeing west carried their manuscripts to Italy, pouring fuel on the young Renaissance.',
+      el: 'Η Πόλη έπεσε ημέρα Τρίτη — και η Τρίτη θεωρείται γρουσούζικη μέρα στον ελληνικό κόσμο ώς σήμερα. Ο θρύλος λέει ότι άγγελος μαρμάρωσε τον αυτοκράτορα, που κοιμάται κάτω από τη Χρυσή Πύλη. Οι Έλληνες λόγιοι που κατέφυγαν δυτικά μετέφεραν τα χειρόγραφά τους στην Ιταλία, τροφοδοτώντας την νεαρή Αναγέννηση.',
+    },
+  },
+];
+
+/* ============================================================
+   ERA OUTCOME SCREENS — tier resolved from final Cohesion/Power
+   ============================================================ */
+function resolveTier(unity, power) {
+  if (unity >= 60 && power >= 45) return 'golden';
+  if (unity >= 35 && power >= 20) return 'endured';
+  return 'collapse';
+}
+const PHASE_ENDINGS = {
+  phase1: {
+    golden: {
+      title: { en: 'The Bulwark of Christendom', el: 'Ο Προμαχώνας της Χριστιανοσύνης' },
+      text: {
+        en: 'The themes stand, the walls stand, the fire burns on the water. Behind this shield, Byzantium enters its long golden autumn: the missions of Cyril and Methodius carry letters to the Slavs, Basil II will carry the eagles to the Danube, and Constantinople — the God-guarded City of half a million souls — remains the greatest metropolis of the Christian world.',
+        el: 'Τα θέματα στέκουν, τα τείχη στέκουν, το πυρ καίει πάνω στο νερό. Πίσω από αυτή την ασπίδα, το Βυζάντιο μπαίνει στο μακρύ χρυσό του φθινόπωρο: οι ιεραποστολές του Κυρίλλου και του Μεθοδίου φέρνουν γράμματα στους Σλάβους, ο Βασίλειος Β΄ θα φτάσει τους αετούς ώς τον Δούναβη, και η Κωνσταντινούπολη — η θεοφύλακτη Πόλη του μισού εκατομμυρίου ψυχών — παραμένει η μεγαλύτερη μητρόπολη του χριστιανικού κόσμου.',
+      },
+    },
+    endured: {
+      title: { en: 'The Wounded Colossus', el: 'Ο Λαβωμένος Κολοσσός' },
+      text: {
+        en: 'The empire survives its trial by fire, but the scars run deep: provinces wasted, the themes strained, the magnates circling the soldiers\' lands like crows. Byzantium remains the strongest state of its world — yet each crisis now costs more than the last, and in the East a new people of horsemen is drifting toward the frontier.',
+        el: 'Η αυτοκρατορία επιβιώνει από τη δοκιμασία της φωτιάς, αλλά οι ουλές είναι βαθιές: επαρχίες ρημαγμένες, τα θέματα καταπονημένα, οι δυνατοί να κυκλώνουν τα στρατιωτικά κτήματα σαν κοράκια. Το Βυζάντιο μένει το ισχυρότερο κράτος του κόσμου του — όμως κάθε κρίση κοστίζει πια περισσότερο από την προηγούμενη, και στην Ανατολή ένας νέος λαός ιππέων γλιστρά προς το σύνορο.',
+      },
+    },
+    collapse: {
+      title: { en: 'The Dreadful Day', el: 'Η Φοβερή Ημέρα' },
+      text: {
+        en: 'The army of the East is no more. Anatolia — the empire\'s reservoir of soldiers, grain and saints — lies open, and within a decade Turkish tents rise within sight of the Bosporus. In desperation, an emperor will write to the Bishop of Rome asking for Western swords. The letter will be answered — by the Crusades.',
+        el: 'Ο στρατός της Ανατολής δεν υπάρχει πια. Η Μικρά Ασία — η δεξαμενή στρατιωτών, σιταριού και αγίων της αυτοκρατορίας — κείται ανοιχτή, και μέσα σε μια δεκαετία τουρκικές σκηνές υψώνονται σε απόσταση βλέμματος από τον Βόσπορο. Μέσα στην απόγνωση, ένας αυτοκράτορας θα γράψει στον επίσκοπο της Ρώμης ζητώντας δυτικά σπαθιά. Το γράμμα θα απαντηθεί — με τις Σταυροφορίες.',
+      },
+    },
+  },
+  phase2: {
+    golden: {
+      title: { en: 'The City Unconquered', el: 'Η Πόλις Απόρθητος' },
+      text: {
+        en: 'The Latin storm breaks against Roman statecraft. The crusades pass through as instruments, not masters; the sea walls hold, the pretenders find no gates opened for them, and the Queen of Cities keeps her relics, her libraries and her God-guarded pride. The West returns home owing oaths to the Basileus — and the empire stands unbroken between two worlds.',
+        el: 'Η λατινική θύελλα σπάει πάνω στη ρωμαίικη τέχνη της διακυβέρνησης. Οι σταυροφορίες περνούν ως όργανα, όχι ως αφέντες· τα θαλάσσια τείχη κρατούν, οι σφετεριστές δεν βρίσκουν πύλες ανοιχτές, και η Βασιλεύουσα κρατά τα λείψανα, τις βιβλιοθήκες και τη θεοφύλακτη περηφάνια της. Η Δύση γυρίζει σπίτι της χρωστώντας όρκους στον Βασιλέα — και η αυτοκρατορία στέκει άθραυστη ανάμεσα σε δύο κόσμους.',
+      },
+    },
+    endured: {
+      title: { en: 'The Empire in Exile', el: 'Η Αυτοκρατορία στην Εξορία' },
+      text: {
+        en: 'The City is lost — but the empire refuses to die with it. At Nicaea the double-headed eagle learns to live lean: laws kept, church kept, army kept, every scrap of Anatolian soil husbanded like seed grain. Fifty-seven years of exile forge the discipline that will walk back through the Gate of the Spring in 1261. The wound of 1204, however, will never fully close.',
+        el: 'Η Πόλη χάθηκε — αλλά η αυτοκρατορία αρνείται να πεθάνει μαζί της. Στη Νίκαια ο δικέφαλος αετός μαθαίνει να ζει λιτά: οι νόμοι κρατιούνται, η εκκλησία κρατιέται, ο στρατός κρατιέται, κάθε σπιθαμή μικρασιατικής γης φυλάγεται σαν σπόρος. Πενήντα επτά χρόνια εξορίας σφυρηλατούν την πειθαρχία που θα ξαναπεράσει την Πύλη της Πηγής το 1261. Η πληγή του 1204, όμως, δεν θα κλείσει ποτέ εντελώς.',
+      },
+    },
+    collapse: {
+      title: { en: 'Romania Partitioned', el: 'Η Ρωμανία Μοιρασμένη' },
+      text: {
+        en: 'The Partitio Romaniae is executed to the letter: Venice takes the harbours and the islands, Frankish lords take the land, and the Roman inheritance is carved like a carcass at market. With no Nicaea to gather the exiles, the reconquest never comes; the Greek world enters its long servitude early, and the bronze horses of the Hippodrome watch it all from Venice.',
+        el: 'Ο Διαμελισμός της Ρωμανίας εκτελείται κατά γράμμα: η Βενετία παίρνει τα λιμάνια και τα νησιά, Φράγκοι άρχοντες παίρνουν τη γη, και η ρωμαϊκή κληρονομιά τεμαχίζεται σαν σφάγιο στην αγορά. Χωρίς Νίκαια να μαζέψει τους εξόριστους, η ανάκτηση δεν έρχεται ποτέ· ο ελληνικός κόσμος μπαίνει νωρίς στη μακριά του δουλεία, και τα χάλκινα άλογα του Ιπποδρόμου τα βλέπουν όλα από τη Βενετία.',
+      },
+    },
+  },
+  phase3: {
+    golden: {
+      title: { en: 'The Second Deliverance', el: 'Η Δεύτερη Λύτρωση' },
+      text: {
+        en: 'Against all arithmetic, the City endures once more: the bombards crack, the tunnels flood, the assault breaks on the Theodosian stones, and Mehmed — his janissaries muttering — strikes his tents. The reprieve cannot be forever; but a generation of peace, a rebuilt fleet and a reconciled church give the Marble Throne one more chapter, and Europe one more century of its eastern shield.',
+        el: 'Ενάντια σε κάθε αριθμητική, η Πόλη αντέχει άλλη μια φορά: οι βομβάρδες ραγίζουν, τα λαγούμια πλημμυρίζουν, η έφοδος σπάει πάνω στις θεοδοσιανές πέτρες, και ο Μωάμεθ — με τους γενίτσαρους να μουρμουρίζουν — λύνει τις σκηνές του. Η ανάπαυλα δεν μπορεί να είναι παντοτινή· όμως μια γενιά ειρήνης, ένας ξαναχτισμένος στόλος και μια συμφιλιωμένη εκκλησία χαρίζουν στον Μαρμάρινο Θρόνο ένα ακόμη κεφάλαιο, και στην Ευρώπη έναν ακόμη αιώνα της ανατολικής της ασπίδας.',
+      },
+    },
+    endured: {
+      title: { en: 'The Lamp That Never Died', el: 'Το Λυχνάρι που δεν Έσβησε' },
+      text: {
+        en: 'The City falls with honor intact, and the fall itself becomes seed: scholars carry Plato and Thucydides west to kindle the Renaissance; the Church under the Ottomans keeps language, faith and memory alive in the crypt of the nation; and the last emperor, marble in legend, waits at the Golden Gate. Empires die — this one chose how, and so was never wholly lost.',
+        el: 'Η Πόλη πέφτει με την τιμή ακέραιη, και η ίδια η πτώση γίνεται σπόρος: οι λόγιοι μεταφέρουν τον Πλάτωνα και τον Θουκυδίδη δυτικά ανάβοντας την Αναγέννηση· η Εκκλησία επί Οθωμανών κρατά γλώσσα, πίστη και μνήμη ζωντανές στην κρύπτη του έθνους· και ο τελευταίος αυτοκράτορας, μαρμαρωμένος στον θρύλο, περιμένει στη Χρυσή Πύλη. Οι αυτοκρατορίες πεθαίνουν — αυτή διάλεξε το πώς, και γι\' αυτό δεν χάθηκε ποτέ ολότελα.',
+      },
+    },
+    collapse: {
+      title: { en: 'The Long Night', el: 'Η Μακριά Νύχτα' },
+      text: {
+        en: 'The end comes without a stand and without a story: thrones bartered, oaths broken, the last army spent on other men\'s gambles. The Ottoman order settles over a people who received no legend to keep — only taxes and silence. It will take the nation centuries longer to remember what it was; some songs are never written, because no one chose the ending.',
+        el: 'Το τέλος έρχεται χωρίς άμυνα και χωρίς αφήγημα: θρόνοι παζαρεμένοι, όρκοι πατημένοι, ο τελευταίος στρατός ξοδεμένος σε ξένα στοιχήματα. Η οθωμανική τάξη απλώνεται πάνω σε έναν λαό που δεν του δόθηκε θρύλος να κρατήσει — μόνο φόροι και σιωπή. Το έθνος θα χρειαστεί αιώνες παραπάνω για να θυμηθεί τι ήταν· κάποια τραγούδια δεν γράφονται ποτέ, γιατί κανείς δεν διάλεξε το τέλος.',
+      },
+    },
+  },
+};
+const GRAND_VERDICT = {
+  golden: {
+    title: { en: 'BASILEUS AUTOKRATOR', el: 'ΒΑΣΙΛΕΥΣ ΑΥΤΟΚΡΑΤΩΡ' },
+    text: {
+      en: 'Across eight centuries you held the impossible balance: soldier-farmers against caliphs, statecraft against crusades, faith against the cannon. From the birth of the themes to the walls of 1453, your Byzantium remained what it always claimed to be — the Roman Empire, one and unbroken, the golden bridge between antiquity and the modern world.',
+      el: 'Επί οκτώ αιώνες κράτησες την αδύνατη ισορροπία: στρατιώτες-αγρότες απέναντι σε χαλίφηδες, τέχνη διακυβέρνησης απέναντι σε σταυροφορίες, πίστη απέναντι στο κανόνι. Από τη γέννηση των θεμάτων ώς τα τείχη του 1453, το Βυζάντιό σου έμεινε αυτό που πάντα διεκδικούσε να είναι — η Ρωμαϊκή Αυτοκρατορία, μία και άθραυστη, η χρυσή γέφυρα ανάμεσα στην αρχαιότητα και στον νεότερο κόσμο.',
+    },
+  },
+  endured: {
+    title: { en: 'THE THOUSAND-YEAR WATCH', el: 'Η ΧΙΛΙΟΧΡΟΝΗ ΦΡΟΥΡΑ' },
+    text: {
+      en: 'Your empire bent, broke, went into exile and returned; it lost Anatolia and kept the faith, lost the City and kept the idea. This is Byzantium as history truly knew it: not invincible, but unkillable — a civilization that stood guard at Europe\'s gate for a thousand years and, falling, handed its lamp to the Renaissance and to a nation yet unborn.',
+      el: 'Η αυτοκρατορία σου λύγισε, ράγισε, πήγε στην εξορία και επέστρεψε· έχασε τη Μικρά Ασία και κράτησε την πίστη, έχασε την Πόλη και κράτησε την ιδέα. Αυτό είναι το Βυζάντιο όπως πραγματικά το γνώρισε η ιστορία: όχι ανίκητο, αλλά αθανάτιστο — ένας πολιτισμός που φύλαξε σκοπιά στην πύλη της Ευρώπης χίλια χρόνια και, πέφτοντας, παρέδωσε το λυχνάρι του στην Αναγέννηση και σε ένα έθνος αγέννητο ακόμη.',
+    },
+  },
+  collapse: {
+    title: { en: 'THE FALLEN QUEEN', el: 'Η ΠΕΣΜΕΝΗ ΒΑΣΙΛΕΥΟΥΣΑ' },
+    text: {
+      en: 'Manzikert, 1204, Varna — the disasters your chroniclers warned of came to pass unamended. The Queen of Cities is a province, her libraries ash or plunder, her people learning silence. Study the sources again, Basileus: Byzantium\'s enemies were rarely stronger than Byzantium — they were merely more united than her palaces, and more patient than her factions.',
+      el: 'Ματζικέρτ, 1204, Βάρνα — οι καταστροφές για τις οποίες προειδοποιούσαν οι χρονικογράφοι σου συνέβησαν αδιόρθωτες. Η Βασιλεύουσα είναι επαρχία, οι βιβλιοθήκες της στάχτη ή λάφυρο, ο λαός της μαθαίνει τη σιωπή. Μελέτησε ξανά τις πηγές, Βασιλεύ: οι εχθροί του Βυζαντίου σπάνια ήταν ισχυρότεροί του — ήταν απλώς πιο ενωμένοι από τα παλάτια του, και πιο υπομονετικοί από τις φατρίες του.',
+    },
+  },
+};
+const RANKS = {
+  golden: { en: 'Basileus Autokrator', el: 'Βασιλεύς Αυτοκράτωρ' },
+  endured: { en: 'Megas Domestikos', el: 'Μέγας Δομέστικος' },
+  collapse: { en: 'Monk of Mount Athos', el: 'Μοναχός του Άθω' },
+};
+
+/* ============================================================
+   CINEMATIC TACTICAL SVG MAPS — terrain art, unit silhouettes
+   ============================================================ */
+const MC = {
+  greek: '#5eead4', greekDeep: '#14b8a6',
+  enemy: '#fb7185', enemyDeep: '#e11d48',
+  admin: '#c084fc',
+  water: '#60a5fa', gold: '#e8d9a0',
+  label: '#e2e8f0', dim: '#94a3b8',
+  land: '#1e2430', landLine: '#475569',
+};
+
+function MapShell({ children, legend }) {
+  return (
+    <div className="map-frame rounded-xl overflow-hidden">
+      <svg viewBox="0 0 400 250" className="w-full h-auto block" role="img">
+        <defs>
+          <marker id="arrGreek" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.greek} />
+          </marker>
+          <marker id="arrEnemy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.enemy} />
+          </marker>
+          <marker id="arrGold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.gold} />
+          </marker>
+          <marker id="arrAdmin" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.admin} />
+          </marker>
+          <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0c4a6e" stopOpacity="0.8" />
+            <stop offset="1" stopColor="#082f49" stopOpacity="0.95" />
+          </linearGradient>
+          <linearGradient id="landG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#2a3140" />
+            <stop offset="1" stopColor="#131722" />
+          </linearGradient>
+          <radialGradient id="plainG" cx="0.5" cy="0.5" r="0.7">
+            <stop offset="0" stopColor="#475569" stopOpacity="0.3" />
+            <stop offset="1" stopColor="#475569" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="vignG" cx="0.5" cy="0.5" r="0.72">
+            <stop offset="0" stopColor="#000" stopOpacity="0" />
+            <stop offset="0.62" stopColor="#000" stopOpacity="0" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.52" />
+          </radialGradient>
+          <radialGradient id="gloAmber" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#22d3ee" stopOpacity="0.30" />
+            <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="gloGold" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#e8d9a0" stopOpacity="0.34" />
+            <stop offset="1" stopColor="#e8d9a0" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="gloGreen" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#a3e635" stopOpacity="0.24" />
+            <stop offset="1" stopColor="#a3e635" stopOpacity="0" />
+          </radialGradient>
+          <pattern id="waterWaves" width="26" height="12" patternUnits="userSpaceOnUse">
+            <path d="M0 8 q6.5 -6 13 0 t13 0" stroke="rgba(96,165,250,0.26)" strokeWidth="1" fill="none" />
+          </pattern>
+          <pattern id="reeds" width="14" height="12" patternUnits="userSpaceOnUse">
+            <g stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" strokeLinecap="round">
+              <path d="M3 11 L3 5 M3 6.5 L1.2 4 M3 6.5 L4.8 4.2" fill="none" />
+              <path d="M10 12 L10 7 M10 8 L8.4 5.8 M10 8 L11.6 6" fill="none" />
+            </g>
+          </pattern>
+          <pattern id="fields" width="16" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)">
+            <path d="M0 4.5 L16 4.5" stroke="rgba(217,180,90,0.30)" strokeWidth="0.8" />
+            <path d="M0 8.5 L16 8.5" stroke="rgba(217,180,90,0.18)" strokeWidth="0.8" />
+          </pattern>
+
+          {/* ---------- UNIT SILHOUETTES (fill/stroke = currentColor) ---------- */}
+          <symbol id="uHop" viewBox="0 0 14 16">
+            <line x1="1.4" y1="14.4" x2="13.2" y2="2.2" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+            <path d="M12 1.4 L13.9 0.6 L13.2 2.5 Z" fill="currentColor" />
+            <path d="M5.7 1.7 Q7.1 -0.7 8.7 1.6 L8.2 2.7 L6.3 2.7 Z" fill="currentColor" />
+            <circle cx="7.1" cy="3.3" r="1.65" fill="currentColor" />
+            <path d="M6 5.1 L8.5 5.1 L9.1 10 L10.1 15.2 L8.4 15.2 L7.3 11.1 L6.4 15.2 L4.7 15.2 L5.7 10 Z" fill="currentColor" />
+            <circle cx="4.7" cy="8.7" r="3.3" fill="currentColor" />
+            <circle cx="4.7" cy="8.7" r="1.9" fill="#060a13" opacity="0.28" />
+            <circle cx="4.7" cy="8.7" r="0.75" fill="currentColor" />
+          </symbol>
+          <symbol id="uPers" viewBox="0 0 14 16">
+            <path d="M6.5 1.9 L9.3 1.9 L8.9 0.5 L6.9 0.5 Z" fill="currentColor" />
+            <circle cx="7.9" cy="3.2" r="1.55" fill="currentColor" />
+            <path d="M6.9 5 L9.2 5 L9.8 9.8 L10.7 15.2 L9.1 15.2 L8.1 11.2 L7.2 15.2 L5.6 15.2 L6.4 9.8 Z" fill="currentColor" />
+            <rect x="2.7" y="4.7" width="2.9" height="9.6" rx="1" fill="currentColor" />
+            <line x1="4.15" y1="6.4" x2="4.15" y2="12.7" stroke="#060a13" strokeWidth="0.5" opacity="0.3" />
+            <path d="M11.6 4.4 Q14.4 7.9 11.6 11.4" stroke="currentColor" strokeWidth="0.85" fill="none" />
+            <line x1="11.6" y1="4.4" x2="11.6" y2="11.4" stroke="currentColor" strokeWidth="0.45" />
+          </symbol>
+          <symbol id="uPike" viewBox="0 0 26 16">
+            <line x1="1" y1="13.4" x2="24.6" y2="5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+            <path d="M23.5 4.2 L25.8 4.6 L24.1 6.2 Z" fill="currentColor" />
+            <circle cx="7.7" cy="3.6" r="1.6" fill="currentColor" />
+            <path d="M6.9 1.9 Q7.7 0.7 8.7 1.9 L8.4 2.6 L7.1 2.6 Z" fill="currentColor" />
+            <path d="M6.7 5.4 L9 5.4 L9.6 10 L10.5 15.2 L8.9 15.2 L8 11.3 L7.1 15.2 L5.5 15.2 L6.4 10 Z" fill="currentColor" />
+            <circle cx="5.2" cy="8.9" r="2.35" fill="currentColor" />
+            <circle cx="5.2" cy="8.9" r="1.3" fill="#060a13" opacity="0.28" />
+          </symbol>
+          <symbol id="uCav" viewBox="0 0 22 17">
+            <line x1="5.2" y1="8.2" x2="17.4" y2="1" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" />
+            <circle cx="9.7" cy="2.7" r="1.4" fill="currentColor" />
+            <path d="M8.7 4.1 L10.8 4.1 L11.4 7 L8.3 7 Z" fill="currentColor" />
+            <path d="M2.8 9.7 Q3.2 6.9 6.2 6.5 L13.4 6.1 Q14 4.1 15.6 3.5 L16.4 4.9 L19 5.4 L17 6.7 Q16.4 7.3 15.2 7.3 L15 9.5 Q14.9 10.7 13.8 11.1 L14.6 15.6 L13.1 15.6 L12.2 11.5 L7.8 11.6 L7 15.6 L5.5 15.6 L6.1 11.1 Q3.2 10.7 2.8 9.7 Z" fill="currentColor" />
+            <path d="M2.9 9.2 Q1.1 9.7 0.7 11.8 Q2.4 11.2 3.2 10.3 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uShip" viewBox="0 0 26 13">
+            <path d="M2 5.2 Q10 8.6 18.6 7.3 L23.4 5.7 Q23 8.8 18.9 9.8 Q10.4 11.4 5 8.8 Q2.4 7.6 2 5.2 Z" fill="currentColor" />
+            <path d="M2 5.2 L0.2 6.3 L2.5 7.4 Z" fill="currentColor" />
+            <path d="M23.4 5.7 Q25.3 4.9 25.5 2.9 Q23.8 3.6 22.8 4.9 Z" fill="currentColor" />
+            <line x1="12.6" y1="0.8" x2="12.6" y2="7.8" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="9.4" y1="1.7" x2="15.8" y2="1.7" stroke="currentColor" strokeWidth="0.7" />
+            <g stroke="currentColor" strokeWidth="0.55">
+              <line x1="5.4" y1="8.9" x2="4.3" y2="11.6" /><line x1="8.4" y1="9.4" x2="7.3" y2="12" />
+              <line x1="11.4" y1="9.7" x2="10.3" y2="12.3" /><line x1="14.4" y1="9.7" x2="13.3" y2="12.3" />
+              <line x1="17.4" y1="9.3" x2="16.3" y2="11.9" /><line x1="20.2" y1="8.7" x2="19.1" y2="11.2" />
+            </g>
+          </symbol>
+          <symbol id="uChar" viewBox="0 0 27 15">
+            <circle cx="8" cy="10.8" r="3.1" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <line x1="5.9" y1="8.6" x2="10.1" y2="13" stroke="currentColor" strokeWidth="0.6" />
+            <line x1="5.9" y1="13" x2="10.1" y2="8.6" stroke="currentColor" strokeWidth="0.6" />
+            <path d="M8 10.8 Q4.6 11.6 2.4 13.6" stroke="currentColor" strokeWidth="0.9" fill="none" />
+            <path d="M5.4 4.4 L10.8 4.4 L10.8 8.3 L5.6 8.3 Q5 6.3 5.4 4.4 Z" fill="currentColor" />
+            <circle cx="8.2" cy="3.1" r="1.25" fill="currentColor" />
+            <line x1="10.8" y1="7" x2="18.4" y2="6.8" stroke="currentColor" strokeWidth="0.7" />
+            <path d="M18 8.9 Q18.4 6.4 20.8 6.1 L21.6 4.2 L22.6 5.5 L24.9 5.9 L23.2 7.2 L23 9.1 Q22.9 10.1 22 10.4 L22.6 13.8 L21.3 13.8 L20.6 10.7 L19.6 10.7 L19 13.8 L17.7 13.8 L18.2 10.3 Q17.9 9.6 18 8.9 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uTemple" viewBox="0 0 16 13">
+            <path d="M1 4.7 L8 0.5 L15 4.7 Z" fill="currentColor" />
+            <rect x="1.7" y="5" width="12.6" height="0.9" fill="currentColor" />
+            <rect x="2.6" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="5.6" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="8.8" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="11.8" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="1.2" y="10.8" width="13.6" height="1.4" fill="currentColor" />
+          </symbol>
+          <symbol id="uZig" viewBox="0 0 16 12">
+            <rect x="1" y="8.6" width="14" height="3" fill="currentColor" />
+            <rect x="3.4" y="5.4" width="9.2" height="3" fill="currentColor" />
+            <rect x="5.7" y="2.4" width="4.6" height="2.8" fill="currentColor" />
+            <line x1="8" y1="2.4" x2="8" y2="11.6" stroke="#060a13" strokeWidth="0.7" opacity="0.35" />
+          </symbol>
+          <symbol id="uFlame" viewBox="0 0 10 13">
+            <path d="M5 0 Q8 3.4 6.6 5.4 Q8.6 4.8 9.2 3.2 Q10.8 7.2 8.6 9.8 Q7 11.8 5 11.8 Q3 11.8 1.6 9.9 Q-0.4 7 2 3.3 Q2.4 4.9 3.6 5.5 Q2.6 2.7 5 0 Z" fill="currentColor" />
+            <path d="M5 6.2 Q6.4 7.9 5.6 9.6 Q5.1 10.6 4.2 10.2 Q3 9.5 3.7 7.8 Q4.2 6.9 5 6.2 Z" fill="#060a13" opacity="0.4" />
+          </symbol>
+          <symbol id="uClash" viewBox="0 0 16 16">
+            <path d="M8 0 L9.3 4.6 L13.8 2.6 L11 6.6 L16 8 L11 9.4 L13.4 13.6 L9.2 11.3 L8 16 L6.8 11.3 L2.6 13.6 L5 9.4 L0 8 L5 6.6 L2.2 2.6 L6.7 4.6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uBombard" viewBox="0 0 22 13">
+            <rect x="4" y="4.6" width="13" height="3.6" rx="1.8" fill="currentColor" />
+            <rect x="15.5" y="5.3" width="5" height="2.2" rx="1.1" fill="currentColor" />
+            <circle cx="7.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="13.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="2.6" cy="9.8" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uChurch" viewBox="0 0 16 14">
+            <path d="M3.4 8.2 Q3.4 4.6 8 4.2 Q12.6 4.6 12.6 8.2 Z" fill="currentColor" />
+            <rect x="2.6" y="8.2" width="10.8" height="4.6" fill="currentColor" />
+            <line x1="8" y1="4" x2="8" y2="1.2" stroke="currentColor" strokeWidth="0.9" />
+            <line x1="6.7" y1="2.4" x2="9.3" y2="2.4" stroke="currentColor" strokeWidth="0.9" />
+          </symbol>
+          <symbol id="uCrescent" viewBox="0 0 12 12">
+            <path d="M9.5 6 A4.3 4.3 0 1 1 5.4 1.8 A3.4 3.4 0 0 0 9.5 6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uCross" viewBox="0 0 10 12">
+            <rect x="4.1" y="1" width="1.8" height="10" fill="currentColor" />
+            <rect x="1.4" y="3.4" width="7.2" height="1.8" fill="currentColor" />
+          </symbol>
+          <symbol id="uRifle" viewBox="0 0 14 16">
+            <circle cx="6.8" cy="2.6" r="1.6" fill="currentColor" />
+            <path d="M6.6 1 Q7.9 0.2 8.6 1.3 L8.3 2 L6.8 2 Z" fill="currentColor" />
+            <path d="M5.8 4.4 L8.2 4.4 L8.8 9.6 L9.7 15.2 L8.1 15.2 L7.2 11 L6.3 15.2 L4.7 15.2 L5.6 9.6 Z" fill="currentColor" />
+            <line x1="2.4" y1="9.8" x2="12.4" y2="3.2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            <line x1="10.6" y1="4.4" x2="11.4" y2="5.6" stroke="currentColor" strokeWidth="0.8" />
+          </symbol>
+          <symbol id="uPlane" viewBox="0 0 22 12">
+            <path d="M2 6.2 L15 5.4 Q18.4 5.4 20 6.6 Q18.2 7.8 15 7.6 L2 7 Q1 6.6 2 6.2 Z" fill="currentColor" />
+            <path d="M9 5.6 L7 1.4 L9 1.6 L11.6 5.5 Z" fill="currentColor" />
+            <path d="M9 7.2 L7 11 L9 10.8 L11.6 7.3 Z" fill="currentColor" />
+            <path d="M2.6 6.6 L1 3.8 L2.6 4 L4 6.3 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uPara" viewBox="0 0 12 14">
+            <path d="M1 6 Q6 -1.4 11 6 Q8.5 4.8 6 4.9 Q3.5 4.8 1 6 Z" fill="currentColor" />
+            <line x1="1.4" y1="6" x2="5.4" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="10.6" y1="6" x2="6.6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="6" y1="5" x2="6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <circle cx="6" cy="11.6" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uSteam" viewBox="0 0 26 13">
+            <path d="M1.6 6.6 L24 6.6 L21.6 10.6 Q13 12.4 5 10.6 Z" fill="currentColor" />
+            <rect x="9" y="3.4" width="7.5" height="3.2" rx="0.6" fill="currentColor" />
+            <rect x="11.4" y="0.8" width="2.2" height="2.8" fill="currentColor" />
+            <path d="M13.8 0.6 Q16 -0.4 17.6 0.9" stroke="currentColor" strokeWidth="0.7" fill="none" />
+            <line x1="3.4" y1="6.6" x2="3.4" y2="3.4" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="21.8" y1="6.6" x2="21.8" y2="4.2" stroke="currentColor" strokeWidth="0.8" />
+          </symbol>
+          <symbol id="uTent" viewBox="0 0 12 9">
+            <path d="M0.8 8.4 L6 0.8 L11.2 8.4 Z" fill="currentColor" />
+            <path d="M4.6 8.4 L6 4.6 L7.4 8.4 Z" fill="#060a13" opacity="0.45" />
+          </symbol>
+        </defs>
+        <rect width="400" height="250" fill="url(#landG)" />
+        {children}
+        <rect width="400" height="250" fill="url(#vignG)" style={{ pointerEvents: 'none' }} />
+        <g opacity="0.75">
+          <circle cx="376" cy="226" r="10" fill="rgba(6,10,19,0.55)" stroke={MC.landLine} strokeWidth="0.8" />
+          <path d="M376 219 L378.4 226.5 L376 225 L373.6 226.5 Z" fill={MC.greek} />
+          <text x="376" y="216" fill={MC.dim} fontSize="6" textAnchor="middle" fontFamily="'Plus Jakarta Sans', sans-serif">N</text>
+        </g>
+      </svg>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2 border-t border-cyan-400/15 text-[10px] uppercase tracking-wider text-slate-400 bg-slate-950/60">
+        {legend.map((l, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: l.c }}></span>{l.t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bold = false, rotate = 0, o = 1 }) => (
+  <text x={x} y={y} fill={fill} fontSize={size} textAnchor={anchor} opacity={o}
+    transform={rotate ? `rotate(${rotate} ${x} ${y})` : undefined}
+    paintOrder="stroke" stroke="rgba(6,10,19,0.85)" strokeWidth="2.6" strokeLinejoin="round"
+    fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
+);
+
+function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1 }) {
+  const t = `translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}${mirror ? ' scale(-1 1)' : ''}`;
+  return (
+    <g transform={t} style={{ color }} opacity={o}>
+      <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+    </g>
+  );
+}
+function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Unit key={i} sym={sym} x={x + i * dx} y={y + i * dy} {...rest} />
+    ))}</g>
+  );
+}
+const Ridge = ({ d, o = 1 }) => (
+  <g opacity={o}>
+    <path d={d} fill="#242b39" stroke={MC.landLine} strokeWidth="0.9" strokeLinejoin="round" />
+    <path d={d} fill="none" stroke="rgba(226,232,240,0.13)" strokeWidth="0.7" strokeDasharray="1.5 3" />
+  </g>
+);
+const Contour = ({ d, o = 0.16 }) => (
+  <path d={d} fill="none" stroke="#cbd5e1" strokeWidth="0.6" opacity={o} />
+);
+
+/* ---------- 1. THE THEMES ---------- */
+function MapThemes({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Θεματικοί στρατιώτες' : 'Theme soldiers' },
+      { c: MC.enemy, t: L ? 'Αραβικές επιδρομές' : 'Arab raids' },
+      { c: MC.water, t: L ? 'Θάλασσα' : 'Sea' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* Asia Minor landmass */}
+      <path d="M30 66 Q80 40 150 46 Q240 50 320 40 L400 46 L400 210 L330 224 Q240 236 160 222 Q90 212 56 180 Q20 150 30 110 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Ridge d="M180 150 L204 122 L226 144 L250 118 L274 146 L266 166 L188 166 Z" o={0.8} />
+      <T x={228} y={182} size={6.5} fill={MC.dim}>{L ? 'ΤΑΥΡΟΣ' : 'TAURUS MTS.'}</T>
+      {/* Constantinople */}
+      <circle cx="52" cy="58" r="6" fill={MC.admin} className="anim-pulse-glow" />
+      <Unit sym="uChurch" x={44} y={38} w={13} color={MC.admin} />
+      <T x={62} y={38} fill={MC.admin} bold size={7} anchor="start">{L ? 'ΚΩΝΣΤΑΝΤΙΝΟΥΠΟΛΗ' : 'CONSTANTINOPLE'}</T>
+      {/* Theme provinces with soldier-farmers */}
+      <path d="M76 80 Q130 66 160 92 Q150 130 96 128 Q66 110 76 80" fill="none" stroke="rgba(94,234,212,0.35)" strokeWidth="1" strokeDasharray="5 4" />
+      <T x={116} y={82} fill={MC.greek} size={7} bold>{L ? 'ΟΨΙΚΙΟΝ' : 'OPSIKION'}</T>
+      <Unit sym="uHop" x={96} y={92} w={12} color={MC.greek} />
+      <path d="M170 66 Q250 56 300 76 Q296 116 230 120 Q176 112 170 66" fill="none" stroke="rgba(94,234,212,0.35)" strokeWidth="1" strokeDasharray="5 4" />
+      <T x={240} y={78} fill={MC.greek} size={7} bold>{L ? 'ΑΡΜΕΝΙΑΚΟΝ' : 'ARMENIAKON'}</T>
+      <Unit sym="uHop" x={228} y={88} w={12} color={MC.greek} />
+      <path d="M96 140 Q180 130 260 140 Q256 186 170 194 Q104 186 96 140" fill="none" stroke="rgba(94,234,212,0.35)" strokeWidth="1" strokeDasharray="5 4" />
+      <T x={176} y={144} fill={MC.greek} size={7} bold>{L ? 'ΑΝΑΤΟΛΙΚΟΝ' : 'ANATOLIKON'}</T>
+      <Unit sym="uHop" x={140} y={158} w={12} color={MC.greek} />
+      <Unit sym="uHop" x={196} y={196} w={12} color={MC.greek} o={0.85} />
+      {/* farmland pattern near soldiers */}
+      <rect x="118" y="98" width="30" height="14" fill="url(#fields)" opacity="0.8" />
+      <rect x="152" y="168" width="34" height="14" fill="url(#fields)" opacity="0.8" />
+      <T x={120} y={216} size={6.5} fill={MC.dim}>{L ? 'ΣΤΡΑΤΙΩΤΙΚΑ ΚΤΗΜΑΤΑ — ΓΗ ΕΝΑΝΤΙ ΥΠΗΡΕΣΙΑΣ' : 'SOLDIERS’ ESTATES — LAND FOR SERVICE'}</T>
+      {/* Arab raid arrows from SE */}
+      <path d="M386 214 Q330 190 288 160" fill="none" stroke={MC.enemy} strokeWidth="2.4" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M396 150 Q356 136 316 122" fill="none" stroke={MC.enemy} strokeWidth="2.4" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <Unit sym="uCrescent" x={372} y={196} w={10} color={MC.enemy} />
+      <Unit sym="uCrescent" x={384} y={134} w={10} color={MC.enemy} />
+      <T x={344} y={230} fill={MC.enemy} bold size={7}>{L ? 'ΕΤΗΣΙΕΣ ΕΠΙΔΡΟΜΕΣ ΧΑΛΙΦΑΤΟΥ' : 'ANNUAL CALIPHATE RAIDS'}</T>
+      <Unit sym="uClash" x={288} y={148} w={10} color={MC.gold} />
+      <T x={66} y={244} size={7} fill={MC.water}>{L ? 'ΑΙΓΑΙΟ' : 'AEGEAN'}</T>
+    </MapShell>
+  );
+}
+
+/* ---------- 2. SIEGE OF 717 ---------- */
+function MapSiege717({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Βυζαντινή άμυνα' : 'Byzantine defence' },
+      { c: MC.enemy, t: L ? 'Αραβικές δυνάμεις' : 'Arab forces' },
+      { c: MC.gold, t: L ? 'Υγρόν πυρ' : 'Greek fire' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* City peninsula (triangle) */}
+      <path d="M150 78 L308 96 Q332 130 306 168 L152 196 Q140 138 150 78 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Unit sym="uChurch" x={224} y={122} w={16} color={MC.admin} />
+      <T x={232} y={152} fill={MC.admin} bold size={7.5}>{L ? 'ΒΑΣΙΛΕΥΟΥΣΑ' : 'THE CITY'}</T>
+      {/* Theodosian walls (west face) */}
+      <path d="M150 78 L152 196" stroke={MC.greek} strokeWidth="4" strokeDasharray="7 2.5" />
+      <path d="M144 80 L146 194" stroke={MC.greek} strokeWidth="2" strokeDasharray="5 3" opacity="0.7" />
+      <T x={128} y={140} fill={MC.greek} bold size={6.8} rotate={-88}>{L ? 'ΘΕΟΔΟΣΙΑΝΑ ΤΕΙΧΗ' : 'THEODOSIAN WALLS'}</T>
+      <Unit sym="uHop" x={154} y={100} w={11} color={MC.greek} />
+      <Unit sym="uHop" x={154} y={150} w={11} color={MC.greek} />
+      {/* Golden Horn + chain */}
+      <T x={230} y={84} fill={MC.water} size={7} rotate={7}>{L ? 'ΚΕΡΑΤΙΟΣ' : 'GOLDEN HORN'}</T>
+      <line x1="150" y1="74" x2="252" y2="60" stroke={MC.gold} strokeWidth="2.6" strokeDasharray="3 3" className="anim-pulse-glow" />
+      <T x={196} y={54} fill={MC.gold} size={6.5}>{L ? 'Η ΑΛΥΣΙΔΑ' : 'THE CHAIN'}</T>
+      {/* Fire dromons burning arab fleet */}
+      <Unit sym="uShip" x={252} y={196} w={19} color={MC.greek} />
+      <Unit sym="uFlame" x={286} y={186} w={10} color={MC.gold} />
+      <Unit sym="uShip" x={296} y={196} w={18} color={MC.enemy} mirror rot={12} o={0.85} />
+      <Unit sym="uFlame" x={320} y={200} w={9} color={MC.gold} o={0.9} />
+      <Unit sym="uShip" x={330} y={210} w={18} color={MC.enemy} mirror rot={-10} o={0.7} />
+      <T x={300} y={236} fill={MC.gold} bold size={7}>{L ? 'ΥΓΡΟΝ ΠΥΡ ΣΤΗΝ ΠΡΟΠΟΝΤΙΔΑ' : 'GREEK FIRE ON THE MARMARA'}</T>
+      {/* Arab siege lines west */}
+      <Rank sym="uPers" x={94} y={92} n={3} dx={0} dy={16} color={MC.enemy} mirror w={12} />
+      <Rank sym="uPers" x={80} y={100} n={3} dx={0} dy={16} color={MC.enemy} mirror w={12} o={0.7} />
+      <Unit sym="uTent" x={52} y={110} w={11} color={MC.enemy} o={0.85} />
+      <Unit sym="uTent" x={64} y={122} w={11} color={MC.enemy} o={0.7} />
+      <Unit sym="uCrescent" x={56} y={88} w={10} color={MC.enemy} />
+      <T x={74} y={168} fill={MC.enemy} bold size={7}>{L ? 'ΜΑΣΛΑΜΑΣ — 120.000' : 'MASLAMA — 120,000'}</T>
+      <T x={72} y={180} fill={MC.dim} size={6.2}>{L ? 'ΧΙΟΝΙ & ΛΙΜΟΣ ΣΤΟ ΣΤΡΑΤΟΠΕΔΟ' : 'SNOW & FAMINE IN CAMP'}</T>
+      {/* Bulgar cavalry from NW */}
+      <Unit sym="uCav" x={34} y={30} w={16} color={MC.gold} />
+      <Unit sym="uCav" x={56} y={24} w={16} color={MC.gold} o={0.85} />
+      <path d="M64 44 Q84 64 96 84" fill="none" stroke={MC.gold} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrGold)" className="anim-dash" />
+      <T x={82} y={20} fill={MC.gold} bold size={7}>{L ? 'ΒΟΥΛΓΑΡΟΙ ΤΟΥ ΤΕΡΒΕΛ' : 'TERVEL’S BULGARS'}</T>
+      <Unit sym="uClash" x={96} y={86} w={11} color={MC.gold} />
+    </MapShell>
+  );
+}
+
+/* ---------- 3. MANZIKERT ---------- */
+function MapManzikert({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Βυζαντινοί' : 'Byzantines' },
+      { c: MC.enemy, t: L ? 'Σελτζούκοι' : 'Seljuks' },
+      { c: MC.dim, t: L ? 'Εφεδρεία Δούκα' : 'Doukas reserve' }]}>
+      <ellipse cx="200" cy="120" rx="180" ry="105" fill="url(#plainG)" />
+      <Ridge d="M-2 60 L26 30 L54 54 L82 26 L112 58 L104 82 L-2 84 Z" o={0.7} />
+      <T x={52} y={98} size={6.5} fill={MC.dim}>{L ? 'ΑΡΜΕΝΙΚΑ ΥΨΙΠΕΔΑ' : 'ARMENIAN HIGHLANDS'}</T>
+      {/* Lake Van hint */}
+      <path d="M320 214 Q356 202 392 216 Q380 238 336 236 Q316 228 320 214 Z" fill="url(#seaG)" stroke={MC.water} strokeWidth="0.8" opacity="0.9" />
+      <T x={356} y={248} fill={MC.water} size={6.5}>{L ? 'ΛΙΜΝΗ ΒΑΝ' : 'LAKE VAN'}</T>
+      {/* Byzantine advancing line */}
+      <Rank sym="uCav" x={96} y={128} n={4} dx={26} color={MC.greek} w={16} />
+      <Rank sym="uHop" x={110} y={148} n={4} dx={26} color={MC.greek} w={12} o={0.8} />
+      <T x={160} y={176} fill={MC.greek} bold size={7.5}>{L ? 'ΡΩΜΑΝΟΣ Δ΄ — ΚΑΤΑΦΡΑΚΤΟΙ' : 'ROMANOS IV — KATAPHRAKTOI'}</T>
+      {/* Seljuk crescent + feigned retreat */}
+      <Rank sym="uCav" x={252} y={74} n={3} dx={24} color={MC.enemy} w={15} />
+      <Rank sym="uCav" x={286} y={128} n={2} dx={24} color={MC.enemy} w={15} o={0.9} />
+      <Rank sym="uCav" x={264} y={170} n={2} dx={24} color={MC.enemy} w={15} o={0.8} />
+      <Unit sym="uCrescent" x={344} y={60} w={11} color={MC.enemy} />
+      <T x={306} y={54} fill={MC.enemy} bold size={7}>{L ? 'ΑΛΠ ΑΡΣΛΑΝ' : 'ALP ARSLAN'}</T>
+      <path d="M258 108 Q290 96 316 100" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={286} y={90} fill={MC.enemy} size={6.2}>{L ? 'ΠΡΟΣΠΟΙΗΤΗ ΥΠΟΧΩΡΗΣΗ' : 'FEIGNED RETREAT'}</T>
+      {/* Envelopment arrows */}
+      <path d="M300 66 Q222 44 160 88" fill="none" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M296 186 Q222 214 158 168" fill="none" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={222} y={228} fill={MC.enemy} size={6.5}>{L ? 'ΚΥΚΛΩΣΗ ΣΤΟ ΛΥΚΟΦΩΣ' : 'ENCIRCLEMENT AT DUSK'}</T>
+      {/* Doukas treachery */}
+      <Rank sym="uCav" x={56} y={196} n={2} dx={20} color={MC.dim} w={15} />
+      <path d="M76 212 Q46 224 18 230" fill="none" stroke={MC.dim} strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrGreek)" opacity="0.8" />
+      <T x={88} y={238} fill={MC.dim} size={6.5} bold>{L ? 'Ο ΔΟΥΚΑΣ ΑΠΟΧΩΡΕΙ — ΠΡΟΔΟΣΙΑ' : 'DOUKAS MARCHES OFF — TREASON'}</T>
+      <Unit sym="uClash" x={196} y={112} w={12} color={MC.gold} />
+    </MapShell>
+  );
+}
+
+/* ---------- 4. FIRST CRUSADE ---------- */
+function MapCrusade1({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Αυτοκρατορικές δυνάμεις' : 'Imperial forces' },
+      { c: MC.enemy, t: L ? 'Σταυροφόροι' : 'Crusaders' },
+      { c: MC.water, t: L ? 'Βόσπορος' : 'Bosporus' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* Thrace (west) & Asia (east) with strait between */}
+      <path d="M0 0 L172 0 Q160 60 168 120 Q172 180 156 250 L0 250 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <path d="M400 0 L228 0 Q240 70 232 130 Q228 190 244 250 L400 250 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <T x={200} y={26} fill={MC.water} size={7} rotate={90}>{L ? 'ΒΟΣΠΟΡΟΣ' : 'BOSPORUS'}</T>
+      {/* Constantinople on Thracian side */}
+      <path d="M120 96 L172 104 L170 140 L124 146 Z" fill="rgba(192,132,252,0.08)" stroke={MC.admin} strokeWidth="1.6" />
+      <Unit sym="uChurch" x={136} y={110} w={14} color={MC.admin} />
+      <T x={112} y={90} fill={MC.admin} bold size={7} anchor="end">{L ? 'ΚΩΝΣΤΑΝΤΙΝΟΥΠΟΛΗ' : 'CONSTANTINOPLE'}</T>
+      <Unit sym="uHop" x={124} y={148} w={11} color={MC.greek} />
+      <T x={96} y={166} fill={MC.greek} size={6.2} anchor="end">{L ? 'ΒΑΡΑΓΓΕΙΑ ΦΡΟΥΡΑ' : 'VARANGIAN GUARD'}</T>
+      {/* Crusader host camped west */}
+      <Rank sym="uCav" x={28} y={44} n={3} dx={22} color={MC.enemy} w={15} />
+      <Rank sym="uHop" x={40} y={64} n={3} dx={20} color={MC.enemy} w={11} o={0.8} />
+      <Unit sym="uCross" x={20} y={40} w={9} color={MC.enemy} />
+      <Unit sym="uTent" x={92} y={52} w={11} color={MC.enemy} o={0.8} />
+      <T x={70} y={30} fill={MC.enemy} bold size={7}>{L ? 'ΣΤΡΑΤΙΕΣ ΤΗΣ ΔΥΣΗΣ — 60.000' : 'HOSTS OF THE WEST — 60,000'}</T>
+      {/* Oath */}
+      <path d="M86 78 Q112 88 126 98" fill="none" stroke={MC.gold} strokeWidth="1.8" strokeDasharray="4 3" markerEnd="url(#arrGold)" />
+      <T x={74} y={98} fill={MC.gold} size={6.5}>{L ? 'ΟΡΚΟΣ ΠΙΣΤΕΩΣ' : 'OATH OF FEALTY'}</T>
+      {/* Ferry across */}
+      <Unit sym="uShip" x={182} y={120} w={18} color={MC.greek} />
+      <Unit sym="uShip" x={192} y={146} w={18} color={MC.greek} o={0.8} />
+      <path d="M176 110 Q200 104 226 108" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="6 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={200} y={178} fill={MC.greek} size={6.5} bold rotate={0}>{L ? 'ΠΕΡΑΙΩΣΗ ΥΠΟ ΣΥΝΟΔΕΙΑ' : 'ESCORTED FERRYING'}</T>
+      {/* Nicaea returned */}
+      <circle cx="304" cy="150" r="12" fill="none" stroke={MC.greek} strokeWidth="2" strokeDasharray="4 3" className="anim-pulse-glow" />
+      <Unit sym="uChurch" x={297} y={140} w={13} color={MC.greek} />
+      <T x={306} y={178} fill={MC.greek} bold size={7}>{L ? 'ΝΙΚΑΙΑ — ΕΠΙΣΤΡΕΦΕΙ ΣΤΗΝ ΑΥΤΟΚΡΑΤΟΡΙΑ' : 'NICAEA — RETURNED TO THE EMPIRE'}</T>
+      {/* Turks watching */}
+      <Unit sym="uCrescent" x={352} y={92} w={10} color={MC.enemy} />
+      <T x={344} y={82} fill={MC.enemy} size={6.2}>{L ? 'ΣΕΛΤΖΟΥΚΟΙ' : 'SELJUKS'}</T>
+      <path d="M262 128 Q290 118 300 132" fill="none" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" opacity="0.8" />
+    </MapShell>
+  );
+}
+
+/* ---------- 5. FOURTH CRUSADE 1203 ---------- */
+function MapCrusade4({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Άμυνα της Πόλης' : 'City defence' },
+      { c: MC.enemy, t: L ? 'Βενετοί & Σταυροφόροι' : 'Venetians & Crusaders' },
+      { c: MC.gold, t: L ? 'Πυρπολικά' : 'Fire-ships' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* City south of the Horn */}
+      <path d="M60 130 L340 148 Q368 176 344 210 L64 238 Q44 182 60 130 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Unit sym="uChurch" x={196} y={176} w={16} color={MC.admin} />
+      <T x={204} y={206} fill={MC.admin} bold size={7.5}>{L ? 'ΚΩΝΣΤΑΝΤΙΝΟΥΠΟΛΗ' : 'CONSTANTINOPLE'}</T>
+      {/* Sea walls along Horn */}
+      <path d="M60 130 L340 148" stroke={MC.greek} strokeWidth="3.4" strokeDasharray="7 2.5" />
+      <T x={196} y={140} fill={MC.greek} size={6.5} rotate={3}>{L ? 'ΘΑΛΑΣΣΙΑ ΤΕΙΧΗ — Η ΑΔΥΝΑΜΗ ΟΨΗ' : 'SEA WALLS — THE WEAK FACE'}</T>
+      <Unit sym="uHop" x={120} y={112} w={11} color={MC.greek} />
+      <Unit sym="uHop" x={250} y={122} w={11} color={MC.greek} />
+      {/* Galata & broken chain */}
+      <circle cx="330" cy="66" r="8" fill="none" stroke={MC.dim} strokeWidth="1.6" />
+      <T x={330} y={50} size={6.5} fill={MC.dim}>{L ? 'ΠΥΡΓΟΣ ΓΑΛΑΤΑ' : 'GALATA TOWER'}</T>
+      <line x1="322" y1="72" x2="348" y2="132" stroke={MC.gold} strokeWidth="2" strokeDasharray="3 4" opacity="0.55" />
+      <T x={366} y={104} fill={MC.gold} size={6.2} rotate={65}>{L ? 'ΑΛΥΣΙΔΑ ΣΠΑΣΜΕΝΗ' : 'CHAIN BROKEN'}</T>
+      {/* Venetian fleet inside Horn */}
+      <Unit sym="uShip" x={130} y={78} w={20} color={MC.enemy} rot={6} />
+      <Unit sym="uShip" x={176} y={66} w={20} color={MC.enemy} rot={-4} />
+      <Unit sym="uShip" x={224} y={80} w={20} color={MC.enemy} rot={5} o={0.9} />
+      <Unit sym="uCross" x={158} y={52} w={9} color={MC.enemy} />
+      <T x={186} y={42} fill={MC.enemy} bold size={7}>{L ? 'ΣΤΟΛΟΣ ΤΟΥ ΔΑΝΔΟΛΟΥ ΣΤΟΝ ΚΕΡΑΤΙΟ' : 'DANDOLO’S FLEET IN THE HORN'}</T>
+      {/* Assault arrows onto walls */}
+      <path d="M148 92 L150 122" stroke={MC.enemy} strokeWidth="2" strokeDasharray="3 3" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M240 96 L242 128" stroke={MC.enemy} strokeWidth="2" strokeDasharray="3 3" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      {/* Fire-ships */}
+      <Unit sym="uShip" x={70} y={62} w={16} color={MC.gold} />
+      <Unit sym="uFlame" x={92} y={54} w={9} color={MC.gold} />
+      <path d="M96 70 Q116 74 128 78" fill="none" stroke={MC.gold} strokeWidth="1.8" strokeDasharray="4 3" markerEnd="url(#arrGold)" className="anim-dash" />
+      <T x={64} y={44} fill={MC.gold} size={6.5} bold>{L ? 'ΠΥΡΠΟΛΙΚΑ ΜΕ ΤΟΝ ΝΥΧΤΕΡΙΝΟ ΑΝΕΜΟ' : 'FIRE-SHIPS ON THE NIGHT WIND'}</T>
+      {/* Pretender */}
+      <Unit sym="uCross" x={52} y={196} w={9} color={MC.enemy} />
+      <T x={98} y={228} fill={MC.enemy} size={6.5}>{L ? 'ΑΛΕΞΙΟΣ Δ΄ — Ο ΣΦΕΤΕΡΙΣΤΗΣ ΠΡΟ ΤΩΝ ΠΥΛΩΝ' : 'ALEXIOS IV — PRETENDER AT THE GATES'}</T>
+    </MapShell>
+  );
+}
+
+/* ---------- 6. SACK OF 1204 ---------- */
+function MapSack1204({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.enemy, t: L ? 'Έφοδος Λατίνων' : 'Latin assault' },
+      { c: MC.gold, t: L ? 'Πυρκαγιές' : 'Fires' },
+      { c: MC.greek, t: L ? 'Έξοδος προς Νίκαια' : 'Exodus to Nicaea' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* City */}
+      <path d="M56 120 L330 136 Q360 168 336 204 L60 232 Q40 176 56 120 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <path d="M56 120 L330 136" stroke={MC.enemy} strokeWidth="3" strokeDasharray="7 2.5" opacity="0.8" />
+      {/* Breaches */}
+      <Unit sym="uClash" x={120} y={116} w={12} color={MC.gold} />
+      <Unit sym="uClash" x={210} y={122} w={12} color={MC.gold} />
+      <Unit sym="uClash" x={280} y={128} w={12} color={MC.gold} />
+      {/* Venetian ships lashed to towers */}
+      <Unit sym="uShip" x={104} y={84} w={20} color={MC.enemy} rot={4} />
+      <Unit sym="uShip" x={196} y={78} w={20} color={MC.enemy} rot={-5} />
+      <Unit sym="uShip" x={268} y={90} w={20} color={MC.enemy} rot={6} o={0.9} />
+      <path d="M122 100 L128 114" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="3 2.5" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M214 94 L218 116" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="3 2.5" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={186} y={64} fill={MC.enemy} bold size={7}>{L ? 'ΓΕΦΥΡΕΣ ΑΠΟ ΤΑ ΚΑΤΑΡΤΙΑ ΣΤΙΣ ΕΠΑΛΞΕΙΣ' : 'FLYING BRIDGES FROM THE MASTS'}</T>
+      {/* Fires in the city */}
+      <Unit sym="uFlame" x={130} y={150} w={12} color={MC.gold} />
+      <Unit sym="uFlame" x={186} y={166} w={14} color={MC.enemy} />
+      <Unit sym="uFlame" x={240} y={152} w={11} color={MC.gold} o={0.9} />
+      <Unit sym="uChurch" x={158} y={182} w={14} color={MC.admin} o={0.9} />
+      <T x={166} y={212} fill={MC.dim} size={6.5}>{L ? 'ΤΡΕΙΣ ΗΜΕΡΕΣ ΛΕΗΛΑΣΙΑΣ' : 'THREE DAYS OF SACK'}</T>
+      {/* Exodus */}
+      <path d="M300 196 Q346 200 384 190" fill="none" stroke={MC.greek} strokeWidth="2.8" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <Unit sym="uHop" x={312} y={176} w={11} color={MC.greek} />
+      <Unit sym="uChurch" x={330} y={172} w={11} color={MC.greek} />
+      <T x={324} y={226} fill={MC.greek} bold size={7}>{L ? 'ΑΥΛΗ, ΕΚΚΛΗΣΙΑ, ΣΤΡΑΤΟΣ → ΝΙΚΑΙΑ' : 'COURT, CHURCH, ARMY → NICAEA'}</T>
+      <T x={70} y={92} fill={MC.dim} size={6.5}>{L ? '12–13 ΑΠΡΙΛΙΟΥ 1204' : '12–13 APRIL 1204'}</T>
+    </MapShell>
+  );
+}
+
+/* ---------- 7. RECOVERY 1261 ---------- */
+function MapRecovery1261({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Οι 800 του Στρατηγόπουλου' : 'Strategopoulos’ 800' },
+      { c: MC.enemy, t: L ? 'Λατινική φρουρά' : 'Latin garrison' },
+      { c: MC.water, t: L ? 'Θάλασσα' : 'Sea' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* City peninsula */}
+      <path d="M128 64 L322 84 Q350 124 324 170 L130 196 Q114 128 128 64 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Unit sym="uChurch" x={226} y={112} w={16} color={MC.admin} />
+      <T x={234} y={142} fill={MC.admin} bold size={7}>{L ? 'ΛΑΤΙΝΟΚΡΑΤΟΥΜΕΝΗ ΠΟΛΗ' : 'LATIN-HELD CITY'}</T>
+      {/* Land walls + Gate of the Spring */}
+      <path d="M128 64 L130 196" stroke={MC.greek} strokeWidth="3.6" strokeDasharray="7 2.5" />
+      <circle cx="130" cy="152" r="7" fill="none" stroke={MC.gold} strokeWidth="1.8" className="anim-pulse-glow" />
+      <T x={106} y={172} fill={MC.gold} bold size={6.5} anchor="end">{L ? 'ΠΥΛΗ ΤΗΣ ΠΗΓΗΣ' : 'GATE OF THE SPRING'}</T>
+      {/* The 800 by night */}
+      <Rank sym="uHop" x={54} y={130} n={3} dx={13} color={MC.greek} w={12} />
+      <path d="M96 142 Q114 146 122 150" fill="none" stroke={MC.greek} strokeWidth="2.4" strokeDasharray="5 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={62} y={116} fill={MC.greek} bold size={7}>{L ? '800 ΑΝΔΡΕΣ — ΝΥΧΤΑ' : '800 MEN — BY NIGHT'}</T>
+      <T x={60} y={198} fill={MC.dim} size={6.2}>{L ? 'ΟΙ ΘΕΛΗΜΑΤΑΡΙΟΙ ΔΕΙΧΝΟΥΝ ΤΗΝ ΠΥΛΙΔΑ' : 'THELEMATARIOI SHOW THE POSTERN'}</T>
+      {/* Sleeping garrison */}
+      <Unit sym="uTent" x={160} y={90} w={11} color={MC.enemy} o={0.8} />
+      <Unit sym="uCross" x={176} y={86} w={8} color={MC.enemy} />
+      <T x={196} y={80} fill={MC.enemy} size={6.2}>{L ? 'ΦΡΟΥΡΑ ΚΟΙΜΩΜΕΝΗ' : 'GARRISON ASLEEP'}</T>
+      {/* Venetian fleet away */}
+      <Unit sym="uShip" x={330} y={40} w={19} color={MC.enemy} mirror rot={-6} />
+      <Unit sym="uShip" x={356} y={54} w={19} color={MC.enemy} mirror rot={5} o={0.85} />
+      <path d="M326 52 Q300 40 274 36" fill="none" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" opacity="0.75" />
+      <T x={318} y={24} fill={MC.enemy} size={6.5} bold>{L ? 'Ο ΣΤΟΛΟΣ ΛΕΙΠΕΙ ΣΤΗ ΔΑΦΝΟΥΣΙΑ' : 'FLEET AWAY AT DAPHNOUSIA'}</T>
+      {/* Fire in Venetian quarter + flight */}
+      <Unit sym="uFlame" x={276} y={96} w={10} color={MC.gold} />
+      <T x={296} y={92} fill={MC.gold} size={6.2} anchor="start">{L ? 'ΒΕΝΕΤΙΚΗ ΣΥΝΟΙΚΙΑ' : 'VENETIAN QUARTER'}</T>
+      <path d="M312 160 Q344 178 378 180" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" opacity="0.8" />
+      <T x={330} y={206} fill={MC.enemy} size={6.5}>{L ? 'ΟΙ ΛΑΤΙΝΟΙ ΦΕΥΓΟΥΝ ΑΠΟ ΤΗ ΘΑΛΑΣΣΑ' : 'LATINS FLEE BY SEA'}</T>
+      <T x={196} y={234} fill={MC.greek} size={7} bold>{L ? '25 ΙΟΥΛΙΟΥ 1261 — Η ΠΟΛΗ ΞΑΝΑ ΡΩΜΑΪΚΗ' : '25 JULY 1261 — THE CITY ROMAN AGAIN'}</T>
+    </MapShell>
+  );
+}
+
+/* ---------- 8. VARNA 1444 ---------- */
+function MapVarna({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.gold, t: L ? 'Σταυροφόροι (σύμμαχοι)' : 'Crusaders (allies)' },
+      { c: MC.enemy, t: L ? 'Οθωμανοί' : 'Ottomans' },
+      { c: MC.water, t: L ? 'Εύξεινος' : 'Black Sea' }]}>
+      {/* Black Sea right */}
+      <path d="M400 0 L306 0 Q290 60 300 124 Q308 190 292 250 L400 250 Z" fill="url(#seaG)" />
+      <path d="M400 0 L306 0 Q290 60 300 124 Q308 190 292 250 L400 250 Z" fill="url(#waterWaves)" />
+      <T x={352} y={130} fill={MC.water} size={7.5} rotate={80}>{L ? 'ΕΥΞΕΙΝΟΣ ΠΟΝΤΟΣ' : 'BLACK SEA'}</T>
+      <ellipse cx="200" cy="120" rx="150" ry="100" fill="url(#plainG)" />
+      {/* Lake Varna */}
+      <path d="M96 178 Q160 168 224 180 Q220 198 160 200 Q104 198 96 178 Z" fill="url(#seaG)" stroke={MC.water} strokeWidth="0.8" opacity="0.9" />
+      <T x={160} y={192} fill={MC.water} size={6.5}>{L ? 'ΛΙΜΝΗ ΒΑΡΝΑΣ' : 'LAKE VARNA'}</T>
+      <T x={272} y={228} fill={MC.dim} size={7}>{L ? 'ΒΑΡΝΑ' : 'VARNA'}</T>
+      {/* Crusader line backs to lake/sea */}
+      <Rank sym="uCav" x={110} y={130} n={3} dx={26} color={MC.gold} w={16} />
+      <Rank sym="uHop" x={124} y={152} n={3} dx={24} color={MC.gold} w={12} o={0.85} />
+      <Unit sym="uCross" x={100} y={124} w={9} color={MC.gold} />
+      <T x={158} y={216} fill={MC.gold} bold size={7}>{L ? 'ΒΛΑΔΙΣΛΑΟΣ & ΟΥΝΥΑΔΗΣ — 20.000' : 'WŁADYSŁAW & HUNYADI — 20,000'}</T>
+      {/* Ottoman host */}
+      <Rank sym="uPers" x={118} y={44} n={5} dx={26} color={MC.enemy} mirror w={12} />
+      <Rank sym="uCav" x={150} y={64} n={3} dx={30} color={MC.enemy} w={15} o={0.9} />
+      <Unit sym="uCrescent" x={106} y={38} w={11} color={MC.enemy} />
+      <T x={190} y={30} fill={MC.enemy} bold size={7}>{L ? 'ΜΟΥΡΑΤ Β΄ — 60.000 (ΕΠΕΣΤΡΕΨΕ)' : 'MURAD II — 60,000 (RETURNED)'}</T>
+      {/* Genoese ferries across straits (context inset arrow) */}
+      <path d="M382 210 Q368 170 372 128" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" className="anim-dash" opacity="0.85" />
+      <T x={386} y={226} fill={MC.enemy} size={6} anchor="end">{L ? 'ΠΟΡΘΜΕΙΑ: 1 ΔΟΥΚΑΤΟ/ΚΕΦΑΛΙ' : 'FERRIES: 1 DUCAT A HEAD'}</T>
+      {/* The king's fatal charge */}
+      <path d="M170 126 Q186 96 200 76" fill="none" stroke={MC.gold} strokeWidth="2.8" strokeDasharray="6 4" markerEnd="url(#arrGold)" className="anim-dash" />
+      <T x={126} y={100} fill={MC.gold} size={6.5} rotate={-55}>{L ? 'Η ΕΦΟΔΟΣ ΤΟΥ ΒΑΣΙΛΙΑ' : 'THE KING’S CHARGE'}</T>
+      <Unit sym="uClash" x={196} y={64} w={12} color={MC.gold} />
+      <T x={236} y={84} fill={MC.enemy} size={6.5}>{L ? 'ΓΕΝΙΤΣΑΡΟΙ' : 'JANISSARIES'}</T>
+      {/* envelopment */}
+      <path d="M110 60 Q66 100 100 140" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M280 60 Q312 100 262 134" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={60} y={110} fill={MC.enemy} size={6.2} rotate={-75}>{L ? 'ΚΥΚΛΩΣΗ' : 'ENVELOPMENT'}</T>
+      <T x={196} y={242} fill={MC.dim} size={6.5}>{L ? '10 ΝΟΕΜΒΡΙΟΥ 1444 — Ο ΟΡΚΟΣ ΠΑΤΗΘΗΚΕ' : '10 NOVEMBER 1444 — THE OATH WAS BROKEN'}</T>
+    </MapShell>
+  );
+}
+
+/* ---------- 9. FALL OF 1453 ---------- */
+function MapFall1453({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? '7.000 υπερασπιστές' : '7,000 defenders' },
+      { c: MC.enemy, t: L ? 'Οθωμανική πολιορκία' : 'Ottoman siege' },
+      { c: MC.gold, t: L ? 'Βομβάρδα & ρήγμα' : 'Bombard & breach' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* City triangle */}
+      <path d="M148 60 L332 84 Q358 124 330 170 L150 208 Q132 132 148 60 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Unit sym="uChurch" x={236} y={116} w={16} color={MC.admin} />
+      <T x={244} y={146} fill={MC.admin} bold size={7}>{L ? 'ΑΓΙΑ ΣΟΦΙΑ' : 'HAGIA SOPHIA'}</T>
+      {/* Land walls */}
+      <path d="M148 60 L150 208" stroke={MC.greek} strokeWidth="4" strokeDasharray="7 2.5" />
+      <Unit sym="uHop" x={154} y={84} w={11} color={MC.greek} />
+      <Unit sym="uHop" x={154} y={166} w={11} color={MC.greek} />
+      {/* Breach at St Romanos + Constantine */}
+      <Unit sym="uClash" x={142} y={124} w={13} color={MC.gold} />
+      <T x={168} y={120} fill={MC.gold} size={6.5} anchor="start">{L ? 'ΠΥΛΗ ΑΓ. ΡΩΜΑΝΟΥ — ΤΟ ΡΗΓΜΑ' : 'ST ROMANOS GATE — THE BREACH'}</T>
+      <T x={168} y={132} fill={MC.greek} size={6.2} anchor="start">{L ? 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΙΑ΄ & ΙΟΥΣΤΙΝΙΑΝΗΣ' : 'CONSTANTINE XI & GIUSTINIANI'}</T>
+      {/* Kerkoporta */}
+      <circle cx="149" cy="74" r="5" fill="none" stroke={MC.enemy} strokeWidth="1.6" className="anim-pulse-glow" />
+      <T x={170} y={68} fill={MC.enemy} size={6.2} anchor="start">{L ? 'ΚΕΡΚΟΠΟΡΤΑ — ΑΝΟΙΧΤΗ' : 'KERKOPORTA — LEFT OPEN'}</T>
+      {/* Urban's bombard */}
+      <Unit sym="uBombard" x={92} y={116} w={20} color={MC.enemy} />
+      <path d="M114 124 L138 124" stroke={MC.gold} strokeWidth="2.4" strokeDasharray="3 3" markerEnd="url(#arrGold)" className="anim-dash" />
+      <T x={92} y={146} fill={MC.enemy} bold size={6.5}>{L ? 'Η ΒΟΜΒΑΡΔΑ ΤΟΥ ΟΥΡΒΑΝΟΥ' : 'URBAN’S BOMBARD'}</T>
+      {/* Ottoman lines */}
+      <Rank sym="uPers" x={66} y={64} n={3} dx={0} dy={17} color={MC.enemy} mirror w={12} />
+      <Rank sym="uPers" x={52} y={72} n={3} dx={0} dy={17} color={MC.enemy} mirror w={12} o={0.75} />
+      <Unit sym="uCrescent" x={44} y={48} w={11} color={MC.enemy} />
+      <T x={66} y={182} fill={MC.enemy} bold size={7}>{L ? 'ΜΩΑΜΕΘ Β΄ — 80.000' : 'MEHMED II — 80,000'}</T>
+      {/* Chain + ships over land */}
+      <line x1="150" y1="56" x2="250" y2="44" stroke={MC.gold} strokeWidth="2.2" strokeDasharray="3 3" />
+      <T x={196} y={38} fill={MC.gold} size={6.2}>{L ? 'Η ΑΛΥΣΙΔΑ ΚΡΑΤΑ' : 'THE CHAIN HOLDS'}</T>
+      <path d="M296 16 Q260 22 236 36" fill="none" stroke={MC.enemy} strokeWidth="2.4" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <Unit sym="uShip" x={300} y={8} w={17} color={MC.enemy} mirror rot={-8} />
+      <T x={300} y={40} fill={MC.enemy} size={6.5} bold>{L ? '70 ΠΛΟΙΑ ΑΠΟ ΤΗ ΣΤΕΡΙΑ — ΠΑΝΩ ΑΠΟ ΤΟΝ ΓΑΛΑΤΑ' : '70 SHIPS OVERLAND — ACROSS GALATA'}</T>
+      <Unit sym="uShip" x={228} y={52} w={16} color={MC.enemy} mirror rot={6} o={0.85} />
+      {/* Marmara */}
+      <T x={250} y={224} fill={MC.water} size={7}>{L ? 'ΠΡΟΠΟΝΤΙΔΑ' : 'SEA OF MARMARA'}</T>
+      <T x={196} y={244} fill={MC.dim} size={6.8} bold>{L ? 'ΤΡΙΤΗ 29 ΜΑΪΟΥ 1453 — «Η ΠΟΛΙΣ ΕΑΛΩ»' : 'TUESDAY 29 MAY 1453 — “THE CITY HAS FALLEN”'}</T>
+    </MapShell>
+  );
+}
+
+const MAPS = {
+  themes: MapThemes,
+  siege717: MapSiege717,
+  manzikert: MapManzikert,
+  crusade1: MapCrusade1,
+  crusade4: MapCrusade4,
+  sack1204: MapSack1204,
+  recovery1261: MapRecovery1261,
+  varna: MapVarna,
+  fall1453: MapFall1453,
+};
+
+/* ============================================================
+   SHARED UI COMPONENTS
+   ============================================================ */
+const clamp = (v) => Math.max(0, Math.min(100, v));
+const fadeUp = {
+  initial: { opacity: 0, y: 24, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -16, scale: 0.985 },
+  transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+};
+
+function MetricBar({ label, value, icon, color }) {
+  const isTyrian = color === 'tyrian';
+  return (
+    <div className="flex-1 min-w-[140px]">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest ${isTyrian ? 'text-purple-300' : 'text-cyan-300'}`}>
+          <Icon name={icon} size={13} /> {label}
+        </span>
+        <span className={`text-sm font-bold tabular-nums ${isTyrian ? 'text-purple-300' : 'text-cyan-200'}`}>{value}%</span>
+      </div>
+      <div className="h-2.5 rounded-full bg-slate-800/80 border border-slate-700/50 overflow-hidden">
+        <motion.div
+          className={`h-full rounded-full ${isTyrian
+            ? 'bg-gradient-to-r from-purple-700 via-purple-500 to-fuchsia-400'
+            : 'bg-gradient-to-r from-cyan-700 via-cyan-500 to-cyan-300'}`}
+          initial={false}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          style={{ boxShadow: isTyrian ? '0 0 12px rgba(192,132,252,0.5)' : '0 0 12px rgba(34,211,238,0.5)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LangToggle({ lang, setLang }) {
+  const t = UI[lang];
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+      onClick={() => setLang(lang === 'en' ? 'el' : 'en')}
+      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-cyan-400/30 bg-slate-900/70 text-cyan-300 text-xs font-bold uppercase tracking-widest hover:border-cyan-400/70 hover:shadow-glow-cyan transition-colors"
+    >
+      <Icon name="Languages" size={14} /> {t.langToggle}
+    </motion.button>
+  );
+}
+
+function DeltaChip({ label, delta, color }) {
+  const pos = delta >= 0;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${pos
+      ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
+      : 'text-rose-300 border-rose-500/40 bg-rose-500/10'}`}>
+      <Icon name={color === 'tyrian' ? 'Crown' : 'Users'} size={13} />
+      {label} {pos ? '+' : ''}{delta}%
+    </span>
+  );
+}
+
+function StepPips({ step }) {
+  return (
+    <div className="flex items-center gap-2">
+      {[1, 2, 3].map((s) => (
+        <span key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-cyan-400 shadow-glow-cyan' : s < step ? 'w-4 bg-cyan-700' : 'w-4 bg-slate-700'}`} />
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   MAIN HUB / ERA SELECTION MENU
+   ============================================================ */
+function Hub({ lang, setLang, onStart }) {
+  const t = UI[lang];
+  return (
+    <motion.div key="hub" {...fadeUp} className="w-full max-w-5xl mx-auto">
+      <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
+      <div className="text-center mb-10">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-cyan-400/40 bg-slate-900/80 shadow-glow-cyan mb-5 text-cyan-300">
+          <Icon name="Landmark" size={32} strokeWidth={1.5} />
+        </motion.div>
+        <h1 className="font-display font-black text-4xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-marble-100 via-marble-200 to-cyan-200 drop-shadow-[0_0_28px_rgba(233,227,209,0.22)]">
+          {t.appTitle}
+        </h1>
+        <p className="font-display text-cyan-300 text-sm sm:text-lg tracking-[0.3em] uppercase mt-2">{t.appSubtitle}</p>
+        <p className="text-slate-400 text-sm max-w-2xl mx-auto mt-4 leading-relaxed">{t.hubTagline}</p>
+      </div>
+
+      {/* Grand campaign card */}
+      <motion.button
+        whileHover={{ y: -4, scale: 1.01 }} whileTap={{ scale: 0.99 }}
+        onClick={() => onStart('all')}
+        className="glass-card w-full rounded-2xl p-6 sm:p-8 text-left mb-6 group hover:border-cyan-400/60 hover:shadow-glow-cyan transition-all duration-300"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="w-14 h-14 shrink-0 rounded-xl border border-laurel-300/40 bg-laurel-300/10 flex items-center justify-center text-laurel-300">
+            <Icon name="Trophy" size={28} strokeWidth={1.6} />
+          </div>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-display font-bold text-xl sm:text-2xl text-marble-200">{t.grandCampaign}</h2>
+              <span className="px-2.5 py-1 rounded-md bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[10px] font-bold uppercase tracking-widest">9 {t.scenariosLabel}</span>
+            </div>
+            <p className="text-slate-400 text-sm mt-2 leading-relaxed">{t.grandCampaignDesc}</p>
+          </div>
+          <span className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+            <Icon name="Play" size={16} /> {t.beginCampaign}
+          </span>
+        </div>
+      </motion.button>
+
+      {/* Chronological strip */}
+      <div className="glass-card rounded-xl px-5 py-3.5 mb-6 overflow-x-auto">
+        <div className="flex items-center min-w-[640px]">
+          {SCENARIOS.map((s, i) => {
+            const dot = { phase1: 'bg-cyan-400', phase2: 'bg-marble-300', phase3: 'bg-purple-400' }[s.phase];
+            return (
+              <React.Fragment key={s.id}>
+                {i > 0 && <span className="flex-1 h-px bg-slate-700/70 mx-1.5" />}
+                <span className="flex flex-col items-center gap-1 shrink-0" title={s.title[lang]}>
+                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                  <span className="text-[9px] font-semibold text-slate-500 tabular-nums">{t.year(s.year)}</span>
+                </span>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Era cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {PHASES.map((ph, i) => {
+          const eraScenarios = SCENARIOS.filter((s) => s.phase === ph.key);
+          const AC = {
+            cyan: { card: 'hover:border-cyan-400/60 hover:shadow-glow-cyan', tile: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-300', label: 'text-cyan-300/80', chev: 'text-cyan-600', play: 'text-cyan-300' },
+            marble: { card: 'hover:border-marble-300/60 hover:shadow-glow-ivory', tile: 'border-marble-300/40 bg-marble-300/10 text-marble-200', label: 'text-marble-300/80', chev: 'text-marble-400', play: 'text-marble-200' },
+            tyrian: { card: 'hover:border-purple-400/60 hover:shadow-glow-tyrian', tile: 'border-purple-400/40 bg-purple-400/10 text-purple-300', label: 'text-purple-300/80', chev: 'text-purple-500', play: 'text-purple-300' },
+          }[ph.accent];
+          return (
+            <motion.button
+              key={ph.key}
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 * i + 0.2, duration: 0.5 }}
+              whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={() => onStart(ph.key)}
+              className={`glass-card rounded-2xl p-6 text-left group transition-all duration-300 ${AC.card}`}
+            >
+              <div className={`w-11 h-11 rounded-lg border flex items-center justify-center mb-4 ${AC.tile}`}>
+                <Icon name={ph.icon} size={22} strokeWidth={1.7} />
+              </div>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.25em] mb-1 ${AC.label}`}>
+                {t.era} {['I', 'II', 'III'][i]} · {ph.range[lang]}
+              </p>
+              <h3 className="font-display font-bold text-lg text-slate-100 leading-snug">{ph.name[lang]}</h3>
+              <p className="text-slate-400 text-xs mt-2.5 leading-relaxed">{ph.blurb[lang]}</p>
+              <ul className="mt-4 space-y-1.5 border-t border-slate-700/50 pt-3">
+                {eraScenarios.map((s) => (
+                  <li key={s.id} className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Icon name="ChevronRight" size={11} className={AC.chev} />
+                    <span className="truncate">{s.title[lang]} · {t.year(s.year)}</span>
+                  </li>
+                ))}
+              </ul>
+              <span className={`mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${AC.play} group-hover:translate-x-1 transition-transform`}>
+                <Icon name="Swords" size={14} /> {t.playEra}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+      <p className="text-center text-[11px] text-slate-600 mt-8 leading-relaxed max-w-3xl mx-auto">{t.hubFooter}</p>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   SCENARIO VIEW — 3-step loop
+   ============================================================ */
+function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, step, setStep, unity, power, chosenIndex, onChoose, onAdvance, isLastOfRun }) {
+  const t = UI[lang];
+  const phase = PHASES.find((p) => p.key === scenario.phase);
+  const MapComp = MAPS[scenario.mapId];
+  const chosen = chosenIndex != null ? scenario.choices[chosenIndex] : null;
+  const positive = chosen ? (chosen.unity + chosen.power) > 0 : false;
+
+  return (
+    <motion.div key={scenario.id} {...fadeUp} className="w-full max-w-4xl mx-auto">
+      {/* Command header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <Icon name={phase.icon} size={13} className="text-cyan-300" /> {phase.name[lang]}
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">{t.scenarioOf(scenarioNum, totalScenarios)}</span>
+        </div>
+        <LangToggle lang={lang} setLang={setLang} />
+      </div>
+
+      {/* Metrics dashboard */}
+      <div className="glass-card rounded-2xl px-5 py-4 mb-5 flex flex-col sm:flex-row gap-4 sm:gap-8">
+        <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+        <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
+      </div>
+
+      {/* Main tactical card */}
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-marble-300/15 greek-key-border">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-marble-300/90 text-[11px] font-bold uppercase tracking-[0.25em] mb-1">{t.year(scenario.year)} · {t.location}: {scenario.location[lang]}</p>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl text-slate-100">{scenario.title[lang]}</h2>
+            </div>
+            <StepPips step={step} />
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {/* ---- STEP 1: SOURCE ANALYSIS ---- */}
+          {step === 1 && (
+            <motion.div key="s1" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Scroll" size={15} /> {t.step1Title}
+              </p>
+              {scenario.context && (
+                <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                  <p className="flex items-center gap-2 text-marble-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="Compass" size={13} /> {t.briefing}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed">{scenario.context[lang]}</p>
+                </div>
+              )}
+              <div className="relative rounded-xl border border-cyan-400/25 bg-cyan-400/5 px-6 py-6 sm:px-8">
+                <span className="absolute -top-3 left-6 px-2.5 bg-slate-900 text-cyan-300 text-[10px] font-bold uppercase tracking-widest border border-cyan-400/25 rounded">
+                  {t.theSourceSays}
+                </span>
+                <blockquote className="font-display text-lg sm:text-xl text-slate-200 leading-relaxed italic">
+                  {scenario.source.quote[lang]}
+                </blockquote>
+                <p className="mt-4 text-cyan-300/90 text-sm font-semibold flex items-center gap-2">
+                  <Icon name="BookOpen" size={14} /> — {scenario.source.author[lang]}
+                </p>
+              </div>
+              {scenario.terms && (
+                <div className="mt-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.keyTerms}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {scenario.terms.map((k, i) => (
+                      <div key={i} className="rounded-lg border border-slate-700/60 bg-slate-900/50 px-3.5 py-2.5">
+                        <p className="text-cyan-200 text-xs font-bold">{k.term[lang]}</p>
+                        <p className="text-slate-400 text-[11px] leading-snug mt-1">{k.def[lang]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="mt-7 flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => setStep(2)}
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan hover:from-cyan-500 hover:to-teal-400 transition-colors"
+                >
+                  <Icon name="Compass" size={17} /> {t.analyzeSource}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ---- STEP 2: STRATEGIC CHOICE & MAP ---- */}
+          {step === 2 && (
+            <motion.div key="s2" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Map" size={15} /> {t.step2Title}
+              </p>
+              <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                  <Icon name="AlertTriangle" size={13} /> {t.dilemmaTitle}
+                </p>
+                <p className="text-slate-300 text-sm leading-relaxed">{scenario.dilemma[lang]}</p>
+              </div>
+              <p className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2.5">
+                <Icon name="Compass" size={13} className="text-cyan-300" /> {t.mapTitle}
+              </p>
+              <MapComp lang={lang} />
+              <p className="mt-6 mb-3 font-display text-marble-200 text-base font-bold">{t.choicePrompt}</p>
+              <div className="grid grid-cols-1 gap-4">
+                {scenario.choices.map((c, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ y: -4, scale: 1.012 }} whileTap={{ scale: 0.99 }}
+                    onClick={() => onChoose(i)}
+                    className="text-left rounded-xl border border-slate-700/70 bg-slate-900/60 px-5 py-4 hover:border-cyan-400/70 hover:shadow-glow-cyan hover:bg-slate-900/90 transition-all duration-300 group"
+                  >
+                    <span className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] mb-2 ${i === 0 ? 'text-cyan-300' : 'text-purple-300'}`}>
+                      <Icon name="Swords" size={12} /> {i === 0 ? t.optionA : t.optionB}
+                    </span>
+                    <p className="text-slate-200 text-sm leading-relaxed group-hover:text-slate-50 transition-colors">{c.text[lang]}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ---- STEP 3: OUTCOME FEEDBACK ---- */}
+          {step === 3 && chosen && (
+            <motion.div key="s3" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Hourglass" size={15} /> {t.step3Title}
+              </p>
+              <div className={`rounded-xl border px-6 py-6 ${positive ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
+                <p className={`flex items-center gap-2 font-display font-bold text-lg mb-3 ${positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <Icon name={positive ? 'TrendingUp' : 'Flame'} size={19} />
+                  {positive ? t.outcomeTriumph : t.outcomeSetback}
+                </p>
+                <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">{chosen.outcome[lang]}</p>
+                <div className="mt-5 pt-4 border-t border-slate-700/50">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.metricShift}</p>
+                  <div className="flex flex-wrap gap-2.5">
+                    <DeltaChip label={t.unityDelta} delta={chosen.unity} color="cyan" />
+                    <DeltaChip label={t.powerDelta} delta={chosen.power} color="tyrian" />
+                  </div>
+                </div>
+              </div>
+              {scenario.note && (
+                <div className="mt-5 rounded-xl border border-laurel-300/25 bg-laurel-300/5 px-5 py-4">
+                  <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="BookOpen" size={13} /> {t.histNote}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed italic">{scenario.note[lang]}</p>
+                </div>
+              )}
+              <div className="mt-7 flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
+                  onClick={onAdvance}
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 text-white font-bold text-sm uppercase tracking-widest shadow-glow-tyrian hover:from-purple-500 hover:to-fuchsia-400 transition-colors"
+                >
+                  {isLastOfRun ? t.concludePhase : t.nextScenario} <Icon name="ChevronRight" size={17} />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   ERA / GRAND CAMPAIGN OUTCOME SCREENS
+   ============================================================ */
+function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, onContinue, onReplay, onHub, isGrandFinale }) {
+  const t = UI[lang];
+  const tier = resolveTier(unity, power);
+  const phase = PHASES.find((p) => p.key === phaseKey);
+  const ending = PHASE_ENDINGS[phaseKey][tier];
+  const grand = GRAND_VERDICT[tier];
+  const tierStyles = {
+    golden: { ring: 'border-laurel-300/60', glow: 'shadow-glow-ivory', text: 'text-laurel-300', icon: 'Trophy' },
+    endured: { ring: 'border-cyan-400/50', glow: 'shadow-glow-cyan', text: 'text-cyan-300', icon: 'Shield' },
+    collapse: { ring: 'border-rose-500/50', glow: '', text: 'text-rose-400', icon: 'Flame' },
+  }[tier];
+  const canContinue = mode === 'all' && !isGrandFinale;
+
+  return (
+    <motion.div key={`end-${phaseKey}-${isGrandFinale}`} {...fadeUp} className="w-full max-w-3xl mx-auto">
+      <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
+      <div className={`glass-card rounded-2xl overflow-hidden ${tierStyles.glow}`}>
+        <div className="px-6 sm:px-10 pt-9 pb-7 text-center border-b border-slate-700/50">
+          <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6, delay: 0.15 }}
+            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border bg-slate-900/80 mb-4 ${tierStyles.ring} ${tierStyles.text}`}>
+            <Icon name={tierStyles.icon} size={30} strokeWidth={1.6} />
+          </motion.div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-2">
+            {isGrandFinale ? t.campaignComplete : `${t.phaseComplete} — ${phase.name[lang]}`}
+          </p>
+          <h2 className={`font-display font-black text-2xl sm:text-4xl ${tierStyles.text}`}>
+            {isGrandFinale ? grand.title[lang] : ending.title[lang]}
+          </h2>
+          {typeof RANKS !== 'undefined' && (
+            <p className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-700/60 bg-slate-900/60 text-[11px] font-bold uppercase tracking-widest text-slate-300">
+              <Icon name="Trophy" size={13} className={tierStyles.text} /> {t.rankLabel}: <span className={tierStyles.text}>{RANKS[tier][lang]}</span>
+            </p>
+          )}
+        </div>
+        <div className="px-6 sm:px-10 py-7">
+          <p className="flex items-center gap-2 text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
+            <Icon name="BookOpen" size={13} /> {t.verdict}
+          </p>
+          <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">
+            {isGrandFinale ? grand.text[lang] : ending.text[lang]}
+          </p>
+          {isGrandFinale && (
+            <p className="text-slate-400 text-sm leading-relaxed mt-4 border-l-2 border-laurel-300/40 pl-4 italic">
+              {ending.text[lang]}
+            </p>
+          )}
+          <div className="mt-7">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.finalStanding}</p>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+              <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+              <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
+            </div>
+          </div>
+          {history.length > 0 && (
+            <div className="mt-7">
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.chronicleOfDecisions}</p>
+              <ul className="space-y-2">
+                {history.map((h, i) => {
+                  const sc = SCENARIOS.find((s) => s.id === h.id);
+                  const ch = sc.choices[h.choice];
+                  const good = (ch.unity + ch.power) > 0;
+                  return (
+                    <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700/50 bg-slate-900/50 px-4 py-2.5">
+                      <span className="flex items-center gap-2.5 text-xs text-slate-300 min-w-0">
+                        <Icon name={good ? 'TrendingUp' : 'Flame'} size={13} className={good ? 'text-emerald-400 shrink-0' : 'text-rose-400 shrink-0'} />
+                        <span className="truncate">{sc.title[lang]}</span>
+                        <span className="text-slate-600 shrink-0">· {h.choice === 0 ? 'Α' : 'Β'}</span>
+                      </span>
+                      <span className="text-[11px] font-bold tabular-nums shrink-0">
+                        <span className={ch.unity >= 0 ? 'text-cyan-300' : 'text-rose-400'}>{ch.unity >= 0 ? '+' : ''}{ch.unity}U</span>
+                        <span className="text-slate-600 mx-1">/</span>
+                        <span className={ch.power >= 0 ? 'text-purple-300' : 'text-rose-400'}>{ch.power >= 0 ? '+' : ''}{ch.power}P</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {canContinue && (
+              <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onContinue}
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan">
+                <Icon name="Swords" size={16} /> {t.continueCampaign}
+              </motion.button>
+            )}
+            <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onReplay}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-purple-400/40 bg-slate-900/70 text-purple-300 font-bold text-sm uppercase tracking-widest hover:border-purple-400/80 hover:shadow-glow-tyrian transition-all">
+              <Icon name="RotateCcw" size={16} /> {t.replay}
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onHub}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-600/60 bg-slate-900/70 text-slate-300 font-bold text-sm uppercase tracking-widest hover:border-slate-400/60 transition-all">
+              <Icon name="Home" size={16} /> {t.returnHub}
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   ROOT APP — STATE MACHINE
+   ============================================================ */
+const BASELINE = { unity: 50, power: 20 };
+
+function App() {
+  const [lang, setLang] = useState('en');
+  const [selectedPlayMode, setSelectedPlayMode] = useState(null); // "all" | "phase1" | "phase2" | "phase3" | null (hub)
+  const [screen, setScreen] = useState('hub'); // 'hub' | 'game' | 'ending'
+  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1); // 1: Source, 2: Choice & Map, 3: Outcome
+  const [unity, setUnity] = useState(BASELINE.unity);
+  const [power, setPower] = useState(BASELINE.power);
+  const [chosenIndex, setChosenIndex] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [endedPhase, setEndedPhase] = useState(null);
+  const [isGrandFinale, setIsGrandFinale] = useState(false);
+
+  const runScenarios = useMemo(() => {
+    if (!selectedPlayMode) return [];
+    return selectedPlayMode === 'all' ? SCENARIOS : SCENARIOS.filter((s) => s.phase === selectedPlayMode);
+  }, [selectedPlayMode]);
+
+  const startRun = useCallback((mode) => {
+    setSelectedPlayMode(mode);
+    setCurrentScenarioIndex(0);
+    setCurrentStep(1);
+    setUnity(BASELINE.unity);
+    setPower(BASELINE.power);
+    setChosenIndex(null);
+    setHistory([]);
+    setEndedPhase(null);
+    setIsGrandFinale(false);
+    setScreen('game');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const scenario = runScenarios[currentScenarioIndex] || null;
+
+  const handleChoose = useCallback((i) => {
+    if (!scenario) return;
+    const c = scenario.choices[i];
+    setChosenIndex(i);
+    setUnity((u) => clamp(u + c.unity));
+    setPower((p) => clamp(p + c.power));
+    setHistory((h) => [...h, { id: scenario.id, choice: i }]);
+    setCurrentStep(3);
+  }, [scenario]);
+
+  const handleAdvance = useCallback(() => {
+    if (!scenario) return;
+    const isLastInRun = currentScenarioIndex === runScenarios.length - 1;
+    const nextScenario = runScenarios[currentScenarioIndex + 1];
+    const phaseBoundary = isLastInRun || (nextScenario && nextScenario.phase !== scenario.phase);
+    if (phaseBoundary) {
+      setEndedPhase(scenario.phase);
+      setIsGrandFinale(selectedPlayMode === 'all' && isLastInRun);
+      setScreen('ending');
+    } else {
+      setCurrentScenarioIndex((x) => x + 1);
+      setCurrentStep(1);
+      setChosenIndex(null);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [scenario, currentScenarioIndex, runScenarios, selectedPlayMode]);
+
+  const handleContinueCampaign = useCallback(() => {
+    setScreen('game');
+    setCurrentScenarioIndex((x) => x + 1);
+    setCurrentStep(1);
+    setChosenIndex(null);
+    setEndedPhase(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const goHub = useCallback(() => {
+    setSelectedPlayMode(null);
+    setScreen('hub');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const isLastOfRun = scenario
+    ? (currentScenarioIndex === runScenarios.length - 1 ||
+       (runScenarios[currentScenarioIndex + 1] && runScenarios[currentScenarioIndex + 1].phase !== scenario.phase))
+    : false;
+
+  const endingHistory = useMemo(() => {
+    if (!endedPhase) return history;
+    if (isGrandFinale) return history;
+    return history.filter((h) => {
+      const sc = SCENARIOS.find((s) => s.id === h.id);
+      return sc && sc.phase === endedPhase;
+    });
+  }, [history, endedPhase, isGrandFinale]);
+
+  return (
+    <div className="min-h-screen w-full px-4 py-8 sm:py-12 font-body">
+      <AnimatePresence mode="wait">
+        {screen === 'hub' && (
+          <Hub key="hub" lang={lang} setLang={setLang} onStart={startRun} />
+        )}
+        {screen === 'game' && scenario && (
+          <ScenarioView
+            key={`game-${scenario.id}`}
+            lang={lang} setLang={setLang}
+            scenario={scenario}
+            scenarioNum={currentScenarioIndex + 1}
+            totalScenarios={runScenarios.length}
+            step={currentStep} setStep={setCurrentStep}
+            unity={unity} power={power}
+            chosenIndex={chosenIndex}
+            onChoose={handleChoose}
+            onAdvance={handleAdvance}
+            isLastOfRun={isLastOfRun}
+          />
+        )}
+        {screen === 'ending' && endedPhase && (
+          <EndingScreen
+            key={`ending-${endedPhase}-${isGrandFinale}`}
+            lang={lang} setLang={setLang}
+            phaseKey={endedPhase}
+            unity={unity} power={power}
+            mode={selectedPlayMode}
+            history={endingHistory}
+            onContinue={handleContinueCampaign}
+            onReplay={() => startRun(selectedPlayMode)}
+            onHub={goHub}
+            isGrandFinale={isGrandFinale}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>

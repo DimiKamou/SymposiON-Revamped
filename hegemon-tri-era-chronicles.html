@@ -193,6 +193,10 @@ const UI = {
     location: 'Theatre',
     unityDelta: 'Unity',
     powerDelta: 'Imperial Power',
+    briefing: 'Strategic Briefing',
+    keyTerms: 'Key Terms',
+    histNote: "Historian's Note",
+    rankLabel: 'Title Earned',
     hubFooter: 'Curriculum alignment: History of 1st Year Gymnasio (IEP) — Persian Wars · Peloponnesian War · Macedonian Hegemony. Sources: Herodotus, Thucydides, Arrian.',
   },
   el: {
@@ -238,6 +242,10 @@ const UI = {
     location: 'Θέατρο Επιχειρήσεων',
     unityDelta: 'Ενότητα',
     powerDelta: 'Αυτοκρ. Ισχύς',
+    briefing: 'Στρατηγική Ενημέρωση',
+    keyTerms: 'Όροι-Κλειδιά',
+    histNote: 'Σημείωμα του Ιστορικού',
+    rankLabel: 'Τίτλος που Απονεμήθηκε',
     hubFooter: 'Ευθυγράμμιση με την ύλη: Ιστορία Α΄ Γυμνασίου (ΙΕΠ) — Περσικοί Πόλεμοι · Πελοποννησιακός Πόλεμος · Μακεδονική Ηγεμονία. Πηγές: Ηρόδοτος, Θουκυδίδης, Αρριανός.',
   },
 };
@@ -291,6 +299,19 @@ const SCENARIOS = [
     phase: 'phase1',
     year: 490,
     mapId: 'marathon',
+    context: {
+      en: 'Darius I has sent a punitive armada across the Aegean to crush Athens for aiding the Ionian Revolt. The Persians land at Marathon guided by the aged tyrant Hippias, who dreams of being reinstalled as Persia\'s puppet. Athens sends a runner to Sparta — but the Karneia festival delays Spartan help by six fatal days.',
+      el: 'Ο Δαρείος Α΄ έστειλε τιμωρητική αρμάδα για να συντρίψει την Αθήνα επειδή βοήθησε την Ιωνική Επανάσταση. Οι Πέρσες αποβιβάζονται στον Μαραθώνα με οδηγό τον γέροντα τύραννο Ιππία, που ονειρεύεται να ξαναγίνει υποτελής άρχοντας. Η Αθήνα στέλνει ημεροδρόμο στη Σπάρτη — αλλά τα Κάρνεια καθυστερούν τη σπαρτιατική βοήθεια έξι μοιραίες ημέρες.',
+    },
+    terms: [
+      { term: { en: 'Phalanx', el: 'Φάλαγξ' }, def: { en: 'Dense formation of heavy infantry, shields locked, fighting as one body.', el: 'Πυκνός σχηματισμός βαρέος πεζικού με κλειδωμένες ασπίδες, που μάχεται ως ένα σώμα.' } },
+      { term: { en: 'Hoplite', el: 'Οπλίτης' }, def: { en: 'Citizen-soldier armed with spear, bronze armor and the round aspis shield.', el: 'Πολίτης-στρατιώτης με δόρυ, χάλκινη πανοπλία και στρογγυλή ασπίδα.' } },
+      { term: { en: 'Strategos', el: 'Στρατηγός' }, def: { en: 'One of the ten elected Athenian generals; Miltiades held the decisive voice.', el: 'Ένας από τους δέκα αιρετούς Αθηναίους στρατηγούς· ο Μιλτιάδης είχε την αποφασιστική ψήφο.' } },
+    ],
+    note: {
+      en: 'Herodotus records 192 Athenian dead against 6,400 Persians. The burial mound (Soros) of the 192 still rises on the plain of Marathon today — and the legend of the messenger\'s run to Athens gave its name to the modern marathon race.',
+      el: 'Ο Ηρόδοτος καταγράφει 192 Αθηναίους νεκρούς έναντι 6.400 Περσών. Ο Τύμβος των 192 πεσόντων υψώνεται ακόμη στην πεδιάδα του Μαραθώνα — και ο θρύλος του δρόμου του αγγελιαφόρου προς την Αθήνα έδωσε το όνομά του στον σύγχρονο μαραθώνιο.',
+    },
     title: { en: 'The Battle of Marathon', el: 'Η Μάχη του Μαραθώνα' },
     location: { en: 'Plain of Marathon, Attica', el: 'Πεδιάδα του Μαραθώνα, Αττική' },
     source: {
@@ -334,6 +355,19 @@ const SCENARIOS = [
     phase: 'phase1',
     year: 481,
     mapId: 'isthmus',
+    context: {
+      en: 'Ten years after Marathon, Xerxes bridges the Hellespont with boats and digs a canal through Athos — engineering meant to terrify before a single arrow flies. Herodotus counts his host in the millions; modern historians say perhaps 200,000, still the largest army Europe had ever seen. The oracle at Delphi counsels despair.',
+      el: 'Δέκα χρόνια μετά τον Μαραθώνα, ο Ξέρξης ζεύει τον Ελλήσποντο με πλοία και διανοίγει διώρυγα στον Άθω — έργα που σκοπεύουν να τρομοκρατήσουν πριν πέσει βέλος. Ο Ηρόδοτος μετρά τη στρατιά σε εκατομμύρια· οι σύγχρονοι ιστορικοί ίσως σε 200.000, πάντως τον μεγαλύτερο στρατό που είδε ποτέ η Ευρώπη. Το μαντείο των Δελφών συμβουλεύει απόγνωση.',
+    },
+    terms: [
+      { term: { en: 'Medize', el: 'Μηδισμός' }, def: { en: 'To submit voluntarily to Persia — the gravest accusation between Greek cities.', el: 'Η εκούσια υποταγή στους Πέρσες — η βαρύτερη κατηγορία μεταξύ ελληνικών πόλεων.' } },
+      { term: { en: 'Pan-Hellenic League', el: 'Πανελλήνια Συμμαχία' }, def: { en: 'The oath-bound alliance of 31 cities formed at Corinth in 481 BCE.', el: 'Η ένορκη συμμαχία 31 πόλεων που ιδρύθηκε στην Κόρινθο το 481 π.Χ.' } },
+      { term: { en: 'Hegemonia', el: 'Ηγεμονία' }, def: { en: 'Supreme command; Sparta received it over both land and sea forces.', el: 'Η ανώτατη αρχηγία· δόθηκε στη Σπάρτη για στρατό και στόλο.' } },
+    ],
+    note: {
+      en: 'The League\'s oath vowed to tithe to Delphi every Greek city that Medized without compulsion. After the victory, the allies\' names were engraved on the bronze Serpent Column — which survives to this day, standing in the ancient Hippodrome of Istanbul.',
+      el: 'Ο όρκος της Συμμαχίας δέσμευε να αφιερωθεί στους Δελφούς το ένα δέκατο κάθε πόλης που μήδισε αβίαστα. Μετά τη νίκη, τα ονόματα των συμμάχων χαράχθηκαν στον χάλκινο Τρικάρηνο Όφι — που σώζεται ώς σήμερα, στημένος στον αρχαίο Ιππόδρομο της Κωνσταντινούπολης.',
+    },
     title: { en: 'The Congress of Corinth', el: 'Το Συνέδριο της Κορίνθου' },
     location: { en: 'Isthmus of Corinth', el: 'Ισθμός της Κορίνθου' },
     source: {
@@ -377,6 +411,19 @@ const SCENARIOS = [
     phase: 'phase1',
     year: 480,
     mapId: 'salamis',
+    context: {
+      en: 'Thermopylae has fallen; Leonidas and the 300 are dead. The famous \'wooden walls\' oracle divides Athens — the elders say it means the Acropolis palisade, Themistocles insists it means the fleet he built with the silver of the Laurion mines. The city is evacuated to Troezen and Salamis as the Persians burn the temples.',
+      el: 'Οι Θερμοπύλες έπεσαν· ο Λεωνίδας και οι 300 είναι νεκροί. Ο περίφημος χρησμός για τα «ξύλινα τείχη» διχάζει την Αθήνα — οι γέροντες λένε ότι εννοεί τον φράχτη της Ακρόπολης, ο Θεμιστοκλής επιμένει ότι εννοεί τον στόλο που έχτισε με το αργύριο του Λαυρίου. Η πόλη εκκενώνεται προς Τροιζήνα και Σαλαμίνα ενώ οι Πέρσες πυρπολούν τους ναούς.',
+    },
+    terms: [
+      { term: { en: 'Trireme', el: 'Τριήρης' }, def: { en: 'War galley with three banks of oars and 170 rowers — the weapon that saved Greece.', el: 'Πολεμικό πλοίο με τρεις σειρές κουπιών και 170 κωπηλάτες — το όπλο που έσωσε την Ελλάδα.' } },
+      { term: { en: 'Ram (Embolon)', el: 'Έμβολον' }, def: { en: 'Bronze beak at the prow, designed to shatter enemy hulls at speed.', el: 'Χάλκινο έμβολο στην πλώρη, σχεδιασμένο να συντρίβει εχθρικά σκάφη με ταχύτητα.' } },
+      { term: { en: 'Wooden Walls', el: 'Ξύλινα Τείχη' }, def: { en: 'The Delphic oracle Themistocles read as meaning the Athenian fleet.', el: 'Ο δελφικός χρησμός που ο Θεμιστοκλής ερμήνευσε ως τον αθηναϊκό στόλο.' } },
+    ],
+    note: {
+      en: 'The playwright Aeschylus fought at Salamis in person. Eight years later he staged The Persians — the oldest surviving Greek tragedy — telling the battle through the grief of the Persian court. Xerxes watched the disaster from a silver-footed throne on Mount Aigaleo.',
+      el: 'Ο τραγικός Αισχύλος πολέμησε ο ίδιος στη Σαλαμίνα. Οκτώ χρόνια αργότερα ανέβασε τους «Πέρσες» — την αρχαιότερη σωζόμενη τραγωδία — αφηγούμενος τη μάχη μέσα από το πένθος της περσικής αυλής. Ο Ξέρξης παρακολούθησε την καταστροφή από αργυρόποδο θρόνο στο όρος Αιγάλεω.',
+    },
     title: { en: 'The Strait of Salamis', el: 'Τα Στενά της Σαλαμίνας' },
     location: { en: 'Salamis Straits, Saronic Gulf', el: 'Στενά Σαλαμίνας, Σαρωνικός Κόλπος' },
     source: {
@@ -421,6 +468,19 @@ const SCENARIOS = [
     phase: 'phase2',
     year: 447,
     mapId: 'delos',
+    context: {
+      en: 'Founded on Delos in 478 BCE to carry the war into Persian waters, the League began as a partnership of free cities each contributing ships or silver. Three decades later Persia is beaten, Naxos and Thasos have been crushed for trying to leave, and Pericles rules the Assembly. The treasury\'s move to Athens in 454 makes the transformation visible to all.',
+      el: 'Ιδρυμένη στη Δήλο το 478 π.Χ. για να μεταφέρει τον πόλεμο στα περσικά νερά, η Συμμαχία ξεκίνησε ως εταιρισμός ελεύθερων πόλεων που συνεισέφεραν πλοία ή αργύριο. Τρεις δεκαετίες αργότερα η Περσία έχει ηττηθεί, η Νάξος και η Θάσος συντρίφτηκαν όταν θέλησαν να αποχωρήσουν, και ο Περικλής κυριαρχεί στην Εκκλησία. Η μεταφορά του ταμείου στην Αθήνα το 454 κάνει τη μεταβολή ορατή σε όλους.',
+    },
+    terms: [
+      { term: { en: 'Cleruchies', el: 'Κληρουχίες' }, def: { en: 'Colonies of Athenian citizen-garrisons planted on allied territory.', el: 'Αποικίες Αθηναίων πολιτών-φρουρών εγκατεστημένες σε συμμαχικά εδάφη.' } },
+      { term: { en: 'Phoros', el: 'Φόρος' }, def: { en: 'The annual tribute paid by the allies — 460 talents at its height.', el: 'Η ετήσια εισφορά των συμμάχων — 460 τάλαντα στο απόγειό της.' } },
+      { term: { en: 'Hegemony to Empire', el: 'Από Ηγεμονία σε Αρχή' }, def: { en: 'Thucydides\' own term: the alliance (symmachia) became an arche — an empire.', el: 'Ο όρος του Θουκυδίδη: η συμμαχία έγινε «αρχή» — αυτοκρατορία.' } },
+    ],
+    note: {
+      en: 'We can still read the empire\'s accounts: the Athenian Tribute Lists, carved in marble on the Acropolis, record each city\'s payment year by year. One sixtieth of every payment was dedicated to Athena — which is why the goddess\'s share survived in stone.',
+      el: 'Μπορούμε ακόμη να διαβάσουμε τα λογιστικά της αυτοκρατορίας: οι Φορολογικοί Κατάλογοι, χαραγμένοι σε μάρμαρο στην Ακρόπολη, καταγράφουν την εισφορά κάθε πόλης χρόνο με τον χρόνο. Το ένα εξηκοστό κάθε εισφοράς αφιερωνόταν στην Αθηνά — γι\' αυτό το μερίδιο της θεάς σώθηκε στην πέτρα.',
+    },
     title: { en: 'The Delian League Imperial Shift', el: 'Η Ιμπεριαλιστική Μεταβολή της Δηλιακής Συμμαχίας' },
     location: { en: 'Delos → Athenian Acropolis', el: 'Δήλος → Ακρόπολη των Αθηνών' },
     source: {
@@ -464,6 +524,19 @@ const SCENARIOS = [
     phase: 'phase2',
     year: 430,
     mapId: 'longwalls',
+    context: {
+      en: 'The Peloponnesian War is one year old. Pericles\' grand strategy treats Athens as an island: let Sparta burn the fields, feed the city by sea, win by endurance. But no one planned for 300,000 people behind the walls — or for a pathogen arriving through Piraeus with the grain ships from Egypt.',
+      el: 'Ο Πελοποννησιακός Πόλεμος είναι ενός έτους. Η στρατηγική του Περικλή αντιμετωπίζει την Αθήνα ως νησί: ας κάψει η Σπάρτη τα χωράφια, η πόλη τρέφεται από τη θάλασσα και νικά με αντοχή. Κανείς όμως δεν υπολόγισε 300.000 ανθρώπους πίσω από τα τείχη — ούτε ένα παθογόνο που φτάνει στον Πειραιά με τα σιτοκάραβα της Αιγύπτου.',
+    },
+    terms: [
+      { term: { en: 'Long Walls', el: 'Μακρά Τείχη' }, def: { en: 'Twin fortifications binding Athens to Piraeus — a 6 km corridor to the sea.', el: 'Δίδυμα τείχη που ένωναν την Αθήνα με τον Πειραιά — διάδρομος 6 χλμ. προς τη θάλασσα.' } },
+      { term: { en: 'Loimos', el: 'Λοιμός' }, def: { en: 'The plague of 430; perhaps typhus or typhoid, it killed a third of the city.', el: 'Ο λοιμός του 430· ίσως τύφος, θέρισε το ένα τρίτο της πόλης.' } },
+      { term: { en: 'Demagogue', el: 'Δημαγωγός' }, def: { en: 'Leader who sways the Assembly by passion rather than judgement — like Cleon.', el: 'Ηγέτης που παρασύρει την Εκκλησία με πάθος αντί για κρίση — όπως ο Κλέων.' } },
+    ],
+    note: {
+      en: 'Thucydides caught the plague himself and survived — then wrote the first clinical description of an epidemic in history, \'so that it may be recognized if it ever breaks out again.\' In 1994, excavations for the Kerameikos metro station uncovered a mass grave of its victims.',
+      el: 'Ο Θουκυδίδης νόσησε ο ίδιος και επέζησε — και έγραψε την πρώτη κλινική περιγραφή επιδημίας στην ιστορία, «για να αναγνωριστεί αν ποτέ ξεσπάσει ξανά». Το 1994, οι εκσκαφές του μετρό στον Κεραμεικό αποκάλυψαν ομαδικό τάφο των θυμάτων του.',
+    },
     title: { en: 'The Plague and the Long Walls', el: 'Ο Λοιμός και τα Μακρά Τείχη' },
     location: { en: 'Athens & Piraeus', el: 'Αθήνα & Πειραιάς' },
     source: {
@@ -507,6 +580,19 @@ const SCENARIOS = [
     phase: 'phase2',
     year: 415,
     mapId: 'syracuse',
+    context: {
+      en: 'The uneasy Peace of Nicias is fraying. Alcibiades — brilliant, beautiful, and trusted by no one — paints Sicily as a stepping stone to Carthage and empire without limit. Days before the fleet sails, the sacred Herms across Athens are mutilated in a single night; the omen poisons everything that follows.',
+      el: 'Η εύθραυστη Νικίειος Ειρήνη ξεφτίζει. Ο Αλκιβιάδης — λαμπρός, ωραίος και αναξιόπιστος για όλους — παρουσιάζει τη Σικελία ως σκαλοπάτι προς την Καρχηδόνα και την απεριόριστη αυτοκρατορία. Λίγες μέρες πριν αποπλεύσει ο στόλος, οι ιερές Ερμές της Αθήνας ακρωτηριάζονται μέσα σε μία νύχτα· ο οιωνός δηλητηριάζει όλα όσα ακολουθούν.',
+    },
+    terms: [
+      { term: { en: 'Ekklesia', el: 'Εκκλησία του Δήμου' }, def: { en: 'The sovereign citizen Assembly that voted the expedition by show of hands.', el: 'Η κυρίαρχη συνέλευση των πολιτών που ψήφισε την εκστρατεία με ανάταση χεριών.' } },
+      { term: { en: 'Hubris', el: 'Ύβρις' }, def: { en: 'Arrogant overreach that invites divine retribution (nemesis).', el: 'Η αλαζονική υπέρβαση του μέτρου που προκαλεί τη θεϊκή νέμεση.' } },
+      { term: { en: 'Hermokopidai', el: 'Ερμοκοπίδαι' }, def: { en: 'The unknown \'Herm-cutters\' whose sacrilege doomed Alcibiades\' command.', el: 'Οι άγνωστοι «ακρωτηριαστές των Ερμών», των οποίων η ιεροσυλία στοίχισε στον Αλκιβιάδη τη διοίκηση.' } },
+    ],
+    note: {
+      en: 'Plutarch records that some Athenian prisoners in the Syracusan quarries won food, water — even freedom — by reciting verses of Euripides from memory, so beloved was the poet in Sicily. Of the great armada, Thucydides writes: \'few out of many returned home.\'',
+      el: 'Ο Πλούταρχος καταγράφει ότι Αθηναίοι αιχμάλωτοι στα λατομεία των Συρακουσών κέρδιζαν τροφή, νερό — ακόμη και την ελευθερία τους — απαγγέλλοντας στίχους του Ευριπίδη από μνήμης· τόσο αγαπητός ήταν ο ποιητής στη Σικελία. Για τη μεγάλη αρμάδα ο Θουκυδίδης γράφει: «λίγοι από πολλούς γύρισαν στην πατρίδα».',
+    },
     title: { en: 'The Sicilian Expedition', el: 'Η Σικελική Εκστρατεία' },
     location: { en: 'Syracuse, Sicily', el: 'Συρακούσες, Σικελία' },
     source: {
@@ -551,6 +637,19 @@ const SCENARIOS = [
     phase: 'phase3',
     year: 338,
     mapId: 'chaeronea',
+    context: {
+      en: 'While the southern cities exhausted each other, Philip II rebuilt Macedon: a professional year-round army, the sarissa pike twice the length of a hoplite spear, and cavalry trained to strike as a hammer against the phalanx\'s anvil. Demosthenes\' Philippics finally shame Athens and Thebes — enemies for a century — into a desperate joint stand in Boeotia.',
+      el: 'Όσο οι νότιες πόλεις αλληλοεξοντώνονταν, ο Φίλιππος Β΄ ανοικοδόμησε τη Μακεδονία: επαγγελματικός στρατός όλο τον χρόνο, η σάρισα διπλάσια από το δόρυ του οπλίτη, και ιππικό εκπαιδευμένο να χτυπά ως σφυρί πάνω στο αμόνι της φάλαγγας. Οι «Φιλιππικοί» του Δημοσθένη ντροπιάζουν επιτέλους Αθήνα και Θήβα — εχθρούς επί έναν αιώνα — σε μια απεγνωσμένη κοινή άμυνα στη Βοιωτία.',
+    },
+    terms: [
+      { term: { en: 'Sarissa', el: 'Σάρισα' }, def: { en: 'The 6-metre Macedonian pike; five rows of points projected before the phalanx.', el: 'Το μακεδονικό δόρυ των 6 μέτρων· πέντε σειρές αιχμών πρόβαλλαν μπροστά από τη φάλαγγα.' } },
+      { term: { en: 'Sacred Band', el: 'Ιερός Λόχος' }, def: { en: 'Thebes\' elite corps of 300, undefeated for forty years — until Chaeronea.', el: 'Το επίλεκτο σώμα των 300 της Θήβας, αήττητο επί σαράντα χρόνια — ώς τη Χαιρώνεια.' } },
+      { term: { en: 'Companions', el: 'Εταίροι' }, def: { en: 'The Macedonian heavy cavalry of nobles, led at Chaeronea by Alexander, aged 18.', el: 'Το βαρύ ιππικό των Μακεδόνων ευγενών, με επικεφαλής στη Χαιρώνεια τον 18χρονο Αλέξανδρο.' } },
+    ],
+    note: {
+      en: 'The colossal stone Lion of Chaeronea still guards the battlefield. Excavated beneath it in 1879: 254 skeletons buried in seven rows — believed to be the Sacred Band, buried where they fell. Philip, seeing them dead in their ranks, reportedly wept.',
+      el: 'Ο πελώριος λίθινος Λέων της Χαιρώνειας φρουρεί ακόμη το πεδίο της μάχης. Το 1879 ανασκάφηκαν κάτω από αυτόν 254 σκελετοί θαμμένοι σε επτά σειρές — θεωρούνται ο Ιερός Λόχος, θαμμένος εκεί όπου έπεσε. Ο Φίλιππος, βλέποντάς τους νεκρούς στις τάξεις τους, λέγεται ότι δάκρυσε.',
+    },
     title: { en: 'The Battle of Chaeronea', el: 'Η Μάχη της Χαιρώνειας' },
     location: { en: 'Kephissos Valley, Boeotia', el: 'Κοιλάδα Κηφισού, Βοιωτία' },
     source: {
@@ -594,6 +693,19 @@ const SCENARIOS = [
     phase: 'phase3',
     year: 331,
     mapId: 'gaugamela',
+    context: {
+      en: 'Granicus opened Asia Minor; Issus broke Darius\' first grand army; Tyre and Egypt secured the coasts. Now Darius stakes everything on one battle on ground of his own choosing, offering Alexander half the empire and a daughter in marriage first. \'I would accept,\' says old Parmenion, \'were I Alexander.\' — \'So would I,\' comes the reply, \'were I Parmenion.\'',
+      el: 'Ο Γρανικός άνοιξε τη Μικρά Ασία· η Ισσός συνέτριψε την πρώτη μεγάλη στρατιά του Δαρείου· η Τύρος και η Αίγυπτος ασφάλισαν τις ακτές. Τώρα ο Δαρείος τα ποντάρει όλα σε μία μάχη σε έδαφος της επιλογής του, προσφέροντας πρώτα στον Αλέξανδρο τη μισή αυτοκρατορία και την κόρη του σε γάμο. «Θα δεχόμουν», λέει ο γέρος Παρμενίων, «αν ήμουν ο Αλέξανδρος». — «Κι εγώ», απαντά εκείνος, «αν ήμουν ο Παρμενίων».',
+    },
+    terms: [
+      { term: { en: 'Scythed Chariots', el: 'Δρεπανηφόρα Άρματα' }, def: { en: 'War-carts with blades on the wheels, needing flat prepared ground to charge.', el: 'Πολεμικά άρματα με λεπίδες στους τροχούς, που απαιτούσαν επίπεδο προετοιμασμένο έδαφος.' } },
+      { term: { en: 'Oblique Order', el: 'Λοξή Διάταξη' }, def: { en: 'Advancing with one reinforced wing forward, refusing the weaker wing.', el: 'Προέλαση με τη μία ενισχυμένη πτέρυγα μπροστά, με άρνηση της ασθενέστερης.' } },
+      { term: { en: 'Lord of Asia', el: 'Κύριος της Ασίας' }, def: { en: 'The title Alexander assumed after the victory — king over the Persian world.', el: 'Ο τίτλος που πήρε ο Αλέξανδρος μετά τη νίκη — βασιλεύς του περσικού κόσμου.' } },
+    ],
+    note: {
+      en: 'A lunar eclipse eleven days before the battle terrified both armies; Babylonian astronomical diaries — clay tablets that survive today — record both the eclipse and \'panic in the camp of the king\'. They are among the very few contemporary documents of Alexander\'s campaigns.',
+      el: 'Έκλειψη σελήνης έντεκα μέρες πριν από τη μάχη τρομοκράτησε και τους δύο στρατούς· τα βαβυλωνιακά αστρονομικά ημερολόγια — πήλινες πινακίδες που σώζονται σήμερα — καταγράφουν και την έκλειψη και «πανικό στο στρατόπεδο του βασιλέως». Είναι από τα ελάχιστα σύγχρονα τεκμήρια των εκστρατειών του Αλεξάνδρου.',
+    },
     title: { en: 'The Battle of Gaugamela', el: 'Η Μάχη στα Γαυγάμηλα' },
     location: { en: 'Plain of Gaugamela, Mesopotamia', el: 'Πεδιάδα των Γαυγαμήλων, Μεσοποταμία' },
     source: {
@@ -637,6 +749,19 @@ const SCENARIOS = [
     phase: 'phase3',
     year: 324,
     mapId: 'opis',
+    context: {
+      en: 'The army has marched 30,000 kilometres in ten years — to the Indus and back through the Gedrosian desert. Alexander now governs through Persian satraps, wears the diadem, and has enrolled 30,000 Persian youths trained in the Macedonian manner. To the veterans of Granicus this looks like replacement; to Alexander, like the only arithmetic that can hold an empire of fifty million.',
+      el: 'Ο στρατός έχει βαδίσει 30.000 χιλιόμετρα σε δέκα χρόνια — ώς τον Ινδό και πίσω μέσα από την έρημο της Γεδρωσίας. Ο Αλέξανδρος κυβερνά πλέον μέσω Περσών σατραπών, φορά το διάδημα και έχει κατατάξει 30.000 Πέρσες νέους εκπαιδευμένους κατά τα μακεδονικά. Για τους βετεράνους του Γρανικού αυτό μοιάζει με αντικατάσταση· για τον Αλέξανδρο, με τη μόνη αριθμητική που μπορεί να κρατήσει αυτοκρατορία πενήντα εκατομμυρίων.',
+    },
+    terms: [
+      { term: { en: 'Epigonoi', el: 'Επίγονοι' }, def: { en: 'The 30,000 Persian youths trained to fight with the sarissa — \'the successors\'.', el: 'Οι 30.000 Πέρσες νέοι εκπαιδευμένοι στη σάρισα — «οι διάδοχοι».' } },
+      { term: { en: 'Proskynesis', el: 'Προσκύνησις' }, def: { en: 'The Persian bow before the king; to Greeks, an honor owed only to gods.', el: 'Η περσική υπόκλιση προ του βασιλέως· για τους Έλληνες, τιμή που ανήκε μόνο στους θεούς.' } },
+      { term: { en: 'Homonoia', el: 'Ομόνοια' }, def: { en: 'Concord — the prayer of the Opis banquet and seed of the ecumenical idea.', el: 'Η ομοψυχία — η δέηση του συμποσίου της Ώπιδος και σπόρος της οικουμενικής ιδέας.' } },
+    ],
+    note: {
+      en: 'Within a year Alexander was dead in Babylon at 32. Most of the Susa marriages dissolved — but the world he stitched together did not: for a thousand years, from the Nile to the Oxus, government, trade and eventually the Gospels would speak the koine Greek born of his conquest.',
+      el: 'Μέσα σε έναν χρόνο ο Αλέξανδρος πέθανε στη Βαβυλώνα, 32 ετών. Οι περισσότεροι γάμοι των Σούσων διαλύθηκαν — όμως ο κόσμος που συρράφτηκε δεν διαλύθηκε: επί χίλια χρόνια, από τον Νείλο ώς τον Ώξο, η διοίκηση, το εμπόριο και τελικά τα Ευαγγέλια θα μιλούσαν την ελληνιστική κοινή που γεννήθηκε από την κατάκτησή του.',
+    },
     title: { en: 'The Mutiny at Opis', el: 'Η Στάση στην Ώπη' },
     location: { en: 'Opis, on the Tigris', el: 'Ώπις, επί του Τίγρη' },
     source: {
@@ -780,6 +905,12 @@ const GRAND_VERDICT = {
   },
 };
 
+
+const RANKS = {
+  golden: { en: 'Hegemon of the Hellenes', el: 'Ηγεμών των Ελλήνων' },
+  endured: { en: 'Strategos of the Polis', el: 'Στρατηγός της Πόλεως' },
+  collapse: { en: 'Exile of the Agora', el: 'Εξόριστος της Αγοράς' },
+};
 
 /* ============================================================
    CINEMATIC TACTICAL SVG MAPS — terrain art, unit silhouettes
@@ -932,6 +1063,54 @@ function MapShell({ children, legend }) {
           </symbol>
           <symbol id="uClash" viewBox="0 0 16 16">
             <path d="M8 0 L9.3 4.6 L13.8 2.6 L11 6.6 L16 8 L11 9.4 L13.4 13.6 L9.2 11.3 L8 16 L6.8 11.3 L2.6 13.6 L5 9.4 L0 8 L5 6.6 L2.2 2.6 L6.7 4.6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uBombard" viewBox="0 0 22 13">
+            <rect x="4" y="4.6" width="13" height="3.6" rx="1.8" fill="currentColor" />
+            <rect x="15.5" y="5.3" width="5" height="2.2" rx="1.1" fill="currentColor" />
+            <circle cx="7.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="13.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="2.6" cy="9.8" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uChurch" viewBox="0 0 16 14">
+            <path d="M3.4 8.2 Q3.4 4.6 8 4.2 Q12.6 4.6 12.6 8.2 Z" fill="currentColor" />
+            <rect x="2.6" y="8.2" width="10.8" height="4.6" fill="currentColor" />
+            <line x1="8" y1="4" x2="8" y2="1.2" stroke="currentColor" strokeWidth="0.9" />
+            <line x1="6.7" y1="2.4" x2="9.3" y2="2.4" stroke="currentColor" strokeWidth="0.9" />
+          </symbol>
+          <symbol id="uCrescent" viewBox="0 0 12 12">
+            <path d="M9.5 6 A4.3 4.3 0 1 1 5.4 1.8 A3.4 3.4 0 0 0 9.5 6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uCross" viewBox="0 0 10 12">
+            <rect x="4.1" y="1" width="1.8" height="10" fill="currentColor" />
+            <rect x="1.4" y="3.4" width="7.2" height="1.8" fill="currentColor" />
+          </symbol>
+          <symbol id="uRifle" viewBox="0 0 14 16">
+            <circle cx="6.8" cy="2.6" r="1.6" fill="currentColor" />
+            <path d="M6.6 1 Q7.9 0.2 8.6 1.3 L8.3 2 L6.8 2 Z" fill="currentColor" />
+            <path d="M5.8 4.4 L8.2 4.4 L8.8 9.6 L9.7 15.2 L8.1 15.2 L7.2 11 L6.3 15.2 L4.7 15.2 L5.6 9.6 Z" fill="currentColor" />
+            <line x1="2.4" y1="9.8" x2="12.4" y2="3.2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            <line x1="10.6" y1="4.4" x2="11.4" y2="5.6" stroke="currentColor" strokeWidth="0.8" />
+          </symbol>
+          <symbol id="uPlane" viewBox="0 0 22 12">
+            <path d="M2 6.2 L15 5.4 Q18.4 5.4 20 6.6 Q18.2 7.8 15 7.6 L2 7 Q1 6.6 2 6.2 Z" fill="currentColor" />
+            <path d="M9 5.6 L7 1.4 L9 1.6 L11.6 5.5 Z" fill="currentColor" />
+            <path d="M9 7.2 L7 11 L9 10.8 L11.6 7.3 Z" fill="currentColor" />
+            <path d="M2.6 6.6 L1 3.8 L2.6 4 L4 6.3 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uPara" viewBox="0 0 12 14">
+            <path d="M1 6 Q6 -1.4 11 6 Q8.5 4.8 6 4.9 Q3.5 4.8 1 6 Z" fill="currentColor" />
+            <line x1="1.4" y1="6" x2="5.4" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="10.6" y1="6" x2="6.6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="6" y1="5" x2="6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <circle cx="6" cy="11.6" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uSteam" viewBox="0 0 26 13">
+            <path d="M1.6 6.6 L24 6.6 L21.6 10.6 Q13 12.4 5 10.6 Z" fill="currentColor" />
+            <rect x="9" y="3.4" width="7.5" height="3.2" rx="0.6" fill="currentColor" />
+            <rect x="11.4" y="0.8" width="2.2" height="2.8" fill="currentColor" />
+            <path d="M13.8 0.6 Q16 -0.4 17.6 0.9" stroke="currentColor" strokeWidth="0.7" fill="none" />
+            <line x1="3.4" y1="6.6" x2="3.4" y2="3.4" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="21.8" y1="6.6" x2="21.8" y2="4.2" stroke="currentColor" strokeWidth="0.8" />
           </symbol>
           <symbol id="uTent" viewBox="0 0 12 9">
             <path d="M0.8 8.4 L6 0.8 L11.2 8.4 Z" fill="currentColor" />
@@ -1647,6 +1826,24 @@ function Hub({ lang, setLang, onStart }) {
         </div>
       </motion.button>
 
+      {/* Chronological strip */}
+      <div className="glass-card rounded-xl px-5 py-3.5 mb-6 overflow-x-auto">
+        <div className="flex items-center min-w-[640px]">
+          {SCENARIOS.map((s, i) => {
+            const dot = { phase1: 'bg-cyan-400', phase2: 'bg-marble-300', phase3: 'bg-purple-400' }[s.phase];
+            return (
+              <React.Fragment key={s.id}>
+                {i > 0 && <span className="flex-1 h-px bg-slate-700/70 mx-1.5" />}
+                <span className="flex flex-col items-center gap-1 shrink-0" title={s.title[lang]}>
+                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                  <span className="text-[9px] font-semibold text-slate-500 tabular-nums">{t.year(s.year)}</span>
+                </span>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Era cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {PHASES.map((ph, i) => {
@@ -1741,6 +1938,14 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
               <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
                 <Icon name="Scroll" size={15} /> {t.step1Title}
               </p>
+              {scenario.context && (
+                <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                  <p className="flex items-center gap-2 text-marble-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="Compass" size={13} /> {t.briefing}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed">{scenario.context[lang]}</p>
+                </div>
+              )}
               <div className="relative rounded-xl border border-cyan-400/25 bg-cyan-400/5 px-6 py-6 sm:px-8">
                 <span className="absolute -top-3 left-6 px-2.5 bg-slate-900 text-cyan-300 text-[10px] font-bold uppercase tracking-widest border border-cyan-400/25 rounded">
                   {t.theSourceSays}
@@ -1752,6 +1957,19 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
                   <Icon name="BookOpen" size={14} /> — {scenario.source.author[lang]}
                 </p>
               </div>
+              {scenario.terms && (
+                <div className="mt-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.keyTerms}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {scenario.terms.map((k, i) => (
+                      <div key={i} className="rounded-lg border border-slate-700/60 bg-slate-900/50 px-3.5 py-2.5">
+                        <p className="text-cyan-200 text-xs font-bold">{k.term[lang]}</p>
+                        <p className="text-slate-400 text-[11px] leading-snug mt-1">{k.def[lang]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="mt-7 flex justify-center">
                 <motion.button
                   whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
@@ -1819,6 +2037,14 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
                   </div>
                 </div>
               </div>
+              {scenario.note && (
+                <div className="mt-5 rounded-xl border border-laurel-300/25 bg-laurel-300/5 px-5 py-4">
+                  <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="BookOpen" size={13} /> {t.histNote}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed italic">{scenario.note[lang]}</p>
+                </div>
+              )}
               <div className="mt-7 flex justify-center">
                 <motion.button
                   whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
@@ -1867,6 +2093,11 @@ function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, on
           <h2 className={`font-display font-black text-2xl sm:text-4xl ${tierStyles.text}`}>
             {isGrandFinale ? grand.title[lang] : ending.title[lang]}
           </h2>
+          {typeof RANKS !== 'undefined' && (
+            <p className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-700/60 bg-slate-900/60 text-[11px] font-bold uppercase tracking-widest text-slate-300">
+              <Icon name="Trophy" size={13} className={tierStyles.text} /> {t.rankLabel}: <span className={tierStyles.text}>{RANKS[tier][lang]}</span>
+            </p>
+          )}
         </div>
         <div className="px-6 sm:px-10 py-7">
           <p className="flex items-center gap-2 text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
