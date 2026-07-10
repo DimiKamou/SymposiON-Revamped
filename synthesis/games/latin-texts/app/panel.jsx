@@ -39,6 +39,7 @@
       part:'text', dir:'A',
       showSyntax:false, showAnalysis:true, hideGreek:false, printAll:false, dark:false,
       query:'', pinned:false, highlight:null, revealed:{}, admin:false, editId:null, showArrows:false,
+      practice:null,
       pop:{show:false,x:0,y:0,tf:'translate(-50%,-100%)',l:'',r:'',g:'',d:'',note:''}
     };
 
@@ -48,6 +49,7 @@
     arrowPathRef = React.createRef();
     arrowAllRef = React.createRef();
     _scrollWanted = false;
+    _scrollPractice = false;
 
     clauseMeta = {
       kyria:{label:'Κύρια', hue:null},
@@ -125,9 +127,9 @@
       this._onResize=()=>this.drawAllArrows(); window.addEventListener('resize', this._onResize);
     }
     componentWillUnmount(){ document.removeEventListener('keydown', this.onKey); document.removeEventListener('focusout', this.onEditBlur); window.removeEventListener('resize', this._onResize); }
-    componentDidUpdate(){ this.applyTheme(); if(this._scrollWanted){ this._scrollWanted=false; this.doScroll(); } this.drawAllArrows(); }
+    componentDidUpdate(){ this.applyTheme(); if(this._scrollWanted){ this._scrollWanted=false; this.doScroll(); } if(this._scrollPractice){ this._scrollPractice=false; const prq=this.state.practice; if(prq&&prq.phase!=='done'&&prq.steps[prq.idx]){ const stq=prq.steps[prq.idx]; const tid= stq.kind==='role'? stq.id : (stq.clauseIds&&stq.clauseIds[0]); const c=this.scrollRef.current; const el=c&&c.querySelector('[data-tid="'+tid+'"]'); if(el){ const cr=c.getBoundingClientRect(), er=el.getBoundingClientRect(); const delta=(er.top-cr.top)-(c.clientHeight/2)+(er.height/2); c.scrollTo({top:Math.max(0,c.scrollTop+delta), behavior:'smooth'}); } } } this.drawAllArrows(); }
 
-    onKey = (e)=>{ if(e.key==='Escape') this.setState(s=>({pinned:false, pop:{...s.pop,show:false}})); };
+    onKey = (e)=>{ if(e.key!=='Escape') return; if(this.state.practice){ this.exitPractice(); return; } this.setState(s=>({pinned:false, pop:{...s.pop,show:false}})); };
 
     /* The unit data (an ES module `export const UNIT`) is imported by a small
        module <script> in the shell HTML, which sets window.LATIN_UNIT and fires
@@ -217,16 +219,80 @@
     closePop=()=>{ this.setState(s=>({pinned:false, pop:{...s.pop,show:false}})); };
     doPrint=()=>{ this.setState({printAll:true}, ()=>{ setTimeout(()=>{ try{window.print();}catch(e){} this.setState({printAll:false}); }, 140); }); };
 
+    // ── ΑΣΚΗΣΗ ΣΥΝΤΑΞΗΣ (guided practice) ────────────────────────────────────
+    // Per clause: (1) "βρες το ρήμα" — click the verb in the (highlighted)
+    // clause; then (2..n) three-option role questions for subject → object →
+    // the remaining terms. Popups/overlays are suppressed so answers don't leak.
+    buildPracticeSteps(){
+      const u=this.state.unit; const steps=[]; if(!u||!u.periods) return steps;
+      const isV=t=>/^Ρήμα/.test(t.r||''), isS=t=>/^Υποκείμεν/.test(t.r||''), isO=t=>/^Αντικείμεν/.test(t.r||''), isC=t=>((t.r||'').trim()==='Σύνδεσμος');
+      const push=(t,kind,cl,ids)=>steps.push({id:t._id, l:t.l, role:t.r, kind, label:cl.label||'', clauseIds:ids});
+      const visit=(cl)=>{
+        const ws=cl.kids.filter(t=>!t.kids && !t.plain && t.r);
+        const ids=ws.map(t=>t._id);
+        const verbs=ws.filter(isV);
+        if(verbs.length) push(verbs[0],'find',cl,ids);
+        ws.filter(isS).forEach(t=>push(t,'role',cl,ids));
+        ws.filter(isO).forEach(t=>push(t,'role',cl,ids));
+        ws.filter(t=>!isV(t)&&!isS(t)&&!isO(t)&&!isC(t)).forEach(t=>push(t,'role',cl,ids));
+        cl.kids.forEach(k=>{ if(k.kids) visit(k); });
+      };
+      u.periods.forEach(p=>p.kids.forEach(k=>{ if(k.kids) visit(k); }));
+      return steps;
+    }
+    rolePool(){ const set=new Set(); const u=this.state.unit; if(!u) return []; const walk=cl=>cl.kids.forEach(t=>{ if(t.kids) walk(t); else if(t.r) set.add(t.r); }); u.periods.forEach(p=>p.kids.forEach(k=>{ if(k.kids) walk(k); else if(k.r) set.add(k.r); })); return Array.from(set); }
+    _mkOptions(step){
+      const DEF=['Υποκείμενο','Αντικείμενο','Ρήμα','Επιθετικός προσδ.','Γενική κτητική'];
+      let pool=this.rolePool().filter(r=>r!==step.role);
+      DEF.forEach(d=>{ if(pool.indexOf(d)<0 && d!==step.role) pool.push(d); });
+      for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=pool[i]; pool[i]=pool[j]; pool[j]=tmp; }
+      const opts=[step.role].concat(pool.slice(0,2));
+      for(let i=opts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const tmp=opts[i]; opts[i]=opts[j]; opts[j]=tmp; }
+      return opts;
+    }
+    startPractice=()=>{
+      const steps=this.buildPracticeSteps(); if(!steps.length) return;
+      const cur=this.state.practice;
+      const saved=cur&&cur.saved? cur.saved : {syntax:this.state.showSyntax, analysis:this.state.showAnalysis, arrows:this.state.showArrows};
+      const st={steps, idx:0, ok:0, done:0, phase:'ask', options: steps[0].kind==='role'? this._mkOptions(steps[0]) : null, pickedRight:null, picked:null, pickedRole:null, saved};
+      this._scrollPractice=true;
+      this.setState({practice:st, part:'text', showSyntax:false, showAnalysis:false, showArrows:false, pinned:false, pop:Object.assign({},this.state.pop,{show:false})});
+    };
+    exitPractice=()=>{ const pr=this.state.practice; const sv=(pr&&pr.saved)||{}; this.setState({practice:null, showSyntax:!!sv.syntax, showAnalysis:sv.analysis!==false, showArrows:!!sv.arrows}); };
+    practiceClick=(t)=>{
+      const pr=this.state.practice; if(!pr||pr.phase!=='ask') return;
+      const step=pr.steps[pr.idx]; if(step.kind!=='find') return;
+      if(!step.clauseIds||step.clauseIds.indexOf(t._id)<0) return;
+      const right=/^Ρήμα/.test(t.r||'');
+      this.setState({practice:Object.assign({},pr,{phase:'feedback', pickedRight:right, picked:t.l, pickedRole:t.r||'', ok:pr.ok+(right?1:0), done:pr.done+1})});
+    };
+    practiceAnswer=(opt)=>{
+      const pr=this.state.practice; if(!pr||pr.phase!=='ask') return;
+      const step=pr.steps[pr.idx]; const right=(opt===step.role);
+      this.setState({practice:Object.assign({},pr,{phase:'feedback', pickedRight:right, picked:opt, pickedRole:null, ok:pr.ok+(right?1:0), done:pr.done+1})});
+    };
+    practiceNext=()=>{
+      const pr=this.state.practice; if(!pr) return;
+      const idx=pr.idx+1;
+      if(idx>=pr.steps.length){ this.setState({practice:Object.assign({},pr,{phase:'done'})}); return; }
+      const step=pr.steps[idx];
+      this._scrollPractice=true;
+      this.setState({practice:Object.assign({},pr,{idx, phase:'ask', options: step.kind==='role'? this._mkOptions(step) : null, pickedRight:null, picked:null, pickedRole:null})});
+    };
+
     showPop(t, el){ if(!t || !t.r) return; const r=el.getBoundingClientRect(); const above=r.top>150; this.setState({editId:(t._id!=null?t._id:null), pop:{show:true, x:Math.round(r.left+r.width/2), y: above?Math.round(r.top-10):Math.round(r.bottom+10), tf: above?'translate(-50%,-100%)':'translate(-50%,0)', l:t.l, r:this.composeRole(t), g:t.g||'', d:t.d||'', note:t.note||'', rawR:t.r||'', toRaw:t.to||''}}); }
     hidePop(){ if(this.state.pinned) return; if(this.state.pop.show) this.setState(s=>({pop:{...s.pop,show:false}})); }
     togglePin(t, el){ if(!t || !t.r) return; const s=this.state; if(s.pinned && s.pop.show && s.pop.l===t.l){ this.setState(st=>({pinned:false, pop:{...st.pop,show:false}})); } else { this.showPop(t, el); this.setState({pinned:true}); } }
 
     jumpTo=(form)=>{ this.setState({highlight:this.keyOf(form), part:'text'}); this._scrollWanted=true; };
     doScroll(){ const c=this.scrollRef.current; if(!c||!this.state.highlight) return; const el=c.querySelector('[data-wkey="'+this.state.highlight+'"]'); if(el){ const cr=c.getBoundingClientRect(), er=el.getBoundingClientRect(); const delta=(er.top-cr.top)-(c.clientHeight/2)+(er.height/2); c.scrollTo({top:Math.max(0,c.scrollTop+delta), behavior:'smooth'}); } }
-    drawArrow(fromEl){ const svg=this.arrowSvgRef.current, path=this.arrowPathRef.current; if(!svg||!path||!fromEl) return; const hid=fromEl.getAttribute('data-head'); if(!hid){ path.style.opacity=0; return; } const cont=svg.parentNode; const headEl=cont.querySelector('[data-tid="'+hid+'"]'); if(!headEl){ path.style.opacity=0; return; } const cr=cont.getBoundingClientRect(), a=fromEl.getBoundingClientRect(), b=headEl.getBoundingClientRect(); const x1=a.left+a.width/2-cr.left, y1=a.top-cr.top-1; const x2=b.left+b.width/2-cr.left, y2=b.top-cr.top-1; const lift=Math.max(20, Math.abs(x2-x1)*0.16); const my=Math.min(y1,y2)-lift; const d='M '+x1.toFixed(1)+' '+y1.toFixed(1)+' Q '+((x1+x2)/2).toFixed(1)+' '+my.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1); path.setAttribute('d',d); path.style.stroke=fromEl.getAttribute('data-col')||'var(--accent)'; path.style.opacity=0.92; }
+    /* Rectilinear "elbow" connector: up from the word, straight across a lane,
+       down into the head — small rounded corners, no big curves. */
+    _elbow(x1,y1,x2,y2,lift){ const lane=Math.min(y1,y2)-lift; const dx=x2-x1; if(Math.abs(dx)<14){ return 'M '+x1.toFixed(1)+' '+y1.toFixed(1)+' L '+x2.toFixed(1)+' '+y2.toFixed(1); } const r=Math.min(7,Math.abs(dx)/2); const sgn=dx>0?1:-1; return 'M '+x1.toFixed(1)+' '+y1.toFixed(1)+' L '+x1.toFixed(1)+' '+(lane+r).toFixed(1)+' Q '+x1.toFixed(1)+' '+lane.toFixed(1)+' '+(x1+sgn*r).toFixed(1)+' '+lane.toFixed(1)+' L '+(x2-sgn*r).toFixed(1)+' '+lane.toFixed(1)+' Q '+x2.toFixed(1)+' '+lane.toFixed(1)+' '+x2.toFixed(1)+' '+(lane+r).toFixed(1)+' L '+x2.toFixed(1)+' '+y2.toFixed(1); }
+    drawArrow(fromEl){ const svg=this.arrowSvgRef.current, path=this.arrowPathRef.current; if(!svg||!path||!fromEl) return; const hid=fromEl.getAttribute('data-head'); if(!hid){ path.style.opacity=0; return; } const cont=svg.parentNode; const headEl=cont.querySelector('[data-tid="'+hid+'"]'); if(!headEl){ path.style.opacity=0; return; } const cr=cont.getBoundingClientRect(), a=fromEl.getBoundingClientRect(), b=headEl.getBoundingClientRect(); const x1=a.left+a.width/2-cr.left, y1=a.top-cr.top-1; const x2=b.left+b.width/2-cr.left, y2=b.top-cr.top-1; const d=this._elbow(x1,y1,x2,y2,18); path.setAttribute('d',d); path.style.stroke=fromEl.getAttribute('data-col')||'var(--accent)'; path.style.opacity=0.95; }
     hideArrow(){ const path=this.arrowPathRef.current; if(path) path.style.opacity=0; }
     toggleArrows=()=>{ this.setState(s=>({showArrows:!s.showArrows})); };
-    drawAllArrows(){ const svg=this.arrowSvgRef.current, g=this.arrowAllRef.current; if(!svg||!g) return; while(g.firstChild) g.removeChild(g.firstChild); if(!this.state.showArrows) return; const cont=svg.parentNode; if(!cont) return; const cr=cont.getBoundingClientRect(); const els=[].slice.call(cont.querySelectorAll('[data-tid]')); const byId={}; els.forEach(e=>{ byId[e.getAttribute('data-tid')]=e; }); const NS='http://www.w3.org/2000/svg'; els.forEach(fromEl=>{ const hid=fromEl.getAttribute('data-head'); if(!hid) return; const headEl=byId[hid]; if(!headEl) return; const a=fromEl.getBoundingClientRect(), b=headEl.getBoundingClientRect(); const x1=a.left+a.width/2-cr.left, y1=a.top-cr.top-1; const x2=b.left+b.width/2-cr.left, y2=b.top-cr.top-1; const lift=Math.max(14, Math.abs(x2-x1)*0.13); const my=Math.min(y1,y2)-lift; const d='M '+x1.toFixed(1)+' '+y1.toFixed(1)+' Q '+((x1+x2)/2).toFixed(1)+' '+my.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1); const p=document.createElementNS(NS,'path'); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke', fromEl.getAttribute('data-col')||'var(--accent)'); p.setAttribute('stroke-width','1.6'); p.setAttribute('marker-end','url(#lt-arrow)'); p.setAttribute('opacity','0.75'); g.appendChild(p); }); }
+    drawAllArrows(){ const svg=this.arrowSvgRef.current, g=this.arrowAllRef.current; if(!svg||!g) return; while(g.firstChild) g.removeChild(g.firstChild); if(!this.state.showArrows) return; const cont=svg.parentNode; if(!cont) return; const cr=cont.getBoundingClientRect(); const els=[].slice.call(cont.querySelectorAll('[data-tid]')); const byId={}; els.forEach(e=>{ byId[e.getAttribute('data-tid')]=e; }); const NS='http://www.w3.org/2000/svg'; let na=0; els.forEach(fromEl=>{ const hid=fromEl.getAttribute('data-head'); if(!hid) return; const headEl=byId[hid]; if(!headEl) return; const a=fromEl.getBoundingClientRect(), b=headEl.getBoundingClientRect(); const x1=a.left+a.width/2-cr.left, y1=a.top-cr.top-1; const x2=b.left+b.width/2-cr.left, y2=b.top-cr.top-1; const lift=12+((na++)%4)*8; const d=this._elbow(x1,y1,x2,y2,lift); const p=document.createElementNS(NS,'path'); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke', fromEl.getAttribute('data-col')||'var(--accent)'); p.setAttribute('stroke-width','1.5'); p.setAttribute('stroke-linejoin','round'); p.setAttribute('stroke-linecap','round'); p.setAttribute('marker-end','url(#lt-arrow)'); p.setAttribute('opacity','0.8'); g.appendChild(p); }); }
 
     segStyle(on){ return {cursor:'pointer',border:0,fontFamily:'var(--font-ui)',fontSize:'12.5px',fontWeight:700,padding:'7px 14px',background:(on?'var(--accent)':'transparent'),color:(on?'var(--on-accent)':'var(--muted)'),transition:'all .15s'}; }
     pillStyle(on){ return {display:'inline-flex',alignItems:'center',gap:'7px',cursor:'pointer',fontFamily:'var(--font-ui)',fontSize:'13px',fontWeight:600,padding:'7px 14px',borderRadius:'999px',border:'1px solid '+(on?'transparent':'var(--line)'),background:(on?'var(--accent)':'var(--panel)'),color:(on?'var(--on-accent)':'var(--fg)'),transition:'all .15s'}; }
@@ -239,19 +305,24 @@
         if(t.plain) return h('span',{key:'k'+(idx++),style:{fontFamily:'var(--font-latin)',fontStyle:'italic',color:'var(--muted)'}}, t.l);
         const k=self.keyOf(t.k||t.d||t.l);
         const hot = s.highlight && k===s.highlight;
+        const pr0=s.practice; const pst=(pr0&&pr0.phase!=='done')?pr0.steps[pr0.idx]:null;
+        const isTarget=!!(pst&&((pst.kind==='role'&&pst.id===t._id)||(pst.kind==='find'&&pr0.phase==='feedback'&&pst.id===t._id)));
+        const inClause=!!(pst&&pst.kind==='find'&&pr0.phase==='ask'&&pst.clauseIds&&pst.clauseIds.indexOf(t._id)>=0);
+        const pbg=isTarget?'var(--hl)':(inClause?'color-mix(in oklab, var(--accent) 9%, transparent)':(hot?'var(--hl)':'transparent'));
         const cols = t.r ? (G.tok.get(t)||['var(--accent)']) : null;
         const c0 = cols?cols[0]:'var(--fg)';
         const latinStyle={fontFamily:'var(--font-latin)',fontStyle:'italic',fontWeight:600};
         if(syn && cols){ Object.assign(latinStyle, self.textColorStyle(cols), decor(t,c0)); }
         const latin=h('span',{style:latinStyle}, t.l+(t.a||''));
         let content=latin; const extra={};
+        if(isTarget){ extra.animation='ltring 1.4s ease-in-out infinite'; extra.borderRadius='6px'; }
         if(syn && t.r){
           const chip=h('span',{style:{fontFamily:'var(--font-ui)',fontSize:'9px',fontWeight:700,letterSpacing:'.02em',textTransform:'uppercase',lineHeight:1.15,color:c0,background:'color-mix(in oklab,'+c0+' 15%,transparent)',border:'1px solid color-mix(in oklab,'+c0+' 32%,transparent)',borderRadius:'4px',padding:'0 4px 1px',marginBottom:'5px',whiteSpace:'nowrap'}}, t.r);
           content=h('span',{style:{display:'inline-flex',flexDirection:'column',alignItems:'center'}}, chip, latin);
           extra.verticalAlign='bottom';
         }
         const hid=G.head.get(t);
-        return h('span',Object.assign({key:'k'+(idx++),'data-wkey':k,'data-tid':t._id,'data-head':(hid!=null?hid:''),'data-col':c0,onMouseEnter:(e)=>{ if(!self.state.admin) self.showPop(t,e.currentTarget); self.drawArrow(e.currentTarget); },onMouseLeave:()=>{ if(!self.state.admin) self.hidePop(); self.hideArrow(); },onClick:(e)=>self.togglePin(t,e.currentTarget),style:Object.assign({cursor:'pointer',borderRadius:'4px',padding:syn?'2px 3px 0':'0 1px',borderBottom:syn?'none':'1px dotted color-mix(in oklab,var(--accent) 45%,transparent)',background:hot?'var(--hl)':'transparent',transition:'background .2s'},extra)}), content);
+        return h('span',Object.assign({key:'k'+(idx++),'data-wkey':k,'data-tid':t._id,'data-head':(hid!=null?hid:''),'data-col':c0,onMouseEnter:(e)=>{ if(!self.state.admin && !self.state.practice) self.showPop(t,e.currentTarget); if(!self.state.practice) self.drawArrow(e.currentTarget); },onMouseLeave:()=>{ if(!self.state.admin) self.hidePop(); self.hideArrow(); },onClick:(e)=>{ if(self.state.practice) self.practiceClick(t); else self.togglePin(t,e.currentTarget); },style:Object.assign({cursor:'pointer',borderRadius:'4px',padding:syn?'2px 3px 0':'0 1px',borderBottom:syn?'none':'1px dotted color-mix(in oklab,var(--accent) 45%,transparent)',background:pbg,transition:'background .2s'},extra)}), content);
       };
       const node=(n,ck)=>{
         if(n.kids){
@@ -310,7 +381,9 @@
       const comparatives=(ready?u.comparatives:[]).map((kl,ki)=>({kl:kl.kl, rows:kl.rows.map((r,ri)=>({pos:r.pos, comp:r.comp, sup:r.sup, onJump:jump(r.pos), pPos:'comparatives.'+ki+'.rows.'+ri+'.pos', pComp:'comparatives.'+ki+'.rows.'+ri+'.comp', pSup:'comparatives.'+ki+'.rows.'+ri+'.sup'})).filter(r=>inc(r.pos,r.comp,r.sup))})).filter(kl=>kl.rows.length);
       const pronouns=(ready?u.pronouns:[]).map((p,pi)=>({form:p.form, kind:p.kind, extra:p.extra||'', onJump:jump(p.form), pForm:'pronouns.'+pi+'.form', pKind:'pronouns.'+pi+'.kind', pExtra:'pronouns.'+pi+'.extra'})).filter(p=>inc(p.form,p.kind,p.extra));
       const verbs=(ready?u.verbs:[]).map((sz,zi)=>{ const rows=sz.rows.map((r,ri)=>({pres:r.pres, perf:r.perf, sup:r.sup, inf:r.inf, note:r.note||'', onJump:jump(r.pres), pPres:'verbs.'+zi+'.rows.'+ri+'.pres', pPerf:'verbs.'+zi+'.rows.'+ri+'.perf', pSup:'verbs.'+zi+'.rows.'+ri+'.sup', pInf:'verbs.'+zi+'.rows.'+ri+'.inf', pNote:'verbs.'+zi+'.rows.'+ri+'.note'})).filter(r=>inc(r.pres,r.perf,r.sup,r.inf,r.note)); return {syz:sz.syz, rows, hasRows:rows.length>0, empty: rows.length===0}; }).filter(sz=> sz.hasRows || !q);
-      const sos=(ready?u.sos:[]).map((x,xi)=>({tag:x.tag, title:x.title, body:x.body, pTag:'sos.'+xi+'.tag', pTitle:'sos.'+xi+'.title', pBody:'sos.'+xi+'.body'})).filter(x=>inc(x.title,x.body,x.tag));
+      const sosHueL=s.dark?0.7:0.52;
+      const sosHueOf=(tg)=>{ let hh=0; const strv=String(tg||''); for(let ii=0;ii<strv.length;ii++) hh=(hh*31+strv.charCodeAt(ii))|0; return this.groupPalette[Math.abs(hh)%this.groupPalette.length]; };
+      const sos=(ready?u.sos:[]).map((x,xi)=>({tag:x.tag, title:x.title, body:x.body, pTag:'sos.'+xi+'.tag', pTitle:'sos.'+xi+'.title', pBody:'sos.'+xi+'.body'})).filter(x=>inc(x.title,x.body,x.tag)).map((x,xi)=>Object.assign(x,{n:xi+1, hue:'oklch('+sosHueL+' 0.14 '+sosHueOf(x.tag)+')'}));
 
       const greekBase={padding:'11px 16px', borderTop:'1px solid var(--line2)', borderLeft:'1px solid var(--line2)', fontFamily:'var(--font-ui)', fontSize:'15px', lineHeight:1.5, color:'var(--fg)'};
       const align=(ready?u.alignment:[]).map((a,i)=>{ const bg = i%2===1 ? 'var(--panel2)' : 'var(--panel)'; const masked = s.hideGreek && !s.revealed[i]; const gs=Object.assign({}, greekBase, {background:bg, cursor: s.hideGreek?'pointer':'default', transition:'filter .18s, opacity .18s'}); if(masked) Object.assign(gs,{filter:'blur(5px)',userSelect:'none',opacity:0.5}); return {la:a.la, el:a.el, pLa:'alignment.'+i+'.la', pEl:'alignment.'+i+'.el', laStyle:{padding:'11px 16px', borderTop:'1px solid var(--line2)', fontFamily:'var(--font-latin)', fontStyle:'italic', fontSize:'15px', lineHeight:1.5, color:'var(--fg)', background:bg}, elStyle:gs, onReveal:()=>this.revealLine(i)}; });
@@ -331,6 +404,7 @@
         showSyntax:s.showSyntax, showAnalysis:s.showAnalysis, hideGreek:s.hideGreek,
         syntaxBtn:this.pillStyle(s.showSyntax), analysisBtn:this.pillStyle(s.showAnalysis), greekBtn:this.pillStyle(s.hideGreek), greekBtnLabel: s.hideGreek?'👁 Δείξε μετάφραση':'⊘ Κρύψε μετάφραση',
         showArrows:s.showArrows, arrowsBtn:this.pillStyle(s.showArrows), toggleArrows:this.toggleArrows,
+        practiceOn:!!s.practice, practice:s.practice, practiceBtn:this.pillStyle(!!s.practice), startPractice:this.startPractice, exitPractice:this.exitPractice, practiceAnswer:this.practiceAnswer, practiceNext:this.practiceNext,
         toggleSyntax:this.toggleSyntax, toggleAnalysis:this.toggleAnalysis, toggleGreek:this.toggleGreek,
         onSearch:this.onSearch, clearSearch:this.clearSearch, query:s.query, doPrint:this.doPrint,
         hasHighlight:!!s.highlight, clearHighlight:this.clearHighlight,
@@ -410,10 +484,11 @@
                         <h2 style={s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")}>Λατινικό κείμενο</h2>
                       </div>
                       <div style={s("display:flex;flex-wrap:wrap;gap:8px")}>
-                        <button onClick={V.toggleSyntax} style={V.syntaxBtn}>⌊ ⌋ Ανάλυση σύνταξης</button>
-                        <button onClick={V.toggleAnalysis} style={V.analysisBtn}>☰ Πλήρης ανάλυση</button>
-                        <button onClick={V.toggleArrows} style={V.arrowsBtn}>➤ Βελάκια εξάρτησης</button>
-                        {V.hasHighlight && <button onClick={V.clearHighlight} style={s("display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)")}>✕ επισήμανση</button>}
+                        {!V.practiceOn && <button onClick={V.toggleSyntax} style={V.syntaxBtn}>⌊ ⌋ Ανάλυση σύνταξης</button>}
+                        {!V.practiceOn && <button onClick={V.toggleAnalysis} style={V.analysisBtn}>☰ Πλήρης ανάλυση</button>}
+                        {!V.practiceOn && <button onClick={V.toggleArrows} style={V.arrowsBtn}>➤ Βελάκια εξάρτησης</button>}
+                        <button onClick={V.practiceOn? V.exitPractice : V.startPractice} style={V.practiceBtn}>🎯 Άσκηση σύνταξης</button>
+                        {V.hasHighlight && !V.practiceOn && <button onClick={V.clearHighlight} style={s("display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)")}>✕ επισήμανση</button>}
                       </div>
                     </div>
                     <p style={s("font-family:var(--font-ui);font-size:14px;color:var(--muted);margin:0 0 18px;max-width:64ch;line-height:1.5")}>Πέρασε τον δείκτη πάνω από μια λέξη (ή πάτησέ την σε κινητό/tablet) για συντακτική &amp; γραμματική αναγνώριση. Με την <b style={s("color:var(--accent)")}>Ανάλυση σύνταξης</b> βλέπεις όλο το κείμενο σε <b>[ κύριες ]</b> και <b>( δευτερεύουσες )</b> προτάσεις, με χρώμα, ετικέτα είδους και ρόλο κάθε λέξης.</p>
@@ -542,7 +617,8 @@
                       <div key={ki} style={s("margin-bottom:22px")}>
                         <div style={s("font-family:var(--font-ui);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 10px")}>{kl.kl}</div>
                         <div style={s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")}>
-                          <table style={s("width:100%;border-collapse:collapse;font-family:var(--font-latin)")}>
+                          <table style={s("width:100%;border-collapse:collapse;font-family:var(--font-latin);table-layout:fixed")}>
+                            <colgroup><col style={s("width:34%")} /><col style={s("width:33%")} /><col style={s("width:33%")} /></colgroup>
                             <thead><tr>
                               <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")}>Θετικός</th>
                               <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")}>Συγκριτικός</th>
@@ -551,9 +627,9 @@
                             <tbody>
                               {kl.rows.map((r,ri) => (
                                 <tr key={ri} className="lt-hovr">
-                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2)")}><button onClick={r.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0")}>{r.pos}</button></td>
-                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg)")}>{r.comp}</td>
-                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg)")}>{r.sup}</td>
+                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2);word-break:break-word")}><button onClick={r.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0;text-align:left")}>{r.pos}</button></td>
+                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg);word-break:break-word")}>{r.comp}</td>
+                                  <td style={s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg);word-break:break-word")}>{r.sup}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -572,7 +648,8 @@
                       <h2 style={s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")}>Αντωνυμίες</h2>
                     </div>
                     <div style={s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")}>
-                      <table style={s("width:100%;border-collapse:collapse")}>
+                      <table style={s("width:100%;border-collapse:collapse;table-layout:fixed")}>
+                        <colgroup><col style={s("width:32%")} /><col style={s("width:24%")} /><col style={s("width:44%")} /></colgroup>
                         <thead><tr>
                           <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")}>Αντωνυμία</th>
                           <th style={s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")}>Είδος</th>
@@ -581,9 +658,9 @@
                         <tbody>
                           {V.pronouns.map((p,pi) => (
                             <tr key={pi} className="lt-hovr">
-                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2)")}><button onClick={p.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0")}>{p.form}</button></td>
-                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--fg)")}>{p.kind}</td>
-                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:13.5px;color:var(--muted)")}>{p.extra}</td>
+                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2);word-break:break-word")}><button onClick={p.onJump} className="lt-hovu" style={s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0;text-align:left")}>{p.form}</button></td>
+                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--fg);word-break:break-word")}>{p.kind}</td>
+                              <td style={s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:13.5px;color:var(--muted);word-break:break-word")}>{p.extra}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -645,12 +722,13 @@
                     </div>
                     <p style={s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")}>Ιδιαιτερότητες &amp; «παγίδες» της ενότητας που αξίζει να θυμάσαι.</p>
                     {V.hasSos && (
-                      <div style={s("display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px")}>
+                      <div style={s("display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px")}>
                         {V.sos.map((x,xi) => (
-                          <div key={xi} style={s("background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r-lg);padding:16px 18px")}>
-                            <div style={s("display:inline-block;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in oklab,var(--accent) 12%,transparent);padding:2px 9px;border-radius:5px")}>{x.tag}</div>
-                            <h4 style={s("margin:10px 0 6px;font-family:var(--font-serif);font-size:18px;font-weight:800")}>{x.title}</h4>
-                            <p style={s("margin:0;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;color:var(--muted)")}>{x.body}</p>
+                          <div key={xi} className="lt-sosc" style={Object.assign(s("position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 18px 16px"),{background:'color-mix(in oklab, '+x.hue+' 5%, var(--panel))',borderTop:'3px solid '+x.hue})}>
+                            <div style={Object.assign(s("position:absolute;top:-16px;right:8px;font-family:var(--font-serif);font-style:italic;font-weight:800;font-size:76px;line-height:1;user-select:none;pointer-events:none"),{color:x.hue,opacity:0.13})}>{x.n}</div>
+                            <div style={Object.assign(s("display:inline-flex;align-items:center;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent);padding:3px 10px;border-radius:999px"),{background:x.hue})}>{x.tag}</div>
+                            <h4 style={s("margin:11px 0 6px;font-family:var(--font-serif);font-size:18.5px;font-weight:800;line-height:1.25")}>{x.title}</h4>
+                            <p style={s("margin:0;font-family:var(--font-ui);font-size:13.5px;line-height:1.6;color:var(--muted)")}>{x.body}</p>
                           </div>
                         ))}
                       </div>
@@ -694,6 +772,49 @@
               )}
             </div>
           )}
+
+          {V.practice && (()=>{ const pr=V.practice; const len=pr.steps.length; const step=pr.steps[Math.min(pr.idx,len-1)]; const pct=Math.round(100*((pr.phase==='done'?len:pr.idx))/Math.max(1,len));
+            return (
+            <div style={s("position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9500;width:min(660px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 18px 50px -16px rgba(0,0,0,.38),0 4px 12px rgba(0,0,0,.14);padding:13px 16px 14px;animation:ltpop .18s ease both")}>
+              <div style={s("display:flex;align-items:center;gap:10px")}>
+                <span style={s("font-family:var(--font-ui);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent);background:var(--accent);padding:3px 9px;border-radius:999px;flex:none")}>🎯 Ασκηση συνταξης</span>
+                {pr.phase!=='done' && <span style={s("font-family:var(--font-mono);font-size:12px;color:var(--muted)")}>{pr.idx+1} / {len}</span>}
+                {pr.phase!=='done' && step.label && <span style={s("font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>{step.label}</span>}
+                <span style={s("font-family:var(--font-ui);font-size:12.5px;font-weight:700;color:var(--accent);margin-left:auto;flex:none")}>✓ {pr.ok}</span>
+                <button onClick={V.exitPractice} style={s("border:0;background:var(--panel2);border-radius:999px;width:24px;height:24px;cursor:pointer;color:var(--muted);flex:none;line-height:1")}>×</button>
+              </div>
+              <div style={s("height:4px;background:var(--line2);border-radius:999px;overflow:hidden;margin:9px 0 11px")}><div style={Object.assign(s("height:100%;background:var(--accent);transition:width .25s"),{width:pct+'%'})}></div></div>
+              {pr.phase==='ask' && step.kind==='find' && (
+                <div style={s("font-family:var(--font-ui);font-size:14.5px;line-height:1.55;color:var(--fg)")}>🔎 <b>Βρες το ρήμα</b> — πάτησε τη λέξη μέσα στο κείμενο (η πρόταση είναι φωτισμένη).</div>
+              )}
+              {pr.phase==='ask' && step.kind==='role' && (
+                <div>
+                  <div style={s("font-family:var(--font-ui);font-size:14.5px;line-height:1.5;color:var(--fg)")}>Τι είναι συντακτικά η λέξη <b style={s("font-family:var(--font-latin);font-style:italic;font-size:16.5px;color:var(--accent)")}>{step.l}</b> ;</div>
+                  {pr.options.map((o,oi)=>(<button key={oi} className="lt-popt" onClick={()=>V.practiceAnswer(o)} style={s("display:block;width:100%;text-align:left;font-family:var(--font-ui);font-size:13.5px;font-weight:600;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:7px")}>{['Α','Β','Γ'][oi]}. {o}</button>))}
+                </div>
+              )}
+              {pr.phase==='feedback' && (
+                <div>
+                  <div style={Object.assign(s("font-family:var(--font-ui);font-size:14px;font-weight:600;line-height:1.5;border-radius:9px;padding:9px 12px;color:var(--fg)"),{background: pr.pickedRight? 'color-mix(in oklab, oklch(0.6 0.15 150) 16%, var(--panel2))' : 'color-mix(in oklab, oklch(0.6 0.19 25) 14%, var(--panel2))'})}>
+                    {pr.pickedRight? '✓ Σωστά! ' : '✗ Λάθος. '}
+                    {step.kind==='find'
+                      ? (pr.pickedRight ? <span>Το ρήμα είναι «{pr.picked}».</span> : <span>«{pr.picked}» είναι: {pr.pickedRole||'—'} · Το ρήμα είναι «{step.l}».</span>)
+                      : <span>«{step.l}» — {step.role}</span>}
+                  </div>
+                  <button onClick={V.practiceNext} style={s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);margin-top:10px")}>Συνέχεια →</button>
+                </div>
+              )}
+              {pr.phase==='done' && (
+                <div style={s("text-align:center;padding:4px 0 2px")}>
+                  <div style={s("font-family:var(--font-serif);font-weight:800;font-size:30px")}>🏆 {pr.ok} / {len}</div>
+                  <div style={s("font-family:var(--font-ui);font-size:13px;color:var(--muted);margin-top:2px")}>σωστές απαντήσεις · {Math.round(100*pr.ok/Math.max(1,len))}%</div>
+                  <div style={s("display:flex;gap:9px;justify-content:center;margin-top:12px")}>
+                    <button onClick={V.startPractice} style={s("cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 16px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent)")}>↺ Ξανά</button>
+                    <button onClick={V.exitPractice} style={s("cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg)")}>Κλείσιμο</button>
+                  </div>
+                </div>
+              )}
+            </div> ); })()}
         </div>
       );
     }

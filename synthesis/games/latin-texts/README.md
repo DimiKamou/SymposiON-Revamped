@@ -7,7 +7,11 @@ serve, no CDN) that renders **7 parts** from one data file per text:
 1. **Κείμενο** — the Latin text; hover/tap a word for full syntactic + grammatical
    analysis. "Ανάλυση σύνταξης" overlays clause brackets `[ κύριες ]` / `( δευτ. )`,
    per-word role chips, connection colours, annotation marks; "Βελάκια εξάρτησης"
-   draws dependency arrows; "Πλήρης ανάλυση" lists the numbered syntactic analysis.
+   draws rectilinear dependency connectors; "Πλήρης ανάλυση" lists the numbered
+   syntactic analysis. **"Άσκηση σύνταξης"** is a guided practice mode generated
+   from the same data: per clause, first *βρες το ρήμα* (click the verb in the
+   highlighted clause), then three-option role quizzes for υποκείμενο → αντικείμενο
+   → the remaining terms, with progress, feedback and a final score.
 2. **Μετάφραση** — Latin ↔ Greek aligned columns, with a hide-and-reveal practice mode.
 3. **Ουσιαστικά & Επίθετα** — nouns/adjectives grouped by κλίση (declension) & γένος.
 4. **Παραθετικά** — adjective degrees (θετικός/συγκριτικός/υπερθετικός) by κλίση.

@@ -57,6 +57,7 @@
       admin: false,
       editId: null,
       showArrows: false,
+      practice: null,
       pop: {
         show: false,
         x: 0,
@@ -75,6 +76,7 @@
     arrowPathRef = React.createRef();
     arrowAllRef = React.createRef();
     _scrollWanted = false;
+    _scrollPractice = false;
     clauseMeta = {
       kyria: {
         label: 'Κύρια',
@@ -319,10 +321,34 @@
         this._scrollWanted = false;
         this.doScroll();
       }
+      if (this._scrollPractice) {
+        this._scrollPractice = false;
+        const prq = this.state.practice;
+        if (prq && prq.phase !== 'done' && prq.steps[prq.idx]) {
+          const stq = prq.steps[prq.idx];
+          const tid = stq.kind === 'role' ? stq.id : stq.clauseIds && stq.clauseIds[0];
+          const c = this.scrollRef.current;
+          const el = c && c.querySelector('[data-tid="' + tid + '"]');
+          if (el) {
+            const cr = c.getBoundingClientRect(),
+              er = el.getBoundingClientRect();
+            const delta = er.top - cr.top - c.clientHeight / 2 + er.height / 2;
+            c.scrollTo({
+              top: Math.max(0, c.scrollTop + delta),
+              behavior: 'smooth'
+            });
+          }
+        }
+      }
       this.drawAllArrows();
     }
     onKey = e => {
-      if (e.key === 'Escape') this.setState(s => ({
+      if (e.key !== 'Escape') return;
+      if (this.state.practice) {
+        this.exitPractice();
+        return;
+      }
+      this.setState(s => ({
         pinned: false,
         pop: {
           ...s.pop,
@@ -733,6 +759,180 @@
         }, 140);
       });
     };
+
+    // ── ΑΣΚΗΣΗ ΣΥΝΤΑΞΗΣ (guided practice) ────────────────────────────────────
+    // Per clause: (1) "βρες το ρήμα" — click the verb in the (highlighted)
+    // clause; then (2..n) three-option role questions for subject → object →
+    // the remaining terms. Popups/overlays are suppressed so answers don't leak.
+    buildPracticeSteps() {
+      const u = this.state.unit;
+      const steps = [];
+      if (!u || !u.periods) return steps;
+      const isV = t => /^Ρήμα/.test(t.r || ''),
+        isS = t => /^Υποκείμεν/.test(t.r || ''),
+        isO = t => /^Αντικείμεν/.test(t.r || ''),
+        isC = t => (t.r || '').trim() === 'Σύνδεσμος';
+      const push = (t, kind, cl, ids) => steps.push({
+        id: t._id,
+        l: t.l,
+        role: t.r,
+        kind,
+        label: cl.label || '',
+        clauseIds: ids
+      });
+      const visit = cl => {
+        const ws = cl.kids.filter(t => !t.kids && !t.plain && t.r);
+        const ids = ws.map(t => t._id);
+        const verbs = ws.filter(isV);
+        if (verbs.length) push(verbs[0], 'find', cl, ids);
+        ws.filter(isS).forEach(t => push(t, 'role', cl, ids));
+        ws.filter(isO).forEach(t => push(t, 'role', cl, ids));
+        ws.filter(t => !isV(t) && !isS(t) && !isO(t) && !isC(t)).forEach(t => push(t, 'role', cl, ids));
+        cl.kids.forEach(k => {
+          if (k.kids) visit(k);
+        });
+      };
+      u.periods.forEach(p => p.kids.forEach(k => {
+        if (k.kids) visit(k);
+      }));
+      return steps;
+    }
+    rolePool() {
+      const set = new Set();
+      const u = this.state.unit;
+      if (!u) return [];
+      const walk = cl => cl.kids.forEach(t => {
+        if (t.kids) walk(t);else if (t.r) set.add(t.r);
+      });
+      u.periods.forEach(p => p.kids.forEach(k => {
+        if (k.kids) walk(k);else if (k.r) set.add(k.r);
+      }));
+      return Array.from(set);
+    }
+    _mkOptions(step) {
+      const DEF = ['Υποκείμενο', 'Αντικείμενο', 'Ρήμα', 'Επιθετικός προσδ.', 'Γενική κτητική'];
+      let pool = this.rolePool().filter(r => r !== step.role);
+      DEF.forEach(d => {
+        if (pool.indexOf(d) < 0 && d !== step.role) pool.push(d);
+      });
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = pool[i];
+        pool[i] = pool[j];
+        pool[j] = tmp;
+      }
+      const opts = [step.role].concat(pool.slice(0, 2));
+      for (let i = opts.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = opts[i];
+        opts[i] = opts[j];
+        opts[j] = tmp;
+      }
+      return opts;
+    }
+    startPractice = () => {
+      const steps = this.buildPracticeSteps();
+      if (!steps.length) return;
+      const cur = this.state.practice;
+      const saved = cur && cur.saved ? cur.saved : {
+        syntax: this.state.showSyntax,
+        analysis: this.state.showAnalysis,
+        arrows: this.state.showArrows
+      };
+      const st = {
+        steps,
+        idx: 0,
+        ok: 0,
+        done: 0,
+        phase: 'ask',
+        options: steps[0].kind === 'role' ? this._mkOptions(steps[0]) : null,
+        pickedRight: null,
+        picked: null,
+        pickedRole: null,
+        saved
+      };
+      this._scrollPractice = true;
+      this.setState({
+        practice: st,
+        part: 'text',
+        showSyntax: false,
+        showAnalysis: false,
+        showArrows: false,
+        pinned: false,
+        pop: Object.assign({}, this.state.pop, {
+          show: false
+        })
+      });
+    };
+    exitPractice = () => {
+      const pr = this.state.practice;
+      const sv = pr && pr.saved || {};
+      this.setState({
+        practice: null,
+        showSyntax: !!sv.syntax,
+        showAnalysis: sv.analysis !== false,
+        showArrows: !!sv.arrows
+      });
+    };
+    practiceClick = t => {
+      const pr = this.state.practice;
+      if (!pr || pr.phase !== 'ask') return;
+      const step = pr.steps[pr.idx];
+      if (step.kind !== 'find') return;
+      if (!step.clauseIds || step.clauseIds.indexOf(t._id) < 0) return;
+      const right = /^Ρήμα/.test(t.r || '');
+      this.setState({
+        practice: Object.assign({}, pr, {
+          phase: 'feedback',
+          pickedRight: right,
+          picked: t.l,
+          pickedRole: t.r || '',
+          ok: pr.ok + (right ? 1 : 0),
+          done: pr.done + 1
+        })
+      });
+    };
+    practiceAnswer = opt => {
+      const pr = this.state.practice;
+      if (!pr || pr.phase !== 'ask') return;
+      const step = pr.steps[pr.idx];
+      const right = opt === step.role;
+      this.setState({
+        practice: Object.assign({}, pr, {
+          phase: 'feedback',
+          pickedRight: right,
+          picked: opt,
+          pickedRole: null,
+          ok: pr.ok + (right ? 1 : 0),
+          done: pr.done + 1
+        })
+      });
+    };
+    practiceNext = () => {
+      const pr = this.state.practice;
+      if (!pr) return;
+      const idx = pr.idx + 1;
+      if (idx >= pr.steps.length) {
+        this.setState({
+          practice: Object.assign({}, pr, {
+            phase: 'done'
+          })
+        });
+        return;
+      }
+      const step = pr.steps[idx];
+      this._scrollPractice = true;
+      this.setState({
+        practice: Object.assign({}, pr, {
+          idx,
+          phase: 'ask',
+          options: step.kind === 'role' ? this._mkOptions(step) : null,
+          pickedRight: null,
+          picked: null,
+          pickedRole: null
+        })
+      });
+    };
     showPop(t, el) {
       if (!t || !t.r) return;
       const r = el.getBoundingClientRect();
@@ -802,6 +1002,18 @@
         });
       }
     }
+    /* Rectilinear "elbow" connector: up from the word, straight across a lane,
+       down into the head — small rounded corners, no big curves. */
+    _elbow(x1, y1, x2, y2, lift) {
+      const lane = Math.min(y1, y2) - lift;
+      const dx = x2 - x1;
+      if (Math.abs(dx) < 14) {
+        return 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L ' + x2.toFixed(1) + ' ' + y2.toFixed(1);
+      }
+      const r = Math.min(7, Math.abs(dx) / 2);
+      const sgn = dx > 0 ? 1 : -1;
+      return 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' L ' + x1.toFixed(1) + ' ' + (lane + r).toFixed(1) + ' Q ' + x1.toFixed(1) + ' ' + lane.toFixed(1) + ' ' + (x1 + sgn * r).toFixed(1) + ' ' + lane.toFixed(1) + ' L ' + (x2 - sgn * r).toFixed(1) + ' ' + lane.toFixed(1) + ' Q ' + x2.toFixed(1) + ' ' + lane.toFixed(1) + ' ' + x2.toFixed(1) + ' ' + (lane + r).toFixed(1) + ' L ' + x2.toFixed(1) + ' ' + y2.toFixed(1);
+    }
     drawArrow(fromEl) {
       const svg = this.arrowSvgRef.current,
         path = this.arrowPathRef.current;
@@ -824,12 +1036,10 @@
         y1 = a.top - cr.top - 1;
       const x2 = b.left + b.width / 2 - cr.left,
         y2 = b.top - cr.top - 1;
-      const lift = Math.max(20, Math.abs(x2 - x1) * 0.16);
-      const my = Math.min(y1, y2) - lift;
-      const d = 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Q ' + ((x1 + x2) / 2).toFixed(1) + ' ' + my.toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1);
+      const d = this._elbow(x1, y1, x2, y2, 18);
       path.setAttribute('d', d);
       path.style.stroke = fromEl.getAttribute('data-col') || 'var(--accent)';
-      path.style.opacity = 0.92;
+      path.style.opacity = 0.95;
     }
     hideArrow() {
       const path = this.arrowPathRef.current;
@@ -855,6 +1065,7 @@
         byId[e.getAttribute('data-tid')] = e;
       });
       const NS = 'http://www.w3.org/2000/svg';
+      let na = 0;
       els.forEach(fromEl => {
         const hid = fromEl.getAttribute('data-head');
         if (!hid) return;
@@ -866,16 +1077,17 @@
           y1 = a.top - cr.top - 1;
         const x2 = b.left + b.width / 2 - cr.left,
           y2 = b.top - cr.top - 1;
-        const lift = Math.max(14, Math.abs(x2 - x1) * 0.13);
-        const my = Math.min(y1, y2) - lift;
-        const d = 'M ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Q ' + ((x1 + x2) / 2).toFixed(1) + ' ' + my.toFixed(1) + ' ' + x2.toFixed(1) + ' ' + y2.toFixed(1);
+        const lift = 12 + na++ % 4 * 8;
+        const d = this._elbow(x1, y1, x2, y2, lift);
         const p = document.createElementNS(NS, 'path');
         p.setAttribute('d', d);
         p.setAttribute('fill', 'none');
         p.setAttribute('stroke', fromEl.getAttribute('data-col') || 'var(--accent)');
-        p.setAttribute('stroke-width', '1.6');
+        p.setAttribute('stroke-width', '1.5');
+        p.setAttribute('stroke-linejoin', 'round');
+        p.setAttribute('stroke-linecap', 'round');
         p.setAttribute('marker-end', 'url(#lt-arrow)');
-        p.setAttribute('opacity', '0.75');
+        p.setAttribute('opacity', '0.8');
         g.appendChild(p);
       });
     }
@@ -953,6 +1165,11 @@
         }, t.l);
         const k = self.keyOf(t.k || t.d || t.l);
         const hot = s.highlight && k === s.highlight;
+        const pr0 = s.practice;
+        const pst = pr0 && pr0.phase !== 'done' ? pr0.steps[pr0.idx] : null;
+        const isTarget = !!(pst && (pst.kind === 'role' && pst.id === t._id || pst.kind === 'find' && pr0.phase === 'feedback' && pst.id === t._id));
+        const inClause = !!(pst && pst.kind === 'find' && pr0.phase === 'ask' && pst.clauseIds && pst.clauseIds.indexOf(t._id) >= 0);
+        const pbg = isTarget ? 'var(--hl)' : inClause ? 'color-mix(in oklab, var(--accent) 9%, transparent)' : hot ? 'var(--hl)' : 'transparent';
         const cols = t.r ? G.tok.get(t) || ['var(--accent)'] : null;
         const c0 = cols ? cols[0] : 'var(--fg)';
         const latinStyle = {
@@ -968,6 +1185,10 @@
         }, t.l + (t.a || ''));
         let content = latin;
         const extra = {};
+        if (isTarget) {
+          extra.animation = 'ltring 1.4s ease-in-out infinite';
+          extra.borderRadius = '6px';
+        }
         if (syn && t.r) {
           const chip = h('span', {
             style: {
@@ -1003,20 +1224,22 @@
           'data-head': hid != null ? hid : '',
           'data-col': c0,
           onMouseEnter: e => {
-            if (!self.state.admin) self.showPop(t, e.currentTarget);
-            self.drawArrow(e.currentTarget);
+            if (!self.state.admin && !self.state.practice) self.showPop(t, e.currentTarget);
+            if (!self.state.practice) self.drawArrow(e.currentTarget);
           },
           onMouseLeave: () => {
             if (!self.state.admin) self.hidePop();
             self.hideArrow();
           },
-          onClick: e => self.togglePin(t, e.currentTarget),
+          onClick: e => {
+            if (self.state.practice) self.practiceClick(t);else self.togglePin(t, e.currentTarget);
+          },
           style: Object.assign({
             cursor: 'pointer',
             borderRadius: '4px',
             padding: syn ? '2px 3px 0' : '0 1px',
             borderBottom: syn ? 'none' : '1px dotted color-mix(in oklab,var(--accent) 45%,transparent)',
-            background: hot ? 'var(--hl)' : 'transparent',
+            background: pbg,
             transition: 'background .2s'
           }, extra)
         }), content);
@@ -1362,6 +1585,13 @@
           empty: rows.length === 0
         };
       }).filter(sz => sz.hasRows || !q);
+      const sosHueL = s.dark ? 0.7 : 0.52;
+      const sosHueOf = tg => {
+        let hh = 0;
+        const strv = String(tg || '');
+        for (let ii = 0; ii < strv.length; ii++) hh = hh * 31 + strv.charCodeAt(ii) | 0;
+        return this.groupPalette[Math.abs(hh) % this.groupPalette.length];
+      };
       const sos = (ready ? u.sos : []).map((x, xi) => ({
         tag: x.tag,
         title: x.title,
@@ -1369,7 +1599,10 @@
         pTag: 'sos.' + xi + '.tag',
         pTitle: 'sos.' + xi + '.title',
         pBody: 'sos.' + xi + '.body'
-      })).filter(x => inc(x.title, x.body, x.tag));
+      })).filter(x => inc(x.title, x.body, x.tag)).map((x, xi) => Object.assign(x, {
+        n: xi + 1,
+        hue: 'oklch(' + sosHueL + ' 0.14 ' + sosHueOf(x.tag) + ')'
+      }));
       const greekBase = {
         padding: '11px 16px',
         borderTop: '1px solid var(--line2)',
@@ -1505,6 +1738,13 @@
         showArrows: s.showArrows,
         arrowsBtn: this.pillStyle(s.showArrows),
         toggleArrows: this.toggleArrows,
+        practiceOn: !!s.practice,
+        practice: s.practice,
+        practiceBtn: this.pillStyle(!!s.practice),
+        startPractice: this.startPractice,
+        exitPractice: this.exitPractice,
+        practiceAnswer: this.practiceAnswer,
+        practiceNext: this.practiceNext,
         toggleSyntax: this.toggleSyntax,
         toggleAnalysis: this.toggleAnalysis,
         toggleGreek: this.toggleGreek,
@@ -1674,16 +1914,19 @@
         style: s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")
       }, "\u039B\u03B1\u03C4\u03B9\u03BD\u03B9\u03BA\u03CC \u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03BF")), /*#__PURE__*/React.createElement("div", {
         style: s("display:flex;flex-wrap:wrap;gap:8px")
-      }, /*#__PURE__*/React.createElement("button", {
+      }, !V.practiceOn && /*#__PURE__*/React.createElement("button", {
         onClick: V.toggleSyntax,
         style: V.syntaxBtn
-      }, "\u230A \u230B \u0391\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7 \u03C3\u03CD\u03BD\u03C4\u03B1\u03BE\u03B7\u03C2"), /*#__PURE__*/React.createElement("button", {
+      }, "\u230A \u230B \u0391\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7 \u03C3\u03CD\u03BD\u03C4\u03B1\u03BE\u03B7\u03C2"), !V.practiceOn && /*#__PURE__*/React.createElement("button", {
         onClick: V.toggleAnalysis,
         style: V.analysisBtn
-      }, "\u2630 \u03A0\u03BB\u03AE\u03C1\u03B7\u03C2 \u03B1\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7"), /*#__PURE__*/React.createElement("button", {
+      }, "\u2630 \u03A0\u03BB\u03AE\u03C1\u03B7\u03C2 \u03B1\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7"), !V.practiceOn && /*#__PURE__*/React.createElement("button", {
         onClick: V.toggleArrows,
         style: V.arrowsBtn
-      }, "\u27A4 \u0392\u03B5\u03BB\u03AC\u03BA\u03B9\u03B1 \u03B5\u03BE\u03AC\u03C1\u03C4\u03B7\u03C3\u03B7\u03C2"), V.hasHighlight && /*#__PURE__*/React.createElement("button", {
+      }, "\u27A4 \u0392\u03B5\u03BB\u03AC\u03BA\u03B9\u03B1 \u03B5\u03BE\u03AC\u03C1\u03C4\u03B7\u03C3\u03B7\u03C2"), /*#__PURE__*/React.createElement("button", {
+        onClick: V.practiceOn ? V.exitPractice : V.startPractice,
+        style: V.practiceBtn
+      }, "\uD83C\uDFAF \u0386\u03C3\u03BA\u03B7\u03C3\u03B7 \u03C3\u03CD\u03BD\u03C4\u03B1\u03BE\u03B7\u03C2"), V.hasHighlight && !V.practiceOn && /*#__PURE__*/React.createElement("button", {
         onClick: V.clearHighlight,
         style: s("display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--font-ui);font-size:13px;font-weight:600;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)")
       }, "\u2715 \u03B5\u03C0\u03B9\u03C3\u03AE\u03BC\u03B1\u03BD\u03C3\u03B7"))), /*#__PURE__*/React.createElement("p", {
@@ -1864,8 +2107,14 @@
       }, kl.kl), /*#__PURE__*/React.createElement("div", {
         style: s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")
       }, /*#__PURE__*/React.createElement("table", {
-        style: s("width:100%;border-collapse:collapse;font-family:var(--font-latin)")
-      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
+        style: s("width:100%;border-collapse:collapse;font-family:var(--font-latin);table-layout:fixed")
+      }, /*#__PURE__*/React.createElement("colgroup", null, /*#__PURE__*/React.createElement("col", {
+        style: s("width:34%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:33%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:33%")
+      })), /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")
       }, "\u0398\u03B5\u03C4\u03B9\u03BA\u03CC\u03C2"), /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")
@@ -1875,15 +2124,15 @@
         key: ri,
         className: "lt-hovr"
       }, /*#__PURE__*/React.createElement("td", {
-        style: s("padding:10px 16px;border-top:1px solid var(--line2)")
+        style: s("padding:10px 16px;border-top:1px solid var(--line2);word-break:break-word")
       }, /*#__PURE__*/React.createElement("button", {
         onClick: r.onJump,
         className: "lt-hovu",
-        style: s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0")
+        style: s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0;text-align:left")
       }, r.pos)), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg)")
+        style: s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg);word-break:break-word")
       }, r.comp), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg)")
+        style: s("padding:10px 16px;border-top:1px solid var(--line2);font-style:italic;font-size:15px;color:var(--fg);word-break:break-word")
       }, r.sup))))))))), V.showPron && /*#__PURE__*/React.createElement("section", {
         "data-part": true,
         "data-screen-label": "\u039C\u03AD\u03C1\u03BF\u03C2 V \u2014 \u0391\u03BD\u03C4\u03C9\u03BD\u03C5\u03BC\u03AF\u03B5\u03C2",
@@ -1897,8 +2146,14 @@
       }, "\u0391\u03BD\u03C4\u03C9\u03BD\u03C5\u03BC\u03AF\u03B5\u03C2")), /*#__PURE__*/React.createElement("div", {
         style: s("overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-lg)")
       }, /*#__PURE__*/React.createElement("table", {
-        style: s("width:100%;border-collapse:collapse")
-      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
+        style: s("width:100%;border-collapse:collapse;table-layout:fixed")
+      }, /*#__PURE__*/React.createElement("colgroup", null, /*#__PURE__*/React.createElement("col", {
+        style: s("width:32%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:24%")
+      }), /*#__PURE__*/React.createElement("col", {
+        style: s("width:44%")
+      })), /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")
       }, "\u0391\u03BD\u03C4\u03C9\u03BD\u03C5\u03BC\u03AF\u03B1"), /*#__PURE__*/React.createElement("th", {
         style: s("text-align:left;font-family:var(--font-ui);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 16px;background:var(--panel2)")
@@ -1908,15 +2163,15 @@
         key: pi,
         className: "lt-hovr"
       }, /*#__PURE__*/React.createElement("td", {
-        style: s("padding:11px 16px;border-top:1px solid var(--line2)")
+        style: s("padding:11px 16px;border-top:1px solid var(--line2);word-break:break-word")
       }, /*#__PURE__*/React.createElement("button", {
         onClick: p.onJump,
         className: "lt-hovu",
-        style: s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0")
+        style: s("border:0;background:transparent;cursor:pointer;font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:15.5px;color:var(--accent);padding:0;text-align:left")
       }, p.form)), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--fg)")
+        style: s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:14px;font-weight:600;color:var(--fg);word-break:break-word")
       }, p.kind), /*#__PURE__*/React.createElement("td", {
-        style: s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:13.5px;color:var(--muted)")
+        style: s("padding:11px 16px;border-top:1px solid var(--line2);font-family:var(--font-ui);font-size:13.5px;color:var(--muted);word-break:break-word")
       }, p.extra))))))), V.showVerbs && /*#__PURE__*/React.createElement("section", {
         "data-part": true,
         "data-screen-label": "\u039C\u03AD\u03C1\u03BF\u03C2 VI \u2014 \u03A1\u03AE\u03BC\u03B1\u03C4\u03B1",
@@ -1990,16 +2245,27 @@
       }, "SOS \u2014 \u03A0\u03B1\u03C1\u03B1\u03C4\u03B7\u03C1\u03AE\u03C3\u03B5\u03B9\u03C2 \u03C3\u03CD\u03BD\u03C4\u03B1\u03BE\u03B7\u03C2")), /*#__PURE__*/React.createElement("p", {
         style: s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")
       }, "\u0399\u03B4\u03B9\u03B1\u03B9\u03C4\u03B5\u03C1\u03CC\u03C4\u03B7\u03C4\u03B5\u03C2 & \xAB\u03C0\u03B1\u03B3\u03AF\u03B4\u03B5\u03C2\xBB \u03C4\u03B7\u03C2 \u03B5\u03BD\u03CC\u03C4\u03B7\u03C4\u03B1\u03C2 \u03C0\u03BF\u03C5 \u03B1\u03BE\u03AF\u03B6\u03B5\u03B9 \u03BD\u03B1 \u03B8\u03C5\u03BC\u03AC\u03C3\u03B1\u03B9."), V.hasSos && /*#__PURE__*/React.createElement("div", {
-        style: s("display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px")
+        style: s("display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px")
       }, V.sos.map((x, xi) => /*#__PURE__*/React.createElement("div", {
         key: xi,
-        style: s("background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r-lg);padding:16px 18px")
+        className: "lt-sosc",
+        style: Object.assign(s("position:relative;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);padding:18px 18px 16px"), {
+          background: 'color-mix(in oklab, ' + x.hue + ' 5%, var(--panel))',
+          borderTop: '3px solid ' + x.hue
+        })
       }, /*#__PURE__*/React.createElement("div", {
-        style: s("display:inline-block;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:color-mix(in oklab,var(--accent) 12%,transparent);padding:2px 9px;border-radius:5px")
+        style: Object.assign(s("position:absolute;top:-16px;right:8px;font-family:var(--font-serif);font-style:italic;font-weight:800;font-size:76px;line-height:1;user-select:none;pointer-events:none"), {
+          color: x.hue,
+          opacity: 0.13
+        })
+      }, x.n), /*#__PURE__*/React.createElement("div", {
+        style: Object.assign(s("display:inline-flex;align-items:center;font-family:var(--font-ui);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent);padding:3px 10px;border-radius:999px"), {
+          background: x.hue
+        })
       }, x.tag), /*#__PURE__*/React.createElement("h4", {
-        style: s("margin:10px 0 6px;font-family:var(--font-serif);font-size:18px;font-weight:800")
+        style: s("margin:11px 0 6px;font-family:var(--font-serif);font-size:18.5px;font-weight:800;line-height:1.25")
       }, x.title), /*#__PURE__*/React.createElement("p", {
-        style: s("margin:0;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;color:var(--muted)")
+        style: s("margin:0;font-family:var(--font-ui);font-size:13.5px;line-height:1.6;color:var(--muted)")
       }, x.body)))), V.noSos && /*#__PURE__*/React.createElement("div", {
         style: s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);padding:16px;border:1px dashed var(--line);border-radius:var(--r-lg)")
       }, "\u0394\u03B5\u03BD \u03AD\u03C7\u03BF\u03C5\u03BD \u03BF\u03C1\u03B9\u03C3\u03C4\u03B5\u03AF \u03C0\u03B1\u03C1\u03B1\u03C4\u03B7\u03C1\u03AE\u03C3\u03B5\u03B9\u03C2 SOS \u03B3\u03B9\u03B1 \u03B1\u03C5\u03C4\u03AE \u03C4\u03B7\u03BD \u03B5\u03BD\u03CC\u03C4\u03B7\u03C4\u03B1.")))))), V.pop.show && /*#__PURE__*/React.createElement("div", {
@@ -2062,7 +2328,66 @@
         style: s("display:block;width:100%;margin-top:3px;font-family:var(--font-ui);font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--fg);resize:vertical")
       })), /*#__PURE__*/React.createElement("div", {
         style: s("font-family:var(--font-ui);font-size:11px;color:var(--muted)")
-      }, "\u2713 \u0391\u03C5\u03C4\u03CC\u03BC\u03B1\u03C4\u03B7 \u03B1\u03C0\u03BF\u03B8\u03AE\u03BA\u03B5\u03C5\u03C3\u03B7. \u03A7\u03C1\u03B7\u03C3\u03B9\u03BC\u03BF\u03C0\u03BF\u03AF\u03B7\u03C3\u03B5 \xAB\u2B73 \u0395\u03BE\u03B1\u03B3\u03C9\u03B3\u03AE\xBB \u03B3\u03B9\u03B1 \u03BC\u03CC\u03BD\u03B9\u03BC\u03BF \u03B1\u03C1\u03C7\u03B5\u03AF\u03BF."))));
+      }, "\u2713 \u0391\u03C5\u03C4\u03CC\u03BC\u03B1\u03C4\u03B7 \u03B1\u03C0\u03BF\u03B8\u03AE\u03BA\u03B5\u03C5\u03C3\u03B7. \u03A7\u03C1\u03B7\u03C3\u03B9\u03BC\u03BF\u03C0\u03BF\u03AF\u03B7\u03C3\u03B5 \xAB\u2B73 \u0395\u03BE\u03B1\u03B3\u03C9\u03B3\u03AE\xBB \u03B3\u03B9\u03B1 \u03BC\u03CC\u03BD\u03B9\u03BC\u03BF \u03B1\u03C1\u03C7\u03B5\u03AF\u03BF."))), V.practice && (() => {
+        const pr = V.practice;
+        const len = pr.steps.length;
+        const step = pr.steps[Math.min(pr.idx, len - 1)];
+        const pct = Math.round(100 * (pr.phase === 'done' ? len : pr.idx) / Math.max(1, len));
+        return /*#__PURE__*/React.createElement("div", {
+          style: s("position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9500;width:min(660px,94vw);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 18px 50px -16px rgba(0,0,0,.38),0 4px 12px rgba(0,0,0,.14);padding:13px 16px 14px;animation:ltpop .18s ease both")
+        }, /*#__PURE__*/React.createElement("div", {
+          style: s("display:flex;align-items:center;gap:10px")
+        }, /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-ui);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent);background:var(--accent);padding:3px 9px;border-radius:999px;flex:none")
+        }, "\uD83C\uDFAF \u0391\u03C3\u03BA\u03B7\u03C3\u03B7 \u03C3\u03C5\u03BD\u03C4\u03B1\u03BE\u03B7\u03C2"), pr.phase !== 'done' && /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-mono);font-size:12px;color:var(--muted)")
+        }, pr.idx + 1, " / ", len), pr.phase !== 'done' && step.label && /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")
+        }, step.label), /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-ui);font-size:12.5px;font-weight:700;color:var(--accent);margin-left:auto;flex:none")
+        }, "\u2713 ", pr.ok), /*#__PURE__*/React.createElement("button", {
+          onClick: V.exitPractice,
+          style: s("border:0;background:var(--panel2);border-radius:999px;width:24px;height:24px;cursor:pointer;color:var(--muted);flex:none;line-height:1")
+        }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+          style: s("height:4px;background:var(--line2);border-radius:999px;overflow:hidden;margin:9px 0 11px")
+        }, /*#__PURE__*/React.createElement("div", {
+          style: Object.assign(s("height:100%;background:var(--accent);transition:width .25s"), {
+            width: pct + '%'
+          })
+        })), pr.phase === 'ask' && step.kind === 'find' && /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:14.5px;line-height:1.55;color:var(--fg)")
+        }, "\uD83D\uDD0E ", /*#__PURE__*/React.createElement("b", null, "\u0392\u03C1\u03B5\u03C2 \u03C4\u03BF \u03C1\u03AE\u03BC\u03B1"), " \u2014 \u03C0\u03AC\u03C4\u03B7\u03C3\u03B5 \u03C4\u03B7 \u03BB\u03AD\u03BE\u03B7 \u03BC\u03AD\u03C3\u03B1 \u03C3\u03C4\u03BF \u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03BF (\u03B7 \u03C0\u03C1\u03CC\u03C4\u03B1\u03C3\u03B7 \u03B5\u03AF\u03BD\u03B1\u03B9 \u03C6\u03C9\u03C4\u03B9\u03C3\u03BC\u03AD\u03BD\u03B7)."), pr.phase === 'ask' && step.kind === 'role' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:14.5px;line-height:1.5;color:var(--fg)")
+        }, "\u03A4\u03B9 \u03B5\u03AF\u03BD\u03B1\u03B9 \u03C3\u03C5\u03BD\u03C4\u03B1\u03BA\u03C4\u03B9\u03BA\u03AC \u03B7 \u03BB\u03AD\u03BE\u03B7 ", /*#__PURE__*/React.createElement("b", {
+          style: s("font-family:var(--font-latin);font-style:italic;font-size:16.5px;color:var(--accent)")
+        }, step.l), " ;"), pr.options.map((o, oi) => /*#__PURE__*/React.createElement("button", {
+          key: oi,
+          className: "lt-popt",
+          onClick: () => V.practiceAnswer(o),
+          style: s("display:block;width:100%;text-align:left;font-family:var(--font-ui);font-size:13.5px;font-weight:600;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;margin-top:7px")
+        }, ['Α', 'Β', 'Γ'][oi], ". ", o))), pr.phase === 'feedback' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+          style: Object.assign(s("font-family:var(--font-ui);font-size:14px;font-weight:600;line-height:1.5;border-radius:9px;padding:9px 12px;color:var(--fg)"), {
+            background: pr.pickedRight ? 'color-mix(in oklab, oklch(0.6 0.15 150) 16%, var(--panel2))' : 'color-mix(in oklab, oklch(0.6 0.19 25) 14%, var(--panel2))'
+          })
+        }, pr.pickedRight ? '✓ Σωστά! ' : '✗ Λάθος. ', step.kind === 'find' ? pr.pickedRight ? /*#__PURE__*/React.createElement("span", null, "\u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", pr.picked, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", pr.picked, "\xBB \u03B5\u03AF\u03BD\u03B1\u03B9: ", pr.pickedRole || '—', " \xB7 \u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", step.l, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", step.l, "\xBB \u2014 ", step.role)), /*#__PURE__*/React.createElement("button", {
+          onClick: V.practiceNext,
+          style: s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);margin-top:10px")
+        }, "\u03A3\u03C5\u03BD\u03AD\u03C7\u03B5\u03B9\u03B1 \u2192")), pr.phase === 'done' && /*#__PURE__*/React.createElement("div", {
+          style: s("text-align:center;padding:4px 0 2px")
+        }, /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-serif);font-weight:800;font-size:30px")
+        }, "\uD83C\uDFC6 ", pr.ok, " / ", len), /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:13px;color:var(--muted);margin-top:2px")
+        }, "\u03C3\u03C9\u03C3\u03C4\u03AD\u03C2 \u03B1\u03C0\u03B1\u03BD\u03C4\u03AE\u03C3\u03B5\u03B9\u03C2 \xB7 ", Math.round(100 * pr.ok / Math.max(1, len)), "%"), /*#__PURE__*/React.createElement("div", {
+          style: s("display:flex;gap:9px;justify-content:center;margin-top:12px")
+        }, /*#__PURE__*/React.createElement("button", {
+          onClick: V.startPractice,
+          style: s("cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 16px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent)")
+        }, "\u21BA \u039E\u03B1\u03BD\u03AC"), /*#__PURE__*/React.createElement("button", {
+          onClick: V.exitPractice,
+          style: s("cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:600;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg)")
+        }, "\u039A\u03BB\u03B5\u03AF\u03C3\u03B9\u03BC\u03BF"))));
+      })());
     }
   }
   window.LatinUnitPanel = LatinUnitPanel;

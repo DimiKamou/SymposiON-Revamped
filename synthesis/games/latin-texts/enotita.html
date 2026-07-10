@@ -21,6 +21,13 @@ a:hover{text-decoration:underline}
 [data-edit][contenteditable="true"]{outline:1px dashed color-mix(in oklab,var(--accent) 55%,transparent);outline-offset:2px;border-radius:3px;cursor:text;min-width:12px}
 [data-edit][contenteditable="true"]:hover{background:color-mix(in oklab,var(--accent) 7%,transparent)}
 [data-edit][contenteditable="true"]:focus{outline:2px solid var(--accent);background:color-mix(in oklab,var(--accent) 10%,transparent)}
+/* SOS cards + practice-mode helpers */
+.lt-sosc{transition:transform .18s ease, box-shadow .18s ease}
+.lt-sosc:hover{transform:translateY(-3px);box-shadow:0 12px 30px -14px rgba(0,0,0,.28)}
+.lt-popt{cursor:pointer;transition:border-color .15s, background .15s, transform .1s}
+.lt-popt:hover{border-color:var(--accent) !important;background:color-mix(in oklab,var(--accent) 8%,var(--panel2)) !important}
+.lt-popt:active{transform:scale(.99)}
+@keyframes ltring{0%,100%{box-shadow:0 0 0 2.5px var(--accent)}50%{box-shadow:0 0 0 7px color-mix(in oklab,var(--accent) 28%,transparent)}}
 /* hover helpers (these were `style-hover` in the design prototype's runtime) */
 .lt-hovb:hover{filter:brightness(0.98)}
 .lt-hova:hover{border-color:var(--accent) !important;color:var(--accent) !important}
