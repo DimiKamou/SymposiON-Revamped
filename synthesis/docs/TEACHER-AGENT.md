@@ -138,7 +138,20 @@ authors. **Primary job of the agent: explore the given κείμενα and _enric
 - Explicit word-limits; μονάδες split inside multi-part υποερωτήματα.
 - Every answer **text-grounded** (παράδειγμα / γλωσσικές επιλογές / παραπομπή σε παράγραφο).
 
-**Still to confirm with the teacher (next calibration passes):**
+**⏸ ON HOLD — awaiting the app's θεωρία έκθεσης (authoritative source).**
+The teacher reviewed the first enriched ΘΕΜΑ 1 (text: «Δημιουργικότητα»):
+most υποερωτήματα OK; **title analysis** and **τρόποι ανάπτυξης** were "a bit
+off" because the agent used generic definitions. These MUST be re-grounded on
+the θεωρία έκθεσης the teacher is building in SymposiON. That theory is NOT in
+the repo (the "Έκφραση · Έκθεση" subject in `data.js:151` is placeholder tiles;
+`INTEGRATION-SPEC.md:229` confirms Νεοελληνική Γλώσσα topics are
+revamp-only placeholders) — it lives in **Firestore** (authored via the theory
+system). This session has no Firebase credentials, so access = the teacher
+provides it (paste / commit to `materials/ekthesi/theory/` / Google Drive /
+give the Firestore path for the deployed function to read live).
+
+**Still to confirm (after θεωρία access):**
+- [ ] Re-ground **ανάλυση τίτλου** + **τρόποι ανάπτυξης** on the app's θεωρία.
 - [ ] Model-answer depth + exact rubric split for auto-grading.
 - [ ] Any Πανελλήνιες-profile version (this calibration is Τράπεζα, Β΄ Λυκείου).
 - [ ] Preferred difficulty and how many alternatives per slot to offer.
