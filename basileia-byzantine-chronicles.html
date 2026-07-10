@@ -74,6 +74,23 @@
   @keyframes dashFlow { to { stroke-dashoffset: -40; } }
   .anim-dash { animation: dashFlow 2.2s linear infinite; }
   .font-display { letter-spacing: 0.04em; }
+  /* --- living map animations --- */
+  .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick { transform-box: fill-box; transform-origin: center; }
+  @keyframes unitBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
+  .anim-bob { animation: unitBob 1.7s ease-in-out infinite; }
+  @keyframes shipRock { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+  .anim-rock { animation: shipRock 3.4s ease-in-out infinite; }
+  @keyframes flameFlick { 0%,100% { transform: scaleY(1); } 35% { transform: scaleY(1.2) skewX(2deg); } 70% { transform: scaleY(0.88); } }
+  .anim-flick { animation: flameFlick 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes clashPop { 0%,100% { transform: scale(0.8) rotate(-4deg); opacity: 0.65; } 50% { transform: scale(1.2) rotate(4deg); opacity: 1; } }
+  .anim-clash { animation: clashPop 1.15s ease-in-out infinite; }
+  @keyframes paraDrop { 0% { transform: translateY(-30px); opacity: 0; } 10% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(32px); opacity: 0; } }
+  .anim-drop { animation: paraDrop 5.2s linear infinite; }
+  @keyframes gunKick { 0%, 88%, 100% { transform: translateX(0); } 90% { transform: translateX(-1.8px); } 95% { transform: translateX(0.7px); } }
+  .anim-kick { animation: gunKick 3.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick, .anim-dash, .anim-pulse-glow { animation: none !important; }
+  }
   #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
 </style>
 </head>
@@ -1142,11 +1159,19 @@ const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bol
     fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
 );
 
-function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1 }) {
+const FX_BY_SYM = {
+  uHop: 'anim-bob', uPers: 'anim-bob', uPike: 'anim-bob', uRifle: 'anim-bob', uCav: 'anim-bob', uChar: 'anim-bob',
+  uShip: 'anim-rock', uSteam: 'anim-rock', uFlame: 'anim-flick', uClash: 'anim-clash', uPara: 'anim-drop', uBombard: 'anim-kick',
+};
+function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1, fx }) {
   const t = `translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}${mirror ? ' scale(-1 1)' : ''}`;
+  const cls = fx === 'none' ? undefined : (fx || FX_BY_SYM[sym]);
+  const delay = -(((x * 7 + y * 13) % 17) / 10);
   return (
     <g transform={t} style={{ color }} opacity={o}>
-      <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      <g className={cls} style={cls ? { animationDelay: `${delay}s` } : undefined}>
+        <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      </g>
     </g>
   );
 }
@@ -1154,6 +1179,25 @@ function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
   return (
     <g>{Array.from({ length: n }).map((_, i) => (
       <Unit key={i} sym={sym} x={x + i * dx} y={y + i * dy} {...rest} />
+    ))}</g>
+  );
+}
+/* A unit that travels along an SVG path, looping — the moving soldier/ship/rider */
+function Mover({ sym, path, w = 13, color, mirror = false, o = 1, dur = 6, begin = '0s' }) {
+  return (
+    <g style={{ color }} opacity={o}>
+      <g transform={mirror ? 'scale(-1 1)' : undefined}>
+        <use href={`#${sym}`} x={-w / 2} y={-w / 2} width={w} height={w} />
+      </g>
+      <animateMotion dur={`${dur}s`} begin={begin} repeatCount="indefinite" path={path} />
+    </g>
+  );
+}
+/* A steady stream of movers on the same route — a marching column */
+function Column({ sym, path, n = 3, dur = 8, w = 13, color, mirror = false, o = 1 }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Mover key={i} sym={sym} path={path} dur={dur} w={w} color={color} mirror={mirror} o={o} begin={`${-(dur / n) * i}s`} />
     ))}</g>
   );
 }
@@ -1208,7 +1252,9 @@ function MapThemes({ lang }) {
       <T x={344} y={230} fill={MC.enemy} bold size={7}>{L ? 'ΕΤΗΣΙΕΣ ΕΠΙΔΡΟΜΕΣ ΧΑΛΙΦΑΤΟΥ' : 'ANNUAL CALIPHATE RAIDS'}</T>
       <Unit sym="uClash" x={288} y={148} w={10} color={MC.gold} />
       <T x={66} y={244} size={7} fill={MC.water}>{L ? 'ΑΙΓΑΙΟ' : 'AEGEAN'}</T>
-    </MapShell>
+    {/* raiders ride, live */}
+      <Mover sym="uCav" path="M384 212 Q330 188 292 162" dur={5} w={14} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1257,7 +1303,10 @@ function MapSiege717({ lang }) {
       <path d="M64 44 Q84 64 96 84" fill="none" stroke={MC.gold} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrGold)" className="anim-dash" />
       <T x={82} y={20} fill={MC.gold} bold size={7}>{L ? 'ΒΟΥΛΓΑΡΟΙ ΤΟΥ ΤΕΡΒΕΛ' : 'TERVEL’S BULGARS'}</T>
       <Unit sym="uClash" x={96} y={86} w={11} color={MC.gold} />
-    </MapShell>
+    {/* allies ride, dromons patrol */}
+      <Mover sym="uCav" path="M64 44 Q84 64 94 82" dur={4} w={14} color={MC.gold} />
+      <Mover sym="uShip" path="M236 210 Q280 218 324 216" dur={7} w={16} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1296,7 +1345,10 @@ function MapManzikert({ lang }) {
       <path d="M76 212 Q46 224 18 230" fill="none" stroke={MC.dim} strokeWidth="2" strokeDasharray="4 4" markerEnd="url(#arrGreek)" opacity="0.8" />
       <T x={88} y={238} fill={MC.dim} size={6.5} bold>{L ? 'Ο ΔΟΥΚΑΣ ΑΠΟΧΩΡΕΙ — ΠΡΟΔΟΣΙΑ' : 'DOUKAS MARCHES OFF — TREASON'}</T>
       <Unit sym="uClash" x={196} y={112} w={12} color={MC.gold} />
-    </MapShell>
+    {/* the feigned retreat, live */}
+      <Mover sym="uCav" path="M258 108 Q290 96 314 100" dur={3.6} w={14} color={MC.enemy} />
+      <Mover sym="uCav" path="M298 66 Q224 44 164 86" dur={5} w={14} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1342,7 +1394,10 @@ function MapCrusade1({ lang }) {
       <Unit sym="uCrescent" x={352} y={92} w={10} color={MC.enemy} />
       <T x={344} y={82} fill={MC.enemy} size={6.2}>{L ? 'ΣΕΛΤΖΟΥΚΟΙ' : 'SELJUKS'}</T>
       <path d="M262 128 Q290 118 300 132" fill="none" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" opacity="0.8" />
-    </MapShell>
+    {/* the ferrying, live */}
+      <Mover sym="uShip" path="M178 112 Q200 106 224 108" dur={5} w={16} color={MC.greek} />
+      <Column sym="uCav" path="M62 72 Q92 86 116 96" n={2} dur={6} w={12} color={MC.enemy} />
+      </MapShell>
   );
 }
 
@@ -1387,7 +1442,9 @@ function MapCrusade4({ lang }) {
       {/* Pretender */}
       <Unit sym="uCross" x={52} y={196} w={9} color={MC.enemy} />
       <T x={98} y={228} fill={MC.enemy} size={6.5}>{L ? 'ΑΛΕΞΙΟΣ Δ΄ — Ο ΣΦΕΤΕΡΙΣΤΗΣ ΠΡΟ ΤΩΝ ΠΥΛΩΝ' : 'ALEXIOS IV — PRETENDER AT THE GATES'}</T>
-    </MapShell>
+    {/* fire-ships ride the night wind */}
+      <Mover sym="uShip" path="M94 68 Q112 72 126 76" dur={4} w={14} color={MC.gold} />
+      </MapShell>
   );
 }
 
@@ -1427,7 +1484,9 @@ function MapSack1204({ lang }) {
       <Unit sym="uChurch" x={330} y={172} w={11} color={MC.greek} />
       <T x={324} y={226} fill={MC.greek} bold size={7}>{L ? 'ΑΥΛΗ, ΕΚΚΛΗΣΙΑ, ΣΤΡΑΤΟΣ → ΝΙΚΑΙΑ' : 'COURT, CHURCH, ARMY → NICAEA'}</T>
       <T x={70} y={92} fill={MC.dim} size={6.5}>{L ? '12–13 ΑΠΡΙΛΙΟΥ 1204' : '12–13 APRIL 1204'}</T>
-    </MapShell>
+    {/* the exodus, live */}
+      <Column sym="uHop" path="M302 194 Q344 198 380 190" n={2} dur={6} w={10} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1469,7 +1528,10 @@ function MapRecovery1261({ lang }) {
       <path d="M312 160 Q344 178 378 180" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" opacity="0.8" />
       <T x={330} y={206} fill={MC.enemy} size={6.5}>{L ? 'ΟΙ ΛΑΤΙΝΟΙ ΦΕΥΓΟΥΝ ΑΠΟ ΤΗ ΘΑΛΑΣΣΑ' : 'LATINS FLEE BY SEA'}</T>
       <T x={196} y={234} fill={MC.greek} size={7} bold>{L ? '25 ΙΟΥΛΙΟΥ 1261 — Η ΠΟΛΗ ΞΑΝΑ ΡΩΜΑΪΚΗ' : '25 JULY 1261 — THE CITY ROMAN AGAIN'}</T>
-    </MapShell>
+    {/* the 800 slip through */}
+      <Column sym="uHop" path="M92 140 Q112 146 124 150" n={2} dur={4} w={11} color={MC.greek} />
+      <Mover sym="uShip" path="M326 52 Q300 42 278 38" dur={6} w={15} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1513,7 +1575,10 @@ function MapVarna({ lang }) {
       <path d="M280 60 Q312 100 262 134" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
       <T x={60} y={110} fill={MC.enemy} size={6.2} rotate={-75}>{L ? 'ΚΥΚΛΩΣΗ' : 'ENVELOPMENT'}</T>
       <T x={196} y={242} fill={MC.dim} size={6.5}>{L ? '10 ΝΟΕΜΒΡΙΟΥ 1444 — Ο ΟΡΚΟΣ ΠΑΤΗΘΗΚΕ' : '10 NOVEMBER 1444 — THE OATH WAS BROKEN'}</T>
-    </MapShell>
+    {/* the king's charge, live */}
+      <Mover sym="uCav" path="M170 126 Q186 96 198 78" dur={3} w={15} color={MC.gold} />
+      <Mover sym="uShip" path="M382 208 Q368 170 372 132" dur={6} w={13} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1561,7 +1626,13 @@ function MapFall1453({ lang }) {
       {/* Marmara */}
       <T x={250} y={224} fill={MC.water} size={7}>{L ? 'ΠΡΟΠΟΝΤΙΔΑ' : 'SEA OF MARMARA'}</T>
       <T x={196} y={244} fill={MC.dim} size={6.8} bold>{L ? 'ΤΡΙΤΗ 29 ΜΑΪΟΥ 1453 — «Η ΠΟΛΙΣ ΕΑΛΩ»' : 'TUESDAY 29 MAY 1453 — “THE CITY HAS FALLEN”'}</T>
-    </MapShell>
+    {/* ships over land, live — and the bombard's shot */}
+      <Mover sym="uShip" path="M298 16 Q262 22 240 34" dur={5} w={15} color={MC.enemy} mirror />
+      <g style={{ color: MC.gold }}>
+        <circle r="2" fill="currentColor" />
+        <animateMotion dur="1.7s" repeatCount="indefinite" path="M114 124 L140 124" />
+      </g>
+      </MapShell>
   );
 }
 

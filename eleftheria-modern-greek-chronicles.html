@@ -74,6 +74,23 @@
   @keyframes dashFlow { to { stroke-dashoffset: -40; } }
   .anim-dash { animation: dashFlow 2.2s linear infinite; }
   .font-display { letter-spacing: 0.04em; }
+  /* --- living map animations --- */
+  .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick { transform-box: fill-box; transform-origin: center; }
+  @keyframes unitBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
+  .anim-bob { animation: unitBob 1.7s ease-in-out infinite; }
+  @keyframes shipRock { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+  .anim-rock { animation: shipRock 3.4s ease-in-out infinite; }
+  @keyframes flameFlick { 0%,100% { transform: scaleY(1); } 35% { transform: scaleY(1.2) skewX(2deg); } 70% { transform: scaleY(0.88); } }
+  .anim-flick { animation: flameFlick 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes clashPop { 0%,100% { transform: scale(0.8) rotate(-4deg); opacity: 0.65; } 50% { transform: scale(1.2) rotate(4deg); opacity: 1; } }
+  .anim-clash { animation: clashPop 1.15s ease-in-out infinite; }
+  @keyframes paraDrop { 0% { transform: translateY(-30px); opacity: 0; } 10% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(32px); opacity: 0; } }
+  .anim-drop { animation: paraDrop 5.2s linear infinite; }
+  @keyframes gunKick { 0%, 88%, 100% { transform: translateX(0); } 90% { transform: translateX(-1.8px); } 95% { transform: translateX(0.7px); } }
+  .anim-kick { animation: gunKick 3.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick, .anim-dash, .anim-pulse-glow { animation: none !important; }
+  }
   #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
 </style>
 </head>
@@ -1142,11 +1159,19 @@ const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bol
     fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
 );
 
-function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1 }) {
+const FX_BY_SYM = {
+  uHop: 'anim-bob', uPers: 'anim-bob', uPike: 'anim-bob', uRifle: 'anim-bob', uCav: 'anim-bob', uChar: 'anim-bob',
+  uShip: 'anim-rock', uSteam: 'anim-rock', uFlame: 'anim-flick', uClash: 'anim-clash', uPara: 'anim-drop', uBombard: 'anim-kick',
+};
+function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1, fx }) {
   const t = `translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}${mirror ? ' scale(-1 1)' : ''}`;
+  const cls = fx === 'none' ? undefined : (fx || FX_BY_SYM[sym]);
+  const delay = -(((x * 7 + y * 13) % 17) / 10);
   return (
     <g transform={t} style={{ color }} opacity={o}>
-      <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      <g className={cls} style={cls ? { animationDelay: `${delay}s` } : undefined}>
+        <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      </g>
     </g>
   );
 }
@@ -1154,6 +1179,25 @@ function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
   return (
     <g>{Array.from({ length: n }).map((_, i) => (
       <Unit key={i} sym={sym} x={x + i * dx} y={y + i * dy} {...rest} />
+    ))}</g>
+  );
+}
+/* A unit that travels along an SVG path, looping — the moving soldier/ship/rider */
+function Mover({ sym, path, w = 13, color, mirror = false, o = 1, dur = 6, begin = '0s' }) {
+  return (
+    <g style={{ color }} opacity={o}>
+      <g transform={mirror ? 'scale(-1 1)' : undefined}>
+        <use href={`#${sym}`} x={-w / 2} y={-w / 2} width={w} height={w} />
+      </g>
+      <animateMotion dur={`${dur}s`} begin={begin} repeatCount="indefinite" path={path} />
+    </g>
+  );
+}
+/* A steady stream of movers on the same route — a marching column */
+function Column({ sym, path, n = 3, dur = 8, w = 13, color, mirror = false, o = 1 }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Mover key={i} sym={sym} path={path} dur={dur} w={w} color={color} mirror={mirror} o={o} begin={`${-(dur / n) * i}s`} />
     ))}</g>
   );
 }
@@ -1205,7 +1249,11 @@ function MapOutbreak1821({ lang }) {
       <T x={66} y={136} fill={MC.greek} size={6.2}>{L ? 'ΕΛΕΥΘΕΡΙΑ Ή ΘΑΝΑΤΟΣ' : 'LIBERTY OR DEATH'}</T>
       <T x={356} y={214} fill={MC.water} size={7} rotate={-90}>{L ? 'ΑΙΓΑΙΟ' : 'AEGEAN'}</T>
       <T x={38} y={60} fill={MC.water} size={7} rotate={90}>{L ? 'ΙΟΝΙΟ' : 'IONIAN'}</T>
-    </MapShell>
+    {/* the bands converge, live */}
+      <Mover sym="uRifle" path="M162 196 Q184 176 200 164" dur={4.5} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M146 66 Q176 104 194 136" dur={5.5} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M256 206 Q240 182 230 164" dur={4.5} w={11} color={MC.greek} mirror />
+      </MapShell>
   );
 }
 
@@ -1252,7 +1300,9 @@ function MapDervenakia({ lang }) {
       <line x1="356" y1="104" x2="368" y2="132" stroke={MC.greek} strokeWidth="3.4" strokeDasharray="4 3" />
       <T x={344} y={148} fill={MC.greek} size={6.2} bold>{L ? 'ΕΞΟΔΟΣ ΦΡΑΓΜΕΝΗ' : 'EXIT BLOCKED'}</T>
       <T x={90} y={240} fill={MC.greek} bold size={7}>{L ? '26 ΙΟΥΛΙΟΥ 1822 — «ΦΕΥΓΕΙ Ο ΔΡΑΜΑΛΗΣ»' : '26 JULY 1822 — “DRAMALI IS FLEEING”'}</T>
-    </MapShell>
+    {/* the doomed column streams through the defile */}
+      <Column sym="uPers" path="M30 140 Q120 118 210 128 Q300 138 380 120" n={4} dur={11} w={11} color={MC.enemy} />
+      </MapShell>
   );
 }
 
@@ -1294,7 +1344,9 @@ function MapNavarino({ lang }) {
       <T x={306} y={160} fill={MC.dim} size={6.5}>{L ? '20 ΟΚΤΩΒΡΙΟΥ 1827' : '20 OCTOBER 1827'}</T>
       <T x={306} y={172} fill={MC.dim} size={6.2}>{L ? '4 ΩΡΕΣ — 60 ΠΛΟΙΑ ΒΥΘΙΣΜΕΝΑ' : '4 HOURS — 60 SHIPS SUNK'}</T>
       <T x={306} y={184} fill={MC.greek} size={6.2}>{L ? 'ΣΥΜΜΑΧΙΚΕΣ ΑΠΩΛΕΙΕΣ: 0 ΠΛΟΙΑ' : 'ALLIED LOSSES: 0 SHIPS'}</T>
-    </MapShell>
+    {/* the allied line glides in */}
+      <Column sym="uShip" path="M132 234 Q150 208 170 184" n={2} dur={6} w={17} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1337,7 +1389,10 @@ function MapThessaloniki1912({ lang }) {
       <T x={344} y={44} fill={MC.admin} bold size={6.8}>{L ? '7η ΜΕΡΑΡΧΙΑ ΡΙΛΑΣ' : '7th RILA DIVISION'}</T>
       <T x={352} y={100} fill={MC.admin} size={6.2} rotate={85}>{L ? 'ΔΥΟ ΜΕΡΕΣ ΠΙΣΩ' : 'TWO DAYS BEHIND'}</T>
       <T x={196} y={26} fill={MC.dim} size={6.8}>{L ? 'ΟΚΤΩΒΡΙΟΣ 1912 — Ο ΧΑΡΤΗΣ ΓΡΑΦΕΤΑΙ ΜΕ ΠΟΡΕΙΕΣ' : 'OCTOBER 1912 — THE MAP IS DRAWN BY MARCHES'}</T>
-    </MapShell>
+    {/* the race, live */}
+      <Column sym="uRifle" path="M166 152 Q240 140 304 170" n={3} dur={6} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M318 58 Q324 108 322 156" dur={7} w={11} color={MC.admin} />
+      </MapShell>
   );
 }
 
@@ -1377,7 +1432,11 @@ function MapKilkis1913({ lang }) {
       <Unit sym="uClash" x={286} y={84} w={12} color={MC.gold} />
       <T x={196} y={242} fill={MC.dim} size={6.8}>{L ? '19–21 ΙΟΥΝΙΟΥ 1913 — «ΕΝΤΟΣ ΤΡΙΩΝ ΗΜΕΡΩΝ»' : '19–21 JUNE 1913 — “WITHIN THREE DAYS”'}</T>
       <T x={330} y={150} fill={MC.dim} size={6.2}>{L ? 'ΠΡΟΣ ΣΤΡΥΜΟΝΑ →' : 'TO THE STRYMON →'}</T>
-    </MapShell>
+    {/* the waves go up the hill */}
+      <Mover sym="uRifle" path="M100 164 Q102 134 104 106" dur={4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M130 164 Q130 136 128 108" dur={4.4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M282 160 Q284 128 288 100" dur={4.2} w={11} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1418,7 +1477,10 @@ function MapSchismSkra({ lang }) {
       <Unit sym="uClash" x={196} y={216} w={9} color={MC.enemy} o={0.8} />
       <T x={286} y={224} fill={MC.dim} size={6.5}>{L ? 'ΘΕΣΣΑΛΟΝΙΚΗ: ΕΘΝΙΚΗ ΑΜΥΝΑ' : 'THESSALONIKI: NATIONAL DEFENCE'}</T>
       <T x={196} y={242} fill={MC.dim} size={6.5} bold>{L ? 'Ο ΔΙΧΑΣΜΟΣ: ΔΥΟ ΚΥΒΕΡΝΗΣΕΙΣ, ΜΙΑ ΣΗΜΑΙΑ' : 'THE SCHISM: TWO GOVERNMENTS, ONE FLAG'}</T>
-    </MapShell>
+    {/* the assault climbs */}
+      <Mover sym="uRifle" path="M162 152 Q176 130 186 110" dur={4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M222 156 Q218 132 214 112" dur={4.3} w={11} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1464,7 +1526,11 @@ function MapElaiaKalamas({ lang }) {
       {/* Fallback line */}
       <path d="M120 226 Q220 214 320 222" fill="none" stroke={MC.dim} strokeWidth="1.6" strokeDasharray="8 5" opacity="0.6" />
       <T x={220} y={240} fill={MC.dim} size={6.2}>{L ? 'ΓΡΑΜΜΗ ΑΡΑΧΘΟΥ — ΤΟ ΣΧΕΔΙΟ ΠΟΥ ΑΓΝΟΗΘΗΚΕ' : 'ARACHTHOS LINE — THE PLAN SET ASIDE'}</T>
-    </MapShell>
+    {/* the invasion presses, live */}
+      <Mover sym="uRifle" path="M120 62 Q150 90 174 110" dur={5} w={11} color={MC.enemy} />
+      <Mover sym="uRifle" path="M220 60 Q222 84 220 102" dur={5.4} w={11} color={MC.enemy} />
+      <Mover sym="uRifle" path="M330 56 Q344 96 354 124" dur={6} w={11} color={MC.enemy} />
+      </MapShell>
   );
 }
 
@@ -1504,7 +1570,9 @@ function MapKorytsa({ lang }) {
       <T x={330} y={40} fill={MC.enemy} size={6.5}>{L ? 'ΑΤΑΚΤΗ ΣΥΜΠΤΥΞΗ' : 'RETREAT IN DISORDER'}</T>
       <Unit sym="uClash" x={272} y={78} w={11} color={MC.gold} />
       <T x={60} y={36} fill={MC.dim} size={6.8} anchor="start">{L ? 'ΒΟΡΕΙΟΣ ΗΠΕΙΡΟΣ — ΟΙ ΚΑΜΠΑΝΕΣ ΠΕΡΙΜΕΝΟΥΝ' : 'NORTHERN EPIRUS — THE BELLS ARE WAITING'}</T>
-    </MapShell>
+    {/* the winter advance, live */}
+      <Column sym="uRifle" path="M212 190 Q236 140 274 88" n={3} dur={6} w={11} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1556,7 +1624,10 @@ function MapCrete1941({ lang }) {
       <Unit sym="uSteam" x={322} y={226} w={22} color={MC.greek} o={0.85} />
       <T x={310} y={210} fill={MC.greek} size={6.2}>{L ? 'ΒΑΣΙΛΙΚΟ ΝΑΥΤΙΚΟ — ΟΙ ΝΗΟΠΟΜΠΕΣ ΔΕΝ ΠΕΡΝΟΥΝ' : 'ROYAL NAVY — THE CONVOYS DON’T PASS'}</T>
       <T x={40} y={238} fill={MC.dim} size={6.5} anchor="start">{L ? 'ΓΕΡΟΝΤΕΣ ΜΕ ΚΑΡΙΟΦΙΛΙΑ, ΓΥΝΑΙΚΕΣ ΜΕ ΔΡΕΠΑΝΙΑ — Η ΠΡΩΤΗ ΛΑΪΚΗ ΑΝΤΙΣΤΑΣΗ' : 'OLD MEN WITH MUSKETS, WOMEN WITH SICKLES — THE FIRST POPULAR RESISTANCE'}</T>
-    </MapShell>
+    {/* the Ju-52s cross the sky */}
+      <Mover sym="uPlane" path="M-24 28 L424 28" dur={11} w={20} color={MC.enemy} />
+      <Mover sym="uPlane" path="M-24 46 L424 46" dur={11} w={18} color={MC.enemy} o={0.8} begin="-5.5s" />
+      </MapShell>
   );
 }
 

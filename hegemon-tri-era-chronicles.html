@@ -74,6 +74,23 @@
   @keyframes dashFlow { to { stroke-dashoffset: -40; } }
   .anim-dash { animation: dashFlow 2.2s linear infinite; }
   .font-display { letter-spacing: 0.04em; }
+  /* --- living map animations --- */
+  .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick { transform-box: fill-box; transform-origin: center; }
+  @keyframes unitBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
+  .anim-bob { animation: unitBob 1.7s ease-in-out infinite; }
+  @keyframes shipRock { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+  .anim-rock { animation: shipRock 3.4s ease-in-out infinite; }
+  @keyframes flameFlick { 0%,100% { transform: scaleY(1); } 35% { transform: scaleY(1.2) skewX(2deg); } 70% { transform: scaleY(0.88); } }
+  .anim-flick { animation: flameFlick 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes clashPop { 0%,100% { transform: scale(0.8) rotate(-4deg); opacity: 0.65; } 50% { transform: scale(1.2) rotate(4deg); opacity: 1; } }
+  .anim-clash { animation: clashPop 1.15s ease-in-out infinite; }
+  @keyframes paraDrop { 0% { transform: translateY(-30px); opacity: 0; } 10% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(32px); opacity: 0; } }
+  .anim-drop { animation: paraDrop 5.2s linear infinite; }
+  @keyframes gunKick { 0%, 88%, 100% { transform: translateX(0); } 90% { transform: translateX(-1.8px); } 95% { transform: translateX(0.7px); } }
+  .anim-kick { animation: gunKick 3.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick, .anim-dash, .anim-pulse-glow { animation: none !important; }
+  }
   #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
 </style>
 </head>
@@ -1144,11 +1161,19 @@ const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bol
     fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
 );
 
-function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1 }) {
+const FX_BY_SYM = {
+  uHop: 'anim-bob', uPers: 'anim-bob', uPike: 'anim-bob', uRifle: 'anim-bob', uCav: 'anim-bob', uChar: 'anim-bob',
+  uShip: 'anim-rock', uSteam: 'anim-rock', uFlame: 'anim-flick', uClash: 'anim-clash', uPara: 'anim-drop', uBombard: 'anim-kick',
+};
+function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1, fx }) {
   const t = `translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}${mirror ? ' scale(-1 1)' : ''}`;
+  const cls = fx === 'none' ? undefined : (fx || FX_BY_SYM[sym]);
+  const delay = -(((x * 7 + y * 13) % 17) / 10);
   return (
     <g transform={t} style={{ color }} opacity={o}>
-      <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      <g className={cls} style={cls ? { animationDelay: `${delay}s` } : undefined}>
+        <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      </g>
     </g>
   );
 }
@@ -1156,6 +1181,25 @@ function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
   return (
     <g>{Array.from({ length: n }).map((_, i) => (
       <Unit key={i} sym={sym} x={x + i * dx} y={y + i * dy} {...rest} />
+    ))}</g>
+  );
+}
+/* A unit that travels along an SVG path, looping — the moving soldier/ship/rider */
+function Mover({ sym, path, w = 13, color, mirror = false, o = 1, dur = 6, begin = '0s' }) {
+  return (
+    <g style={{ color }} opacity={o}>
+      <g transform={mirror ? 'scale(-1 1)' : undefined}>
+        <use href={`#${sym}`} x={-w / 2} y={-w / 2} width={w} height={w} />
+      </g>
+      <animateMotion dur={`${dur}s`} begin={begin} repeatCount="indefinite" path={path} />
+    </g>
+  );
+}
+/* A steady stream of movers on the same route — a marching column */
+function Column({ sym, path, n = 3, dur = 8, w = 13, color, mirror = false, o = 1 }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Mover key={i} sym={sym} path={path} dur={dur} w={w} color={color} mirror={mirror} o={o} begin={`${-(dur / n) * i}s`} />
     ))}</g>
   );
 }
@@ -1220,7 +1264,11 @@ function MapMarathon({ lang }) {
       <Unit sym="uClash" x={238} y={76} w={11} color={MC.gold} o={0.95} />
       <Unit sym="uClash" x={238} y={176} w={11} color={MC.gold} o={0.95} />
       <T x={196} y={42} fill={MC.greek} bold size={7.5}>{L ? 'ΔΙΠΛΗ ΥΠΕΡΚΕΡΑΣΗ — ΔΡΟΜΩ' : 'DOUBLE ENVELOPMENT — AT A RUN'}</T>
-    </MapShell>
+    {/* living charge */}
+      <Column sym="uHop" path="M152 76 C192 50 220 58 240 82" n={2} dur={5} w={12} color={MC.greek} />
+      <Column sym="uHop" path="M152 188 C192 214 220 206 240 182" n={2} dur={5} w={12} color={MC.greek} />
+      <Mover sym="uHop" path="M150 130 L232 130" dur={6.5} w={11} color={MC.greekDeep} o={0.85} />
+      </MapShell>
   );
 }
 
@@ -1270,7 +1318,10 @@ function MapIsthmus({ lang }) {
       <Unit sym="uShip" x={352} y={130} w={20} color={MC.greek} />
       <path d="M372 128 Q392 96 384 58" fill="none" stroke={MC.water} strokeWidth="1.8" strokeDasharray="4 3" markerEnd="url(#arrGreek)" className="anim-dash" />
       <T x={344} y={122} fill={MC.water} size={6.8}>{L ? 'ΣΤΟΛΟΣ → ΑΡΤΕΜΙΣΙΟ' : 'FLEET → ARTEMISIUM'}</T>
-    </MapShell>
+    {/* living march */}
+      <Column sym="uPers" path="M252 30 Q236 62 216 94" n={2} dur={6.5} w={11} color={MC.enemy} mirror />
+      <Column sym="uPers" path="M132 30 Q146 60 176 94" n={2} dur={6.5} w={11} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1335,7 +1386,10 @@ function MapSalamis({ lang }) {
       <path d="M252 208 Q284 210 308 198" fill="none" stroke={MC.water} strokeWidth="1.4" strokeDasharray="3 3" markerEnd="url(#arrGreek)" />
       <T x={252} y={224} fill={MC.water} size={6.5}>{L ? 'ΣΙΚΙΝΝΟΣ — Ο ΔΟΛΟΣ' : 'SICINNUS — THE RUSE'}</T>
       <T x={130} y={240} size={6.8} fill={MC.dim}>{L ? 'ΠΛΑΤΟΣ ΣΤΕΝΟΥ ≈ 1,2 χλμ — ΑΔΥΝΑΤΟΙ ΟΙ ΕΛΙΓΜΟΙ' : 'CHANNEL ≈ 1.2 KM WIDE — NO ROOM TO MANEUVER'}</T>
-    </MapShell>
+    {/* living current of hulls */}
+      <Column sym="uShip" path="M306 140 Q270 142 238 140" n={2} dur={7} w={17} color={MC.enemy} mirror />
+      <Mover sym="uShip" path="M186 132 Q200 136 212 138" dur={5} w={17} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1397,7 +1451,10 @@ function MapDelos({ lang }) {
       <Unit sym="uShip" x={130} y={216} w={18} color={MC.greek} />
       <Unit sym="uShip" x={166} y={226} w={18} color={MC.greek} o={0.8} />
       <T x={156} y={210} fill={MC.greek} size={6.5}>{L ? 'ΑΘΗΝΑΪΚΕΣ ΠΕΡΙΠΟΛΟΙ' : 'ATHENIAN PATROLS'}</T>
-    </MapShell>
+    {/* tribute under sail */}
+      <Mover sym="uShip" path="M340 128 Q300 128 266 124" dur={8} w={15} color={MC.greek} mirror />
+      <Mover sym="uShip" path="M104 162 Q170 150 232 130" dur={9} w={15} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1460,7 +1517,10 @@ function MapLongWalls({ lang }) {
       {/* Fleet raids out */}
       <path d="M254 216 Q300 226 344 222" fill="none" stroke={MC.greek} strokeWidth="1.6" strokeDasharray="5 4" markerEnd="url(#arrGreek)" opacity="0.8" />
       <T x={300} y={242} fill={MC.greek} size={6.5}>{L ? 'ΕΠΙΔΡΟΜΕΣ ΣΤΗΝ ΠΕΛΟΠΟΝΝΗΣΟ' : 'RAIDS ON THE PELOPONNESE'}</T>
-    </MapShell>
+    {/* the lifeline moves */}
+      <Mover sym="uShip" path="M24 230 Q62 224 100 212" dur={7} w={17} color={MC.greek} />
+      <Column sym="uHop" path="M154 96 Q210 92 250 84" n={2} dur={7} w={9} color={MC.dim} o={0.8} />
+      </MapShell>
   );
 }
 
@@ -1520,7 +1580,9 @@ function MapSyracuse({ lang }) {
       <path d="M232 196 Q170 204 100 192" fill="none" stroke={MC.enemyDeep} strokeWidth="1.6" strokeDasharray="3 3" markerEnd="url(#arrEnemy)" opacity="0.8" />
       <Unit sym="uClash" x={88} y={182} w={11} color={MC.gold} />
       <T x={128} y={216} fill={MC.enemyDeep} size={6.2}>{L ? 'ΠΟΤΑΜΟΣ ΑΣΣΙΝΑΡΟΣ — Η ΟΔΟΣ ΤΟΥ ΟΛΕΘΡΟΥ' : 'RIVER ASSINARUS — THE DEATH MARCH'}</T>
-    </MapShell>
+    {/* the armada sails in */}
+      <Column sym="uShip" path="M20 242 Q130 250 242 212" n={2} dur={9} w={17} color={MC.greek} />
+      </MapShell>
   );
 }
 
@@ -1574,7 +1636,10 @@ function MapChaeronea({ lang }) {
       <path d="M294 80 Q278 116 262 138" fill="none" stroke={MC.greek} strokeWidth="2.8" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" />
       <path d="M262 152 Q284 162 300 168" fill="none" stroke={MC.greek} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrGreek)" className="anim-dash" />
       <Unit sym="uClash" x={294} y={158} w={12} color={MC.gold} />
-    </MapShell>
+    {/* the charge & the pursuit, live */}
+      <Mover sym="uCav" path="M294 80 Q278 116 262 138" dur={3.2} w={16} color={MC.greek} />
+      <Mover sym="uHop" path="M136 138 Q112 118 98 102" dur={4.5} w={12} color={MC.enemy} mirror />
+      </MapShell>
   );
 }
 
@@ -1634,7 +1699,9 @@ function MapGaugamela({ lang }) {
       <path d="M358 46 Q394 104 372 160" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
       <T x={30} y={132} fill={MC.enemy} size={6.2} rotate={-80}>{L ? 'ΥΠΕΡΚΕΡΑΣΗ' : 'ENVELOPMENT'}</T>
       <T x={200} y={240} size={6.8} fill={MC.dim}>{L ? 'ΑΝΕΦΟΔΙΑΣΜΟΣ: 1.000 χλμ ΠΙΣΩ — ΗΤΤΑ = ΑΦΑΝΙΣΜΟΣ' : 'SUPPLY LINES 1,000 KM BEHIND — DEFEAT MEANS ANNIHILATION'}</T>
-    </MapShell>
+    {/* the wedge rides */}
+      <Mover sym="uCav" path="M298 122 Q262 88 228 64" dur={3.4} w={15} color={MC.greek} mirror />
+      </MapShell>
   );
 }
 
@@ -1696,7 +1763,10 @@ function MapOpis({ lang }) {
       <T x={96} y={20} fill={MC.greek} size={6.8} bold>{L ? 'ΑΠΟ ΤΗΝ ΑΔΡΙΑΤΙΚΗ...' : 'FROM THE ADRIATIC...'}</T>
       <path d="M248 36 Q310 26 366 14" fill="none" stroke="rgba(192,132,252,0.5)" strokeWidth="1.8" strokeDasharray="7 5" markerEnd="url(#arrAdmin)" className="anim-dash" />
       <T x={318} y={10} fill={MC.admin} size={6.8} bold>{L ? '...ΩΣ ΤΟΝ ΙΝΔΟ' : '...TO THE INDUS'}</T>
-    </MapShell>
+    {/* the two worlds walk toward each other */}
+      <Mover sym="uPike" path="M170 102 Q192 100 206 98" dur={4.5} w={13} color={MC.greek} />
+      <Mover sym="uPike" path="M274 102 Q250 100 238 98" dur={4.5} w={13} color={MC.admin} mirror />
+      </MapShell>
   );
 }
 
