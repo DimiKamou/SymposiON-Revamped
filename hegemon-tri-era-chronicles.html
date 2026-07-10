@@ -18,8 +18,13 @@
           body: ['"Plus Jakarta Sans"', 'sans-serif'],
         },
         boxShadow: {
-          'glow-amber': '0 0 24px rgba(245,158,11,0.25), 0 0 60px rgba(245,158,11,0.08)',
-          'glow-sky': '0 0 24px rgba(56,189,248,0.22), 0 0 60px rgba(56,189,248,0.07)',
+          'glow-cyan': '0 0 24px rgba(34,211,238,0.25), 0 0 60px rgba(34,211,238,0.08)',
+          'glow-tyrian': '0 0 24px rgba(192,132,252,0.25), 0 0 60px rgba(192,132,252,0.08)',
+          'glow-ivory': '0 0 24px rgba(232,217,160,0.22), 0 0 60px rgba(232,217,160,0.07)',
+        },
+        colors: {
+          marble: { 100: '#f6f2e7', 200: '#e9e3d1', 300: '#d9d0b6', 400: '#c4b78f' },
+          laurel: { 300: '#e8d9a0', 400: '#d9c47c' },
         },
       },
     },
@@ -37,38 +42,39 @@
 <style>
   html, body { height: 100%; }
   body {
-    background-color: #0c0a09; /* stone-950 obsidian */
+    background-color: #060a13; /* aegean ink */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,158,11,0.08), transparent),
-      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(56,189,248,0.06), transparent);
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.07), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(168,85,247,0.06), transparent),
+      radial-gradient(ellipse 40% 30% at 6% 100%, rgba(232,217,160,0.04), transparent);
     background-attachment: fixed;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #e7e5e4;
+    color: #e2e8f0;
   }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: #0c0a09; }
-  ::-webkit-scrollbar-thumb { background: #44403c; border-radius: 8px; border: 2px solid #0c0a09; }
-  ::-webkit-scrollbar-thumb:hover { background: #b45309; }
+  ::-webkit-scrollbar-track { background: #060a13; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; border: 2px solid #060a13; }
+  ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
   .glass-card {
-    background: linear-gradient(160deg, rgba(28,25,23,0.82), rgba(12,10,9,0.88));
+    background: linear-gradient(160deg, rgba(15,23,42,0.82), rgba(6,10,19,0.9));
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(245,158,11,0.18);
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 24px 70px rgba(0,0,0,0.65), 0 0 42px rgba(245,158,11,0.06) inset;
+    border: 1px solid rgba(103,232,249,0.16);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 24px 70px rgba(0,0,0,0.65), 0 0 42px rgba(34,211,238,0.05) inset;
   }
   .map-frame {
-    background: radial-gradient(ellipse at center, rgba(28,25,23,0.9), rgba(12,10,9,0.95));
-    border: 1px solid rgba(56,189,248,0.22);
+    background: radial-gradient(ellipse at center, rgba(15,23,42,0.9), rgba(6,10,19,0.95));
+    border: 1px solid rgba(103,232,249,0.2);
   }
   .greek-key-border {
-    border-image: repeating-linear-gradient(90deg, rgba(245,158,11,0.55) 0 12px, transparent 12px 20px) 1;
+    border-image: repeating-linear-gradient(90deg, rgba(233,227,209,0.5) 0 12px, transparent 12px 20px) 1;
   }
   @keyframes pulseGlow { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
   .anim-pulse-glow { animation: pulseGlow 2.6s ease-in-out infinite; }
   @keyframes dashFlow { to { stroke-dashoffset: -40; } }
   .anim-dash { animation: dashFlow 2.2s linear infinite; }
   .font-display { letter-spacing: 0.04em; }
-  #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#a8a29e; font-family:'Plus Jakarta Sans',sans-serif; }
+  #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
 </style>
 </head>
 <body>
@@ -243,7 +249,7 @@ const PHASES = [
   {
     key: 'phase1',
     icon: 'Shield',
-    accent: 'amber',
+    accent: 'cyan',
     range: { en: '490–479 BCE', el: '490–479 π.Χ.' },
     name: { en: 'The Persian Wars', el: 'Οι Περσικοί Πόλεμοι' },
     blurb: {
@@ -254,7 +260,7 @@ const PHASES = [
   {
     key: 'phase2',
     icon: 'Anchor',
-    accent: 'sky',
+    accent: 'marble',
     range: { en: '447–415 BCE', el: '447–415 π.Χ.' },
     name: { en: 'The Peloponnesian War', el: 'Ο Πελοποννησιακός Πόλεμος' },
     blurb: {
@@ -265,7 +271,7 @@ const PHASES = [
   {
     key: 'phase3',
     icon: 'Crown',
-    accent: 'amber',
+    accent: 'tyrian',
     range: { en: '338–324 BCE', el: '338–324 π.Χ.' },
     name: { en: 'The Macedonian Hegemony', el: 'Η Μακεδονική Ηγεμονία' },
     blurb: {
@@ -779,12 +785,12 @@ const GRAND_VERDICT = {
    CINEMATIC TACTICAL SVG MAPS — terrain art, unit silhouettes
    ============================================================ */
 const MC = {
-  greek: '#fbbf24', greekDeep: '#d97706',
+  greek: '#5eead4', greekDeep: '#14b8a6',
   enemy: '#fb7185', enemyDeep: '#e11d48',
   admin: '#c084fc',
-  water: '#38bdf8', gold: '#facc15',
-  label: '#e7e5e4', dim: '#a8a29e',
-  land: '#26221e', landLine: '#57534e',
+  water: '#60a5fa', gold: '#e8d9a0',
+  label: '#e2e8f0', dim: '#94a3b8',
+  land: '#1e2430', landLine: '#475569',
 };
 
 function MapShell({ children, legend }) {
@@ -809,12 +815,12 @@ function MapShell({ children, legend }) {
             <stop offset="1" stopColor="#082f49" stopOpacity="0.95" />
           </linearGradient>
           <linearGradient id="landG" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#312d28" />
-            <stop offset="1" stopColor="#1a1714" />
+            <stop offset="0" stopColor="#2a3140" />
+            <stop offset="1" stopColor="#131722" />
           </linearGradient>
           <radialGradient id="plainG" cx="0.5" cy="0.5" r="0.7">
-            <stop offset="0" stopColor="#44403c" stopOpacity="0.35" />
-            <stop offset="1" stopColor="#44403c" stopOpacity="0" />
+            <stop offset="0" stopColor="#475569" stopOpacity="0.3" />
+            <stop offset="1" stopColor="#475569" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="vignG" cx="0.5" cy="0.5" r="0.72">
             <stop offset="0" stopColor="#000" stopOpacity="0" />
@@ -822,19 +828,19 @@ function MapShell({ children, legend }) {
             <stop offset="1" stopColor="#000" stopOpacity="0.52" />
           </radialGradient>
           <radialGradient id="gloAmber" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#f59e0b" stopOpacity="0.32" />
-            <stop offset="1" stopColor="#f59e0b" stopOpacity="0" />
+            <stop offset="0" stopColor="#22d3ee" stopOpacity="0.30" />
+            <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="gloGold" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#facc15" stopOpacity="0.38" />
-            <stop offset="1" stopColor="#facc15" stopOpacity="0" />
+            <stop offset="0" stopColor="#e8d9a0" stopOpacity="0.34" />
+            <stop offset="1" stopColor="#e8d9a0" stopOpacity="0" />
           </radialGradient>
           <radialGradient id="gloGreen" cx="0.5" cy="0.5" r="0.5">
             <stop offset="0" stopColor="#a3e635" stopOpacity="0.24" />
             <stop offset="1" stopColor="#a3e635" stopOpacity="0" />
           </radialGradient>
           <pattern id="waterWaves" width="26" height="12" patternUnits="userSpaceOnUse">
-            <path d="M0 8 q6.5 -6 13 0 t13 0" stroke="rgba(56,189,248,0.28)" strokeWidth="1" fill="none" />
+            <path d="M0 8 q6.5 -6 13 0 t13 0" stroke="rgba(96,165,250,0.26)" strokeWidth="1" fill="none" />
           </pattern>
           <pattern id="reeds" width="14" height="12" patternUnits="userSpaceOnUse">
             <g stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" strokeLinecap="round">
@@ -855,7 +861,7 @@ function MapShell({ children, legend }) {
             <circle cx="7.1" cy="3.3" r="1.65" fill="currentColor" />
             <path d="M6 5.1 L8.5 5.1 L9.1 10 L10.1 15.2 L8.4 15.2 L7.3 11.1 L6.4 15.2 L4.7 15.2 L5.7 10 Z" fill="currentColor" />
             <circle cx="4.7" cy="8.7" r="3.3" fill="currentColor" />
-            <circle cx="4.7" cy="8.7" r="1.9" fill="#0c0a09" opacity="0.28" />
+            <circle cx="4.7" cy="8.7" r="1.9" fill="#060a13" opacity="0.28" />
             <circle cx="4.7" cy="8.7" r="0.75" fill="currentColor" />
           </symbol>
           <symbol id="uPers" viewBox="0 0 14 16">
@@ -863,7 +869,7 @@ function MapShell({ children, legend }) {
             <circle cx="7.9" cy="3.2" r="1.55" fill="currentColor" />
             <path d="M6.9 5 L9.2 5 L9.8 9.8 L10.7 15.2 L9.1 15.2 L8.1 11.2 L7.2 15.2 L5.6 15.2 L6.4 9.8 Z" fill="currentColor" />
             <rect x="2.7" y="4.7" width="2.9" height="9.6" rx="1" fill="currentColor" />
-            <line x1="4.15" y1="6.4" x2="4.15" y2="12.7" stroke="#0c0a09" strokeWidth="0.5" opacity="0.3" />
+            <line x1="4.15" y1="6.4" x2="4.15" y2="12.7" stroke="#060a13" strokeWidth="0.5" opacity="0.3" />
             <path d="M11.6 4.4 Q14.4 7.9 11.6 11.4" stroke="currentColor" strokeWidth="0.85" fill="none" />
             <line x1="11.6" y1="4.4" x2="11.6" y2="11.4" stroke="currentColor" strokeWidth="0.45" />
           </symbol>
@@ -874,7 +880,7 @@ function MapShell({ children, legend }) {
             <path d="M6.9 1.9 Q7.7 0.7 8.7 1.9 L8.4 2.6 L7.1 2.6 Z" fill="currentColor" />
             <path d="M6.7 5.4 L9 5.4 L9.6 10 L10.5 15.2 L8.9 15.2 L8 11.3 L7.1 15.2 L5.5 15.2 L6.4 10 Z" fill="currentColor" />
             <circle cx="5.2" cy="8.9" r="2.35" fill="currentColor" />
-            <circle cx="5.2" cy="8.9" r="1.3" fill="#0c0a09" opacity="0.28" />
+            <circle cx="5.2" cy="8.9" r="1.3" fill="#060a13" opacity="0.28" />
           </symbol>
           <symbol id="uCav" viewBox="0 0 22 17">
             <line x1="5.2" y1="8.2" x2="17.4" y2="1" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" />
@@ -918,30 +924,30 @@ function MapShell({ children, legend }) {
             <rect x="1" y="8.6" width="14" height="3" fill="currentColor" />
             <rect x="3.4" y="5.4" width="9.2" height="3" fill="currentColor" />
             <rect x="5.7" y="2.4" width="4.6" height="2.8" fill="currentColor" />
-            <line x1="8" y1="2.4" x2="8" y2="11.6" stroke="#0c0a09" strokeWidth="0.7" opacity="0.35" />
+            <line x1="8" y1="2.4" x2="8" y2="11.6" stroke="#060a13" strokeWidth="0.7" opacity="0.35" />
           </symbol>
           <symbol id="uFlame" viewBox="0 0 10 13">
             <path d="M5 0 Q8 3.4 6.6 5.4 Q8.6 4.8 9.2 3.2 Q10.8 7.2 8.6 9.8 Q7 11.8 5 11.8 Q3 11.8 1.6 9.9 Q-0.4 7 2 3.3 Q2.4 4.9 3.6 5.5 Q2.6 2.7 5 0 Z" fill="currentColor" />
-            <path d="M5 6.2 Q6.4 7.9 5.6 9.6 Q5.1 10.6 4.2 10.2 Q3 9.5 3.7 7.8 Q4.2 6.9 5 6.2 Z" fill="#0c0a09" opacity="0.4" />
+            <path d="M5 6.2 Q6.4 7.9 5.6 9.6 Q5.1 10.6 4.2 10.2 Q3 9.5 3.7 7.8 Q4.2 6.9 5 6.2 Z" fill="#060a13" opacity="0.4" />
           </symbol>
           <symbol id="uClash" viewBox="0 0 16 16">
             <path d="M8 0 L9.3 4.6 L13.8 2.6 L11 6.6 L16 8 L11 9.4 L13.4 13.6 L9.2 11.3 L8 16 L6.8 11.3 L2.6 13.6 L5 9.4 L0 8 L5 6.6 L2.2 2.6 L6.7 4.6 Z" fill="currentColor" />
           </symbol>
           <symbol id="uTent" viewBox="0 0 12 9">
             <path d="M0.8 8.4 L6 0.8 L11.2 8.4 Z" fill="currentColor" />
-            <path d="M4.6 8.4 L6 4.6 L7.4 8.4 Z" fill="#0c0a09" opacity="0.45" />
+            <path d="M4.6 8.4 L6 4.6 L7.4 8.4 Z" fill="#060a13" opacity="0.45" />
           </symbol>
         </defs>
         <rect width="400" height="250" fill="url(#landG)" />
         {children}
         <rect width="400" height="250" fill="url(#vignG)" style={{ pointerEvents: 'none' }} />
         <g opacity="0.75">
-          <circle cx="376" cy="226" r="10" fill="rgba(12,10,9,0.55)" stroke={MC.landLine} strokeWidth="0.8" />
+          <circle cx="376" cy="226" r="10" fill="rgba(6,10,19,0.55)" stroke={MC.landLine} strokeWidth="0.8" />
           <path d="M376 219 L378.4 226.5 L376 225 L373.6 226.5 Z" fill={MC.greek} />
           <text x="376" y="216" fill={MC.dim} fontSize="6" textAnchor="middle" fontFamily="'Plus Jakarta Sans', sans-serif">N</text>
         </g>
       </svg>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2 border-t border-sky-400/15 text-[10px] uppercase tracking-wider text-stone-400 bg-stone-950/60">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2 border-t border-cyan-400/15 text-[10px] uppercase tracking-wider text-slate-400 bg-slate-950/60">
         {legend.map((l, i) => (
           <span key={i} className="inline-flex items-center gap-1.5">
             <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: l.c }}></span>{l.t}
@@ -955,7 +961,7 @@ function MapShell({ children, legend }) {
 const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bold = false, rotate = 0, o = 1 }) => (
   <text x={x} y={y} fill={fill} fontSize={size} textAnchor={anchor} opacity={o}
     transform={rotate ? `rotate(${rotate} ${x} ${y})` : undefined}
-    paintOrder="stroke" stroke="rgba(12,10,9,0.85)" strokeWidth="2.6" strokeLinejoin="round"
+    paintOrder="stroke" stroke="rgba(6,10,19,0.85)" strokeWidth="2.6" strokeLinejoin="round"
     fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
 );
 
@@ -976,12 +982,12 @@ function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
 }
 const Ridge = ({ d, o = 1 }) => (
   <g opacity={o}>
-    <path d={d} fill="#2e2a25" stroke={MC.landLine} strokeWidth="0.9" strokeLinejoin="round" />
-    <path d={d} fill="none" stroke="rgba(231,229,228,0.13)" strokeWidth="0.7" strokeDasharray="1.5 3" />
+    <path d={d} fill="#242b39" stroke={MC.landLine} strokeWidth="0.9" strokeLinejoin="round" />
+    <path d={d} fill="none" stroke="rgba(226,232,240,0.13)" strokeWidth="0.7" strokeDasharray="1.5 3" />
   </g>
 );
 const Contour = ({ d, o = 0.16 }) => (
-  <path d={d} fill="none" stroke="#d6d3d1" strokeWidth="0.6" opacity={o} />
+  <path d={d} fill="none" stroke="#cbd5e1" strokeWidth="0.6" opacity={o} />
 );
 
 /* ---------- 1. MARATHON ---------- */
@@ -1195,10 +1201,10 @@ function MapDelos({ lang }) {
       <Unit sym="uTemple" x={245} y={110} w={13} color={MC.gold} />
       <T x={252} y={98} fill={MC.gold} bold size={7.5}>{L ? 'ΔΗΛΟΣ — ΣΥΜΜΑΧΙΚΟ ΤΑΜΕΙΟ' : 'DELOS — LEAGUE TREASURY'}</T>
       {/* Tribute sea-lanes */}
-      <path d="M268 168 Q268 148 258 134" fill="none" stroke="rgba(250,204,21,0.55)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
-      <path d="M338 130 Q300 128 268 124" fill="none" stroke="rgba(250,204,21,0.55)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
-      <path d="M100 164 Q170 152 236 128 " fill="none" stroke="rgba(250,204,21,0.55)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
-      <path d="M238 78 Q244 96 248 106" fill="none" stroke="rgba(250,204,21,0.55)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
+      <path d="M268 168 Q268 148 258 134" fill="none" stroke="rgba(232,217,160,0.6)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
+      <path d="M338 130 Q300 128 268 124" fill="none" stroke="rgba(232,217,160,0.6)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
+      <path d="M100 164 Q170 152 236 128 " fill="none" stroke="rgba(232,217,160,0.6)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
+      <path d="M238 78 Q244 96 248 106" fill="none" stroke="rgba(232,217,160,0.6)" strokeWidth="1.2" strokeDasharray="3 3" markerEnd="url(#arrGold)" />
       <Unit sym="uShip" x={158} y={148} w={16} color={MC.greek} o={0.9} />
       <Unit sym="uShip" x={300} y={120} w={16} color={MC.greek} mirror o={0.9} />
       {/* Treasury transfer to Athens */}
@@ -1241,7 +1247,7 @@ function MapLongWalls({ lang }) {
       <path d="M74 30 Q140 34 196 50" fill="none" stroke={MC.enemy} strokeWidth="2.4" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
       <T x={116} y={16} fill={MC.enemy} bold size={7.5}>{L ? 'ΑΡΧΙΔΑΜΟΣ — ΔΗΩΣΗ ΤΗΣ ΑΤΤΙΚΗΣ' : 'ARCHIDAMUS RAVAGES ATTICA'}</T>
       {/* Athens */}
-      <circle cx="288" cy="76" r="30" fill="rgba(245,158,11,0.05)" stroke={MC.greek} strokeWidth="2.2" strokeDasharray="7 2.5" />
+      <circle cx="288" cy="76" r="30" fill="rgba(94,234,212,0.05)" stroke={MC.greek} strokeWidth="2.2" strokeDasharray="7 2.5" />
       <Unit sym="uTemple" x={280} y={58} w={15} color={MC.greek} />
       <g fill={MC.dim} opacity="0.85">
         <rect x="272" y="80" width="5" height="4" /><rect x="280" y="84" width="5" height="4" />
@@ -1258,12 +1264,12 @@ function MapLongWalls({ lang }) {
       </g>
       <T x={334} y={40} fill="#a3e635" size={6.8} bold anchor="start">{L ? 'ΛΟΙΜΟΣ' : 'PLAGUE'}</T>
       {/* Long Walls corridor */}
-      <path d="M262 96 L142 164 L152 176 L270 106 Z" fill="rgba(245,158,11,0.07)" />
+      <path d="M262 96 L142 164 L152 176 L270 106 Z" fill="rgba(94,234,212,0.07)" />
       <line x1="262" y1="96" x2="142" y2="164" stroke={MC.greek} strokeWidth="2.8" strokeDasharray="7 2.5" />
       <line x1="270" y1="106" x2="152" y2="176" stroke={MC.greek} strokeWidth="2.8" strokeDasharray="7 2.5" />
       <T x={222} y={128} fill={MC.greek} bold size={7.5} rotate={-27}>{L ? 'ΜΑΚΡΑ ΤΕΙΧΗ' : 'THE LONG WALLS'}</T>
       {/* Piraeus & the sea lifeline */}
-      <path d="M124 170 Q142 162 154 172 Q148 186 130 184 Q118 178 124 170 Z" fill="rgba(245,158,11,0.05)" stroke={MC.greek} strokeWidth="1.8" />
+      <path d="M124 170 Q142 162 154 172 Q148 186 130 184 Q118 178 124 170 Z" fill="rgba(94,234,212,0.05)" stroke={MC.greek} strokeWidth="1.8" />
       <T x={112} y={162} fill={MC.greek} bold size={7} anchor="end">{L ? 'ΠΕΙΡΑΙΑΣ' : 'PIRAEUS'}</T>
       <Unit sym="uShip" x={182} y={206} w={19} color={MC.greek} />
       <Unit sym="uShip" x={224} y={214} w={19} color={MC.greek} o={0.85} />
@@ -1354,7 +1360,7 @@ function MapChaeronea({ lang }) {
       {/* Kephissos river */}
       <path d="M358 0 Q344 60 352 118 Q360 178 338 250" fill="none" stroke="url(#seaG)" strokeWidth="13" opacity="0.9" />
       <path d="M358 0 Q344 60 352 118 Q360 178 338 250" fill="none" stroke={MC.water} strokeWidth="1.2" opacity="0.7" />
-      <path d="M351 24 Q343 70 349 118 Q355 172 336 232" fill="none" stroke="rgba(56,189,248,0.35)" strokeWidth="0.8" />
+      <path d="M351 24 Q343 70 349 118 Q355 172 336 232" fill="none" stroke="rgba(96,165,250,0.35)" strokeWidth="0.8" />
       <T x={370} y={140} fill={MC.water} size={7} rotate={78}>{L ? 'ΚΗΦΙΣΟΣ' : 'KEPHISSOS'}</T>
       {/* Chaeronea town */}
       <Contour d="M28 196 Q52 184 76 196 Q64 212 40 210 Q26 206 28 196" o={0.3} />
@@ -1405,9 +1411,9 @@ function MapGaugamela({ lang }) {
       <Contour d="M20 210 Q110 200 200 208 Q300 216 384 206" o={0.12} />
       <Contour d="M30 226 Q130 218 230 224 Q320 230 386 222" o={0.09} />
       {/* Levelled chariot ground */}
-      <rect x="34" y="78" width="332" height="30" fill="rgba(250,204,21,0.05)" stroke="rgba(250,204,21,0.38)" strokeWidth="0.9" strokeDasharray="6 4" />
+      <rect x="34" y="78" width="332" height="30" fill="rgba(232,217,160,0.05)" stroke="rgba(232,217,160,0.38)" strokeWidth="0.9" strokeDasharray="6 4" />
       {[70, 130, 190, 250, 310].map((x, i) => (
-        <line key={i} x1={x} y1="82" x2={x} y2="104" stroke="rgba(250,204,21,0.3)" strokeWidth="0.8" strokeDasharray="2 3" />
+        <line key={i} x1={x} y1="82" x2={x} y2="104" stroke="rgba(232,217,160,0.3)" strokeWidth="0.8" strokeDasharray="2 3" />
       ))}
       <T x={38} y={74} fill={MC.gold} size={6.8} anchor="start">{L ? 'ΕΔΑΦΟΣ ΙΣΟΠΕΔΩΜΕΝΟ ΓΙΑ ΤΑ ΔΡΕΠΑΝΗΦΟΡΑ' : 'GROUND LEVELLED FOR THE SCYTHED CHARIOTS'}</T>
       {/* Persian line spanning the horizon */}
@@ -1507,7 +1513,7 @@ function MapOpis({ lang }) {
       <path d="M219 108 Q222 104 225 108 L224 112 L220 112 Z" fill={MC.gold} />
       <T x={222} y={144} fill={MC.gold} size={6.5} bold>{L ? 'ΤΟ ΣΥΜΠΟΣΙΟ ΤΗΣ ΟΜΟΝΟΙΑΣ — 9.000' : 'BANQUET OF HOMONOIA — 9,000'}</T>
       {/* The span of empire */}
-      <path d="M12 46 Q60 22 118 34 Q170 44 196 38" fill="none" stroke="rgba(245,158,11,0.45)" strokeWidth="1.8" strokeDasharray="7 5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M12 46 Q60 22 118 34 Q170 44 196 38" fill="none" stroke="rgba(94,234,212,0.5)" strokeWidth="1.8" strokeDasharray="7 5" markerEnd="url(#arrGreek)" className="anim-dash" />
       <T x={96} y={20} fill={MC.greek} size={6.8} bold>{L ? 'ΑΠΟ ΤΗΝ ΑΔΡΙΑΤΙΚΗ...' : 'FROM THE ADRIATIC...'}</T>
       <path d="M248 36 Q310 26 366 14" fill="none" stroke="rgba(192,132,252,0.5)" strokeWidth="1.8" strokeDasharray="7 5" markerEnd="url(#arrAdmin)" className="anim-dash" />
       <T x={318} y={10} fill={MC.admin} size={6.8} bold>{L ? '...ΩΣ ΤΟΝ ΙΝΔΟ' : '...TO THE INDUS'}</T>
@@ -1539,24 +1545,24 @@ const fadeUp = {
 };
 
 function MetricBar({ label, value, icon, color }) {
-  const isAmber = color === 'amber';
+  const isTyrian = color === 'tyrian';
   return (
     <div className="flex-1 min-w-[140px]">
       <div className="flex items-center justify-between mb-1.5">
-        <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest ${isAmber ? 'text-amber-500' : 'text-sky-400'}`}>
+        <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest ${isTyrian ? 'text-purple-300' : 'text-cyan-300'}`}>
           <Icon name={icon} size={13} /> {label}
         </span>
-        <span className={`text-sm font-bold tabular-nums ${isAmber ? 'text-amber-400' : 'text-sky-300'}`}>{value}%</span>
+        <span className={`text-sm font-bold tabular-nums ${isTyrian ? 'text-purple-300' : 'text-cyan-200'}`}>{value}%</span>
       </div>
-      <div className="h-2.5 rounded-full bg-stone-800/80 border border-stone-700/50 overflow-hidden">
+      <div className="h-2.5 rounded-full bg-slate-800/80 border border-slate-700/50 overflow-hidden">
         <motion.div
-          className={`h-full rounded-full ${isAmber
-            ? 'bg-gradient-to-r from-amber-700 via-amber-500 to-amber-400'
-            : 'bg-gradient-to-r from-sky-700 via-sky-500 to-sky-400'}`}
+          className={`h-full rounded-full ${isTyrian
+            ? 'bg-gradient-to-r from-purple-700 via-purple-500 to-fuchsia-400'
+            : 'bg-gradient-to-r from-cyan-700 via-cyan-500 to-cyan-300'}`}
           initial={false}
           animate={{ width: `${value}%` }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          style={{ boxShadow: isAmber ? '0 0 12px rgba(245,158,11,0.5)' : '0 0 12px rgba(56,189,248,0.5)' }}
+          style={{ boxShadow: isTyrian ? '0 0 12px rgba(192,132,252,0.5)' : '0 0 12px rgba(34,211,238,0.5)' }}
         />
       </div>
     </div>
@@ -1569,7 +1575,7 @@ function LangToggle({ lang, setLang }) {
     <motion.button
       whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
       onClick={() => setLang(lang === 'en' ? 'el' : 'en')}
-      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-amber-500/30 bg-stone-900/70 text-amber-400 text-xs font-bold uppercase tracking-widest hover:border-amber-500/70 hover:shadow-glow-amber transition-colors"
+      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-cyan-400/30 bg-slate-900/70 text-cyan-300 text-xs font-bold uppercase tracking-widest hover:border-cyan-400/70 hover:shadow-glow-cyan transition-colors"
     >
       <Icon name="Languages" size={14} /> {t.langToggle}
     </motion.button>
@@ -1582,7 +1588,7 @@ function DeltaChip({ label, delta, color }) {
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${pos
       ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
       : 'text-rose-300 border-rose-500/40 bg-rose-500/10'}`}>
-      <Icon name={color === 'amber' ? 'Crown' : 'Users'} size={13} />
+      <Icon name={color === 'tyrian' ? 'Crown' : 'Users'} size={13} />
       {label} {pos ? '+' : ''}{delta}%
     </span>
   );
@@ -1592,7 +1598,7 @@ function StepPips({ step }) {
   return (
     <div className="flex items-center gap-2">
       {[1, 2, 3].map((s) => (
-        <span key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-amber-500 shadow-glow-amber' : s < step ? 'w-4 bg-amber-700' : 'w-4 bg-stone-700'}`} />
+        <span key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-cyan-400 shadow-glow-cyan' : s < step ? 'w-4 bg-cyan-700' : 'w-4 bg-slate-700'}`} />
       ))}
     </div>
   );
@@ -1608,34 +1614,34 @@ function Hub({ lang, setLang, onStart }) {
       <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
       <div className="text-center mb-10">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
-          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-amber-500/40 bg-stone-900/80 shadow-glow-amber mb-5 text-amber-500">
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-cyan-400/40 bg-slate-900/80 shadow-glow-cyan mb-5 text-cyan-300">
           <Icon name="Landmark" size={32} strokeWidth={1.5} />
         </motion.div>
-        <h1 className="font-display font-black text-4xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-amber-300 via-amber-500 to-amber-700 drop-shadow-[0_0_28px_rgba(245,158,11,0.35)]">
+        <h1 className="font-display font-black text-4xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-marble-100 via-marble-200 to-cyan-200 drop-shadow-[0_0_28px_rgba(233,227,209,0.22)]">
           {t.appTitle}
         </h1>
-        <p className="font-display text-sky-400 text-sm sm:text-lg tracking-[0.3em] uppercase mt-2">{t.appSubtitle}</p>
-        <p className="text-stone-400 text-sm max-w-2xl mx-auto mt-4 leading-relaxed">{t.hubTagline}</p>
+        <p className="font-display text-cyan-300 text-sm sm:text-lg tracking-[0.3em] uppercase mt-2">{t.appSubtitle}</p>
+        <p className="text-slate-400 text-sm max-w-2xl mx-auto mt-4 leading-relaxed">{t.hubTagline}</p>
       </div>
 
       {/* Grand campaign card */}
       <motion.button
         whileHover={{ y: -4, scale: 1.01 }} whileTap={{ scale: 0.99 }}
         onClick={() => onStart('all')}
-        className="glass-card w-full rounded-2xl p-6 sm:p-8 text-left mb-6 group hover:border-amber-500/60 hover:shadow-glow-amber transition-all duration-300"
+        className="glass-card w-full rounded-2xl p-6 sm:p-8 text-left mb-6 group hover:border-cyan-400/60 hover:shadow-glow-cyan transition-all duration-300"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="w-14 h-14 shrink-0 rounded-xl border border-amber-500/40 bg-amber-500/10 flex items-center justify-center text-amber-500">
+          <div className="w-14 h-14 shrink-0 rounded-xl border border-laurel-300/40 bg-laurel-300/10 flex items-center justify-center text-laurel-300">
             <Icon name="Trophy" size={28} strokeWidth={1.6} />
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="font-display font-bold text-xl sm:text-2xl text-amber-400">{t.grandCampaign}</h2>
-              <span className="px-2.5 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-bold uppercase tracking-widest">9 {t.scenariosLabel}</span>
+              <h2 className="font-display font-bold text-xl sm:text-2xl text-marble-200">{t.grandCampaign}</h2>
+              <span className="px-2.5 py-1 rounded-md bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[10px] font-bold uppercase tracking-widest">9 {t.scenariosLabel}</span>
             </div>
-            <p className="text-stone-400 text-sm mt-2 leading-relaxed">{t.grandCampaignDesc}</p>
+            <p className="text-slate-400 text-sm mt-2 leading-relaxed">{t.grandCampaignDesc}</p>
           </div>
-          <span className="inline-flex items-center gap-2 text-amber-500 font-bold text-sm uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+          <span className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm uppercase tracking-wider group-hover:translate-x-1 transition-transform">
             <Icon name="Play" size={16} /> {t.beginCampaign}
           </span>
         </div>
@@ -1645,7 +1651,11 @@ function Hub({ lang, setLang, onStart }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {PHASES.map((ph, i) => {
           const eraScenarios = SCENARIOS.filter((s) => s.phase === ph.key);
-          const amber = ph.accent === 'amber';
+          const AC = {
+            cyan: { card: 'hover:border-cyan-400/60 hover:shadow-glow-cyan', tile: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-300', label: 'text-cyan-300/80', chev: 'text-cyan-600', play: 'text-cyan-300' },
+            marble: { card: 'hover:border-marble-300/60 hover:shadow-glow-ivory', tile: 'border-marble-300/40 bg-marble-300/10 text-marble-200', label: 'text-marble-300/80', chev: 'text-marble-400', play: 'text-marble-200' },
+            tyrian: { card: 'hover:border-purple-400/60 hover:shadow-glow-tyrian', tile: 'border-purple-400/40 bg-purple-400/10 text-purple-300', label: 'text-purple-300/80', chev: 'text-purple-500', play: 'text-purple-300' },
+          }[ph.accent];
           return (
             <motion.button
               key={ph.key}
@@ -1653,32 +1663,32 @@ function Hub({ lang, setLang, onStart }) {
               transition={{ delay: 0.12 * i + 0.2, duration: 0.5 }}
               whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={() => onStart(ph.key)}
-              className={`glass-card rounded-2xl p-6 text-left group transition-all duration-300 ${amber ? 'hover:border-amber-500/60 hover:shadow-glow-amber' : 'hover:border-sky-400/60 hover:shadow-glow-sky'}`}
+              className={`glass-card rounded-2xl p-6 text-left group transition-all duration-300 ${AC.card}`}
             >
-              <div className={`w-11 h-11 rounded-lg border flex items-center justify-center mb-4 ${amber ? 'border-amber-500/40 bg-amber-500/10 text-amber-500' : 'border-sky-400/40 bg-sky-400/10 text-sky-400'}`}>
+              <div className={`w-11 h-11 rounded-lg border flex items-center justify-center mb-4 ${AC.tile}`}>
                 <Icon name={ph.icon} size={22} strokeWidth={1.7} />
               </div>
-              <p className={`text-[10px] font-bold uppercase tracking-[0.25em] mb-1 ${amber ? 'text-amber-500/80' : 'text-sky-400/80'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.25em] mb-1 ${AC.label}`}>
                 {t.era} {['I', 'II', 'III'][i]} · {ph.range[lang]}
               </p>
-              <h3 className="font-display font-bold text-lg text-stone-100 leading-snug">{ph.name[lang]}</h3>
-              <p className="text-stone-400 text-xs mt-2.5 leading-relaxed">{ph.blurb[lang]}</p>
-              <ul className="mt-4 space-y-1.5 border-t border-stone-700/50 pt-3">
+              <h3 className="font-display font-bold text-lg text-slate-100 leading-snug">{ph.name[lang]}</h3>
+              <p className="text-slate-400 text-xs mt-2.5 leading-relaxed">{ph.blurb[lang]}</p>
+              <ul className="mt-4 space-y-1.5 border-t border-slate-700/50 pt-3">
                 {eraScenarios.map((s) => (
-                  <li key={s.id} className="flex items-center gap-2 text-[11px] text-stone-500">
-                    <Icon name="ChevronRight" size={11} className={amber ? 'text-amber-600' : 'text-sky-600'} />
+                  <li key={s.id} className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Icon name="ChevronRight" size={11} className={AC.chev} />
                     <span className="truncate">{s.title[lang]} · {t.year(s.year)}</span>
                   </li>
                 ))}
               </ul>
-              <span className={`mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${amber ? 'text-amber-500' : 'text-sky-400'} group-hover:translate-x-1 transition-transform`}>
+              <span className={`mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${AC.play} group-hover:translate-x-1 transition-transform`}>
                 <Icon name="Swords" size={14} /> {t.playEra}
               </span>
             </motion.button>
           );
         })}
       </div>
-      <p className="text-center text-[11px] text-stone-600 mt-8 leading-relaxed max-w-3xl mx-auto">{t.hubFooter}</p>
+      <p className="text-center text-[11px] text-slate-600 mt-8 leading-relaxed max-w-3xl mx-auto">{t.hubFooter}</p>
     </motion.div>
   );
 }
@@ -1698,27 +1708,27 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
       {/* Command header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-900/80 border border-stone-700/60 text-[11px] font-bold uppercase tracking-widest text-stone-400">
-            <Icon name={phase.icon} size={13} className="text-amber-500" /> {phase.name[lang]}
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <Icon name={phase.icon} size={13} className="text-cyan-300" /> {phase.name[lang]}
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-stone-500">{t.scenarioOf(scenarioNum, totalScenarios)}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">{t.scenarioOf(scenarioNum, totalScenarios)}</span>
         </div>
         <LangToggle lang={lang} setLang={setLang} />
       </div>
 
       {/* Metrics dashboard */}
       <div className="glass-card rounded-2xl px-5 py-4 mb-5 flex flex-col sm:flex-row gap-4 sm:gap-8">
-        <MetricBar label={t.unity} value={unity} icon="Users" color="sky" />
-        <MetricBar label={t.power} value={power} icon="Crown" color="amber" />
+        <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+        <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
       </div>
 
       {/* Main tactical card */}
       <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-amber-500/15 greek-key-border">
+        <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-marble-300/15 greek-key-border">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-amber-500/90 text-[11px] font-bold uppercase tracking-[0.25em] mb-1">{t.year(scenario.year)} · {t.location}: {scenario.location[lang]}</p>
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-stone-100">{scenario.title[lang]}</h2>
+              <p className="text-marble-300/90 text-[11px] font-bold uppercase tracking-[0.25em] mb-1">{t.year(scenario.year)} · {t.location}: {scenario.location[lang]}</p>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl text-slate-100">{scenario.title[lang]}</h2>
             </div>
             <StepPips step={step} />
           </div>
@@ -1728,17 +1738,17 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
           {/* ---- STEP 1: SOURCE ANALYSIS ---- */}
           {step === 1 && (
             <motion.div key="s1" {...fadeUp} className="px-6 sm:px-8 py-7">
-              <p className="flex items-center gap-2 text-sky-400 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
                 <Icon name="Scroll" size={15} /> {t.step1Title}
               </p>
-              <div className="relative rounded-xl border border-sky-400/25 bg-sky-400/5 px-6 py-6 sm:px-8">
-                <span className="absolute -top-3 left-6 px-2.5 bg-stone-900 text-sky-400 text-[10px] font-bold uppercase tracking-widest border border-sky-400/25 rounded">
+              <div className="relative rounded-xl border border-cyan-400/25 bg-cyan-400/5 px-6 py-6 sm:px-8">
+                <span className="absolute -top-3 left-6 px-2.5 bg-slate-900 text-cyan-300 text-[10px] font-bold uppercase tracking-widest border border-cyan-400/25 rounded">
                   {t.theSourceSays}
                 </span>
-                <blockquote className="font-display text-lg sm:text-xl text-stone-200 leading-relaxed italic">
+                <blockquote className="font-display text-lg sm:text-xl text-slate-200 leading-relaxed italic">
                   {scenario.source.quote[lang]}
                 </blockquote>
-                <p className="mt-4 text-sky-400/90 text-sm font-semibold flex items-center gap-2">
+                <p className="mt-4 text-cyan-300/90 text-sm font-semibold flex items-center gap-2">
                   <Icon name="BookOpen" size={14} /> — {scenario.source.author[lang]}
                 </p>
               </div>
@@ -1746,7 +1756,7 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
                 <motion.button
                   whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
                   onClick={() => setStep(2)}
-                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-stone-950 font-bold text-sm uppercase tracking-widest shadow-glow-amber hover:from-amber-500 hover:to-amber-400 transition-colors"
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan hover:from-cyan-500 hover:to-teal-400 transition-colors"
                 >
                   <Icon name="Compass" size={17} /> {t.analyzeSource}
                 </motion.button>
@@ -1757,32 +1767,32 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
           {/* ---- STEP 2: STRATEGIC CHOICE & MAP ---- */}
           {step === 2 && (
             <motion.div key="s2" {...fadeUp} className="px-6 sm:px-8 py-7">
-              <p className="flex items-center gap-2 text-sky-400 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
                 <Icon name="Map" size={15} /> {t.step2Title}
               </p>
-              <div className="rounded-xl border border-stone-700/60 bg-stone-900/50 px-5 py-4 mb-5">
-                <p className="flex items-center gap-2 text-amber-500 text-[11px] font-bold uppercase tracking-widest mb-2">
+              <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
                   <Icon name="AlertTriangle" size={13} /> {t.dilemmaTitle}
                 </p>
-                <p className="text-stone-300 text-sm leading-relaxed">{scenario.dilemma[lang]}</p>
+                <p className="text-slate-300 text-sm leading-relaxed">{scenario.dilemma[lang]}</p>
               </div>
-              <p className="flex items-center gap-2 text-stone-400 text-[11px] font-bold uppercase tracking-widest mb-2.5">
-                <Icon name="Compass" size={13} className="text-sky-400" /> {t.mapTitle}
+              <p className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2.5">
+                <Icon name="Compass" size={13} className="text-cyan-300" /> {t.mapTitle}
               </p>
               <MapComp lang={lang} />
-              <p className="mt-6 mb-3 font-display text-amber-400 text-base font-bold">{t.choicePrompt}</p>
+              <p className="mt-6 mb-3 font-display text-marble-200 text-base font-bold">{t.choicePrompt}</p>
               <div className="grid grid-cols-1 gap-4">
                 {scenario.choices.map((c, i) => (
                   <motion.button
                     key={i}
                     whileHover={{ y: -4, scale: 1.012 }} whileTap={{ scale: 0.99 }}
                     onClick={() => onChoose(i)}
-                    className="text-left rounded-xl border border-stone-700/70 bg-stone-900/60 px-5 py-4 hover:border-amber-500/70 hover:shadow-glow-amber hover:bg-stone-900/90 transition-all duration-300 group"
+                    className="text-left rounded-xl border border-slate-700/70 bg-slate-900/60 px-5 py-4 hover:border-cyan-400/70 hover:shadow-glow-cyan hover:bg-slate-900/90 transition-all duration-300 group"
                   >
-                    <span className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] mb-2 ${i === 0 ? 'text-amber-500' : 'text-sky-400'}`}>
+                    <span className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] mb-2 ${i === 0 ? 'text-cyan-300' : 'text-purple-300'}`}>
                       <Icon name="Swords" size={12} /> {i === 0 ? t.optionA : t.optionB}
                     </span>
-                    <p className="text-stone-200 text-sm leading-relaxed group-hover:text-stone-50 transition-colors">{c.text[lang]}</p>
+                    <p className="text-slate-200 text-sm leading-relaxed group-hover:text-slate-50 transition-colors">{c.text[lang]}</p>
                   </motion.button>
                 ))}
               </div>
@@ -1792,7 +1802,7 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
           {/* ---- STEP 3: OUTCOME FEEDBACK ---- */}
           {step === 3 && chosen && (
             <motion.div key="s3" {...fadeUp} className="px-6 sm:px-8 py-7">
-              <p className="flex items-center gap-2 text-sky-400 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
                 <Icon name="Hourglass" size={15} /> {t.step3Title}
               </p>
               <div className={`rounded-xl border px-6 py-6 ${positive ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
@@ -1800,12 +1810,12 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
                   <Icon name={positive ? 'TrendingUp' : 'Flame'} size={19} />
                   {positive ? t.outcomeTriumph : t.outcomeSetback}
                 </p>
-                <p className="text-stone-200 text-sm sm:text-[15px] leading-relaxed">{chosen.outcome[lang]}</p>
-                <div className="mt-5 pt-4 border-t border-stone-700/50">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-stone-500 mb-2.5">{t.metricShift}</p>
+                <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">{chosen.outcome[lang]}</p>
+                <div className="mt-5 pt-4 border-t border-slate-700/50">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.metricShift}</p>
                   <div className="flex flex-wrap gap-2.5">
-                    <DeltaChip label={t.unityDelta} delta={chosen.unity} color="sky" />
-                    <DeltaChip label={t.powerDelta} delta={chosen.power} color="amber" />
+                    <DeltaChip label={t.unityDelta} delta={chosen.unity} color="cyan" />
+                    <DeltaChip label={t.powerDelta} delta={chosen.power} color="tyrian" />
                   </div>
                 </div>
               </div>
@@ -1813,7 +1823,7 @@ function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, st
                 <motion.button
                   whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
                   onClick={onAdvance}
-                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-sky-500 text-stone-950 font-bold text-sm uppercase tracking-widest shadow-glow-sky hover:from-sky-500 hover:to-sky-400 transition-colors"
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 text-white font-bold text-sm uppercase tracking-widest shadow-glow-tyrian hover:from-purple-500 hover:to-fuchsia-400 transition-colors"
                 >
                   {isLastOfRun ? t.concludePhase : t.nextScenario} <Icon name="ChevronRight" size={17} />
                 </motion.button>
@@ -1836,8 +1846,8 @@ function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, on
   const ending = PHASE_ENDINGS[phaseKey][tier];
   const grand = GRAND_VERDICT[tier];
   const tierStyles = {
-    golden: { ring: 'border-amber-500/60', glow: 'shadow-glow-amber', text: 'text-amber-400', icon: 'Trophy' },
-    endured: { ring: 'border-sky-400/50', glow: 'shadow-glow-sky', text: 'text-sky-400', icon: 'Shield' },
+    golden: { ring: 'border-laurel-300/60', glow: 'shadow-glow-ivory', text: 'text-laurel-300', icon: 'Trophy' },
+    endured: { ring: 'border-cyan-400/50', glow: 'shadow-glow-cyan', text: 'text-cyan-300', icon: 'Shield' },
     collapse: { ring: 'border-rose-500/50', glow: '', text: 'text-rose-400', icon: 'Flame' },
   }[tier];
   const canContinue = mode === 'all' && !isGrandFinale;
@@ -1846,12 +1856,12 @@ function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, on
     <motion.div key={`end-${phaseKey}-${isGrandFinale}`} {...fadeUp} className="w-full max-w-3xl mx-auto">
       <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
       <div className={`glass-card rounded-2xl overflow-hidden ${tierStyles.glow}`}>
-        <div className="px-6 sm:px-10 pt-9 pb-7 text-center border-b border-stone-700/50">
+        <div className="px-6 sm:px-10 pt-9 pb-7 text-center border-b border-slate-700/50">
           <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6, delay: 0.15 }}
-            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border bg-stone-900/80 mb-4 ${tierStyles.ring} ${tierStyles.text}`}>
+            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border bg-slate-900/80 mb-4 ${tierStyles.ring} ${tierStyles.text}`}>
             <Icon name={tierStyles.icon} size={30} strokeWidth={1.6} />
           </motion.div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-stone-500 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-2">
             {isGrandFinale ? t.campaignComplete : `${t.phaseComplete} — ${phase.name[lang]}`}
           </p>
           <h2 className={`font-display font-black text-2xl sm:text-4xl ${tierStyles.text}`}>
@@ -1859,43 +1869,43 @@ function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, on
           </h2>
         </div>
         <div className="px-6 sm:px-10 py-7">
-          <p className="flex items-center gap-2 text-stone-500 text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
+          <p className="flex items-center gap-2 text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
             <Icon name="BookOpen" size={13} /> {t.verdict}
           </p>
-          <p className="text-stone-200 text-sm sm:text-[15px] leading-relaxed">
+          <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">
             {isGrandFinale ? grand.text[lang] : ending.text[lang]}
           </p>
           {isGrandFinale && (
-            <p className="text-stone-400 text-sm leading-relaxed mt-4 border-l-2 border-amber-500/40 pl-4 italic">
+            <p className="text-slate-400 text-sm leading-relaxed mt-4 border-l-2 border-laurel-300/40 pl-4 italic">
               {ending.text[lang]}
             </p>
           )}
           <div className="mt-7">
-            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-500 mb-3">{t.finalStanding}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.finalStanding}</p>
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
-              <MetricBar label={t.unity} value={unity} icon="Users" color="sky" />
-              <MetricBar label={t.power} value={power} icon="Crown" color="amber" />
+              <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+              <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
             </div>
           </div>
           {history.length > 0 && (
             <div className="mt-7">
-              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-stone-500 mb-3">{t.chronicleOfDecisions}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.chronicleOfDecisions}</p>
               <ul className="space-y-2">
                 {history.map((h, i) => {
                   const sc = SCENARIOS.find((s) => s.id === h.id);
                   const ch = sc.choices[h.choice];
                   const good = (ch.unity + ch.power) > 0;
                   return (
-                    <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-stone-700/50 bg-stone-900/50 px-4 py-2.5">
-                      <span className="flex items-center gap-2.5 text-xs text-stone-300 min-w-0">
+                    <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700/50 bg-slate-900/50 px-4 py-2.5">
+                      <span className="flex items-center gap-2.5 text-xs text-slate-300 min-w-0">
                         <Icon name={good ? 'TrendingUp' : 'Flame'} size={13} className={good ? 'text-emerald-400 shrink-0' : 'text-rose-400 shrink-0'} />
                         <span className="truncate">{sc.title[lang]}</span>
-                        <span className="text-stone-600 shrink-0">· {h.choice === 0 ? 'Α' : 'Β'}</span>
+                        <span className="text-slate-600 shrink-0">· {h.choice === 0 ? 'Α' : 'Β'}</span>
                       </span>
                       <span className="text-[11px] font-bold tabular-nums shrink-0">
-                        <span className={ch.unity >= 0 ? 'text-sky-400' : 'text-rose-400'}>{ch.unity >= 0 ? '+' : ''}{ch.unity}U</span>
-                        <span className="text-stone-600 mx-1">/</span>
-                        <span className={ch.power >= 0 ? 'text-amber-400' : 'text-rose-400'}>{ch.power >= 0 ? '+' : ''}{ch.power}P</span>
+                        <span className={ch.unity >= 0 ? 'text-cyan-300' : 'text-rose-400'}>{ch.unity >= 0 ? '+' : ''}{ch.unity}U</span>
+                        <span className="text-slate-600 mx-1">/</span>
+                        <span className={ch.power >= 0 ? 'text-purple-300' : 'text-rose-400'}>{ch.power >= 0 ? '+' : ''}{ch.power}P</span>
                       </span>
                     </li>
                   );
@@ -1906,16 +1916,16 @@ function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, on
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             {canContinue && (
               <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onContinue}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-stone-950 font-bold text-sm uppercase tracking-widest shadow-glow-amber">
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan">
                 <Icon name="Swords" size={16} /> {t.continueCampaign}
               </motion.button>
             )}
             <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onReplay}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-sky-400/40 bg-stone-900/70 text-sky-400 font-bold text-sm uppercase tracking-widest hover:border-sky-400/80 hover:shadow-glow-sky transition-all">
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-purple-400/40 bg-slate-900/70 text-purple-300 font-bold text-sm uppercase tracking-widest hover:border-purple-400/80 hover:shadow-glow-tyrian transition-all">
               <Icon name="RotateCcw" size={16} /> {t.replay}
             </motion.button>
             <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onHub}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-stone-600/60 bg-stone-900/70 text-stone-300 font-bold text-sm uppercase tracking-widest hover:border-stone-400/60 transition-all">
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-600/60 bg-slate-900/70 text-slate-300 font-bold text-sm uppercase tracking-widest hover:border-slate-400/60 transition-all">
               <Icon name="Home" size={16} /> {t.returnHub}
             </motion.button>
           </div>
