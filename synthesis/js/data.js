@@ -269,6 +269,7 @@ Object.assign(SUBJECTS, {
       games:[ g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
               g('Ενότητα 17','Unit 17','Φόβος μπροστά στο άγνωστο','scroll',{fn:'openLatinText17'}),
               g('Ενότητα 18','Unit 18','Ο Ηρακλής στην Ιταλία','scroll',{fn:'openLatinText18'}),
+              g('Ενότητα 19','Unit 19','Η συνωμοσία του Κατιλίνα','scroll',{fn:'openLatinText19'}),
               g('Ενότητα 20','Unit 20','Πίσω από τις κουρτίνες ή πώς ο Κλαύδιος έγινε αυτοκράτορας','scroll',{fn:'openLatinText20'}),
               g('Ενότητα 21','Unit 21','Πώς πήρε το όνομά του το Πίσαυρο','scroll',{fn:'openLatinText21'}),
               g('Ενότητα 22','Unit 22','Προτροπές προς τους Ρωμαίους','scroll',{fn:'openLatinText22'}),
