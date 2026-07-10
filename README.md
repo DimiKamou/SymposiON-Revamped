@@ -48,6 +48,11 @@ Firebase config is the project's public client config (`js/firebase-config.js`) 
 - **~51 game folders / 56 wired launchers** — Greek & Latin grammar, canvas/arcade, trivia,
   iframe games (istoria, symposion board), study/Mnemosyne, multiplayer/Firebase (live-arena,
   golden-fleece, halieia), plus the PvP pack (krypteia, hegemonia, discus, toxotes, agora).
+- **«Αγία Σοφία 537» interactive 3D museum** (`games/hagia-sophia/`) — a walkable first-person
+  reconstruction of Justinian's Hagia Sophia as consecrated in 537 (original shallow dome,
+  silver templon, great ambo, atrium & phiale; 14 bilingual exhibit stations, day/dusk,
+  generative ambience). Self-contained Three.js, no assets/build; also runs standalone —
+  see its `README.md` and `UNREAL-PORT.md`.
 - **Auth/login** (Firebase) and the **admin Command Center** (gated to the admin account).
 - Game-launch system: `js/syn-launch.js` + `js/manifest/*.js` (`SYN_GAMES` / `SYN_LAUNCH_MAP`)
   → `synLaunch(openFn)` injects the overlay + css + lazy-loads the game, then calls it.

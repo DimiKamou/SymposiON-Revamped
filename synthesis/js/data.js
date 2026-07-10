@@ -197,6 +197,7 @@ const ENGINES = [
   { gr:'Ναυμαχία', en:'Naumachia', meta:{gr:'Naval · PvP',en:'Naval · PvP'}, illu:'trident' },
   { gr:'Λαβύρινθος', en:'Labyrinth', meta:{gr:'Maze · Μυθολογία',en:'Maze · Mythology'}, illu:'labyrinth' },
   { gr:'Συμπόσιον', en:'Symposion', meta:{gr:'Επιτραπέζιο · 2–8 παίκτες',en:'Board game · 2–8 players'}, illu:'amphora' },
+  { gr:'Αγία Σοφία 537', en:'Hagia Sophia 537', meta:{gr:'3D Μουσείο · Περιήγηση στον ναό',en:'3D museum · walk the Great Church'}, illu:'acropolis' },
 ];
 
 window.SYM = { STR, CLASSES, SUBJECTS, ENGINES, L };

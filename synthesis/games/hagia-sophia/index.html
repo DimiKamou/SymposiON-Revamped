@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Hagia Sophia · 537 AD — Interactive Museum</title>
+<style>
+  :root {
+    --gold: #d9b45c; --gold-dim: #9a7c39; --ink: #f3ead2;
+    --glass: rgba(18, 14, 8, 0.82); --glass2: rgba(24, 19, 11, 0.94);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #0e0b07;
+    font-family: Georgia, 'Times New Roman', serif; color: var(--ink); }
+  canvas { display: block; }
+  body.locked { cursor: none; }
+
+  /* ---------- intro ---------- */
+  #intro { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center;
+    justify-content: center; background:
+    radial-gradient(ellipse at 50% 30%, rgba(90,66,20,0.55), rgba(10,8,5,0.96) 70%);
+    transition: opacity .8s; }
+  #intro.gone { opacity: 0; pointer-events: none; }
+  .intro-card { max-width: 720px; width: calc(100% - 40px); max-height: 92vh; overflow: auto;
+    text-align: center; padding: 42px 44px 34px; border: 1px solid var(--gold-dim);
+    background: var(--glass2); box-shadow: 0 0 90px rgba(0,0,0,.7), inset 0 0 60px rgba(120,90,30,.08); }
+  .intro-card h1 { font-size: 34px; letter-spacing: 2px; color: var(--gold); font-weight: normal; }
+  .intro-card h2 { font-size: 15px; letter-spacing: 4px; margin: 8px 0 18px; color: #cbb684;
+    text-transform: uppercase; font-weight: normal; }
+  .intro-card p { font-size: 14.5px; line-height: 1.65; color: #e6dcc0; text-align: justify; margin: 0 0 12px; }
+  .keys { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center;
+    font-size: 12.5px; color: #bfae87; margin: 16px 0 20px; }
+  .keys b { color: var(--ink); border: 1px solid var(--gold-dim); padding: 1px 7px;
+    border-radius: 4px; font-family: monospace; font-size: 12px; }
+  .intro-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-main { font-family: inherit; font-size: 16px; letter-spacing: 1px; cursor: pointer;
+    padding: 12px 30px; color: #1c1508; background: linear-gradient(180deg, #e8c874, #b78d34);
+    border: 1px solid #f4e0a8; border-radius: 3px; }
+  .btn-main:hover { filter: brightness(1.1); }
+  .btn-ghost { font-family: inherit; font-size: 14px; cursor: pointer; padding: 12px 22px;
+    color: var(--gold); background: transparent; border: 1px solid var(--gold-dim); border-radius: 3px; }
+  .btn-ghost:hover { background: rgba(217,180,92,.12); }
+  .credit { margin-top: 18px; font-size: 11px; color: #8d7f5e; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px;
+    margin: -2.5px; border-radius: 50%; background: rgba(243,234,210,.85);
+    box-shadow: 0 0 6px rgba(0,0,0,.8); }
+  #title-chip { position: absolute; top: 14px; left: 16px; font-size: 13px; letter-spacing: 2px;
+    color: var(--gold); background: var(--glass); border: 1px solid rgba(217,180,92,.35);
+    padding: 7px 13px; }
+  #hint { position: absolute; bottom: 12vh; left: 50%; transform: translateX(-50%);
+    background: var(--glass); border: 1px solid var(--gold-dim); color: var(--ink);
+    padding: 9px 18px; font-size: 14.5px; opacity: 0; transition: opacity .25s;
+    pointer-events: auto; }
+  #hint.show { opacity: 1; }
+  #hint b { color: var(--gold); font-family: monospace; }
+  #map-wrap { position: absolute; left: 16px; bottom: 16px; border: 1px solid rgba(217,180,92,.4);
+    box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+  #map-wrap.hidden { display: none; }
+  #map-wrap .compass { position: absolute; right: 5px; top: 3px; font-size: 10px; color: #cbb684; }
+  #buttons { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 8px;
+    pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+  #buttons button { font-family: inherit; cursor: pointer; font-size: 12.5px;
+    background: var(--glass); color: var(--ink); border: 1px solid rgba(217,180,92,.4);
+    padding: 8px 12px; border-radius: 3px; }
+  #buttons button:hover { border-color: var(--gold); }
+
+  /* ---------- exhibit panel ---------- */
+  #panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(430px, 92vw); z-index: 30;
+    background: var(--glass2); border-left: 1px solid var(--gold-dim);
+    transform: translateX(105%); transition: transform .35s ease; padding: 26px 28px;
+    overflow-y: auto; pointer-events: auto; box-shadow: -20px 0 60px rgba(0,0,0,.5); }
+  #panel.show { transform: none; }
+  #panel-n { font-size: 11px; letter-spacing: 3px; color: #a08c5d; }
+  #panel-title { font-size: 24px; color: var(--gold); margin: 8px 0 4px; font-weight: normal; }
+  #panel-sub { font-size: 13px; color: #cbb684; font-style: italic; margin-bottom: 14px; }
+  #panel-body { font-size: 14.5px; line-height: 1.72; color: #eee3c6; text-align: justify;
+    border-top: 1px solid rgba(217,180,92,.25); padding-top: 14px; }
+  #panel-close { position: absolute; top: 12px; right: 14px; background: none; border: none;
+    color: var(--gold); font-size: 22px; cursor: pointer; font-family: inherit; }
+  #panel-hintrow { margin-top: 16px; font-size: 11.5px; color: #8d7f5e; }
+
+  /* ---------- exhibit index drawer ---------- */
+  #list { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(.96);
+    width: min(560px, 94vw); max-height: 80vh; overflow: auto; z-index: 35;
+    background: var(--glass2); border: 1px solid var(--gold-dim); padding: 22px 24px;
+    opacity: 0; pointer-events: none; transition: all .25s; }
+  #list.show { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%); }
+  #list h3 { color: var(--gold); font-weight: normal; letter-spacing: 2px; margin-bottom: 12px; }
+  .list-item { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+    font-family: inherit; font-size: 14px; color: var(--ink); background: none; cursor: pointer;
+    border: none; border-bottom: 1px solid rgba(217,180,92,.15); padding: 9px 4px; }
+  .list-item:hover { background: rgba(217,180,92,.1); }
+  .list-item .ln { flex: 0 0 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold-dim);
+    color: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+  /* ---------- pause veil ---------- */
+  #pause { position: fixed; inset: 0; z-index: 25; display: none; align-items: center;
+    justify-content: center; background: rgba(8,6,3,.55); cursor: pointer; }
+  #pause.show { display: flex; }
+  #pause div { border: 1px solid var(--gold-dim); background: var(--glass2);
+    padding: 18px 34px; font-size: 15px; letter-spacing: 1px; }
+
+  body.shot #panel, body.shot #list, body.shot #pause { display: none !important; }
+  @media (max-width: 700px) {
+    .intro-card { padding: 26px 20px; }
+    .intro-card h1 { font-size: 24px; }
+    #map-wrap { transform: scale(.8); transform-origin: bottom left; }
+  }
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <div class="intro-card">
+    <h1>ΑΓΙΑ ΣΟΦΙΑ · 537</h1>
+    <h2 data-en="The Great Church of Justinian — an interactive museum"
+        data-gr="Η Μεγάλη Εκκλησία του Ιουστινιανού — διαδραστικό μουσείο">The Great Church of Justinian — an interactive museum</h2>
+    <p data-en="Constantinople, 27 December 537. After five years and ten months of construction, Emperor Justinian dedicates the largest vaulted building the world has ever seen. This reconstruction returns Hagia Sophia to that first morning: the original shallow dome that fell in 558, the silver templon and great ambo, the gold vaults before any figural mosaics, the atrium and its fountain — no minarets, no buttresses, no later centuries."
+       data-gr="Κωνσταντινούπολη, 27 Δεκεμβρίου 537. Ύστερα από πέντε χρόνια και δέκα μήνες, ο Ιουστινιανός εγκαινιάζει το μεγαλύτερο θολωτό κτίριο που είδε ποτέ ο κόσμος. Η αναπαράσταση επιστρέφει την Αγία Σοφία σε εκείνο το πρώτο πρωινό: ο αρχικός χαμηλός τρούλος που έπεσε το 558, το ασημένιο τέμπλο και ο μέγας άμβωνας, οι χρυσοί θόλοι πριν από κάθε εικονιστικό ψηφιδωτό, το αίθριο με τη φιάλη — χωρίς μιναρέδες, χωρίς αντηρίδες, χωρίς τους κατοπινούς αιώνες.">
+    </p>
+    <p data-en="Walk from the atrium through the Imperial Door. Fourteen numbered stations tell the story — approach a golden marker and press E."
+       data-gr="Περπατήστε από το αίθριο ώς την Ωραία Πύλη. Δεκατέσσερις αριθμημένοι σταθμοί αφηγούνται την ιστορία — πλησιάστε έναν χρυσό σημαδευτή και πατήστε E.">
+    </p>
+    <div class="keys">
+      <span><b>W A S D</b> <span data-en="walk" data-gr="κίνηση">walk</span></span>
+      <span><b>Mouse</b> <span data-en="look" data-gr="ματιά">look</span></span>
+      <span><b>Shift</b> <span data-en="hurry" data-gr="τρέξιμο">hurry</span></span>
+      <span><b>E</b> <span data-en="exhibit" data-gr="έκθεμα">exhibit</span></span>
+      <span><b>Tab</b> <span data-en="index" data-gr="ευρετήριο">index</span></span>
+      <span><b>N</b> <span data-en="day / dusk" data-gr="μέρα / νύχτα">day / dusk</span></span>
+      <span><b>M</b> <span data-en="map" data-gr="χάρτης">map</span></span>
+      <span><b>Esc</b> <span data-en="release mouse" data-gr="ελευθέρωση ποντικιού">release mouse</span></span>
+    </div>
+    <div class="intro-btns">
+      <button class="btn-main" id="btn-enter" data-en="Enter the Great Church" data-gr="Είσοδος στη Μεγάλη Εκκλησία">Enter the Great Church</button>
+      <button class="btn-ghost" id="btn-nave" data-en="Skip to the nave" data-gr="Κατευθείαν στον ναό">Skip to the nave</button>
+    </div>
+    <div class="credit"
+      data-en="A conjectural reconstruction after Procopius (De aedificiis), Paul the Silentiary (563) and modern surveys (R. Van Nice, R. Mainstone). Touch devices: left half = move, right half = look."
+      data-gr="Υποθετική αναπαράσταση κατά τον Προκόπιο, τον Παύλο Σιλεντιάριο (563) και τις σύγχρονες αποτυπώσεις (Van Nice, Mainstone). Οθόνες αφής: αριστερό μισό = κίνηση, δεξί = ματιά.">
+    </div>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="title-chip">ΑΓΙΑ ΣΟΦΙΑ · 537</div>
+  <div id="crosshair"></div>
+  <div id="hint"></div>
+  <div id="map-wrap"><canvas id="map" width="248" height="128"></canvas><span class="compass">E →</span></div>
+  <div id="buttons">
+    <button id="btn-list" data-en="① Exhibits" data-gr="① Εκθέματα">① Exhibits</button>
+    <button id="btn-mode">🌙 Dusk</button>
+    <button id="btn-lamps" data-en="🕯 Lamps" data-gr="🕯 Καντήλια">🕯 Lamps</button>
+    <button id="btn-sound" data-en="♪ Sound" data-gr="♪ Ήχος">♪ Sound</button>
+    <button id="btn-lang">ΕΛ</button>
+    <button id="btn-help">?</button>
+  </div>
+</div>
+
+<div id="panel">
+  <button id="panel-close">✕</button>
+  <div id="panel-n"></div>
+  <h2 id="panel-title"></h2>
+  <div id="panel-sub"></div>
+  <div id="panel-body"></div>
+  <div id="panel-hintrow" data-en="E or ✕ closes · Tab opens the exhibit index"
+       data-gr="E ή ✕ κλείνει · Tab ανοίγει το ευρετήριο">E or ✕ closes · Tab opens the exhibit index</div>
+</div>
+
+<div id="list">
+  <h3 data-en="THE FOURTEEN STATIONS" data-gr="ΟΙ ΔΕΚΑΤΕΣΣΕΡΙΣ ΣΤΑΘΜΟΙ">THE FOURTEEN STATIONS</h3>
+  <div id="list-items"></div>
+</div>
+
+<div id="pause"><div data-en="Paused — click to continue" data-gr="Παύση — κλικ για συνέχεια">Paused — click to continue</div></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/util.js"></script>
+<script src="js/materials.js"></script>
+<script src="js/parts.js"></script>
+<script src="js/nave.js"></script>
+<script src="js/aisles.js"></script>
+<script src="js/east.js"></script>
+<script src="js/west.js"></script>
+<script src="js/lighting.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/exhibits.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
