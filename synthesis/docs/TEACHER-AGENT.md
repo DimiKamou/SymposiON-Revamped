@@ -111,38 +111,40 @@ For an unseen (αδίδακτο) line, the agent produces, in order:
 *(Calibration pending: exact terminology, how exhaustive the συντακτικό should
 be, the teacher's Τράπεζα marking split, and their preferred θέμα wording.)*
 
-### 7.2 Έκθεση / Νεοελληνική Γλώσσα — pipeline template (calibrating FIRST)
+### 7.2 Έκθεση / Νεοελληνική Γλώσσα — **CALIBRATED** (Β΄ Λυκείου · Τράπεζα Θεμάτων)
 
-Source material: **`materials/ekthesi/`** (repo-root, not deployed). The teacher
-adds a Τράπεζα Θεμάτων PDF (or own text); the agent ingests it, reuses any
-existing θέματα, and generates new ones.
+Calibrated from 3 real teacher papers → `materials/ekthesi/sample-papers/`.
+Generation menu → `materials/ekthesi/THEMA1-TOOLKIT.md`.
 
-Standard exam shape (as understood — the teacher confirms exact marks/word-limits
-from their PDF):
+**Confirmed exam structure (100 μονάδες):**
+- **Κείμενο 1** (μη λογοτεχνικό, με πηγή) + **Κείμενο 2** (λογοτεχνικό, με πηγή).
+- **ΘΕΜΑ 1 — 35 μον** on Κ1: 3 υποερωτήματα **(10 + 10 + 15)** →
+  Α κατανόηση/πύκνωση · Β οργάνωση/δομή/πειθώ · Γ γλώσσα/ύφος/λεξιλόγιο.
+- **ΘΕΜΑ 2 — 30 μον** on Κ1: παραγωγή λόγου 350–400 λ. (επιστολή/άρθρο/ομιλία,
+  με 1–2 ζητούμενα). *Teacher-made.*
+- **ΘΕΜΑ 3 — 20 μον** on Κ2: θεωρία λογοτεχνίας (αφηγηματικοί τρόποι, αφηγητής
+  ως προς συμμετοχή/γνώση, ρηματικά πρόσωπα, εικόνες). *Teacher-made.*
+- **ΘΕΜΑ 4 — 15 μον** on Κ2: ερμηνεία 100–150 λ.
 
-**Πανελλήνιες — Νεοελληνική Γλώσσα & Λογοτεχνία**
-- 2–3 μη-λογοτεχνικά κείμενα + 1 λογοτεχνικό.
-- **Θέμα Α** — περίληψη / συμπύκνωση νοήματος (word-limit: `?`, μονάδες: `?`).
-- **Θέμα Β** — κατανόηση / δομή / τρόποι & μέσα πειθούς / λεξιλογικά
-  (Β1, Β2, Β3…; μονάδες: `?`).
-- **Θέμα Γ** — ερμηνεία λογοτεχνικού κειμένου (word-limit: `?`, μονάδες: `?`).
-- **Θέμα Δ** — παραγωγή λόγου, ορισμένο επικοινωνιακό πλαίσιο
-  (άρθρο/ομιλία/επιστολή; word-limit: `?`, μονάδες: `?`).
+**The teacher's ask:** ΘΕΜΑ 1 & 4 are usually premade; ΘΕΜΑ 2 & 3 the teacher
+authors. **Primary job of the agent: explore the given κείμενα and _enrich
+ΘΕΜΑ 1_** with a rich bank of υποερωτήματα across the θεωρία-έκθεσης toolkit
+(τρόποι ανάπτυξης, συνώνυμα/αντώνυμα, τρόποι πειθούς, κειμενικά είδη,
+συνοχή/συνεκτικότητα, σημεία στίξης, ανάλυση τίτλου, δομή παραγράφου, πρόθεση
+συγγραφέα, ύφος…). Secondary: draft ΘΕΜΑ 2/3/4 in the same style.
 
-**Τράπεζα Θεμάτων (Α΄/Β΄ Λυκείου)** — 4-θεμα δομή προσαρμοσμένη ανά τάξη; exact
-θέματα/marks taken from the PDF.
+**Confirmed style rules (see toolkit for full list):**
+- ΘΕΜΑ 1 & 4 → **β΄ ενικό**; ΘΕΜΑ 2 → **β΄ πληθυντικό**.
+- Explicit word-limits; μονάδες split inside multi-part υποερωτήματα.
+- Every answer **text-grounded** (παράδειγμα / γλωσσικές επιλογές / παραπομπή σε παράγραφο).
 
-**Calibration checklist (fill from the teacher's real PDF + corrections):**
-- [ ] Exact θέματα layout + μονάδες split for each profile.
-- [ ] Word-limits (περίληψη, παραγωγή λόγου).
-- [ ] Preferred phrasing/register of θέμα prompts (the teacher's voice).
-- [ ] What a **model answer** + **rubric points** look like (these feed
-      `gradeAnswer` for auto-scoring).
-- [ ] Difficulty targeting + how distractors/traps are chosen.
-- [ ] Types of παραγωγή-λόγου prompts the teacher favours.
+**Still to confirm with the teacher (next calibration passes):**
+- [ ] Model-answer depth + exact rubric split for auto-grading.
+- [ ] Any Πανελλήνιες-profile version (this calibration is Τράπεζα, Β΄ Λυκείου).
+- [ ] Preferred difficulty and how many alternatives per slot to offer.
 
 Output → `examContent` doc (schema `exam`, subject `ekthesi`, profile
-`trapeza`|`panellinies`), `status:'draft'`.
+`trapeza`), `status:'draft'`.
 
 ## 8. Open questions (resolve with the teacher)
 
