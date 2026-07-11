@@ -297,7 +297,8 @@ Object.assign(SUBJECTS, {
               g('Ενότητα 46','Unit 46','Το γενικό συμφέρον μπαίνει πριν από το ατομικό','scroll',{fn:'openLatinText46'}),
               g('Ενότητα 47','Unit 47','Ο Αύγουστος και η φιλαρέσκεια της κόρης του, της Ιουλίας','scroll',{fn:'openLatinText47'}),
               g('Ενότητα 48','Unit 48','Το ελάφι του Σερτώριου','scroll',{fn:'openLatinText48'}),
-              g('Ενότητα 49','Unit 49','Η Πορκία και ο Βρούτος','scroll',{fn:'openLatinText49'}) ] },
+              g('Ενότητα 49','Unit 49','Η Πορκία και ο Βρούτος','scroll',{fn:'openLatinText49'}),
+              g('Ενότητα 50','Unit 50','Η φτώχεια και η απληστία είναι κακοί σύμβουλοι της εξουσίας','scroll',{fn:'openLatinText50'}) ] },
   ],
   'gram-neo': [
     { id:'gn-gram', roman:'I', illu:'book', gr:'Γραμματική', en:'Grammar', sub:'Modern Greek',
