@@ -295,6 +295,98 @@ export const UNIT = {
     { tag:"Γερουνδιακό", title:"spectandum (σκοπός)", body:"Το spectandum είναι αιτιατική γερουνδιακού που δηλώνει σκοπό και εξαρτάται από το praebuit· υποκείμενό του είναι το se, και από αυτό εξαρτώνται οι κατηγορηματικές μετοχές assidentem/cenantem." },
     { tag:"Απαρέμφατο", title:"Ετεροπροσωπία (malle)", body:"Στο «narrate ... Manium Curium malle ...» το ειδικό απαρέμφατο malle έχει υποκείμενο το Manium Curium (αιτ.), διαφορετικό από το εννοούμενο vos του narrate — ετεροπροσωπία." },
     { tag:"Σύγκριση", title:"quam + β΄ όρος", body:"Το quam εισάγει τον β΄ όρο σύγκρισης (fieri) ομοιότροπα προς τον α΄ όρο (imperare)· συγκριτική λέξη είναι το malle. Το facilius είναι συγκρ. του επιρρ. facile (υπερθ. facillime)." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"missum",
+        to:"quod missum erat",
+        note:"Επιθετική μετοχή παρακειμένου· δηλώνει το προτερόχρονο. Αναλύεται σε δευτερεύουσα αναφορική πρόταση (quod + οριστική υπερσυντελίκου), εξάρτηση από ιστορικό χρόνο: attulissent." }
+    ]},
+    { id:"Β", label:"Μετατροπή δευτερευουσών προτάσεων σε αντίστοιχες μετοχές", items:[
+      { from:"cum ad eum magnum pondus auri publice missum attulissent, …, vultum risu solvit",
+        to:"Magno pondere auri publice misso ad eum a Samnitibus allato …",
+        note:"Μετατροπή της δευτερεύουσας χρονικής πρότασης σε επιρρηματική χρονική μετοχή, γνήσια αφαιρετική απόλυτη, γιατί το υποκείμενό της (pondere) δεν έχει καμία σχέση με τους κύριους όρους της πρότασης με ρήμα το solvit." }
+    ]},
+    { id:"Γ", label:"Μετατροπή κύριων προτάσεων σε μετοχικές φράσεις", items:[
+      { from:"Samnitium divitias contempsit et Samnites paupertatem eius mirati sunt",
+        to:"Samnitium divitiis ab eo contemptis Samnites paupertatem eius mirati sunt",
+        note:"Μετατροπή της 1ης κύριας πρότασης σε χρονική μετοχή, γνήσια αφαιρετική απόλυτη, γιατί το υποκείμενό της (divitiis) δεν έχει σχέση με τους κύριους όρους της πρότασης με ρήμα το mirati sunt." }
+    ]},
+    { id:"Δ", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Samnitium divitias contempsit", to:"Samnitium divitiae a Manio Curio Dentato contemptae sunt" },
+      { from:"cum ad eum magnum pondus auri publice missum attulissent, …", to:"cum ad eum magnum pondus (ονομ.) auri publice missum (ονομ.) a Samnitibus allatum esset" }
+    ]},
+    { id:"Ε", label:"Δήλωση του σκοπού (με όλους τους τρόπους εκφοράς)", items:[
+      { from:"Cum … attulissent, ut eo uteretur, …",
+        to:[
+        "α. Τελική πρόταση: Cum … attulissent, ut eo uteretur, …",
+        "β. Αναφορικοτελική πρόταση: Cum … attulissent, qui eo uteretur, …",
+        "γ. Αιτιατική σουπίνου: Cum … attulissent eo usum, …",
+        "δ. ad + αιτ. γερουνδίου: Cum … attulissent ad eo utendum …",
+        "ε. causa + γεν. γερουνδίου: Cum … attulissent eo utendi causa …"],
+        note:"Στις περιπτώσεις δ & ε δεν γίνεται γερουνδιακή έλξη, γιατί το αντικείμενο (eo) είναι ουδέτερο αντωνυμίας. Το utor (όπως fruor, fungor, potior, vescor) αρχικά συντασσόταν με αιτιατική." }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή αποσπάσματος σε πλάγιο λόγο", items:[
+      { from:"(εξάρτηση: Scriptor tradit / tradidit) Manius Curius … maxima frugalitate utebatur … legati … venerunt … contempsit et Samnites … mirati sunt … vultum risu solvit et … dixit", to:"Manium Curium Dentatum … uti, quo … posset, legatos ad eum venisse; illum se … praebuisse; … contempsisse et Samnites (αιτ.) … miratos esse; (illum), cum ad eum … attulissent, ut eo uteretur, … solvisse et … dixisse." },
+      { from:"(εξάρτηση: Manius Curius monet / monuit legatos) narrate Samnitibus …", to:"ut narrent / narrarent Samnitibus Manium Curium … locupletem." }
+    ]},
+    { id:"Ζ", label:"Μετατροπή του πλάγιου λόγου σε ευθύ", items:[
+      { from:"narrate Samnitibus Manium Curium malle locupletibus imperare quam ipsum fieri locupletem", to:"Manius Curius mavult locupletibus imperare quam ipse fieri locuples." },
+      { from:"et mementote me nec acie vinci nec pecunia corrumpi posse",
+        to:[
+        "(posse ως απρόσωπο): me nec acie vinci nec pecunia corrumpi potest",
+        "(posse ως προσωπικό): ego nec acie vinci nec pecunia corrumpi possum"] }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"Manius, Manium", el:"Μάνιος" },
+    { la:"Curius, Curium", el:"Κούριος" },
+    { la:"Dentatus", el:"Δεντάτος" },
+    { la:"maxima", el:"μάξιμουμ // μαξιμαλισμός (< γαλλ.)" },
+    { la:"frugalitate", el:"(γαλλ.) frugal (= ολιγαρκής), frugalité (= λιτότητα)" },
+    { la:"utebatur, uteretur [< utor]", el:"(αγγλ.) utility (= χρησιμότητα), use (= χρήση) // (γαλλ.) utile (= χρήσιμος), utiliser (= χρησιμοποιώ)" },
+    { la:"facilius [< facio]", el:"(αγγλ.) facts (= γεγονότα), factory (= εργοστάσιο)" },
+    { la:"divitias [< dives]", el:"δῖος [< Διός] (= όμοιος με / προς τους θεούς, θεϊκός) // (γαλλ.) divin (= θεϊκός)" },
+    { la:"con-temnere, con-tempsit [< con-temno]", el:"τέμνω // (αγγλ.) contempt (= περιφρόνηση)" },
+    { la:"posset, posse [< potis + esse]", el:"πόσις, δεσπότης (= «κύριος σπιτιού»)" },
+    { la:"Samnitium, Samnites, Samnitibus", el:"Σαμνίτες" },
+    { la:"legati, legationis [< lego]", el:"λέγω" },
+    { la:"catillo", el:"κοτύλη (= κύπελλο)" },
+    { la:"cenantem [< ceno]", el:"(ισπαν.) cena (= δείπνο)" },
+    { la:"spectandum [< specto]", el:"σπέκουλα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.) // (αγγλ.) pro-spect (= προοπτική, άποψη)" },
+    { la:"praebuit [< prae + habeo]", el:"(γερμ.) haben (= έχω), (αγγλ.) have // (γαλλ.) pro-hiber (= απαγορεύω)" },
+    { la:"paupertatem [< pauper]", el:"παῦρος // (γαλλ.) pau-vre (= φτωχός), pau-vreté (= φτώχεια)" },
+    { la:"mirati [< miror]", el:"(γαλλ.) miracle (= θαύμα), admirable (= θαυμαστός)" },
+    { la:"sunt [< sum]", el:"εἰμί" },
+    { la:"magnum", el:"μέγας // (αγγλ.) magni-fic (= μεγαλοπρεπής) // (γαλλ.) magnificence (= μεγαλοπρέπεια)" },
+    { la:"pondus", el:"(γαλλ.) peser (= ζυγίζω) // (αγγλ.) pending (= εκκρεμής)" },
+    { la:"auri [< aurum]", el:"(γαλλ.) or (= χρυσός)" },
+    { la:"publice", el:"(γαλλ.) publique (= δημόσιος) // ρεπουμπλικανός" },
+    { la:"missum [< mitto]", el:"(αγγλ.) mission (= αποστολή)" },
+    { la:"venerunt [< venio]", el:"βαίνω // (γαλλ.) avenue (= λεωφόρος)" },
+    { la:"risu [< rideo]", el:"(γαλλ.) rire (= γελώ)" },
+    { la:"scamno", el:"σκίμπους, σκαμνί // σκαμπό (< γαλλ. escabeau)" },
+    { la:"assidentem [< assideo < ad + sedeo]", el:"ἕζομαι, ἕδρα // (γαλλ.) assis (= καθισμένος) // (αγγλ.) pos-session (= κατοχή, κτήση)" },
+    { la:"focum [< focus]", el:"(αγγλ.) focus (= εστίαση) // (γαλλ.) focaliser (= εστιάζω)" },
+    { la:"solvit [< solvo]", el:"σβέλτος (< ιταλ.) // (γαλλ.) solution (= λύση), solvant (= διαλύτης)" },
+    { la:"dixit, dicam [< dico]", el:"δείκνυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση)" },
+    { la:"super-vacaneae", el:"(αγγλ.) vacancy (= κενότητα) // (γαλλ.) vacant (= κενός), vacuum (= κενό)" },
+    { la:"ligneo", el:"λιγνίτης (< γαλλ.)" },
+    { la:"in-eptae [< in + aptus]", el:"ἅπτω // (αγγλ.) inept (= ανάρμοστος, ανόητος)" },
+    { la:"ministri", el:"(γαλλ.) ministre (= υπουργός) // (αγγλ.) ad-ministration (= διαχείριση)" },
+    { la:"narrate [< narro]", el:"(αγγλ.) narrator (= αφηγητής) // (γαλλ.) narration (= αφήγηση)" },
+    { la:"malle [< malo < magis + volo]", el:"βούλομαι // (αγγλ.) volunteer (= εθελοντής)" },
+    { la:"locupletibus, locupletem [< locuples (= «πλούσιος σε γη») < locus + plenus]", el:"(γαλλ.) locale (= τοπικός) // (αγγλ.) location (= τοποθεσία) // πίμπλημι / πλήθω· πλήθος, πλημμύρα, πλήρης, πλησμονή" },
+    { la:"imperare", el:"ιμπεριαλισμός (< γαλλ.)" },
+    { la:"fieri [< fio]", el:"φύω, φύσις" },
+    { la:"mementote [< memini]", el:"μέμνημαι, μνήμη, μνημονικός // (αγγλ.) monument (= μνημείο)" },
+    { la:"acie [< acies]", el:"ἄκρη, ἀκμή // (γαλλ.) acide (= οξύς), aci-culaire (= βελονοειδής)" },
+    { la:"vinci [< vinco]", el:"βικτοριανός (< αγγλ.) // (γαλλ.) victoire (= νίκη), (αγγλ.) victory" },
+    { la:"corrumpi [< corrumpo]", el:"(γαλλ.) corruption (= διαφθορά)" }
   ]
 };
 

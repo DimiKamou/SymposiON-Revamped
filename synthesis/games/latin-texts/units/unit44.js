@@ -297,6 +297,88 @@ export const UNIT = {
     { tag:"Πλάγια ερώτηση", title:"Υποτακτική & ακολουθία χρόνων", body:"Οι πλάγιες ερωτηματικές εκφέρονται με υποτακτική (υποκειμενική χροιά): possit (ενεστ. = σύγχρονο από αρκτικό), fuerint (παρακ. = προτερόχρονο από αρκτικό), habuissem (υπερσυντ. = προτερόχρονο από ιστορικό)." },
     { tag:"Χρονική", title:"cum + οριστική στον πλάγιο λόγο", body:"Το «cum poteram» είναι καθαρά χρονικός cum με οριστική· η οριστική διατηρείται γιατί η πρόταση λειτουργεί ανεξάρτητα από τον πλάγιο λόγο (δηλώνει σύγχρονο στο παρελθόν)." },
     { tag:"Μετοχή", title:"exulantem: χρονική συνημμένη", body:"Το exulantem είναι χρονική μετοχή, συνημμένη στο Tarquinium (υποκ. του ειδικού απαρεμφάτου dixisse από το ferunt). Το intellegitur λειτουργεί απρόσωπα, με υποκείμενο την πλάγια ερωτηματική." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"exulantem",
+        to:[
+        "cum exularet (cum ιστορικός + υποτ. παρατ.)",
+        "dum exulat (dum + οριστ. ενεστ. — σύγχρονο, συνεχιζόμενη πράξη)"],
+        note:"Επιρρηματική χρονική μετοχή ενεστώτα (σύγχρονο)· εξάρτηση από ιστορικό χρόνο (dixisse)." }
+    ]},
+    { id:"Β", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Hoc est quod Tarquinium dixisse ferunt exulantem",
+        to:[
+        "Hoc est quod Tarquinius dixisse fertur exulans",
+        "Hoc est quod a Tarquinio dictum esse ferunt exulante"] },
+      { from:"Tum intellexi, quos fidos amicos habuissem, quos infidos, …", to:"Tum intellectum est a me, qui fidi amici a me habiti essent, qui infidi, …" }
+    ]},
+    { id:"Γ", label:"Μετατροπή της παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Coluntur tamen simulatione dumtaxat ad tempus.",
+        to:"Colunt tyrannos tamen simulatione dumtaxat ad tempus.",
+        note:"Στην παθητική σύνταξη εννοείται ως υποκ. το tyranni." }
+    ]},
+    { id:"Δ", label:"Μετατροπή του υποθετικού λόγου στα άλλα είδη", items:[
+      { from:"Quodsi forte (ut fit plerumque) ceciderunt, tum intellegitur (μεικτός: υπόθεση στο παρελθόν – απόδοση στο παρόν)",
+        to:[
+        "Ανοικτή (πραγματική) για το παρόν: Quodsi forte cadunt, tum intellegitur (οριστ. ενεστ. – οριστ. ενεστ.)",
+        "Ανοικτή (πραγματική) για το παρελθόν: Quodsi forte ceciderunt, tum intellectum est (οριστ. παρακ. – οριστ. παρακ.)",
+        "Ανοικτή για το μέλλον: Quodsi forte cadent (ή ceciderint), tum intellegetur (οριστ. μέλλ. ή συντ. μέλλ. – οριστ. μέλλ.)",
+        "Δυνατή/πιθανή για το παρόν-μέλλον: Quodsi forte cadant, tum intellegatur (υποτ. ενεστ. – υποτ. ενεστ.)",
+        "Αντίθετη προς την πραγματικότητα (παρόν): Quodsi forte caderent, tum intellegeretur (υποτ. παρατ. – υποτ. παρατ.)",
+        "Αντίθετη προς την πραγματικότητα (παρελθόν): Quodsi forte cecidissent, tum intellectum esset (υποτ. υπερσ. – υποτ. υπερσ.)"],
+        note:"Ο αρχικός είναι μεικτός (α΄ είδος): υπόθεση στο παρελθόν (οριστ. παρακ. ceciderunt), απόδοση στο παρόν (οριστ. ενεστ. intellegitur)." }
+    ]},
+    { id:"Ε", label:"Μετατροπή του ευθέος λόγου σε πλάγιο", items:[
+      { from:"Haec est tyrannorum vita … Hoc est quod Tarquinium dixisse ferunt exulantem (εξάρτηση: Cicero dicit / dixit)", to:"Cicero dicit / dixit illam esse tyrannorum vitam, in qua nulla fides … esse possit / posset; tyrannis omnia semper suspecta atque sollicita esse; nullum locum amicitiae eis esse; se nescire quis possit / posset diligere eum, quem metuat / metueret, aut eum, a quo se metui putet / putaret; tyrannos coli tamen simulatione dumtaxat ad tempus; quodsi forte … ceciderint / cecidissent, tum intellegi quam fuerint / fuissent inopes amicorum; illud esse quod Tarquinium dixisse ferant / ferrent exulantem." },
+      { from:"Tum intellexi, quos fidos amicos habuissem, quos infidos, cum iam neutris gratiam referre poteram (λόγια Ταρκυνίου· εξάρτηση: Tarquinius dicit / dixit)",
+        to:"Tarquinius dicit / dixit tum se intellexisse, quos fidos amicos habuerit / habuisset, quos infidos, cum iam neutris gratiam referre possit / posset.",
+        note:"Η habuisset (ιστ. χρόνου) εξαρτάται από το ιστορικού χρόνου απαρέμφατο intellexisse." }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή του πλάγιου λόγου σε ευθύ", items:[
+      { from:"Nescio enim quis possit diligere eum, quem metuat, aut eum, a quo se metui putet", to:"Quis potest diligere eum, quem metuit, aut eum, a quo se metui putat?" },
+      { from:"… tum intellegitur, quam fuerint inopes amicorum", to:"Quam fuerunt (fuere) inopes amicorum?" },
+      { from:"… quod Tarquinium dixisse ferunt exulantem", to:"… quod Tarquinius dixit exulans." },
+      { from:"«Tum intellexi, quos fidos amicos habuissem, quos infidos, cum iam neutris gratiam referre poteram»", to:"Quos fidos amicos habui, quos infidos, cum iam neutris gratiam referre poteram?" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"sunt [< sum]", el:"εἰμί, ἐστί(ν)" },
+    { la:"tyrannorum, tyrannis [< tyrannus]", el:"τύραννος" },
+    { la:"vita", el:"βίος // βιταλισμός (< γαλλ. vitalisme), βιταμίνη (< γαλλ. vitamine)" },
+    { la:"nulla [< nullus]", el:"(ιταλ.) nulla (= μηδενικά, χωρίς αξία)" },
+    { la:"fides, fiducia, fidos, infidos [< fides / fido]", el:"πειθώ, πείθω, πίστις, πιθανός // (αγγλ.) confidence (= αυτοπεποίθηση)" },
+    { la:"caritas [< carus (= αγαπητός)]", el:"(γαλλ.) caritatif (= φιλανθρωπικός)" },
+    { la:"benevolentiae [< bene (< bonus) + volo]", el:"(ιταλ.) bona mano (= καλό χέρι), μπουνάτσα (< βενετ.), μπόνους // βούλομαι, (αγγλ.) volunteer (= εθελοντής), (γαλλ.) bénévolat (= εθελοντισμός)" },
+    { la:"stabilis", el:"ἵστημι, στάση // (γαλλ.) stable (= σταθερός), stabilité (= σταθερότητα)" },
+    { la:"potest, possit, poteram [< possum < potis (= δυνατός) + sum]", el:"πόσις, δεσπότης («κύριος του σπιτιού»)" },
+    { la:"semper", el:"(ισπαν.) siempre (= πάντα)" },
+    { la:"suspecta [< suspicio < sub + specio]", el:"σπεκουλάντζα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.) // (γαλλ.) suspect (= ύποπτος)" },
+    { la:"sollicita [< sollus (= όλος) + cieo (= κινώ)]", el:"(γαλλ.) solliciter (= εκλιπαρώ), inciter (= υποκινώ)" },
+    { la:"locus", el:"(γαλλ.) locale (= τοπικός) // (αγγλ.) location (= τοποθεσία)" },
+    { la:"amicitiae, amicorum, amicos [< amicus]", el:"(ιταλ.) αμόρε [amore] // (γαλλ.) amour (= αγάπη), ami (= φίλος), amical (= φιλικός)" },
+    { la:"nescio [< ne + scio]", el:"(γαλλ.) science (= επιστήμη), conscience (= συνείδηση)" },
+    { la:"diligere [< dis + lego]", el:"(αγγλ.) diligent (= επιμελής)" },
+    { la:"putet [< puto]", el:"(αγγλ.) dispute, disputation (= συζήτηση, λογομαχία) // putative (= υποτιθέμενος)" },
+    { la:"coluntur [< colo]", el:"(αγγλ.) cult (= λατρεία), culture (= καλλιέργεια)" },
+    { la:"simulatione [< simulo]", el:"(αγγλ.) simulation (= προσποίηση) // (γαλλ.) similarité (= ομοιότητα)" },
+    { la:"tempus", el:"τέμπο (< ιταλ. tempo) // (ισπαν.) tiempo (= χρόνος)" },
+    { la:"forte [< fors]", el:"φουρτούνα (< ιταλ. fortuna) // (γαλλ.) fortune (= τύχη)" },
+    { la:"fit [< fio]", el:"φύω, φύσις" },
+    { la:"plerumque [< plerus / pleo]", el:"πίμπλημι, πληθύς, πλήθος, πλημμύρα, πλήρης, πλησμονή" },
+    { la:"ceciderunt [< cado]", el:"κάζο (< ιταλ. caso = συμβάν)" },
+    { la:"intellegitur, intellexi [< intellego]", el:"(γαλλ.) intelligent (= ευφυής)" },
+    { la:"Tarquinium [< Tarquinius]", el:"Ταρκύνιος" },
+    { la:"dixisse [< dico]", el:"δείκνυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση)" },
+    { la:"ferunt, referre [< fero]", el:"φέρω, διαφορά, φορέας, φορείο // (αγγλ.) transfer (= μεταφορά)" },
+    { la:"exulantem [< ex(s)ulo]", el:"(γαλλ.) exil (= εξορία), exilé (= εξόριστος)" },
+    { la:"habuissem [< habeo]", el:"(γερμ.) haben (= έχω) // (αγγλ.) have" },
+    { la:"neutris [< neuter < ne + uter]", el:"οὐδέτερος // (γαλλ.) neutre (= ουδέτερος)" },
+    { la:"gratiam [< gratia]", el:"(αγγλ.) grateful (= ευγνώμων) // (γαλλ.) gratitude (= ευγνωμοσύνη)" }
   ]
 };
 

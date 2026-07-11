@@ -342,6 +342,132 @@ export const UNIT = {
     { tag:"Ακολουθία χρόνων", title:"ut viderem: ιδιομορφία", body:"Στη συμπερασματική «ut … viderem» υπάρχει ιδιομορφία στην ακολουθία των χρόνων: το αποτέλεσμα είναι ιδωμένο τη στιγμή που εμφανίζεται στο μυαλό του ομιλητή (συγχρονισμός κύριας–δευτ.) και όχι τη στιγμή της πιθανής πραγματοποίησής του." },
     { tag:"Υποθετικοί λόγοι", title:"β΄ και α΄ είδος", body:"nisi ego peperissem → Roma non oppugnaretur και nisi haberem filium → essem mortua: υποθ. λόγοι β΄ είδους (αντίθετοι προς την πραγματικότητα). si pergis → manet…: υποθ. λόγος α΄ είδους (ανοικτή υπόθεση στο παρόν)." },
     { tag:"Ρήμα", title:"Αποθετικά ρήματα", body:"populor, ingredior, morior, patior είναι αποθετικά: παθητικός τύπος, ενεργητική σημασία (λεηλατώ, εισβάλλω, πεθαίνω, υπομένω). Το mortua είναι μετοχή παρακειμένου (ενεργ. σημ.) του morior." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"ingredienti (επιρρηματική χρονική μετοχή ενεστώτα — σύγχρονο)",
+        to:[
+        "dum ingrederis / -re (dum + οριστ. ενεστ. — σύγχρονο, συνεχιζόμενη πράξη)",
+        "cum ingredereris / -re (cum ιστορικός + υποτ. παρατ. — εξάρτηση από ιστορικό χρόνο: cecidit)"] }
+    ]},
+    { id:"Β", label:"Μετατροπή δευτερευουσών προτάσεων σε αντίστοιχες μετοχές", items:[
+      { from:"Qui potuisti populari hanc terram, quae te genuit atque aluit?",
+        to:"Qui potuisti populari hanc terram quae te genitum aluit?",
+        note:"Η 1η αναφορική πρόταση → επιρρηματική χρονική μετοχή, συνημμένη στο αντικ. (te) του aluit." },
+      { from:"Ergo ego nisi peperissem (te), Roma non oppugnaretur;",
+        to:"Ergo te a me non parto Roma non oppugnaretur.",
+        note:"Η υποθετική → υποθετική μετοχή, γνήσια αφαιρετική απόλυτη (το υποκ. te δεν έχει άλλο ρόλο στην πρόταση του non oppugnaretur)." },
+      { from:"nisi filium haberem, libera in libera patria mortua essem.",
+        to:"non habens filium libera in libera patria mortua essem.",
+        note:"Η υποθετική → υποθετική μετοχή, συνημμένη στο εννοούμενο υποκ. ego του essem." },
+      { from:"…, si pergis, aut immatura mors aut longa servitus manet.",
+        to:"…, te pergente aut immatura mors aut longa servitus manet.",
+        note:"Η υποθετική → υποθετική μετοχή, γνήσια αφαιρετική απόλυτη (το υποκ. te δεν έχει άλλο ρόλο στην πρόταση του manet)." }
+    ]},
+    { id:"Γ", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"In hoc me longa vita et infelix senecta traxit, ut primum exsulem deinde hostem te viderem?",
+        to:"In hoc ego longa vita et infelici senectā tracta sum, ut primum tu exsul deinde hostis a me videreris / -re?",
+        note:"Τα ποιητικά αίτια vita, senecta με απρόθετη αφαιρετική (άψυχα)· το a me εμπρόθετα (έμψυχο)." },
+      { from:"Qui potuisti populari hanc terram, quae te genuit atque aluit?",
+        to:"Qui potuisti populari hanc terram, qua tu genitus es atque alitus (altus) es?",
+        note:"Το ποιητικό αίτιο qua (= terra) απρόθετα (άψυχο)· ως προσωποποιημένο: a qua." },
+      { from:"Ergo ego nisi peperissem, Roma non oppugnaretur; (ενν. te peperissem)", to:"Ergo a me nisi tu partus esses, Roma non oppugnaretur." }
+    ]},
+    { id:"Δ", label:"Μετατροπή της παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Ergo … Roma non oppugnaretur;",
+        to:"Ergo … (tu) Romam non oppugnares.",
+        note:"Στην παθητική εννοείται το έμψυχο ποιητικό αίτιο a te → εννοούμενο υποκ. tu." }
+    ]},
+    { id:"Ε", label:"Μετατροπή των υποθετικών λόγων στα άλλα είδη", items:[
+      { from:"Ergo ego nisi peperissem, Roma non oppugnaretur; (μεικτός β΄ είδους: υπόθεση στο παρελθόν, απόδοση στο παρόν — αντίθετο προς την πραγματικότητα)",
+        to:[
+        "Α΄ είδος (ανοικτή, παρόν): Ergo ego nisi pario, Roma non oppugnatur",
+        "Α΄ είδος (ανοικτή, παρελθόν): Ergo ego nisi peperi, Roma non oppugnata est",
+        "Α΄ είδος (ανοικτή, μέλλον): Ergo ego nisi pariam / peperero, Roma non oppugnabitur",
+        "Β΄ είδος (αντίθετο, παρόν): Ergo ego nisi parerem, Roma non oppugnaretur",
+        "Β΄ είδος (αντίθετο, παρελθόν): Ergo ego nisi peperissem, Roma non oppugnata esset",
+        "Γ΄ είδος (δυνατή/πιθανή, παρόν-μέλλον): Ergo ego nisi pariam, Roma non oppugnetur"] },
+      { from:"nisi filium haberem, libera in libera patria mortua essem. (β΄ είδος — αντίθετο προς την πραγματικότητα, παρόν)",
+        to:[
+        "Α΄ είδος (ανοικτή, παρόν): nisi filium habeo, libera in libera patria mortua sum",
+        "Α΄ είδος (ανοικτή, παρελθόν): nisi filium habui, libera in libera patria mortua fui",
+        "Α΄ είδος (ανοικτή, μέλλον): nisi filium habebo / habuero, libera in libera patria mortua ero",
+        "Β΄ είδος (αντίθετο, παρόν): nisi filium haberem, libera in libera patria mortua essem",
+        "Β΄ είδος (αντίθετο, παρελθόν): nisi filium habuissem, libera in libera patria mortua fuissem",
+        "Γ΄ είδος (δυνατή/πιθανή, παρόν-μέλλον): nisi filium habeam, libera in libera patria mortua sim"] },
+      { from:"at contra hos, si pergis, aut immatura mors aut longa servitus manet. (α΄ είδος — ανοικτή για το παρόν)",
+        to:[
+        "Α΄ είδος (ανοικτή, παρόν): si pergis, … aut immatura mors aut longa servitus manet",
+        "Α΄ είδος (ανοικτή, παρελθόν): si perrexisti, … mansit",
+        "Α΄ είδος (ανοικτή, μέλλον): si perges / perrexeris, … manebit",
+        "Β΄ είδος (αντίθετο, παρόν): si pergeres, … maneret",
+        "Β΄ είδος (αντίθετο, παρελθόν): si perrexisses, … mansisset",
+        "Γ΄ είδος (δυνατή/πιθανή, παρόν-μέλλον): si pergas, … maneat"] }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή του κειμένου σε πλάγιο λόγο", items:[
+      { from:"(εξάρτηση: Mater interrogat / interrogavit filium) Num ad hostem veni et captiva in castris tuis sum;",
+        to:"num ipsa ad hostem venerit / venisset et captiva in castris illius sit / esset",
+        note:"Πλάγιες ερωτηματικές προτάσεις." },
+      { from:"In hoc me longa vita et infelix senecta traxit, ut primum exsulem deinde hostem te viderem;", to:"num in illud (id) se longa vita et infelix senecta traxerit / traxisset, ut primum exsulem deinde hostem illum videat / videret" },
+      { from:"Qui potuisti populari hanc terram, quae te genuit atque aluit;", to:"qui potuerit / potuisset populari illam (eam) terram, quae illum genuerit / genuisset atque aluerit / aluisset" },
+      { from:"Non tibi ingredienti fines patriae ira cecidit;", to:"num non illi ingredienti fines patriae ira ceciderit / cecidisset" },
+      { from:"Quamvis infesto animo et minaci perveneras, cur, cum in conspectu Roma fuit, tibi non succurrit «intra illa moenia domus ac penates mei sunt, mater coniunx liberique»;", to:"quamvis infesto et minaci animo pervenerit / pervenisset, cur, cum in conspectu Roma fuerit / fuisset, illi non succurrerit / succurrisset intra illa moenia domum ac penates (αιτ.) suos esse, matrem coniugem liberosque" },
+      { from:"(εξάρτηση: Mater filio dicit / dixit) Ergo ego nisi peperissem, Roma non oppugnaretur;",
+        to:"nisi ipsa (illum) peperisset, illum Romam non oppugnaturum esse",
+        note:"Ειδικό απαρέμφατο· απαρ. ενεστ. ενεργ. περιφραστικής συζυγίας." },
+      { from:"nisi filium haberem, libera in libera patria mortua essem;", to:"nisi filium haberet, se liberam in libera patria mortuam futuram esse" },
+      { from:"Ego nihil iam pati … possum, nec ut sim miserrima, diu futura sum;", to:"se nihil iam pati posse nec diu miserrimam futuram esse" },
+      { from:"at contra hos, si pergis, aut immatura mors aut longa servitus manet.", to:"at contra illos, si (ille) pergat / pergeret, aut immaturam mortem aut longam servitutem manere" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"hostem", el:"(αγγλ.) host (= ξενιστής) // (γαλλ.) hostilité (= εχθρότητα)" },
+    { la:"in-gredienti [< in-gredior]", el:"(αγγλ.) ingress (= είσοδος), e-gress (= έξοδος) // (γαλλ.) ingredient (= συστατικό)" },
+    { la:"per-veneras [< per-venio]", el:"βαίνω // (γαλλ.) venir (= έρχομαι), parvenir (= φθάνω), avenue (= λεωφόρος)" },
+    { la:"captiva [< capio]", el:"(αγγλ.) captive (= αιχμάλωτος) // (γαλλ.) captif" },
+    { la:"castris", el:"κάστρο" },
+    { la:"sum, sunt, essem", el:"εἰμί" },
+    { la:"longa", el:"δολιχός // (αγγλ.) long (= μακρύς), (γαλλ.) longue" },
+    { la:"vita", el:"βίος // βιταλισμός (< γαλλ. vitalisme), βιταμίνη (< γαλλ.)" },
+    { la:"in-felix", el:"(ισπαν.) infeliz (= δυστυχισμένος) // (γαλλ.) félicité (= ευτυχία)" },
+    { la:"senecta [< senex]", el:"(αγγλ.) senior (= ηλικιωμένος), senator (= γερουσιαστής)" },
+    { la:"traxit [< traho]", el:"τρακτέρ (< γαλλ.) // (αγγλ.) ex-traction (= εξαγωγή)" },
+    { la:"primum", el:"πρό, πρότερος, πρῶτος· πριν // πριμαντόνα (< ιταλ.) // (γαλλ.) primaire (= πρωτογενής)" },
+    { la:"ex(s)ulem [< ex(s)ul]", el:"(γαλλ.) exil (= εξορία), exilé (= εξόριστος)" },
+    { la:"fines", el:"φινάλε, φινίρισμα (< ιταλ.) // (γαλλ.) finaliste" },
+    { la:"patriae, patriā", el:"πατρίς, πατήρ, πατέρας" },
+    { la:"cecidit [< cado]", el:"κάζο [< ιταλ. caso (= συμβάν)]" },
+    { la:"infesto", el:"(γαλλ.) infester (= λυμαίνομαι)" },
+    { la:"minaci [< minor (= απειλώ)]", el:"(γαλλ.) menacer (= απειλώ), (ισπαν.) con-minar" },
+    { la:"animo", el:"ανιμισμός (< γαλλ.) // άνεμος" },
+    { la:"con-spectu [< con-spicio]", el:"σπέκουλα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.) // (αγγλ.) pro-spect (= προοπτική, άποψη)" },
+    { la:"Roma", el:"Ρώμη, Ρωμαίος, ρωμαϊκός, ρωμιός" },
+    { la:"succurrit [< sub + curro]", el:"κούρσα (< γαλλ.) // κουρσάρος (< ιταλ.)" },
+    { la:"viderem", el:"(ϝιδεῖν) ἰδέα, βίντεο (< αγγλ.)" },
+    { la:"moenia", el:"ἄμυνα" },
+    { la:"potuisti [< possum < potis (= δυνατός) + sum]", el:"πόσις, δεσπότης («κύριος σπιτιού»)" },
+    { la:"terram", el:"τέρσομαι (= ξεραίνομαι) // τερακότα (< ιταλ.)" },
+    { la:"genuit [< gigno]", el:"γίγνομαι, γένος, γενιά, γνήσιος // natura (= φύση), natural, νατουραλισμός (< γαλλ.)" },
+    { la:"aluit [< alo]", el:"ἀλδαίνω (= ενδυναμώνω, αυξάνω) // (γαλλ.) alourdir (= αυξάνω, βαραίνω)" },
+    { la:"domus", el:"δέμω, δόμος, δῶμα, νεόδμητος // (γαλλ.) domestique (= εξημερωμένος)" },
+    { la:"mater", el:"μήτηρ // (γαλλ.) maternel (= μητρικός), matri-monial (= συζυγικός, γαμήλιος)" },
+    { la:"con-iunx [< con-iungo]", el:"ζεύγνυμι, ζυγός, σύζυγος" },
+    { la:"op-pugnaretur [< op-pugno]", el:"πύξ (= με γροθιά)· πυγμή" },
+    { la:"haberem", el:"(γερμ.) haben (= έχω), (αγγλ.) have" },
+    { la:"libera, liberā", el:"(γαλλ.) libre (= ελεύθερος) // (αγγλ.) liberty (= ελευθερία), libero (< ιταλ.)" },
+    { la:"mortua, mors", el:"βροτός // (γαλλ.) mort (= νεκρός) // (αγγλ.) mortal (= θνητός)" },
+    { la:"pati [< patior]", el:"παθεῖν, πάθος // πασιέντσα (< ιταλ.) // (γαλλ.) patience (= υπομονή) // (αγγλ.) patient (= ασθενής)" },
+    { la:"miserrima", el:"μιζέρια, μίζερος (< ιταλ.)" },
+    { la:"futura", el:"(γαλλ.) futur (= μέλλον)" },
+    { la:"contra", el:"(επίρρ.) κόντρα (< ιταλ.)" },
+    { la:"pergis [< pergo < per + rego]", el:"ρήγας" },
+    { la:"im-matura", el:"(γαλλ.) immature (= ανώριμος), mature (= ώριμος)" },
+    { la:"servitus [< servus]", el:"σερβίρω, σερβιτόρος, σερβίτσιο (< ιταλ.) // σέρβις (< αγγλ.), σερβίς (< γαλλ.)" },
+    { la:"manet", el:"μένω, μόνος" }
   ]
 };
 

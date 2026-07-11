@@ -327,6 +327,141 @@ export const UNIT = {
     { tag:"Απαρέμφατο", title:"se … adfore (ταυτοπροσωπία)", body:"Το adfore είναι ειδικό απαρέμφατο μέλλοντα (αντικ. του scribit)· ως υποκείμενό του τίθεται η αιτιατική se, αν και έχουμε ταυτοπροσωπία — πρόκειται για λατινισμό." },
     { tag:"Μετοχή", title:"intercepta epistula", body:"Το «intercepta epistula» είναι γνήσια αφαιρετική απόλυτη, υποθετική μετοχή (= αν αρπάξουν την επιστολή), με υποκείμενο το epistula. Το veritus (πρότ. 15) είναι αιτιολογική μετοχή, συνημμένη στο Gallus." },
     { tag:"Ουσιαστικό", title:"Ετερόσημα: litterae / castra", body:"litterae, -arum (πληθ.) = επιστολή/λογοτεχνία, ενώ ενικ. littera = γράμμα. castra, -orum (πληθ.) = στρατόπεδο, ενώ ενικ. castrum = φρούριο. Η turris έχει αιτ. turrim, αφαιρ. turri, γεν. πληθ. turrium." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"intercepta (epistula)",
+        to:[
+        "σε εξαρτημένο λόγο: si epistula intercepta sit (si + υποτακτική παρακειμένου)",
+        "σε ανεξάρτητο λόγο: si epistula intercepta erit (si + οριστική συντελεσμένου μέλλοντα)"],
+        note:"Γνήσια αφαιρετική απόλυτη, επιρρηματική υποθετική μετοχή παρακειμένου· δηλώνει το προτερόχρονο· εξάρτηση από αρκτικό χρόνο (cognoscantur)." },
+      { from:"conscriptam (epistulam)",
+        to:"quae conscripta est (quae + οριστική παρακειμένου)",
+        note:"Επιθετική μετοχή στο epistulam, παρακειμένου· δηλώνει το προτερόχρονο· εξάρτηση από αρκτικό χρόνο (mittit)." },
+      { from:"veritus",
+        to:[
+        "quod / quia / quoniam veritus erat (+ οριστ. υπερσ.): αιτιολογία αντικειμενικά αποδεκτή",
+        "quod / quia / quoniam veritus esset (+ υποτ. υπερσ.): αιτιολογία υποθετική/υποκειμενική",
+        "cum veritus esset (cum αιτιολογικός + υποτ. υπερσ.): εσωτερική λογική διεργασία"],
+        note:"Επιρρηματική αιτιολογική μετοχή παρακειμένου· προτερόχρονο· εξάρτηση από ιστορικό χρόνο (constituit)." }
+    ]},
+    { id:"Β", label:"Μετατροπή κύριων προτάσεων σε μετοχικές φράσεις", items:[
+      { from:"… et (haec) tertio post die a quodam milite conspicitur et ad Ciceronem defertur.",
+        to:"… et (haec) tertio post die a quodam milite conspecta ad Ciceronem defertur.",
+        note:"Μετατροπή της 1ης κύριας πρότασης σε επιρρηματική χρονική μετοχή, συνημμένη στο εννοούμενο υποκ. haec του defertur." },
+      { from:"Ille epistulam perlegit militesque adhortatur …",
+        to:"Ille epistulam perlegens milites adhortatur …",
+        note:"Μετατροπή της 1ης κύριας πρότασης σε επιρρηματική τροπική/χρονική μετοχή, συνημμένη στο υποκ. ille." }
+    ]},
+    { id:"Γ", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Tum cuidam ex equitibus Gallis persuadet ut ad Ciceronem epistulam deferat", to:"Tum quidam ex equitibus Gallis a Caesare (ενν.) persuadetur ut ad Ciceronem epistula deferatur (ab ipso)" },
+      { from:"Quam ob rem epistulam conscriptam Graecis litteris mittit", to:"Quam ob rem epistula conscripta Graecis litteris mittitur a Caesare (ενν.)" },
+      { from:"… ut … epistulam ad amentum tragulae adliget et intra castra abiciat", to:"… ut … epistula ad amentum tragulae a legato (ενν.) adligetur et intra castra abiciatur" },
+      { from:"ille epistulam perlegit …", to:"Epistula perlegitur ab illo." },
+      { from:"… ut salutem sperent", to:"… ut salus a militibus (ενν.) speretur" }
+    ]},
+    { id:"Δ", label:"Μετατροπή της παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"… ne, intercepta epistula, nostra consilia ab hostibus cognoscantur", to:"… ne, intercepta epistula, nostra (αιτ.) consilia (αιτ.) hostes cognoscant" },
+      { from:"… et tertio post die a quodam milite conspicitur et ad Ciceronem defertur",
+        to:"… et tertio post die quidam miles hanc conspicit et ad Ciceronem defert",
+        note:"Στην παθητική σύνταξη εννοείται το υποκ. haec." }
+    ]},
+    { id:"Ε", label:"Μετατροπή του λανθάνοντος υποθετικού λόγου σε εξαρτημένο & ανεξάρτητο", items:[
+      { from:"Curat et providet ne, intercepta epistula, nostra consilia ab hostibus cognoscantur. (λανθάνων υποθετικός λόγος· Υπόθεση: intercepta epistula· Απόδοση: ne … cognoscantur)",
+        to:"Curat et providet ne, si epistula intercepta sit, nostra consilia ab hostibus cognoscantur. (εξαρτημένος· Υπόθεση: si epistula intercepta sit — si + υποτ. παρακ.)",
+        note:"Αν αναλυθεί η μετοχή, ο υποθετικός λόγος παύει να είναι λανθάνων· α΄ είδος, υπόθεση ανοικτή για το μέλλον· εξάρτηση από curat/providet." },
+      { from:"Curat et providet ne, si epistula intercepta sit, … cognoscantur. (εξαρτημένος)",
+        to:[
+        "Si epistula intercepta erit, ne nostra consilia ab hostibus cognoscantur. (ne + αποτρεπτική υποτ. ενεστ.)",
+        "Si epistula intercepta erit, ne nostra consilia ab hostibus cognita sint. (ne + υποτ. παρακ.: απαγόρευση)"],
+        note:"Ανεξάρτητος· Υπόθεση: si … erit (si + οριστ. συντ. μέλλ.)· α΄ είδος· η μετατροπή στα άλλα είδη δεν είναι δυνατή νοηματικά." }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή του εξαρτημένου υποθετικού λόγου (legatum monet) σε ανεξάρτητο & στα άλλα είδη", items:[
+      { from:"Legatum monet ut, si adire non possit, epistulam ad amentum tragulae adliget et intra castra abiciat. (εξαρτημένος· Υπόθεση: si adire non possit· Απόδοση: βουλητικές)",
+        to:"Si adire non poteris, epistulam ad amentum tragulae adliga et intra castra abice. (ευθύς· Υπόθεση: si adire non poteris — si non + οριστ. μέλλ.· Απόδοση: προστακτική)",
+        note:"α΄ είδος, υπόθεση ανοικτή για το μέλλον· εξάρτηση από monet." },
+      { from:"Si adire non poteris, … adliga … abice. (α΄ είδος — μετατροπή στα άλλα είδη)",
+        to:[
+        "Ανοικτή για το παρόν: si adire non potes (+ οριστ. ενεστ.) — … adliga … abice (προστ. ενεστ.)",
+        "Ανοικτή για το μέλλον: si adire non poteris (+ οριστ. μέλλ.) — … adliga/adligabis … abice/abicies",
+        "Αντίθετη προς την πραγματικότητα (παρόν): si adire non posses (+ υποτ. παρατ.) — … adligeres … abiceres",
+        "Αντίθετη προς την πραγματικότητα (παρελθόν): si adire non potuisses (+ υποτ. υπερσ.) — … adligavisses … abiecisses",
+        "Δυνατή/πιθανή (παρόν-μέλλον): si adire non possis (+ υποτ. ενεστ.) — … adliges … abicias"],
+        note:"Η υπόθεση ανοικτή για το παρελθόν δεν είναι δυνατή νοηματικά." }
+    ]},
+    { id:"Ζ", label:"Μετατροπή του κειμένου σε πλάγιο λόγο", items:[
+      { from:"Το αρχικό κείμενο (ευθύς λόγος) — εξάρτηση: Scriptor tradit / tradidit",
+        to:[
+        "Caesarem … cognoscere quae … gerantur / gererentur quantoque in periculo res sit / esset",
+        "tum cuidam … Caesarem persuadere ut … deferat / deferret",
+        "Caesarem curare et providere ne, intercepta epistula, sua consilia … cognoscantur / cognoscerentur",
+        "ob eam rem epistulam … Caesarem mittere",
+        "Caesarem legatum monere ut, si adire non possit / posset, epistulam … adliget / adligaret et … abiciat / abiceret",
+        "in litteris Caesarem scribere se … adfore",
+        "Gallum, … veritum, constituisse ut tragulam mittat / mitteret",
+        "illam … adhaesisse et … conspici et … deferri",
+        "illum … perlegere militesque adhortari ut … sperent / sperarent"],
+        note:"Δίνονται και οι δύο τύποι ανάλογα με την ακολουθία (αρκτικός/ιστορικός)." }
+    ]},
+    { id:"Η", label:"Μετατροπή του πλάγιου λόγου σε ευθύ λόγο", items:[
+      { from:"Caesar ex captivis cognoscit quae apud Ciceronem gerantur quantoque in periculo res sit.", to:"Quae apud Ciceronem geruntur quantoque in periculo res est?" },
+      { from:"Tum cuidam ex equitibus Gallis persuadet ut ad Ciceronem epistulam deferat.", to:"Ad Ciceronem epistulam defer!" },
+      { from:"Curat et providet ne, intercepta epistula, nostra consilia ab hostibus cognoscantur.",
+        to:[
+        "Ne, intercepta epistula, nostra consilia ab hostibus cognoscuntur!",
+        "Ne, intercepta epistula, nostra consilia ab hostibus cognita sint! (απαγόρευση)"] },
+      { from:"Legatum monet ut, si adire non possit, epistulam ad amentum tragulae adliget et intra castra abiciat.", to:"Si adire non poteris, epistulam ad amentum tragulae adliga et intra castra abice!" },
+      { from:"In litteris scribit se cum legionibus celeriter adfore.", to:"Ego cum legionibus celeriter adero." },
+      { from:"Gallus, periculum veritus, constituit ut tragulam mitteret.", to:"Tragulam mittam!" },
+      { from:"… militesque adhortatur ut salutem sperent.", to:"Salutem, milites, sperate!" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"Caesar", el:"Καίσαρας, καισαρική (τομή), καισαρισμός" },
+    { la:"captivis [< capio]", el:"(αγγλ.) captive (= αιχμάλωτος) // (γαλλ.) captif" },
+    { la:"cognoscit, cognoscantur [< cum + gnosco (αρχαϊκός τύπος του nosco)]", el:"γιγνώσκω // νότα" },
+    { la:"Ciceronem", el:"Κικέρωνας" },
+    { la:"periculo, periculum", el:"πείρα, πειρατής, ἀπειρία" },
+    { la:"litteris", el:"(γαλλ.) lettre (= γράμμα), littérature (= λογοτεχνία)" },
+    { la:"mittit, mitteret", el:"(αγγλ.) mission (= αποστολή)" },
+    { la:"legatum, legionibus", el:"λέγω" },
+    { la:"monet", el:"μιμνήσκω, μνήμη" },
+    { la:"adire [< adeo < ad + eo]", el:"εἶμι" },
+    { la:"posset [< possum < potis (= δυνατός) + sum]", el:"πόσις, δεσπότης («κύριος σπιτιού»)" },
+    { la:"res, rem", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)" },
+    { la:"tragulae, tragulam [< traho]", el:"τρακτέρ (< γαλλ.)" },
+    { la:"sit", el:"εἰμί" },
+    { la:"equitibus [< eques < equus]", el:"ἵππος" },
+    { la:"Gallis, Gallus", el:"Γάλλοι, Γαλλία" },
+    { la:"persuadet [< persuadeo < per + suadeo]", el:"ἁδύς (ἡδύς), ἀνδάνω (= τέρπω), ἡδονή // (αγγλ.) sweet (= γλυκύς), sweetness (= γλυκύτητα)" },
+    { la:"epistulam, epistulā", el:"ἐπιστέλλω, ἐπιστολή" },
+    { la:"de-ferat, de-fertur", el:"φέρω, διαφορά, φορέας, φορείο // (αγγλ.) trans-fer (= μεταφορά)" },
+    { la:"curat", el:"κούρα (< ιταλ.) (= φροντίδα)" },
+    { la:"pro-videt", el:"(ϝιδεῖν) ἰδέα, βίντεο (< αγγλ.)" },
+    { la:"intercepta", el:"(γαλλ.) intercepter (= αναχαιτίζω), accepter (= δέχομαι)" },
+    { la:"hostibus", el:"(αγγλ.) host (= ξενιστής) // (γαλλ.) hostilité (= εχθρότητα)" },
+    { la:"con-scriptam, scribit", el:"σκάριφος (= όργανο γραφής), σκαρίφημα // (αγγλ.) script (= σενάριο κινηματογραφικής ταινίας)" },
+    { la:"Graecis", el:"Γραικός" },
+    { la:"castra", el:"κάστρο" },
+    { la:"ab-iciat [< ab + iacio]", el:"ἵημι (= ρίχνω)" },
+    { la:"celeriter [< celer (= ταχύς)]", el:"κέλης (= ταχύς ίππος, ελαφρύ πλοιάριο), κέλλω (= έλκω πλοίο, ελλιμενίζομαι) // (γαλλ.) célérité (= ταχύτητα)" },
+    { la:"veritus [< vereor]", el:"ὁράω [< ϝοράω]" },
+    { la:"con-stituit", el:"συν-ίστημι // (γαλλ.) con-stituer (= συγκροτώ, καθορίζω)" },
+    { la:"casu", el:"κάζο [< ιταλ. caso (= συμβάν)]" },
+    { la:"turrim", el:"τύρρις/τύρσις (= πύργος) // (γερμ.) Turm" },
+    { la:"adhaesit [< adhaeresco < ad + haeresco < haereo]", el:"(γαλλ.) adhérer (= προσκολλώμαι), adhésion (= προσχώρηση)" },
+    { la:"tertio", el:"τρεῖς, τρία" },
+    { la:"die", el:"(Ζεύς, γεν. Διός) Δίας (ως «θεός του φωτός»)" },
+    { la:"milite, milites", el:"μιλιταρισμός (< γαλλ.)" },
+    { la:"con-spicitur [< con-spicio]", el:"σπέκουλα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.) // (αγγλ.) pro-spect (= προοπτική, άποψη)" },
+    { la:"per-legit [< perlego < per + lego (= διαβάζω)]", el:"(γαλλ.) lecture (= ανάγνωση)" },
+    { la:"salutem", el:"(γαλλ.) salutation (= χαιρετισμός)" },
+    { la:"ad-hortatur", el:"(γαλλ.) ex-horter (= προτρέπω) // (αγγλ.) ex-hortation (= προτροπή)" },
+    { la:"sperent", el:"(γαλλ.) espérer (= ελπίζω), espoir (= ελπίδα) // Σπεράντζα" }
   ]
 };
 

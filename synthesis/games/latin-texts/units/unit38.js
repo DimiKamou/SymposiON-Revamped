@@ -284,6 +284,95 @@ export const UNIT = {
     { tag:"Ρήμα", title:"mortua est: αποθετικό morior", body:"Το mortua est είναι γ΄ ενικ. παρακειμένου του αποθετικού morior, mortuus sum, mori (3, 15 σε -io) = πεθαίνω· έχει ενεργητική σημασία και μετοχή μέλλοντα moriturus." },
     { tag:"Μετοχή", title:"fessa: αιτιολογική μετοχή", body:"Η fessa (μτχ. παρακ. του αποθ. fatiscor) είναι συνημμένη αιτιολογική μετοχή στο puella· το mora είναι αφαιρετική του εξωτερικού αναγκαστικού αιτίου, με συμπλήρωμα τη γενική γερουνδίου standi." },
     { tag:"Ουσιαστικό", title:"filia & locus: ιδιαιτερότητες", body:"filia: δοτ. & αφαιρ. πληθ. filiis & filiabus (για διάκριση από το filius). locus: ετερογενές στον πληθ. — loci, locorum (χωρία βιβλίου) & loca, locorum (τόποι)." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"congruens",
+        to:"quae congrueret",
+        note:"Επιθετική μετοχή ενεστώτα (σύγχρονο)· αναλύεται σε αναφορική πρόταση με quae + υποτακτική (έλξη προς την υποτακτική audiretur), χρόνου παρατατικού (εξάρτηση από ιστορικό χρόνο audiretur)." },
+      { from:"fessa",
+        to:[
+        "quod fessa erat (+ οριστ. υπερσ.) — αιτιολογία αντικειμενικά αποδεκτή",
+        "quod fessa esset (+ υποτ. υπερσ.) — αιτιολογία υποθετική/υποκειμενική",
+        "cum fessa esset (cum + υποτ. υπερσ.) — εσωτερική, λογική διεργασία"],
+        note:"Επιρρηματική αιτιολογική μετοχή παρακειμένου (προτερόχρονο)· εξάρτηση από ιστορικό χρόνο (rogavit)." }
+    ]},
+    { id:"Β", label:"Μετατροπή των δευτερευουσών προτάσεων σε αντίστοιχες μετοχές", items:[
+      { from:"Caecilia, uxor Metelli, dum more prisco omen nuptiale petit filiae sororis, ipsa fecit omen",
+        to:"Caecilia, uxor Metelli, more prisco omen nuptiale petens filiae sororis, ipsa fecit omen",
+        note:"Η χρονική πρόταση → επιρρηματική χρονική μετοχή, συνημμένη στο υποκ. Caecilia του fecit." },
+      { from:"Nam mortua est Caecilia, quam Metellus, dum vixit, multum amavit",
+        to:"Nam mortua est Caecilia, quam Metellus viventem multum amavit",
+        note:"Η χρονική πρόταση → χρονική μετοχή, συνημμένη στο αντικ. quam του amavit· η μετοχή σε ενεστώτα (παράλληλη διάρκεια), αν και το vixit είναι παρακ." }
+    ]},
+    { id:"Γ", label:"Μετατροπή κυρίων προτάσεων σε μετοχικές φράσεις", items:[
+      { from:"Nam in sacello quodam nocte cum sororis filia persedebat expectabatque dum aliqua vox … audiretur",
+        to:"Nam in sacello quodam nocte cum sororis filia (Caecilia) persedens expectabat dum aliqua vox … audiretur",
+        note:"Η κύρια → επιρρηματική χρονική μετοχή, συνημμένη στο εννοούμενο υποκ. Caecilia του expectabat." }
+    ]},
+    { id:"Δ", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Caecilia, uxor Metelli, dum more prisco omen nuptiale petit filiae sororis, ipsa fecit omen", to:"Caecilia, uxore Metelli, dum more prisco omen nuptiale (υποκ.) petitur filiae sororis, ab ipsa factum est omen (υποκ.)" },
+      { from:"Ego libenter tibi mea sede cedo", to:"Mea sedes (υποκ.) libenter tibi a me ceditur" },
+      { from:"Hoc dictum paulo post res ipsa confirmavit",
+        to:"Hoc dictum (υποκ.) paulo post re ipsa confirmatum est",
+        note:"Το ποιητικό αίτιο (re ipsa) με απλή αφαιρετική, γιατί είναι άψυχο." },
+      { from:"quam Metellus … multum amavit", to:"quae a Metello multum amata est" },
+      { from:"Postea is puellam in matrimonium duxit", to:"Postea ab eo puella in matrimonium ducta est" }
+    ]},
+    { id:"Ε", label:"Μετατροπή του κειμένου σε πλάγιο λόγο", items:[
+      { from:"Το κείμενο σε ευθύ λόγο (εξάρτηση: Scriptor tradit / tradidit)", to:"Scriptor tradit / tradidit Caeciliam, uxorem Metelli, dum … petat / peteret ipsam fecisse omen; Caeciliam (eam) in sacello quodam … persedere expectareque dum … audiretur; tandem puellam … fessam, rogavisse materteram, ut sibi … cederet; (tum) Caeciliam puellae dixisse se libenter illi sua sede cedere; illud dictum paulo post rem ipsam confirmavisse; mortuam esse Caeciliam, quam Metellus, dum vixerit / vixisset, multum amaverit / amavisset; postea eum duxisse." }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή του πλάγιου λόγου σε ευθύ", items:[
+      { from:"Tandem puella, …, rogavit materteram, ut sibi paulisper loco cederet",
+        to:[
+        "(προστακτική) Matertera, quaeso, mihi paulisper loco cede",
+        "(βουλητική υποτακτική) Matertera, mihi paulisper loco cedas"] }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"Caecilia", el:"Καικιλία" },
+    { la:"uxor", el:"(γαλλ.) uxori-cide (= συζυγοκτονία)" },
+    { la:"audiretur [< audio]", el:"ἀΐω" },
+    { la:"puella, puellae, puellam [< puer]", el:"(γαλλ.) puéril (= παιδικός)" },
+    { la:"Metelli [< Metellus]", el:"Μέτελλος" },
+    { la:"more [< mos]", el:"αμοραλισμός (< γαλλ.) // (αγγλ.) moral (= ηθικό), morality (= ηθική)" },
+    { la:"prisco [< prior]", el:"πρό, πρότερος, πριν // (γαλλ.) priorité (= προτεραιότητα)" },
+    { la:"omen", el:"(αγγλ.) omen (= οιωνός)" },
+    { la:"nuptiale [< nuptiae]", el:"νύμφη // (αγγλ.) nuptial (= γαμήλιος) // (γαλλ.) nuptialité (= ο αριθμός των γάμων κατ' έτος)" },
+    { la:"petit [< peto]", el:"πίπτω, πέτομαι" },
+    { la:"sororis [< soror]", el:"(γαλλ.) sœur // (αγγλ.) sister" },
+    { la:"fecit [< facio]", el:"(αγγλ.) facts (= γεγονότα), factory (= εργοστάσιο)" },
+    { la:"sacello [< sacrum < sacer]", el:"(αγγλ.) sacrifice (= θυσία) // (γαλλ.) sanctifier (= αγιάζω)" },
+    { la:"nocte [< nox]", el:"νύξ (γεν. νυκτός) // (ισπαν.) noche // (γαλλ.) nocturne (= νυχτερινός)" },
+    { la:"per-sedebat [< per-sedeo], sede", el:"ἕζομαι, ἕδρα // (αγγλ.) pos-session (= κατοχή, κτήση)" },
+    { la:"expectabat [< expecto < ex + specto]", el:"(αγγλ.) expect (= αναμένω), pro-spect (= προοπτική) // (γαλλ.) expectative (= προσδοκία)" },
+    { la:"vox", el:"(αγγλ.) vocal (= φωνητικός), voice (= φωνή), re-vocation (= ανάκληση) // (γαλλ.) vocabulaire (= λεξιλόγιο)" },
+    { la:"congruens [< congruo]", el:"(αγγλ.) congruent (= σύμφωνος) // (γαλλ.) congruence (= αναλογία, αντιστοιχία)" },
+    { la:"pro-posito [< pro-pono]", el:"(γαλλ.) positionner (= τοποθετώ), position (= θέση), proposition (= πρόταση)" },
+    { la:"-ulus, pullus (= μικρό ζώο)", el:"(κατάληξη) -πουλος" },
+    { la:"longa [< longus]", el:"δολιχός // (αγγλ.) long // (γαλλ.) longue" },
+    { la:"mora", el:"μέριμνα, μάρτυς // μορατόριουμ [< moratorius (= αυτός που καθυστερεί)]" },
+    { la:"standi [< sto]", el:"ἵστημι, στάσις // (γαλλ.) station (= στάση, σταθμός)" },
+    { la:"fessa [< fatiscor]", el:"(γαλλ.) fatigué (= κουρασμένος)" },
+    { la:"rogavit [< rogo]", el:"(γαλλ.) inter-rogatif (= ερωτηματικός)" },
+    { la:"materteram, matri-monium [< mater]", el:"μήτηρ // (γαλλ.) maternel (= μητρικός), matrimonial (= συζυγικός, γαμήλιος)" },
+    { la:"paulisper [< paulus], paulo", el:"παῦρος (= μικρός, λίγος)" },
+    { la:"loco [< locus]", el:"(γαλλ.) locale (= τοπικός) // (αγγλ.) location (= τοποθεσία)" },
+    { la:"cederet [< cedo]", el:"(γαλλ.) céder (= παραχωρώ), re-cession (= ύφεση, επιβράδυνση)" },
+    { la:"dixit, dictum [< dico]", el:"δείκνυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση)" },
+    { la:"ego", el:"ἐγώ" },
+    { la:"libenter", el:"(γερμ.) Liebe (= αγάπη)" },
+    { la:"res", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)" },
+    { la:"con-firmavit [< con-firmo]", el:"(γαλλ.) confirmer (= επιβεβαιώνω) // φίρμα (< ιταλ.)" },
+    { la:"mortua [< morior]", el:"βροτός // (γαλλ.) mort (= νεκρός) // (αγγλ.) mortal (= θνητός)" },
+    { la:"vivit [< vivo]", el:"βίος // βιταλισμός (< γαλλ. vitalisme), βιταμίνη (< γαλλ. vitamine)" },
+    { la:"multum", el:"μάλα (= πολύ)" },
+    { la:"amavit [< amo]", el:"(γαλλ.) amour (= αγάπη), ami (= φίλος), amical (= φιλικός)" },
+    { la:"duxit [< duco]", el:"(γαλλ.) conducteur (= οδηγός) // ductor, ad-ductor" }
   ]
 };
 
