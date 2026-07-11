@@ -287,6 +287,7 @@ Object.assign(SUBJECTS, {
               g('Ενότητα 36','Unit 36','Μια απόπειρα δωροδοκίας','scroll',{fn:'openLatinText36'}),
               g('Ενότητα 37','Unit 37','Η κατάρα των εμφυλίων πολέμων','scroll',{fn:'openLatinText37'}),
               g('Ενότητα 38','Unit 38','Η μοίρα της Καικιλίας','scroll',{fn:'openLatinText38'}),
+              g('Ενότητα 39','Unit 39','Ένα πρότυπο ιδανικού ανθρώπου','scroll',{fn:'openLatinText39'}),
               g('Ενότητα 43','Unit 43','Η οργή της μάνας','scroll',{fn:'openLatinText43'}),
               g('Ενότητα 44','Unit 44','Η ζωή των τυράννων','scroll',{fn:'openLatinText44'}),
               g('Ενότητα 45','Unit 45','Μια επιστολή στα ελληνικά αναπτερώνει το ηθικό των πολιορκημένων','scroll',{fn:'openLatinText45'}) ] },
