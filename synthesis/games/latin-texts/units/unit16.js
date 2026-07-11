@@ -335,6 +335,74 @@ export const UNIT = {
     { tag:"Προσδιορισμός", title:"vivus: επιρρ. κατηγορούμενο", body:"Το vivus δεν είναι απλός επιθετικός προσδιορισμός, αλλά επιρρηματικό κατηγορούμενο του τρόπου στο dux (μέσω του comprehenditur)." },
     { tag:"Ουσιαστικό", title:"castra: ετερόσημο", body:"castra, -orum (ουδ. β΄, πληθ.) = στρατόπεδο· στον ενικό castrum, -i = φρούριο. Ετερόσημο ουσιαστικό." },
     { tag:"Απαρέμφατο", title:"Ετεροπροσωπία (tradi / produci)", body:"Στο «Caesar iubet arma tradi ac principes produci» τα τελικά απαρέμφατα έχουν υποκείμενα arma και principes — διαφορετικά από το υποκείμενο του iubet (Caesar). Πρόκειται για ετεροπροσωπία." }
+  ],
+  transforms: [
+    { id:"Α", label:"Μετατροπή ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Nostri, postquam pila in hostes miserunt, gladiis rem gerunt", to:"A nostris postquam pila in hostes missa sunt, gladiis res geritur" },
+      { from:"hostes terga vertunt", to:"a hostibus terga vertuntur" }
+    ]},
+    { id:"Β", label:"Μετατροπή παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Repente (a nostris) post tergum equitatus cernitur", to:"Repente (nostri) post tergum equitatum cernunt" },
+      { from:"Fit magna caedes (a militibus)", to:"(milites) magnam caedem faciunt" },
+      { from:"Sedulius, dux et princeps Lemovicum, occiditur (a nostris)", to:"(Nostri) Sedulium, ducem et principem Lemovicum, occidunt" },
+      { from:"dux Arvernorum vivus in fuga comprehenditur (a nostris)", to:"(Nostri) ducem Arvernorum vivum in fuga comprehendunt" },
+      { from:"signa militaria LXXIIII (septuaginta quattuor) ad Caesarem referuntur (ab hostibus)", to:"(hostes) signa militaria LXXIIII (septuaginta quattuor) ad Caesarem referunt" },
+      { from:"magnus numerus hostium capitur atque interficitur (a nostris)", to:"(Nostri) magnum numerum hostium capiunt atque interficiunt" },
+      { from:"Postero die ad Caesarem legati mittuntur (ab hostibus)", to:"Postero die (hostes) ad Caesarem legatos mittunt" },
+      { from:"Caesar iubet arma tradi ac principes produci", to:"Caesar iubet (Gallos) arma tradere ac principes producere" },
+      { from:"duces producuntur (a militibus)", to:"(milites) duces producunt" },
+      { from:"Vercingetorix deditur", to:"Vercingetorix se dedit" },
+      { from:"arma proiciuntur (ab hostibus)", to:"(hostes) arma proiciunt" }
+    ]},
+    { id:"Γ", label:"Μετατροπή σε απαρεμφατική σύνταξη (εξάρτηση από «Scriptor narrat»)", items:[
+      { from:"Nostri [...] gladiis rem gerunt", to:"Scriptor narrat suos [...] gladiis rem gerere" },
+      { from:"Repente post tergum equitatus cernitur; cohortes appropinquant; hostes terga vertunt ac fugiunt; eis equites occurrunt", to:"Scriptor narrat repente post tergum equitatum cerni; cohortes appropinquare; hostes terga vertere ac fugere; eis equites occurrere" },
+      { from:"Fit magna caedes", to:"Scriptor narrat fieri magnam caedem" },
+      { from:"Sedulius, dux et princeps Lemovicum, occiditur; dux Arvernorum vivus in fuga comprehenditur; signa militaria LXXIIII (septuaginta quattuor) ad Caesarem referuntur; magnus numerus hostium capitur atque interficitur; reliqui ex fuga in civitates discedunt", to:"Scriptor narrat Sedulium, ducem et principem Lemovicum, occidi; ducem Arvernorum vivum in fuga comprehendi; signa militaria LXXIIII (septuaginta quattuor) ad Caesarem referri; magnum numerum hostium capi atque interfici; reliquos ex fuga in civitates discedere" },
+      { from:"Postero die ad Caesarem legati mittuntur", to:"Scriptor narrat postero die ad Caesarem legatos mitti" },
+      { from:"Caesar iubet arma tradi ac principes produci", to:"Scriptor narrat Caesarem iubere arma tradi ac principes produci" },
+      { from:"Ipse pro castris consedit; eo duces producuntur", to:"Scriptor narrat ipsum pro castris consedisse, eo duces produci" },
+      { from:"Vercingetorix deditur, arma proiciuntur", to:"Scriptor narrat Vercingetorigem dedi, arma proici" }
+    ]}
+  ],
+  etymology: [
+    { la:"hostes, hostium", el:"(αγγλ.) host (= ξενιστής) // (γαλλ.) hostilité (= εχθρότητα)" },
+    { la:"miserunt, mittuntur", el:"(αγγλ.) mission (= αποστολή)" },
+    { la:"gladius", el:"(υποκορ.) gladiolus (= κοντό ξίφος) — (λόγω του σχήματος) γλαδιόλα (φυτό)" },
+    { la:"cohortes", el:"(αγγλ.) cohort, (γαλλ.) cohorte" },
+    { la:"vertunt", el:"(verso) βέρσο (= πίσω μέρος σελίδας), ρεβέρ (< γαλλ.), v. s. (= εναντίον)" },
+    { la:"fugiunt, fuga", el:"φεύγω, φυγή // (αγγλ.) fugitive (= φυγάς)" },
+    { la:"occurrunt", el:"κούρσα (< γαλλ.), κουρσάρος (< ιταλ.)" },
+    { la:"rem", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)" },
+    { la:"fit", el:"φύω, φύσις" },
+    { la:"equitatus, equites", el:"ίππος" },
+    { la:"cernitur", el:"κρίνω" },
+    { la:"magna, magnus", el:"μέγας" },
+    { la:"Sedulius", el:"Σεδούλιος" },
+    { la:"dux, produci, duces, producuntur", el:"δούκας" },
+    { la:"princeps, principes", el:"πρίγκιπας // (γαλλ., αγγλ.) prince" },
+    { la:"numerus", el:"νούμερο (< ιταλ.) / (γαλλ.) numéral (= αριθμός, ψηφία)" },
+    { la:"Lemovicum", el:"Λεμόβικες" },
+    { la:"Arvernorum", el:"Αρβέρνοι" },
+    { la:"capitur", el:"(ιταλ.) capire (= καταλαβαίνω)" },
+    { la:"vivus", el:"βίος // βιταλισμός (< γαλλ. vitalisme), βιταμίνη (< γαλλ.)" },
+    { la:"interficitur", el:"(αγγλ.) facts (= γεγονότα)" },
+    { la:"comprehenditur", el:"(αγγλ.) comprehend (= κατανοώ, περιλαμβάνω)" },
+    { la:"reliqui", el:"λείπω, λοιπός" },
+    { la:"signa", el:"σινιάλο (< ιταλ.) // (αγγλ.) sign (= σήμα, σημάδι) // (γαλλ.) signe (= σήμα, σημάδι, δείγμα)" },
+    { la:"militaria", el:"μιλιταρισμός (< γαλλ.)" },
+    { la:"septuaginta quattuor", el:"ἑπτά, ἕβδομος, ἑβδομήκοντα // (γαλλ.) quatre // τέτταρες" },
+    { la:"Caesarem, Caesar", el:"Καίσαρας, καισαρικός [καισαρική (τομή)], καισαρισμός" },
+    { la:"referuntur", el:"φέρω // (αγγλ.) transfer (= μεταφορά) // διαφορά, φορέας, φορείο" },
+    { la:"civitates", el:"κοίτη // (αγγλ.) city (= πόλη) // (γαλλ.) civilisation (= πολιτισμός)" },
+    { la:"die", el:"(Ζεύς, γενική Διός) Δίας (ως «θεός του φωτός»)" },
+    { la:"legati", el:"λέγω" },
+    { la:"arma", el:"άρμα, αρματολός" },
+    { la:"tradi, deditur", el:"δίδωμι" },
+    { la:"castris", el:"κάστρο" },
+    { la:"consedit", el:"ἕζομαι, ἕδρα, πρόεδρος, πάρεδρος" },
+    { la:"Vercingetorix", el:"Βερκιγγετόριγας" },
+    { la:"proiciuntur", el:"ἵημι (= ρίχνω)" }
   ]
 };
 
