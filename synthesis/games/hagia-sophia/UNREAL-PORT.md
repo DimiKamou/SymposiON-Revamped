@@ -77,7 +77,7 @@ gain a one-click blockout.
 
 ## 5. The museum layer
 
-- Each of the 14 stations in `js/exhibits.js` becomes a
+- Each of the 16 stations in `js/exhibits.js` becomes a
   `BP_ExhibitMarker`: a niagara light-pillar + numbered medallion sprite +
   sphere trigger. On overlap, show an UMG widget with the same title /
   subtitle / body strings (copy them straight from `HS.EXHIBITS` — they are

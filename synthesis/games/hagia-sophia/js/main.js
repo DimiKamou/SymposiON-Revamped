@@ -42,8 +42,11 @@
   HS.buildEast(world);
   HS.buildWest(world);
   HS.flushColumns(world);
+  HS.buildIcons(world);
   HS.buildLighting(scene, world);
   HS.buildExhibits(world);
+  let iconsOn = Q.icons !== '0';          // the later icon-layer, on by default
+  HS.setIcons(iconsOn);
 
   /* ---------- controls ---------- */
   const controls = new HS.Controls(camera, renderer.domElement);
@@ -106,6 +109,7 @@
     renderList();
   });
   $('btn-mode').addEventListener('click', e => { e.stopPropagation(); HS.setDusk(!HS.isDusk); syncButtons(); });
+  $('btn-icons').addEventListener('click', e => { e.stopPropagation(); iconsOn = !iconsOn; HS.setIcons(iconsOn); syncButtons(); });
   $('btn-lamps').addEventListener('click', e => { e.stopPropagation(); lampsOn = !lampsOn; HS.setLampsVisible(lampsOn); syncButtons(); });
   $('btn-sound').addEventListener('click', e => { e.stopPropagation(); ambience.setOn(!ambience.isOn()); syncButtons(); });
   $('btn-list').addEventListener('click', e => { e.stopPropagation(); $('list').classList.toggle('show'); });
@@ -113,6 +117,7 @@
   let lampsOn = true;
   function syncButtons() {
     $('btn-mode').innerHTML = HS.isDusk ? '☀ ' + TXT.day[HS.lang] : '🌙 ' + TXT.dusk[HS.lang];
+    $('btn-icons').style.opacity = iconsOn ? 1 : 0.45;
     $('btn-lamps').style.opacity = lampsOn ? 1 : 0.45;
     $('btn-sound').style.opacity = ambience.isOn() ? 1 : 0.45;
   }
@@ -157,6 +162,7 @@
       else if (nearEx) showPanel(nearEx);
     }
     if (code === 'KeyN') { HS.setDusk(!HS.isDusk); syncButtons(); }
+    if (code === 'KeyI') { iconsOn = !iconsOn; HS.setIcons(iconsOn); syncButtons(); }
     if (code === 'KeyL') { lampsOn = !lampsOn; HS.setLampsVisible(lampsOn); syncButtons(); }
     if (code === 'KeyM') $('map-wrap').classList.toggle('hidden');
     if (code === 'Tab') $('list').classList.toggle('show');

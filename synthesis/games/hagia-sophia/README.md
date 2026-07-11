@@ -2,6 +2,7 @@
 
 ![The nave, looking east](docs/shot-nave.png)
 ![The first dome of 537](docs/shot-dome.png)
+![The Orthodox icon-layer of later centuries (toggle with I)](docs/shot-icons.png)
 ![Dusk — the polykandela lit](docs/shot-dusk.png)
 ![The atrium and phiale](docs/shot-atrium.png)
 
@@ -11,8 +12,15 @@ consecrated it on 27 December 537** — the original shallow dome that fell in
 mosaics, the atrium with its phiale fountain. No minarets, no buttresses,
 no later centuries.
 
-Fourteen numbered museum stations (EN/ΕΛ) tell the story: walk up to a
-golden marker and press **E**.
+Sixteen numbered museum stations (EN/ΕΛ) tell the story: walk up to a
+golden marker and press **E** — including a station on the structural
+engineering (how a 31 m dome stands on four piers) and one on the
+**Orthodox icon-layer**: the apse Theotokos of 867, the dome Pantokrator,
+pendentive seraphim, church fathers in the tympana, Leo VI over the
+Imperial Door and the south-gallery Deesis, all painted procedurally in
+the Byzantine manner. The icons belong to the centuries **after**
+Iconoclasm, so they are a toggleable layer (**I**) over the aniconic
+church of 537.
 
 ## Run it
 
@@ -35,6 +43,7 @@ calls).
 | `E` | open / close the nearest exhibit |
 | `Tab` | exhibit index (click an entry to travel there, incl. the gallery) |
 | `N` | day ↔ dusk (Paul the Silentiary's "second sun") |
+| `I` | Orthodox icon-layer of later centuries on/off |
 | `L` | hanging lamps on/off |
 | `M` | mini-map on/off |
 | Touch | left half = move stick, right half = look |
@@ -82,7 +91,8 @@ js/west.js        west wall + 9 doors (Imperial Door), narthex + loge,
                   exonarthex, atrium + phiale, exterior massing
 js/lighting.js    sun + god-rays, polykandela, day/dusk
 js/controls.js    pointer-lock / touch FPS controls, collision, floors
-js/exhibits.js    the 14 stations (EN/ΕΛ), markers, mini-map
+js/exhibits.js    the 16 stations (EN/ΕΛ), markers, mini-map
+js/icons.js       the procedural Byzantine icon-layer (toggleable)
 js/audio.js       generative ambience (drone + synthesized reverb)
 js/main.js        boot, loop, HUD wiring, screenshot mode
 launcher.js       SymposiON shell glue (openHagiaSophia/closeHagiaSophia)

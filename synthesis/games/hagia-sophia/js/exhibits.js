@@ -123,7 +123,25 @@ HS.EXHIBITS = [
     }
   },
   {
-    id: 'atrium', n: 14, at: [-62.5, 2.8], view: [-60.5, 2.2, Math.PI / 2 + 0.5],
+    id: 'engineering', n: 14, at: [-11.5, -3], view: [-11.5, -2.5, -Math.PI / 2 + 0.35, 0.5],
+    title: { en: 'Engineering the Impossible', gr: 'Η Μηχανική του Αδυνάτου' },
+    sub: { en: 'How a 31-metre dome stands on empty air', gr: 'Πώς στέκεται τρούλος 31 μέτρων στο κενό' },
+    body: {
+      en: 'Follow the loads with your eye. The dome presses outward on its ring of forty windows; the pendentives gather that push and bend it into the four great arches; the arches drive it into four piers of dressed stone. East and west, the thrust rolls on into the half-domes, then the exedrae, then the outer walls — a cascade of shells, each buttressing the last, which is why the building feels weightless along its axis. North and south it is met bluntly: massive piers and the window-pierced tympana. The bricks are light, the mortar beds nearly as thick as the bricks — the whole structure flexes like a living thing. Built in under six years, shaken at once by the quakes of 553 and 557, the too-shallow first dome fell in 558; Isidore the Younger rebuilt it steeper — less outward push — and that geometry has ridden every earthquake since. No cathedral enclosed more space for nearly a thousand years.',
+      gr: 'Ακολουθήστε τα φορτία με το βλέμμα. Ο τρούλος πιέζει προς τα έξω τον δακτύλιο των σαράντα παραθύρων· τα λοφία μαζεύουν την ώθηση και τη στέλνουν στα τέσσερα μεγάλα τόξα· τα τόξα στους τέσσερις πεσσούς. Ανατολικά και δυτικά η ώθηση κυλά στα ημιθόλια, στις κόγχες, στους εξωτερικούς τοίχους — καταρράκτης από κελύφη που αντιστηρίζουν το ένα το άλλο· γι\' αυτό ο άξονας μοιάζει αβαρής. Βόρεια και νότια τη συγκρατούν οι πεσσοί και τα τύμπανα. Τα τούβλα ελαφριά, τα αρμολογήματα παχιά σχεδόν όσο τα τούβλα — η κατασκευή «αναπνέει». Χτίστηκε σε λιγότερο από έξι χρόνια· οι σεισμοί του 553 και 557 ράγισαν τον πολύ ρηχό πρώτο τρούλο, που έπεσε το 558· ο Ισίδωρος ο Νεότερος τον ξανασήκωσε πιο κατακόρυφο — μικρότερη ώθηση — και αυτή η γεωμετρία άντεξε κάθε σεισμό έκτοτε. Κανένας καθεδρικός δεν έκλεισε περισσότερο χώρο για σχεδόν χίλια χρόνια.'
+    }
+  },
+  {
+    id: 'icons', n: 15, at: [13.5, -3.2], view: [12.5, -2.8, -Math.PI / 2 + 0.12, 0.3],
+    title: { en: 'The Icons — a Later Skin', gr: 'Οι Εικόνες — Μεταγενέστερο Δέρμα' },
+    sub: { en: 'Press I to strip back to 537', gr: 'Πατήστε I για να δείτε το 537' },
+    body: {
+      en: 'In 537 this gold held almost no faces — crosses, stars, ornament. After the century-long crisis of Iconoclasm ended in 843, the images returned in glory, and this reconstruction lets you wear that later skin over Justinian\'s church: the enthroned Mother of God in the apse — unveiled in 867, when Patriarch Photius preached that her silent lips seemed to speak; six-winged seraphim on the pendentives; Christ Pantokrator, "Ruler of All," in the crown of the dome; the great bishops — Chrysostom, Basil, Nicholas — standing in the tympana niches; Emperor Leo VI prostrate before Christ over the Imperial Door; and upstairs in the south gallery, the Deesis, set after 1261, whose gentleness has stunned visitors for centuries. Toggle the icon layer (I) to move between 537 and the church of later ages.',
+      gr: 'Το 537 ο χρυσός αυτός δεν είχε σχεδόν κανένα πρόσωπο — σταυροί, αστέρια, κόσμημα. Όταν τελείωσε η Εικονομαχία (843), οι εικόνες γύρισαν με δόξα, και η αναπαράσταση σας αφήνει να φορέσετε αυτό το μεταγενέστερο «δέρμα» στον ναό του Ιουστινιανού: η ένθρονη Θεοτόκος στην αψίδα — αποκαλύφθηκε το 867, όταν ο πατριάρχης Φώτιος κήρυξε πως τα σιωπηλά χείλη της μοιάζουν να μιλούν· εξαπτέρυγα στα λοφία· ο Παντοκράτωρ στην κορυφή του τρούλου· οι ιεράρχες — Χρυσόστομος, Βασίλειος, Νικόλαος — όρθιοι στα τύμπανα· ο Λέων ΣΤ΄ γονατιστός μπροστά στον Χριστό πάνω από την Ωραία Πύλη· και πάνω, στο νότιο υπερώο, η Δέηση (μετά το 1261), που η γλυκύτητά της συγκλονίζει αιώνες τώρα. Εναλλάξτε το στρώμα των εικόνων (I) ανάμεσα στο 537 και στους κατοπινούς αιώνες.'
+    }
+  },
+  {
+    id: 'atrium', n: 16, at: [-62.5, 2.8], view: [-60.5, 2.2, Math.PI / 2 + 0.5],
     title: { en: 'The Atrium & the Phiale', gr: 'Το Αίθριο και η Φιάλη' },
     sub: { en: 'ΝΙΨΟΝ ΑΝΟΜΗΜΑΤΑ ΜΗ ΜΟΝΑΝ ΟΨΙΝ', gr: 'Το παλίνδρομο της φιάλης' },
     body: {
