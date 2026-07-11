@@ -294,7 +294,8 @@ Object.assign(SUBJECTS, {
               g('Ενότητα 43','Unit 43','Η οργή της μάνας','scroll',{fn:'openLatinText43'}),
               g('Ενότητα 44','Unit 44','Η ζωή των τυράννων','scroll',{fn:'openLatinText44'}),
               g('Ενότητα 45','Unit 45','Μια επιστολή στα ελληνικά αναπτερώνει το ηθικό των πολιορκημένων','scroll',{fn:'openLatinText45'}),
-              g('Ενότητα 46','Unit 46','Το γενικό συμφέρον μπαίνει πριν από το ατομικό','scroll',{fn:'openLatinText46'}) ] },
+              g('Ενότητα 46','Unit 46','Το γενικό συμφέρον μπαίνει πριν από το ατομικό','scroll',{fn:'openLatinText46'}),
+              g('Ενότητα 47','Unit 47','Ο Αύγουστος και η φιλαρέσκεια της κόρης του, της Ιουλίας','scroll',{fn:'openLatinText47'}) ] },
   ],
   'gram-neo': [
     { id:'gn-gram', roman:'I', illu:'book', gr:'Γραμματική', en:'Grammar', sub:'Modern Greek',
