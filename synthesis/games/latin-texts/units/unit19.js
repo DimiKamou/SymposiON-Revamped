@@ -237,6 +237,44 @@ export const UNIT = {
     { tag:"Ποιητικό αίτιο", title:"a Cicerōne / ab Antōnio", body:"Το ποιητικό αίτιο εκφέρεται με εμπρόθετη αφαιρετική a/ab + αφαιρετική, επειδή πρόκειται για έμψυχα (a Cicerōne στο expulsus est· ab Antōnio στο interfectus est). Στις προτάσεις των socii εννοείται a militibus." },
     { tag:"Προσδιορισμός", title:"proelio victus", body:"Το proelio είναι απρόθετη αφαιρετική (οργανική) του μέσου στη μετοχή victus — έτσι με τα ρήματα που σημαίνουν «νικώ» (vinco, supero). Το victus είναι επιρρηματική χρονική μετοχή, συνημμένη στο υποκείμενο Catilīna, και δηλώνει το προτερόχρονο." },
     { tag:"Αντωνυμίες", title:"is / idem / ipse — suus vs eius", body:"is, ea, id (eum, eius) = δεικτική ως επαναληπτική· idem, eadem (eādem) = δηλώνει επανάληψη· ipse (ipse) = δηλώνει ταυτότητα. Στην αυτοπάθεια: suo (suus) = άμεση/ευθεία αυτοπάθεια (στο υποκ. Catilīna), ενώ eius (is) = κτήση χωρίς αυτοπάθεια." }
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  //  Ετυμολογικοί συσχετισμοί λατινικών λέξεων με ελληνικές ή άλλων ευρωπαϊκών γλωσσών.
+  etymology: [
+    { la:"Marco Tullio Cicerōne", el:"Μάρκος Τύλλιος Κικέρωνας" },
+    { la:"Gaio Antōnio", el:"Γάιος Αντώνιος" },
+    { la:"consulibus, consule", el:"(γαλλ.) consulter (= συμβουλεύω)" },
+    { la:"Lucius Sergius Catilīna", el:"Λεύκιος Σέργιος Κατιλίνας" },
+    { la:"nobilissimi", el:"γιγνώσκω // (γαλλ.) noble (= ευγενής, αριστοκράτης)" },
+    { la:"generis", el:"γένος· γενιά" },
+    { la:"ingenii", el:"(αγγλ.) engine (= κινητήρας)" },
+    { la:"pravissimi", el:"μπράβος [< ιταλ. bravo (= μισθωτός σωματοφύλακας / ταραχοποιός)]" },
+    { la:"contra", el:"(επίρρημα) κόντρα (< ιταλ.)" },
+    { la:"rem", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)" },
+    { la:"publicam", el:"(γαλλ.) publique (= δημόσιος)" },
+    { la:"rem publicam", el:"ρεπουμπλικανός, ρεπουμπλικανισμός // ρεπούμπλικα (= είδος ανδρικού καπέλου) (< ιταλ.)" },
+    { la:"con-iurāvit (ius)", el:"(γαλλ.) justice (= δικαιοσύνη) // (αγγλ.) justice // (γαλλ.) juste (= δίκαιος)" },
+    { la:"clari", el:"(αγγλ.) clear (= καθαρός, σαφής)" },
+    { la:"im-probi", el:"(αγγλ.) probity (= χρηστότητα, ακεραιότητα)" },
+    { la:"consecūti erant", el:"(αγγλ.) sequent (= ακόλουθος)" },
+    { la:"urbe", el:"(γαλλ.) urbain (= αστικός)" },
+    { la:"expulsus est (ex-pellor)", el:"(αγγλ.) expulsion (= εκδίωξη, απέλαση), expelled (= διωγμένος, αποβληθείς)" },
+    { la:"socii", el:"(αγγλ.) social (= κοινωνικός) // σοσιαλισμός (< γαλλ.)" },
+    { la:"de-prehensi sunt", el:"(αγγλ.) com-prehend (= κατανοώ, περιλαμβάνω)" },
+    { la:"carcere", el:"(αγγλ.) in-carceration (= φυλάκιση, κάθειρξη)" },
+    { la:"strangulāti sunt", el:"στραγγαλίζω // (αγγλ.) strangulate // (γαλλ.) étrangler" },
+    { la:"exercitu", el:"(ισπαν.) ejército (= στρατός) // (γαλλ.) exercice (= άσκηση)" },
+    { la:"victus", el:"(γαλλ.) victoire, (αγγλ.) victory" },
+    { la:"inter-fectus est", el:"(αγγλ.) facts (= γεγονότα)" },
+    { la:"Gaius Sallustius", el:"Γάιος Σαλλούστιος" },
+    { la:"tradit", el:"(γαλλ.) tradition (= παράδοση)" },
+    { la:"multos", el:"μάλα (= πολύ)" },
+    { la:"milites", el:"μιλιταρισμός (< γαλλ.)" },
+    { la:"Rōmānos", el:"Ρώμη, Ρωμαίος, ρωμαϊκός, ρωμιός" },
+    { la:"pugnā", el:"πύξ (= γροθιά)· πυγμή" },
+    { la:"graviter", el:"(γαλλ.) gravement (= βαριά, σοβαρά) // (γαλλ.) gravité (= βαρύτητα, σοβαρότητα)" },
+    { la:"vulnerātos esse (vulnus)", el:"ουλή (= επουλωμένο τραύμα) // (αγγλ.) vulnerable (= τρωτός, ευπαθής)" }
   ]
 };
 

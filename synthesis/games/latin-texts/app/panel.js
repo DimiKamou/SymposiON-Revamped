@@ -296,7 +296,13 @@
       id: 'transforms',
       rn: '⇄',
       label: 'Μετατροπές'
-    } // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
+    },
+    // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
+    {
+      id: 'etym',
+      rn: '≈',
+      label: 'Ετυμολογικά'
+    } // Μέρος IX — μόνο όταν η ενότητα έχει `etymology`
     ];
     componentDidMount() {
       this.applyTheme();
@@ -1469,7 +1475,8 @@
       const inc = (...vals) => !q || vals.some(v => String(v || '').toLowerCase().includes(q));
       const ready = s.loaded && !s.err && !!u;
       const hasTransforms = ready && u && Array.isArray(u.transforms) && u.transforms.length > 0;
-      const parts = this.partDefs.filter(p => p.id !== 'transforms' || hasTransforms).map(p => {
+      const hasEtym = ready && u && Array.isArray(u.etymology) && u.etymology.length > 0;
+      const parts = this.partDefs.filter(p => (p.id !== 'transforms' || hasTransforms) && (p.id !== 'etym' || hasEtym)).map(p => {
         const active = p.id === s.part;
         return {
           id: p.id,
@@ -1626,6 +1633,22 @@
           hue: 'oklch(' + sosHueL + ' 0.13 ' + sosHueOf(g.id || g.label || gi) + ')'
         };
       }).filter(g => g.items.length);
+
+      // ΜΕΡΟΣ ΙΧ — Ετυμολογικά (προαιρετικό): λατινική λέξη → ελληνικές/ευρωπαϊκές
+      // συγγενείς & παράγωγες. Απαλή χρωματική εναλλαγή (7 αποχρώσεις) για ευκολότερη ανάγνωση.
+      const etymHues = [28, 90, 150, 200, 255, 300, 345];
+      const etymLC = s.dark ? 0.74 : 0.5;
+      const jumpE = form => () => {
+        if (this.state.admin) return;
+        this.jumpTo(form);
+      };
+      const etymology = (ready && Array.isArray(u.etymology) ? u.etymology : []).map((e, i) => ({
+        la: e.la || '',
+        el: e.el || '',
+        n: i + 1,
+        onJump: jumpE(e.la || ''),
+        hue: 'oklch(' + etymLC + ' 0.12 ' + etymHues[i % etymHues.length] + ')'
+      })).filter(e => inc(e.la, e.el));
       const greekBase = {
         padding: '11px 16px',
         borderTop: '1px solid var(--line2)',
@@ -1752,6 +1775,7 @@
         showVerbs: s.part === 'verbs' || s.printAll,
         showSos: s.part === 'sos' || s.printAll,
         showTransforms: s.part === 'transforms' || s.printAll,
+        showEtym: s.part === 'etym' || s.printAll,
         showSyntax: s.showSyntax,
         showAnalysis: s.showAnalysis,
         hideGreek: s.hideGreek,
@@ -1811,6 +1835,8 @@
         noSos: sos.length === 0,
         transforms,
         hasTransforms: transforms.length > 0,
+        etymology,
+        hasEtym: etymology.length > 0,
         pop: s.pop,
         closePop: this.closePop,
         popStyle: {
@@ -2349,7 +2375,41 @@
         style: s("font-family:var(--font-latin);font-style:italic;font-weight:600;font-size:16.5px;line-height:1.5;color:var(--fg)")
       }, t))), it.note && /*#__PURE__*/React.createElement("p", {
         style: s("margin:9px 0 0;font-family:var(--font-ui);font-size:13px;line-height:1.6;color:var(--muted)")
-      }, it.note)))))))))))))), V.pop.show && /*#__PURE__*/React.createElement("div", {
+      }, it.note)))))))))), V.showEtym && V.hasEtym && /*#__PURE__*/React.createElement("section", {
+        "data-part": true,
+        "data-screen-label": "\u039C\u03AD\u03C1\u03BF\u03C2 IX \u2014 \u0395\u03C4\u03C5\u03BC\u03BF\u03BB\u03BF\u03B3\u03B9\u03BA\u03AC",
+        style: s("animation:ltfade .4s ease both")
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("margin-bottom:8px")
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("font-family:var(--font-ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)")
+      }, "\u039C\u03AD\u03C1\u03BF\u03C2 IX \xB7 \u039B\u03B5\u03BE\u03B9\u03BB\u03BF\u03B3\u03B9\u03BA\u03CC\u03C2 \u03BA\u03CC\u03C3\u03BC\u03BF\u03C2"), /*#__PURE__*/React.createElement("h2", {
+        style: s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")
+      }, "\u0395\u03C4\u03C5\u03BC\u03BF\u03BB\u03BF\u03B3\u03B9\u03BA\u03AC")), /*#__PURE__*/React.createElement("p", {
+        style: s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")
+      }, "\u0395\u03C4\u03C5\u03BC\u03BF\u03BB\u03BF\u03B3\u03B9\u03BA\u03BF\u03AF \u03C3\u03C5\u03C3\u03C7\u03B5\u03C4\u03B9\u03C3\u03BC\u03BF\u03AF \u03C4\u03C9\u03BD \u03BB\u03B1\u03C4\u03B9\u03BD\u03B9\u03BA\u03CE\u03BD \u03BB\u03AD\u03BE\u03B5\u03C9\u03BD \u03BC\u03B5 \u03B5\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AD\u03C2 \u03AE \u03AC\u03BB\u03BB\u03C9\u03BD \u03B5\u03C5\u03C1\u03C9\u03C0\u03B1\u03CA\u03BA\u03CE\u03BD \u03B3\u03BB\u03C9\u03C3\u03C3\u03CE\u03BD. \u03A0\u03AC\u03C4\u03B7\u03C3\u03B5 \u03C4\u03B7 \u03BB\u03B1\u03C4\u03B9\u03BD\u03B9\u03BA\u03AE \u03BB\u03AD\u03BE\u03B7 \u03B3\u03B9\u03B1 \u03BC\u03B5\u03C4\u03AC\u03B2\u03B1\u03C3\u03B7 \u03C3\u03C4\u03BF \u03BA\u03B5\u03AF\u03BC\u03B5\u03BD\u03BF."), /*#__PURE__*/React.createElement("div", {
+        style: s("display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:11px")
+      }, V.etymology.map((e, ei) => /*#__PURE__*/React.createElement("div", {
+        key: ei,
+        onClick: e.onJump,
+        className: "lt-hovr",
+        style: Object.assign(s("cursor:pointer;border:1px solid var(--line);border-radius:var(--r-lg);padding:11px 14px 12px"), {
+          background: 'color-mix(in oklab, ' + e.hue + ' 7%, var(--panel))',
+          borderLeft: '3px solid ' + e.hue
+        })
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("display:flex;align-items:baseline;gap:8px")
+      }, /*#__PURE__*/React.createElement("span", {
+        style: Object.assign(s("font-family:var(--font-latin);font-style:italic;font-weight:800;font-size:16.5px;line-height:1.35"), {
+          color: e.hue
+        })
+      }, e.la), /*#__PURE__*/React.createElement("span", {
+        style: Object.assign(s("flex:none;font-weight:800;font-size:14px"), {
+          color: e.hue
+        })
+      }, "\u2192")), /*#__PURE__*/React.createElement("div", {
+        style: s("margin-top:3px;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;color:var(--fg)")
+      }, e.el))))))))), V.pop.show && /*#__PURE__*/React.createElement("div", {
         style: V.popStyle
       }, /*#__PURE__*/React.createElement("div", {
         style: s("display:flex;justify-content:space-between;align-items:flex-start;gap:10px")

@@ -23,6 +23,11 @@ serve, no CDN) that renders **7 parts** from one data file per text:
    grouped into lettered sub-sections (Α, Β, Γ…). The tab **only appears** for a
    unit whose data file provides a non-empty `transforms` array — units without it
    are unaffected.
+9. **Ετυμολογικά** — *(optional)* etymological links of each Latin word to Greek
+   and other European cognates/derivatives, shown as a card grid with a subtle
+   7-colour reading palette (each card tinted by a rotating hue). Click a headword
+   to jump to it in the text. The tab **only appears** for a unit whose data file
+   provides a non-empty `etymology` array.
 
 Two visual **directions** (Α · Κώδικας / Β · Εφαρμογή), each with a **dark** variant.
 Teacher (admin) mode enables in-place editing + PDF/print; students get read-only.
@@ -71,5 +76,18 @@ transforms: [
   { id:"Γ", label:"Ενεργητική → Παθητική σύνταξη", items:[
     { from:"Scipionis filiae … dotem acceperunt", to:"A filiis Scipionis … dos accepta est", note:"…" }
   ]}
+]
+```
+
+### Optional: `etymology` (Ετυμολογικά)
+
+Add an `etymology` array to surface the **Part IX · Ετυμολογικά** tab («Λεξιλογικός
+κόσμος»). Each entry is one Latin word → its Greek/European cognates. Omit the field
+and the tab never renders. Cards cycle through a subtle 7-hue palette for readability.
+
+```js
+etymology: [
+  { la:"unum",   el:"ένας // (γαλλ.) un, unique (= μοναδικός), unité (= ενότητα)" },
+  { la:"servum", el:"σερβίρω, σερβιτόρος (< ιταλ.) // σέρβις (< αγγλ.)" }
 ]
 ```

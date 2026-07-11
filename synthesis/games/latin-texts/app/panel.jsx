@@ -110,7 +110,8 @@
       {id:'pron', rn:'V', label:'Αντωνυμίες'},
       {id:'verbs', rn:'VI', label:'Ρήματα'},
       {id:'sos', rn:'✦', label:'SOS'},
-      {id:'transforms', rn:'⇄', label:'Μετατροπές'}   // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
+      {id:'transforms', rn:'⇄', label:'Μετατροπές'},  // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
+      {id:'etym', rn:'≈', label:'Ετυμολογικά'}         // Μέρος IX — μόνο όταν η ενότητα έχει `etymology`
     ];
 
     componentDidMount(){
@@ -368,8 +369,9 @@
       const inc=(...vals)=> !q || vals.some(v=> String(v||'').toLowerCase().includes(q));
       const ready = s.loaded && !s.err && !!u;
       const hasTransforms = ready && u && Array.isArray(u.transforms) && u.transforms.length>0;
+      const hasEtym = ready && u && Array.isArray(u.etymology) && u.etymology.length>0;
 
-      const parts=this.partDefs.filter(p=> p.id!=='transforms' || hasTransforms).map(p=>{
+      const parts=this.partDefs.filter(p=> (p.id!=='transforms'||hasTransforms) && (p.id!=='etym'||hasEtym)).map(p=>{
         const active=p.id===s.part;
         return {id:p.id, rn:p.rn, label:p.label, onSelect:()=>this.setPart(p.id),
           style:{display:'flex',alignItems:'center',gap:'10px',width:(s.dir==='B'?'100%':'auto'),textAlign:'left',cursor:'pointer',fontFamily:'var(--font-ui)',fontSize:'14px',fontWeight:600,padding:'9px 13px',borderRadius:'var(--r)',border:'1px solid '+(active?'transparent':'var(--line)'),background:(active?'var(--accent)':'var(--panel2)'),color:(active?'var(--on-accent)':'var(--fg)'),whiteSpace:'nowrap',transition:'all .15s'},
@@ -397,6 +399,16 @@
                 hue:'oklch('+sosHueL+' 0.13 '+sosHueOf(g.id||g.label||gi)+')'};
       }).filter(g=>g.items.length);
 
+      // ΜΕΡΟΣ ΙΧ — Ετυμολογικά (προαιρετικό): λατινική λέξη → ελληνικές/ευρωπαϊκές
+      // συγγενείς & παράγωγες. Απαλή χρωματική εναλλαγή (7 αποχρώσεις) για ευκολότερη ανάγνωση.
+      const etymHues=[28,90,150,200,255,300,345];
+      const etymLC = s.dark?0.74:0.5;
+      const jumpE=(form)=>()=>{ if(this.state.admin) return; this.jumpTo(form); };
+      const etymology=(ready && Array.isArray(u.etymology)?u.etymology:[]).map((e,i)=>({
+        la:e.la||'', el:e.el||'', n:i+1, onJump:jumpE(e.la||''),
+        hue:'oklch('+etymLC+' 0.12 '+etymHues[i%etymHues.length]+')'
+      })).filter(e=>inc(e.la,e.el));
+
       const greekBase={padding:'11px 16px', borderTop:'1px solid var(--line2)', borderLeft:'1px solid var(--line2)', fontFamily:'var(--font-ui)', fontSize:'15px', lineHeight:1.5, color:'var(--fg)'};
       const align=(ready?u.alignment:[]).map((a,i)=>{ const bg = i%2===1 ? 'var(--panel2)' : 'var(--panel)'; const masked = s.hideGreek && !s.revealed[i]; const gs=Object.assign({}, greekBase, {background:bg, cursor: s.hideGreek?'pointer':'default', transition:'filter .18s, opacity .18s'}); if(masked) Object.assign(gs,{filter:'blur(5px)',userSelect:'none',opacity:0.5}); return {la:a.la, el:a.el, pLa:'alignment.'+i+'.la', pEl:'alignment.'+i+'.el', laStyle:{padding:'11px 16px', borderTop:'1px solid var(--line2)', fontFamily:'var(--font-latin)', fontStyle:'italic', fontSize:'15px', lineHeight:1.5, color:'var(--fg)', background:bg}, elStyle:gs, onReveal:()=>this.revealLine(i)}; });
 
@@ -412,7 +424,7 @@
         parts,
         dirABtn:this.segStyle(s.dir==='A'), dirBBtn:this.segStyle(s.dir==='B'),
         onDirA:()=>this.setDir('A'), onDirB:()=>this.setDir('B'),
-        showText:(s.part==='text'||s.printAll), showTrans:(s.part==='trans'||s.printAll), showNouns:(s.part==='nouns'||s.printAll), showCompar:(s.part==='compar'||s.printAll), showPron:(s.part==='pron'||s.printAll), showVerbs:(s.part==='verbs'||s.printAll), showSos:(s.part==='sos'||s.printAll), showTransforms:(s.part==='transforms'||s.printAll),
+        showText:(s.part==='text'||s.printAll), showTrans:(s.part==='trans'||s.printAll), showNouns:(s.part==='nouns'||s.printAll), showCompar:(s.part==='compar'||s.printAll), showPron:(s.part==='pron'||s.printAll), showVerbs:(s.part==='verbs'||s.printAll), showSos:(s.part==='sos'||s.printAll), showTransforms:(s.part==='transforms'||s.printAll), showEtym:(s.part==='etym'||s.printAll),
         showSyntax:s.showSyntax, showAnalysis:s.showAnalysis, hideGreek:s.hideGreek,
         syntaxBtn:this.pillStyle(s.showSyntax), analysisBtn:this.pillStyle(s.showAnalysis), greekBtn:this.pillStyle(s.hideGreek), greekBtnLabel: s.hideGreek?'👁 Δείξε μετάφραση':'⊘ Κρύψε μετάφραση',
         showArrows:s.showArrows, arrowsBtn:this.pillStyle(s.showArrows), toggleArrows:this.toggleArrows,
@@ -426,6 +438,7 @@
         textView:this.buildText(), analysis:this.buildAnalysis(), legendActive,
         align, nouns, adjectives, comparatives, pronouns, verbs, sos, hasSos:sos.length>0, noSos:sos.length===0,
         transforms, hasTransforms:transforms.length>0,
+        etymology, hasEtym:etymology.length>0,
         pop:s.pop, closePop:this.closePop,
         popStyle:{position:'fixed', left:s.pop.x+'px', top:s.pop.y+'px', transform:s.pop.tf, zIndex:9999, width:(s.admin?'min(370px,92vw)':'min(330px,86vw)'), maxHeight:'74vh', overflowY:'auto', background:'var(--panel)', border:'1px solid var(--line)', borderRadius:'var(--r-lg)', boxShadow:'0 16px 44px -12px rgba(0,0,0,.34),0 3px 9px rgba(0,0,0,.12)', padding:'15px 16px', animation:'ltpop .14s ease both'}
       };
@@ -790,6 +803,27 @@
                             ))}
                           </div>
                         </section>
+                      ))}
+                    </div>
+                  </section>
+                  )}
+
+                  {V.showEtym && V.hasEtym && (
+                  <section data-part data-screen-label="Μέρος IX — Ετυμολογικά" style={s("animation:ltfade .4s ease both")}>
+                    <div style={s("margin-bottom:8px")}>
+                      <div style={s("font-family:var(--font-ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)")}>Μέρος IX · Λεξιλογικός κόσμος</div>
+                      <h2 style={s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")}>Ετυμολογικά</h2>
+                    </div>
+                    <p style={s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")}>Ετυμολογικοί συσχετισμοί των λατινικών λέξεων με ελληνικές ή άλλων ευρωπαϊκών γλωσσών. Πάτησε τη λατινική λέξη για μετάβαση στο κείμενο.</p>
+                    <div style={s("display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:11px")}>
+                      {V.etymology.map((e,ei) => (
+                        <div key={ei} onClick={e.onJump} className="lt-hovr" style={Object.assign(s("cursor:pointer;border:1px solid var(--line);border-radius:var(--r-lg);padding:11px 14px 12px"),{background:'color-mix(in oklab, '+e.hue+' 7%, var(--panel))',borderLeft:'3px solid '+e.hue})}>
+                          <div style={s("display:flex;align-items:baseline;gap:8px")}>
+                            <span style={Object.assign(s("font-family:var(--font-latin);font-style:italic;font-weight:800;font-size:16.5px;line-height:1.35"),{color:e.hue})}>{e.la}</span>
+                            <span style={Object.assign(s("flex:none;font-weight:800;font-size:14px"),{color:e.hue})}>→</span>
+                          </div>
+                          <div style={s("margin-top:3px;font-family:var(--font-ui);font-size:13.5px;line-height:1.55;color:var(--fg)")}>{e.el}</div>
+                        </div>
                       ))}
                     </div>
                   </section>
