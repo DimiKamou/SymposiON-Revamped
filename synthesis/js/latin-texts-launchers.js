@@ -108,4 +108,42 @@
     window['openLatinText' + n] = function () { openLatinText(n, UNITS[n]); };
   });
   window.LATIN_TEXT_UNITS = UNITS;
+
+  // Εισαγωγή — standalone interactive introduction chapter (not a unit panel).
+  // Reuses the same overlay shell but loads eisagogi.html instead of enotita.html.
+  function openLatinIntro() {
+    var title = 'Λατινικά · Εισαγωγή στη Ρωμαϊκή Λογοτεχνία';
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = document.getElementById(OVID);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = OVID;
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      ov.innerHTML =
+        '<div class="overlay-topbar">' +
+          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+          '<span class="overlay-title"></span>' +
+          '<span style="width:64px;display:inline-block"></span>' +
+        '</div>' +
+        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+          '<iframe title="" allow="fullscreen" ' +
+            'style="width:100%;height:100%;border:none;display:block;background:#ecede7"></iframe>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    }
+    ov.querySelector('.overlay-title').textContent = title;
+    var fr = ov.querySelector('iframe');
+    fr.title = title;
+    fr.src = _appBase() + 'games/latin-texts/eisagogi.html';
+    fr.addEventListener('load', function _l() {
+      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
+      fr.removeEventListener('load', _l);
+    });
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+  }
+  window.openLatinIntro = openLatinIntro;
 })();

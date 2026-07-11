@@ -266,7 +266,8 @@ Object.assign(SUBJECTS, {
     //    grammar games above). One tile → one link per text. ──
     { id:'gl-texts', roman:'IV', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
       summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
-      games:[ g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
+      games:[ g('Εισαγωγή','Introduction','Ρωμαϊκή λογοτεχνία · συγγραφείς · ασκήσεις','book',{fn:'openLatinIntro'}),
+              g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
               g('Ενότητα 17','Unit 17','Φόβος μπροστά στο άγνωστο','scroll',{fn:'openLatinText17'}),
               g('Ενότητα 18','Unit 18','Ο Ηρακλής στην Ιταλία','scroll',{fn:'openLatinText18'}),
               g('Ενότητα 19','Unit 19','Η συνωμοσία του Κατιλίνα','scroll',{fn:'openLatinText19'}),
