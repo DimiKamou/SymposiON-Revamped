@@ -29,13 +29,13 @@ export const UNIT = {
         { l:'Nostri', r:'Υποκείμενο', to:'στο gerunt', g:'ονομ. πληθ., αρσ. — κτητική αντωνυμία α΄ προσ. (πολλοί κτήτορες)', d:'noster, nostra, nostrum — ο δικός μας', a:',' },
         { type:'sub', key:'xroniki', label:'Χρονική', note:'Δευτ. επιρρηματική χρονική, ως επιρρ. προσδ. του χρόνου στο «rem gerunt». Εισάγεται με τον χρονικό σύνδεσμο postquam και εκφέρεται με οριστική, γιατί δηλώνει κάτι το πραγματικό (προτερόχρονο).', kids:[
           { l:'postquam', r:'Χρον. σύνδεσμος', g:'χρονικός σύνδεσμος (+ οριστική) — προτερόχρονο', d:'postquam — αφού' },
-          { l:'miserunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. παρακειμένου ενεργ. φωνής', d:'mitto, misi, missum, mittere (3) — στέλνω· εδώ: ρίχνω' },
           { l:'pila', r:'Αντικείμενο', to:'στο miserunt', g:'αιτ. πληθ., ουδ.', d:'pilum, -i (ουδ. β΄) — το ακόντιο' },
-          { l:'in hostes', k:'hostis', r:'Εμπρόθετος επιρρ. προσδ. της εναντίωσης', to:'στο miserunt', g:'in (πρόθ. + αιτ.) + hostes (αιτ. πληθ.)', d:'in — σε (εδώ εναντίον)· hostis, -is (αρσ. γ΄) — ο εχθρός', a:',' }
+          { l:'in hostes', k:'hostis', r:'Εμπρόθετος επιρρ. προσδ. της εναντίωσης', to:'στο miserunt', g:'in (πρόθ. + αιτ.) + hostes (αιτ. πληθ.)', d:'in — σε (εδώ εναντίον)· hostis, -is (αρσ. γ΄) — ο εχθρός' },
+          { l:'miserunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. παρακειμένου ενεργ. φωνής', d:'mitto, misi, missum, mittere (3) — στέλνω· εδώ: ρίχνω', a:',' }
         ]},
-        { l:'gerunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ. φωνής', d:'gero, gessi, gestum, gerere (3) — διεξάγω· «rem gero» = μάχομαι' },
+        { l:'gladiis', r:'Αφαιρετική του οργάνου', to:'στο rem gerunt', g:'αφαιρ. πληθ.', d:'gladius, -ii/-i (αρσ. β΄) — το ξίφος' },
         { l:'rem', r:'Αντικείμενο', to:'στο gerunt', g:'αιτ. ενικ.', d:'res, rei (θηλ. ε΄) — το πράγμα· «rem gero» = μάχομαι' },
-        { l:'gladiis', r:'Αφαιρετική του οργάνου', to:'στο rem gerunt', g:'αφαιρ. πληθ.', d:'gladius, -ii/-i (αρσ. β΄) — το ξίφος', a:'.' }
+        { l:'gerunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ. φωνής', d:'gero, gessi, gestum, gerere (3) — διεξάγω· «rem gero» = μάχομαι', a:'.' }
       ]}
     ]},
 
@@ -43,8 +43,8 @@ export const UNIT = {
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'Repente', r:'Επιρρ. προσδ. του τρόπου', to:'στο cernitur', g:'τροπικό επίρρημα', d:'repente — ξαφνικά (από επίθ. γ΄ κλ. repens)' },
         { l:'post tergum', k:'tergum', r:'Εμπρόθετος επιρρ. προσδ. του τόπου', to:'στο cernitur', g:'post (πρόθ. + αιτ.) + tergum (αιτ. ενικ., ουδ.)', d:'post — πίσω από· tergum, -i (ουδ. β΄) — τα νώτα, η πλάτη' },
-        { l:'cernitur', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. παθ. φωνής', d:'cerno, crevi, cretum, cernere (3) — διακρίνω' },
-        { l:'equitatus', r:'Υποκείμενο', to:'στο cernitur', g:'ονομ. ενικ.', d:'equitatus, -us (αρσ. δ΄) — το ιππικό', a:';' }
+        { l:'equitatus', r:'Υποκείμενο', to:'στο cernitur', g:'ονομ. ενικ.', d:'equitatus, -us (αρσ. δ΄) — το ιππικό' },
+        { l:'cernitur', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. παθ. φωνής', d:'cerno, crevi, cretum, cernere (3) — διακρίνω', a:',' }
       ]}
     ]},
 
@@ -58,8 +58,8 @@ export const UNIT = {
     { n: 4, kids: [
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'hostes', r:'Υποκείμενο', to:'στο vertunt', g:'ονομ. πληθ.', d:'hostis, -is (αρσ. γ΄) — ο εχθρός' },
-        { l:'vertunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ.', d:'verto, verti, versum, vertere (3) — στρέφω' },
-        { l:'terga', r:'Αντικείμενο', to:'στο vertunt', g:'αιτ. πληθ., ουδ.', d:'tergum, -i (ουδ. β΄) — τα νώτα' }
+        { l:'terga', r:'Αντικείμενο', to:'στο vertunt', g:'αιτ. πληθ., ουδ.', d:'tergum, -i (ουδ. β΄) — τα νώτα' },
+        { l:'vertunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ.', d:'verto, verti, versum, vertere (3) — στρέφω' }
       ]}
     ]},
 
@@ -73,8 +73,8 @@ export const UNIT = {
     { n: 6, kids: [
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'eis', r:'Αντικείμενο', to:'στο occurrunt', g:'δοτ. πληθ., αρσ. — δεικτική (ως επαναληπτική) αντων.', d:'is, ea, id — αυτός, αυτή, αυτό', note:'Το occurro συντάσσεται με δοτική → το eis είναι αντικείμενο (όχι εμπρόθετο).' },
-        { l:'occurrunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ. (+ δοτ.)', d:'occurro, occurri/occucurri, occursum, occurrere (3) — επιτίθεμαι' },
-        { l:'equites', r:'Υποκείμενο', to:'στο occurrunt', g:'ονομ. πληθ.', d:'eques, equitis (αρσ. γ΄) — ο ιππέας', a:'.' }
+        { l:'equites', r:'Υποκείμενο', to:'στο occurrunt', g:'ονομ. πληθ.', d:'eques, equitis (αρσ. γ΄) — ο ιππέας' },
+        { l:'occurrunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ. (+ δοτ.)', d:'occurro, occurri/occucurri, occursum, occurrere (3) — επιτίθεμαι', a:'.' }
       ]}
     ]},
 
@@ -101,21 +101,21 @@ export const UNIT = {
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'dux', r:'Υποκείμενο', to:'στο comprehenditur', g:'ονομ. ενικ.', d:'dux, ducis (αρσ. γ΄) — ο αρχηγός, ο στρατηγός' },
         { l:'Arvernorum', r:'Γενική αντικειμενική', to:'στο dux', g:'γεν. πληθ.', d:'Arverni, -orum (αρσ. β΄, μόνο πληθ.) — οι Αρβέρνοι' },
-        { l:'comprehenditur', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. παθ.', d:'comprehendo/comprendo, -hendi, -hensum, -hendere (3) — συλλαμβάνω' },
         { l:'vivus', r:'Επιρρ. κατηγορούμενο του τρόπου', to:'στο dux (μέσω του comprehenditur)', g:'ονομ. ενικ., αρσ. — επίθ. β΄ κλ.', d:'vivus, -a, -um — ζωντανός', note:'Δεν είναι απλός επιθετικός προσδιορισμός, αλλά επιρρηματικό κατηγορούμενο.' },
-        { l:'in fuga', k:'fuga', r:'Εμπρόθετος επιρρ. προσδ. του χρόνου', to:'στο comprehenditur', g:'in (πρόθ. + αφαιρ.) + fuga (αφαιρ. ενικ.)', d:'in — σε· fuga, -ae (θηλ. α΄) — η φυγή', a:';' }
+        { l:'in fuga', k:'fuga', r:'Εμπρόθετος επιρρ. προσδ. του χρόνου', to:'στο comprehenditur', g:'in (πρόθ. + αφαιρ.) + fuga (αφαιρ. ενικ.)', d:'in — σε· fuga, -ae (θηλ. α΄) — η φυγή' },
+        { l:'comprehenditur', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. παθ.', d:'comprehendo/comprendo, -hendi, -hensum, -hendere (3) — συλλαμβάνω', a:';' }
       ]}
     ]},
 
     { n: 10, kids: [
       { type:'main', key:'kyria', label:'Κύρια', kids:[
+        { l:'signa', r:'Υποκείμενο', to:'στο referuntur', g:'ονομ. πληθ., ουδ.', d:'signum, -i (ουδ. β΄) — το λάβαρο, η σημαία' },
+        { l:'militaria', r:'Επιθετικός προσδ.', to:'στο signa', g:'ονομ. πληθ., ουδ. — επίθ. γ΄ κλ.', d:'militaris, -is, -e — στρατιωτικός' },
+        { l:'(LXXIIII)', plain:true },
         { l:'septuaginta', r:'Επιθετικός προσδ.', to:'στο signa', g:'άκλιτο απόλυτο αριθμητικό επίθετο', d:'septuaginta quattuor — εβδομήντα τέσσερα (74)' },
         { l:'quattuor', r:'Επιθετικός προσδ.', to:'στο signa', g:'άκλιτο απόλυτο αριθμητικό επίθετο', d:'septuaginta quattuor — εβδομήντα τέσσερα (74)' },
-        { l:'(LXXIIII)', plain:true },
-        { l:'militaria', r:'Επιθετικός προσδ.', to:'στο signa', g:'ονομ. πληθ., ουδ. — επίθ. γ΄ κλ.', d:'militaris, -is, -e — στρατιωτικός' },
-        { l:'signa', r:'Υποκείμενο', to:'στο referuntur', g:'ονομ. πληθ., ουδ.', d:'signum, -i (ουδ. β΄) — το λάβαρο, η σημαία' },
-        { l:'referuntur', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. παθ.', d:'refero, ret(t)uli, relatum, referre — παραδίδω (ανώμαλο, σύνθ. του fero)' },
-        { l:'ad Caesarem', k:'Caesar', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση σε πρόσωπο)', to:'στο referuntur', g:'ad (πρόθ. + αιτ.) + Caesarem (αιτ. ενικ.)', d:'ad — σε, προς· Caesar, Caesaris (αρσ. γ΄) — ο Καίσαρας', a:';' }
+        { l:'ad Caesarem', k:'Caesar', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση σε πρόσωπο)', to:'στο referuntur', g:'ad (πρόθ. + αιτ.) + Caesarem (αιτ. ενικ.)', d:'ad — σε, προς· Caesar, Caesaris (αρσ. γ΄) — ο Καίσαρας' },
+        { l:'referuntur', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. παθ.', d:'refero, ret(t)uli, relatum, referre — παραδίδω (ανώμαλο, σύνθ. του fero)', a:';' }
       ]}
     ]},
 
@@ -136,8 +136,8 @@ export const UNIT = {
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'reliqui', r:'Υποκείμενο', to:'στο discedunt', g:'ονομ. πληθ., αρσ. — επίθ. β΄ κλ. (ουσιαστικοπ.)', d:'reliquus, -a, -um — υπόλοιπος' },
         { l:'ex fuga', k:'fuga', r:'Εμπρόθετος επιρρ. προσδ. του χρόνου', to:'στο discedunt', g:'ex (πρόθ. + αφαιρ.) + fuga (αφαιρ. ενικ.)', d:'ex — μετά από· fuga, -ae (θηλ. α΄) — η φυγή' },
-        { l:'discedunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ.', d:'discedo, -cessi, -cessum, -cedere (3) — αποχωρώ· εδώ: διασκορπίζομαι' },
-        { l:'in civitates', k:'civitas', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση)', to:'στο discedunt', g:'in (πρόθ. + αιτ.) + civitates (αιτ. πληθ.)', d:'in — σε, προς· civitas, civitatis (θηλ. γ΄) — η πολιτεία· εδώ: η επικράτεια', a:'.' }
+        { l:'in civitates', k:'civitas', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση)', to:'στο discedunt', g:'in (πρόθ. + αιτ.) + civitates (αιτ. πληθ.)', d:'in — σε, προς· civitas, civitatis (θηλ. γ΄) — η πολιτεία· εδώ: η επικράτεια' },
+        { l:'discedunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ.', d:'discedo, -cessi, -cessum, -cedere (3) — αποχωρώ· εδώ: διασκορπίζομαι', a:'.' }
       ]}
     ]},
 
@@ -145,9 +145,9 @@ export const UNIT = {
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'Postero', r:'Επιθετικός προσδ.', to:'στο die', g:'αφαιρ. ενικ., αρσ. — επίθ. β΄ κλ.', d:'posterus, -a, -um — επόμενος' },
         { l:'die', r:'Αφαιρετική του χρόνου', to:'στο mittuntur', g:'αφαιρ. ενικ.', d:'dies, diei (αρσ. ε΄) — η ημέρα' },
-        { l:'mittuntur', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. παθ.', d:'mitto, misi, missum, mittere (3) — στέλνω' },
+        { l:'ad Caesarem', k:'Caesar', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση σε πρόσωπο)', to:'στο mittuntur', g:'ad (πρόθ. + αιτ.) + Caesarem (αιτ. ενικ.)', d:'ad — σε, προς· Caesar, Caesaris (αρσ. γ΄) — ο Καίσαρας' },
         { l:'legati', r:'Υποκείμενο', to:'στο mittuntur', g:'ονομ. πληθ.', d:'legatus, -i (αρσ. β΄) — ο πρεσβευτής, ο απεσταλμένος' },
-        { l:'ad Caesarem', k:'Caesar', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (κατεύθυνση σε πρόσωπο)', to:'στο mittuntur', g:'ad (πρόθ. + αιτ.) + Caesarem (αιτ. ενικ.)', d:'ad — σε, προς· Caesar, Caesaris (αρσ. γ΄) — ο Καίσαρας', a:'.' }
+        { l:'mittuntur', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. παθ.', d:'mitto, misi, missum, mittere (3) — στέλνω', a:'.' }
       ]}
     ]},
 
@@ -155,19 +155,19 @@ export const UNIT = {
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'Caesar', r:'Υποκείμενο', to:'στο iubet', g:'ονομ. ενικ.', d:'Caesar, Caesaris (αρσ. γ΄) — ο Καίσαρας' },
         { l:'iubet', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. ενεργ.', d:'iubeo, iussi, iussum, iubere (2) — διατάζω' },
-        { l:'tradi', r:'Αντικείμενο (τελικό απαρέμφατο)', to:'στο iubet', g:'απαρέμφατο ενεστ. παθ.', d:'trado, tradidi, traditum, tradere (3) — παραδίδω' },
         { l:'arma', r:'Υποκείμενο απαρεμφάτου', to:'στο tradi (ετεροπροσωπία)', g:'αιτ. πληθ., ουδ.', d:'arma, -orum (ουδ. β΄, μόνο πληθ.) — τα όπλα' },
+        { l:'tradi', r:'Αντικείμενο (τελικό απαρέμφατο)', to:'στο iubet', g:'απαρέμφατο ενεστ. παθ.', d:'trado, tradidi, traditum, tradere (3) — παραδίδω' },
         { l:'ac', r:'Σύνδεσμος', g:'συμπλεκτικός σύνδεσμος', d:'ac — και' },
-        { l:'produci', r:'Αντικείμενο (τελικό απαρέμφατο)', to:'στο iubet', g:'απαρέμφατο ενεστ. παθ.', d:'produco, -duxi, -ductum, -ducere (3) — οδηγώ μπροστά' },
-        { l:'principes', r:'Υποκείμενο απαρεμφάτου', to:'στο produci (ετεροπροσωπία)', g:'αιτ. πληθ.', d:'princeps, principis (αρσ. γ΄) — ο ηγεμόνας', a:'.' }
+        { l:'principes', r:'Υποκείμενο απαρεμφάτου', to:'στο produci (ετεροπροσωπία)', g:'αιτ. πληθ.', d:'princeps, principis (αρσ. γ΄) — ο ηγεμόνας' },
+        { l:'produci', r:'Αντικείμενο (τελικό απαρέμφατο)', to:'στο iubet', g:'απαρέμφατο ενεστ. παθ.', d:'produco, -duxi, -ductum, -ducere (3) — οδηγώ μπροστά', a:'.' }
       ]}
     ]},
 
     { n: 15, kids: [
       { type:'main', key:'kyria', label:'Κύρια', kids:[
         { l:'Ipse', r:'Κατηγορηματικός προσδ.', to:'στο (εννοούμενο) Caesar', g:'ονομ. ενικ., αρσ. — δεικτική (ως οριστική) αντων.', d:'ipse, ipsa, ipsum — ο ίδιος' },
-        { l:'consedit', r:'Ρήμα', g:'γ΄ ενικ. οριστ. παρακειμένου ενεργ.', d:'consido, consedi, consessum, considere (3) — παίρνω θέση', note:'Εννοούμενο υποκείμενο: Caesar.' },
-        { l:'pro castris', k:'castra', r:'Εμπρόθετος επιρρ. προσδ. του τόπου', to:'στο consedit', g:'pro (πρόθ. + αφαιρ.) + castris (αφαιρ. πληθ., ουδ.)', d:'pro — μπροστά σε· castra, -orum (ουδ. β΄) — στρατόπεδο (ενικ. castrum = φρούριο· ετερόσημο)', a:';' }
+        { l:'pro castris', k:'castra', r:'Εμπρόθετος επιρρ. προσδ. του τόπου', to:'στο consedit', g:'pro (πρόθ. + αφαιρ.) + castris (αφαιρ. πληθ., ουδ.)', d:'pro — μπροστά σε· castra, -orum (ουδ. β΄) — στρατόπεδο (ενικ. castrum = φρούριο· ετερόσημο)' },
+        { l:'consedit', r:'Ρήμα', g:'γ΄ ενικ. οριστ. παρακειμένου ενεργ.', d:'consido, consedi, consessum, considere (3) — παίρνω θέση', note:'Εννοούμενο υποκείμενο: Caesar.', a:';' }
       ]}
     ]},
 
@@ -196,23 +196,21 @@ export const UNIT = {
 
   // ── ΜΕΡΟΣ 2: ΜΕΤΑΦΡΑΣΗ ΣΕ ΑΝΤΙΣΤΟΙΧΙΣΗ ────────────────────────────────────
   alignment: [
-    { la:"Nostri,", el:"Οι δικοί μας," },
-    { la:"postquam miserunt pila in hostes,", el:"αφού έριξαν τα ακόντια στους εχθρούς," },
-    { la:"gerunt rem gladiis.", el:"μάχονται με τα ξίφη." },
-    { la:"Repente post tergum cernitur equitatus;", el:"Ξαφνικά στα νώτα τους διακρίνεται το ιππικό·" },
+    { la:"Nostri, postquam pila in hostes miserunt, gladiis rem gerunt.", el:"Οι δικοί μας, αφού έριξαν τα ακόντια στους εχθρούς, μάχονται με τα ξίφη." },
+    { la:"Repente post tergum equitatus cernitur,", el:"Ξαφνικά στα νώτα τους διακρίνεται το ιππικό," },
     { la:"cohortes appropinquant;", el:"οι κοόρτεις πλησιάζουν·" },
-    { la:"hostes vertunt terga", el:"οι εχθροί στρέφουν τα νώτα (τους)" },
+    { la:"hostes terga vertunt", el:"οι εχθροί στρέφουν τα νώτα (τους)" },
     { la:"ac fugiunt;", el:"και φεύγουν·" },
-    { la:"eis occurrunt equites.", el:"τους επιτίθενται οι ιππείς." },
+    { la:"eis equites occurrunt.", el:"τους επιτίθενται οι ιππείς." },
     { la:"Fit magna caedes.", el:"Γίνεται μεγάλη σφαγή." },
     { la:"Sedulius, dux et princeps Lemovicum, occiditur;", el:"Ο Σεδούλιος, ο στρατηγός και ηγεμόνας των Λεμοβίκων, σκοτώνεται·" },
-    { la:"dux Arvernorum comprehenditur vivus in fuga;", el:"ο στρατηγός των Αρβέρνων συλλαμβάνεται ζωντανός κατά τη διάρκεια της φυγής·" },
-    { la:"septuaginta quattuor (LXXIIII) militaria signa referuntur ad Caesarem;", el:"εβδομήντα τέσσερις στρατιωτικές σημαίες παραδίδονται στον Καίσαρα·" },
+    { la:"dux Arvernorum vivus in fuga comprehenditur;", el:"ο στρατηγός των Αρβέρνων συλλαμβάνεται ζωντανός κατά τη διάρκεια της φυγής·" },
+    { la:"signa militaria LXXIIII (septuaginta quattuor) ad Caesarem referuntur;", el:"εβδομήντα τέσσερις στρατιωτικές σημαίες παραδίδονται στον Καίσαρα·" },
     { la:"magnus numerus hostium capitur atque interficitur;", el:"μεγάλος αριθμός εχθρών συλλαμβάνεται και εκτελείται·" },
-    { la:"reliqui ex fuga discedunt in civitates.", el:"οι υπόλοιποι μετά από τη φυγή διασκορπίζονται στις πολιτείες." },
-    { la:"Postero die mittuntur legati ad Caesarem.", el:"Την επόμενη ημέρα στέλνονται πρεσβευτές στον Καίσαρα." },
-    { la:"Caesar iubet tradi arma ac produci principes.", el:"Ο Καίσαρας διατάζει να παραδοθούν τα όπλα και να οδηγηθούν μπροστά του οι ηγεμόνες." },
-    { la:"Ipse consedit pro castris;", el:"Ο ίδιος παίρνει θέση μπροστά από το στρατόπεδο·" },
+    { la:"reliqui ex fuga in civitates discedunt.", el:"οι υπόλοιποι μετά από τη φυγή διασκορπίζονται στις πολιτείες." },
+    { la:"Postero die ad Caesarem legati mittuntur.", el:"Την επόμενη ημέρα στέλνονται πρεσβευτές στον Καίσαρα." },
+    { la:"Caesar iubet arma tradi ac principes produci.", el:"Ο Καίσαρας διατάζει να παραδοθούν τα όπλα και να οδηγηθούν μπροστά του οι ηγεμόνες." },
+    { la:"Ipse pro castris consedit;", el:"Ο ίδιος παίρνει θέση μπροστά από το στρατόπεδο·" },
     { la:"eo duces producuntur.", el:"εκεί οι αρχηγοί οδηγούνται μπροστά του." },
     { la:"Vercingetorix deditur,", el:"Ο Βερκιγγετόριγας παραδίδεται," },
     { la:"arma proiciuntur.", el:"τα όπλα κατατίθενται." }
