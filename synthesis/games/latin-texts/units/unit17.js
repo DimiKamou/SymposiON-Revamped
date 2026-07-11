@@ -118,30 +118,14 @@ export const UNIT = {
 
   // ── ΜΕΡΟΣ 2: ΜΕΤΑΦΡΑΣΗ ΣΕ ΑΝΤΙΣΤΟΙΧΙΣΗ ────────────────────────────────────
   alignment: [
-    { la:"Magnus timor", el:"Μεγάλος φόβος" },
-    { la:"occupavit exercitum", el:"κατέλαβε το στρατό" },
-    { la:"ex vocibus Gallorum ac mercatorum,", el:"από τις διαδόσεις των Γαλατών και των εμπόρων," },
-    { la:"qui praedicabant", el:"οι οποίοι διακήρυσσαν" },
-    { la:"Germanos esse ingenti magnitudine corporum et incredibili virtute.", el:"ότι οι Γερμανοί είχαν φοβερή σωματική διάπλαση και απίστευτη ανδρεία." },
-    { la:"Alius alia de causa cupiebat discedere.", el:"Προβάλλοντας ο καθένας και μια δικαιολογία επιθυμούσε να αποχωρήσει." },
-    { la:"Nonnulli", el:"Μερικοί" },
-    { la:"adducti pudore", el:"παρασυρμένοι από ντροπή" },
-    { la:"remanebant.", el:"παρέμεναν." },
-    { la:"Hi poterant", el:"Αυτοί δεν μπορούσαν" },
-    { la:"neque vultum fingere", el:"ούτε να προσποιηθούν" },
-    { la:"neque tenere lacrimas;", el:"ούτε να συγκρατήσουν τα δάκρυά τους·" },
-    { la:"abditi in tabernaculis", el:"κρυμμένοι στις σκηνές τους" },
-    { la:"aut querebantur suum fatum", el:"είτε παραπονούνταν για τη μοίρα τους" },
-    { la:"aut miserabantur commune periculum", el:"είτε θρηνούσαν για τον κοινό κίνδυνο" },
-    { la:"cum familiaribus suis.", el:"μαζί με τους γνωστούς τους." },
-    { la:"Totis castris", el:"Σε ολόκληρο το στρατόπεδο" },
-    { la:"obsignabantur testamenta.", el:"υπογράφονταν και σφραγίζονταν διαθήκες." },
-    { la:"Vocibus ac timore horum", el:"Από τις διαδόσεις και το φόβο αυτών" },
-    { la:"perturbabantur", el:"ταράζονταν" },
-    { la:"paulatim", el:"σιγά σιγά" },
-    { la:"etiam ii,", el:"ακόμα και αυτοί," },
-    { la:"qui habebantur periti", el:"οι οποίοι θεωρούνταν έμπειροι" },
-    { la:"rei militaris.", el:"στα στρατιωτικά ζητήματα." }
+    { n:1, la:"Magnus timor exercitum occupavit ex vocibus Gallorum ac mercatorum, qui Germanos ingenti magnitudine corporum et incredibili virtute esse praedicabant.", el:"Μεγάλος φόβος κατέλαβε το στρατό από τις διαδόσεις των Γαλατών και των εμπόρων, οι οποίοι διακήρυσσαν ότι οι Γερμανοί είχαν φοβερή σωματική διάπλαση και απίστευτη ανδρεία." },
+    { n:2, la:"Alius alia de causa discedere cupiebat.", el:"Προβάλλοντας ο καθένας και μια δικαιολογία επιθυμούσε να αποχωρήσει." },
+    { n:3, la:"Nonnulli pudore adducti remanebant.", el:"Μερικοί παρασυρμένοι από ντροπή παρέμεναν." },
+    { n:4, la:"Hi neque vultum fingere neque lacrimas tenere poterant;", el:"Αυτοί δεν μπορούσαν ούτε να προσποιηθούν ούτε να συγκρατήσουν τα δάκρυά τους·" },
+    { n:5, la:"abditi in tabernaculis aut suum fatum querebantur", el:"κρυμμένοι στις σκηνές τους είτε παραπονούνταν για τη μοίρα τους" },
+    { n:6, la:"aut cum familiaribus suis commune periculum miserabantur.", el:"είτε θρηνούσαν για τον κοινό κίνδυνο μαζί με τους γνωστούς τους." },
+    { n:7, la:"Totis castris testamenta obsignabantur.", el:"Σε ολόκληρο το στρατόπεδο υπογράφονταν και σφραγίζονταν διαθήκες." },
+    { n:8, la:"Horum vocibus ac timore paulatim etiam ii, qui rei militaris periti habebantur, perturbabantur.", el:"Από τις διαδόσεις και το φόβο αυτών ταράζονταν σιγά σιγά ακόμα και αυτοί, οι οποίοι θεωρούνταν έμπειροι στα στρατιωτικά ζητήματα." }
   ],
 
   // ── ΜΕΡΟΣ 3: ΟΥΣΙΑΣΤΙΚΑ & ΕΠΙΘΕΤΑ (κατά κλίση & γένος) ────────────────────
