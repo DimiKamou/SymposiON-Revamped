@@ -348,7 +348,7 @@ export const UNIT = {
     { la:"sum, esse", el:"εἰμί" },
     { la:"semper", el:"(ισπαν.) siempre (= πάντα)" },
     { la:"meminero", el:"μέμνημαι, μνήμη // (γαλλ.) mémorable // (αγγλ.) memorial (= μνημείο)" },
-    { la:"Rōmam", el:"Ρώμη, Ρωμαίος, ρωμαλέος, ρωμιός" },
+    { la:"Rōmam", el:"Ρώμη, Ρωμαίος, ρωμαϊκός, ρωμιός" },
     { la:"Italiam", el:"Ιταλία" },
     { la:"con-servātam [< conservo < cum + servo]", el:"κονσέρβα" }
   ]
