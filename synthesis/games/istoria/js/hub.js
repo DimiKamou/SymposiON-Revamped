@@ -348,5 +348,6 @@
 
   function readSec(id){ READ_SEC=id; renderMode('read'); }
 
-  window.HUB = { init, renderHub, pickUnit, pickSec, readSec, openMode, goHub, nextItem, mcPick, mSel, fcStep, tfPick, fillLac, get course(){return COURSE;} };
+  window.HUB = { init, renderHub, pickUnit, pickSec, readSec, openMode, goHub, nextItem, mcPick, mSel, fcStep, tfPick, fillLac,
+    get course(){return COURSE;}, get curUnit(){return CUR_UNIT;}, get curSec(){return CUR_SEC;} };
 })();

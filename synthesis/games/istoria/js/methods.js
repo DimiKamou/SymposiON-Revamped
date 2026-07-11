@@ -11,7 +11,7 @@
   const ICON = (n)=>`<span class="ico">${SYM.icon(n)}</span>`;
   const esc = (s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  let COURSE='g3', CUR=null, idx=0, sel=null;
+  let COURSE='g3', CUR=null, idx=0, sel=null, FU=null, FS=null;  // FU=unit label filter, FS=section id filter
 
   // method descriptors (id → meta + how its question card and inputs render)
   const METHODS = {
@@ -31,16 +31,56 @@
   function bank(id){ return (ISTORIA.getMethods(COURSE)||{})[METHODS[id].key] || []; }
   function available(){ return ORDER.filter(id=>bank(id).length); }
 
-  function open(id){ if(!bank(id).length) return; CUR=id; idx=0; sel=null; render(); show('mt-'+id); }
+  // items carry `unit` (Greek label) + `sec`; filter the bank by the active scope
+  function curArr(){
+    let a = bank(CUR);
+    if(FU){ a = a.filter(x=>x && x.unit===FU); if(FS) a = a.filter(x=>x && x.sec===FS); }
+    return a;
+  }
+  function unitId(label){ const u=(ISTORIA.getUnits(COURSE)||[]).find(x=>x.t===label); return u?u.id:null; }
+
+  function open(id){
+    if(!bank(id).length) return; CUR=id; idx=0; sel=null; FU=null; FS=null;
+    // scope to the hub's currently-selected chapter, if this bank has items there
+    try{
+      const us=ISTORIA.getUnits(COURSE), cu=window.HUB&&HUB.curUnit, cs=window.HUB&&HUB.curSec;
+      if(cu){ const lbl=(us.find(u=>u.id===cu)||{}).t;
+        if(lbl && bank(id).some(x=>x&&x.unit===lbl)){ FU=lbl; if(cs && bank(id).some(x=>x&&x.unit===lbl&&x.sec===cs)) FS=cs; } }
+    }catch(_){}
+    render(); show('mt-'+id);
+  }
   function show(scr){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $('#'+scr).classList.add('on'); window.scrollTo({top:0,behavior:'instant'}); }
   function pick(i){ idx=i; sel=null; render(); }
+  function setFU(u){ FU=u; FS=null; idx=0; sel=null; render(); }
+  function setFS(s){ FS=s; idx=0; sel=null; render(); }
+
+  // unit + sub-section filter chips (only when the bank spans >1 unit)
+  function filterBar(){
+    const full=bank(CUR); const units=[];
+    full.forEach(x=>{ if(x&&x.unit&&!units.includes(x.unit)) units.push(x.unit); });
+    if(units.length<=1) return '';
+    const uchips=`<button class="fchip ${!FU?'on':''}" onclick="MT.setFU(null)">Όλες <span class="fc-n">${full.length}</span></button>`+
+      units.map(u=>`<button class="fchip ${FU===u?'on':''}" onclick="MT.setFU('${esc(u).replace(/'/g,"\\'")}')">${esc(u)} <span class="fc-n">${full.filter(x=>x&&x.unit===u).length}</span></button>`).join('');
+    let schips='';
+    if(FU){
+      const secs=ISTORIA.getSections(COURSE, unitId(FU))||[];
+      const present=secs.filter(s=>full.some(x=>x&&x.unit===FU&&x.sec===s.id));
+      if(present.length>1){
+        schips=`<div class="mt-fsec"><button class="fchip sm ${!FS?'on':''}" onclick="MT.setFS(null)">Όλα τα κεφάλαια</button>`+
+          present.map(s=>`<button class="fchip sm ${FS===s.id?'on':''}" onclick="MT.setFS('${s.id}')">${esc(((s.part?s.part+' ':'')+(s.code?s.code+'.':'')).trim()||s.t)} <span class="fc-n">${full.filter(x=>x&&x.unit===FU&&x.sec===s.id).length}</span></button>`).join('')+`</div>`;
+      }
+    }
+    return `<div class="mt-filter"><div class="mt-funit">${uchips}</div>${schips}</div>`;
+  }
 
   function render(){
-    const m=METHODS[CUR], arr=bank(CUR), q=arr[idx];
+    const m=METHODS[CUR]; const arr=curArr(); if(idx>=arr.length) idx=0;
+    const q=arr[idx];
     const pills = arr.map((x,i)=>`<button class="${i===idx?'on':''}" onclick="MT.pick(${i})">${i+1}</button>`).join('');
     $('#mt-'+CUR).innerHTML = `<div class="sk-wrap">
       <div class="topbar"><button class="back" onclick="HUB.goHub()">← Κατάλογος</button>
         <span class="crumb">ΓΡΑΠΤΗ ΕΞΑΣΚΗΣΗ &nbsp;/&nbsp; <b>${esc(m.title)}</b></span></div>
+      ${filterBar()}
       <div class="sk-top">
         <div class="sk-badge">${ICON(m.badge)}</div>
         <div><h1>${esc(m.title)}</h1><div class="ds">${esc(m.ds)}</div></div>
@@ -107,7 +147,7 @@
 
   /* ── gather + grade ──────────────────────────────────────────────── */
   async function check(){
-    const arr=bank(CUR), q=arr[idx];
+    const arr=curArr(), q=arr[idx];
     let params=null, you=null, model=q.model, opts={};
 
     if(CUR==='orismoi'){
@@ -149,5 +189,5 @@
 
   function init(course){ COURSE = course || (window.HUB && HUB.course) || 'g3'; }
 
-  window.MT = { init, open, pick, setSL, wc, reset, check, available, METHODS, ORDER };
+  window.MT = { init, open, pick, setFU, setFS, setSL, wc, reset, check, available, METHODS, ORDER };
 })();
