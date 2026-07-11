@@ -109,7 +109,8 @@
       {id:'compar', rn:'IV', label:'Παραθετικά'},
       {id:'pron', rn:'V', label:'Αντωνυμίες'},
       {id:'verbs', rn:'VI', label:'Ρήματα'},
-      {id:'sos', rn:'✦', label:'SOS'}
+      {id:'sos', rn:'✦', label:'SOS'},
+      {id:'transforms', rn:'⇄', label:'Μετατροπές'}   // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
     ];
 
     componentDidMount(){
@@ -366,8 +367,9 @@
       const q=s.query.trim().toLowerCase();
       const inc=(...vals)=> !q || vals.some(v=> String(v||'').toLowerCase().includes(q));
       const ready = s.loaded && !s.err && !!u;
+      const hasTransforms = ready && u && Array.isArray(u.transforms) && u.transforms.length>0;
 
-      const parts=this.partDefs.map(p=>{
+      const parts=this.partDefs.filter(p=> p.id!=='transforms' || hasTransforms).map(p=>{
         const active=p.id===s.part;
         return {id:p.id, rn:p.rn, label:p.label, onSelect:()=>this.setPart(p.id),
           style:{display:'flex',alignItems:'center',gap:'10px',width:(s.dir==='B'?'100%':'auto'),textAlign:'left',cursor:'pointer',fontFamily:'var(--font-ui)',fontSize:'14px',fontWeight:600,padding:'9px 13px',borderRadius:'var(--r)',border:'1px solid '+(active?'transparent':'var(--line)'),background:(active?'var(--accent)':'var(--panel2)'),color:(active?'var(--on-accent)':'var(--fg)'),whiteSpace:'nowrap',transition:'all .15s'},
@@ -385,6 +387,16 @@
       const sosHueOf=(tg)=>{ let hh=0; const strv=String(tg||''); for(let ii=0;ii<strv.length;ii++) hh=(hh*31+strv.charCodeAt(ii))|0; return this.groupPalette[Math.abs(hh)%this.groupPalette.length]; };
       const sos=(ready?u.sos:[]).map((x,xi)=>({tag:x.tag, title:x.title, body:x.body, pTag:'sos.'+xi+'.tag', pTitle:'sos.'+xi+'.title', pBody:'sos.'+xi+'.body'})).filter(x=>inc(x.title,x.body,x.tag)).map((x,xi)=>Object.assign(x,{n:xi+1, hue:'oklch('+sosHueL+' 0.14 '+sosHueOf(x.tag)+')'}));
 
+      // ΜΕΡΟΣ VIII — Μετατροπές (προαιρετικό: εμφανίζεται μόνο αν η ενότητα έχει `transforms`)
+      const transforms=(ready && Array.isArray(u.transforms)?u.transforms:[]).map((g,gi)=>{
+        const items=(g.items||[]).map((it,ii)=>({
+          from:it.from||'', note:it.note||'', n:ii+1,
+          to: Array.isArray(it.to)? it.to.slice() : (it.to!=null && it.to!==''? [it.to] : [])
+        })).filter(it=> inc(it.from, it.note, ...it.to));
+        return {id:g.id||g.key||('§'+(gi+1)), label:g.label||'', intro:g.intro||'', items,
+                hue:'oklch('+sosHueL+' 0.13 '+sosHueOf(g.id||g.label||gi)+')'};
+      }).filter(g=>g.items.length);
+
       const greekBase={padding:'11px 16px', borderTop:'1px solid var(--line2)', borderLeft:'1px solid var(--line2)', fontFamily:'var(--font-ui)', fontSize:'15px', lineHeight:1.5, color:'var(--fg)'};
       const align=(ready?u.alignment:[]).map((a,i)=>{ const bg = i%2===1 ? 'var(--panel2)' : 'var(--panel)'; const masked = s.hideGreek && !s.revealed[i]; const gs=Object.assign({}, greekBase, {background:bg, cursor: s.hideGreek?'pointer':'default', transition:'filter .18s, opacity .18s'}); if(masked) Object.assign(gs,{filter:'blur(5px)',userSelect:'none',opacity:0.5}); return {la:a.la, el:a.el, pLa:'alignment.'+i+'.la', pEl:'alignment.'+i+'.el', laStyle:{padding:'11px 16px', borderTop:'1px solid var(--line2)', fontFamily:'var(--font-latin)', fontStyle:'italic', fontSize:'15px', lineHeight:1.5, color:'var(--fg)', background:bg}, elStyle:gs, onReveal:()=>this.revealLine(i)}; });
 
@@ -400,7 +412,7 @@
         parts,
         dirABtn:this.segStyle(s.dir==='A'), dirBBtn:this.segStyle(s.dir==='B'),
         onDirA:()=>this.setDir('A'), onDirB:()=>this.setDir('B'),
-        showText:(s.part==='text'||s.printAll), showTrans:(s.part==='trans'||s.printAll), showNouns:(s.part==='nouns'||s.printAll), showCompar:(s.part==='compar'||s.printAll), showPron:(s.part==='pron'||s.printAll), showVerbs:(s.part==='verbs'||s.printAll), showSos:(s.part==='sos'||s.printAll),
+        showText:(s.part==='text'||s.printAll), showTrans:(s.part==='trans'||s.printAll), showNouns:(s.part==='nouns'||s.printAll), showCompar:(s.part==='compar'||s.printAll), showPron:(s.part==='pron'||s.printAll), showVerbs:(s.part==='verbs'||s.printAll), showSos:(s.part==='sos'||s.printAll), showTransforms:(s.part==='transforms'||s.printAll),
         showSyntax:s.showSyntax, showAnalysis:s.showAnalysis, hideGreek:s.hideGreek,
         syntaxBtn:this.pillStyle(s.showSyntax), analysisBtn:this.pillStyle(s.showAnalysis), greekBtn:this.pillStyle(s.hideGreek), greekBtnLabel: s.hideGreek?'👁 Δείξε μετάφραση':'⊘ Κρύψε μετάφραση',
         showArrows:s.showArrows, arrowsBtn:this.pillStyle(s.showArrows), toggleArrows:this.toggleArrows,
@@ -413,6 +425,7 @@
         editL:(e)=>this.editToken('l',e), editR:(e)=>this.editToken('r',e), editTo:(e)=>this.editToken('to',e), editG:(e)=>this.editToken('g',e), editD:(e)=>this.editToken('d',e), editNote:(e)=>this.editToken('note',e),
         textView:this.buildText(), analysis:this.buildAnalysis(), legendActive,
         align, nouns, adjectives, comparatives, pronouns, verbs, sos, hasSos:sos.length>0, noSos:sos.length===0,
+        transforms, hasTransforms:transforms.length>0,
         pop:s.pop, closePop:this.closePop,
         popStyle:{position:'fixed', left:s.pop.x+'px', top:s.pop.y+'px', transform:s.pop.tf, zIndex:9999, width:(s.admin?'min(370px,92vw)':'min(330px,86vw)'), maxHeight:'74vh', overflowY:'auto', background:'var(--panel)', border:'1px solid var(--line)', borderRadius:'var(--r-lg)', boxShadow:'0 16px 44px -12px rgba(0,0,0,.34),0 3px 9px rgba(0,0,0,.12)', padding:'15px 16px', animation:'ltpop .14s ease both'}
       };
@@ -736,6 +749,49 @@
                     {V.noSos && (
                       <div style={s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);padding:16px;border:1px dashed var(--line);border-radius:var(--r-lg)")}>Δεν έχουν οριστεί παρατηρήσεις SOS για αυτή την ενότητα.</div>
                     )}
+                  </section>
+                  )}
+
+                  {V.showTransforms && V.hasTransforms && (
+                  <section data-part data-screen-label="Μέρος VIII — Μετατροπές" style={s("animation:ltfade .4s ease both")}>
+                    <div style={s("margin-bottom:8px")}>
+                      <div style={s("font-family:var(--font-ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)")}>Μέρος VIII · Συντακτική επεξεργασία</div>
+                      <h2 style={s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")}>Μετατροπές</h2>
+                    </div>
+                    <p style={s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")}>Ανάλυση &amp; μετατροπή μετοχών ↔ δευτερευουσών προτάσεων, ενεργητική ↔ παθητική σύνταξη, ευθύς ↔ πλάγιος λόγος.</p>
+                    <div style={s("display:flex;flex-direction:column;gap:18px")}>
+                      {V.transforms.map((g,gi) => (
+                        <section key={gi} style={Object.assign(s("overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel)"),{borderLeft:'4px solid '+g.hue})}>
+                          <header style={Object.assign(s("display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line)"),{background:'color-mix(in oklab, '+g.hue+' 8%, var(--panel))'})}>
+                            <span style={Object.assign(s("display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 7px;font-family:var(--font-serif);font-weight:800;font-size:15px;color:var(--on-accent);border-radius:7px"),{background:g.hue})}>{g.id}</span>
+                            <h3 style={s("margin:0;font-family:var(--font-serif);font-weight:800;font-size:17px;line-height:1.25;color:var(--fg)")}>{g.label}</h3>
+                          </header>
+                          <div style={s("display:flex;flex-direction:column")}>
+                            {g.items.map((it,ii) => (
+                              <div key={ii} style={Object.assign(s("padding:13px 16px 14px"),{borderTop: ii>0?'1px solid var(--line2)':'none'})}>
+                                <div style={s("display:flex;gap:10px;align-items:flex-start")}>
+                                  <span style={Object.assign(s("flex:none;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;margin-top:2px"),{})}>{it.n}</span>
+                                  <div style={s("flex:1;min-width:0")}>
+                                    {it.from && (
+                                      <div style={s("font-family:var(--font-latin);font-style:italic;font-size:16px;line-height:1.5;color:var(--muted)")}>{it.from}</div>
+                                    )}
+                                    {it.to.map((t,ti) => (
+                                      <div key={ti} style={s("display:flex;gap:8px;align-items:baseline;margin-top:5px")}>
+                                        <span style={Object.assign(s("flex:none;font-weight:800;font-size:17px;line-height:1.3"),{color:g.hue})}>→</span>
+                                        <span style={s("font-family:var(--font-latin);font-style:italic;font-weight:600;font-size:16.5px;line-height:1.5;color:var(--fg)")}>{t}</span>
+                                      </div>
+                                    ))}
+                                    {it.note && (
+                                      <p style={s("margin:9px 0 0;font-family:var(--font-ui);font-size:13px;line-height:1.6;color:var(--muted)")}>{it.note}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
                   </section>
                   )}
 

@@ -283,6 +283,7 @@ Object.assign(SUBJECTS, {
               g('Ενότητα 32','Unit 32','Ένας πανηγυρικός της λογοτεχνίας','scroll',{fn:'openLatinText32'}),
               g('Ενότητα 33','Unit 33','Καιρός για ανασυγκρότηση','scroll',{fn:'openLatinText33'}),
               g('Ενότητα 34','Unit 34','Ο Σκιπίωνας ο Αφρικανός και οι λήσταρχοι','scroll',{fn:'openLatinText34'}),
+              g('Ενότητα 35','Unit 35','Ο φιλόσοφος μπροστά στα δεινά της εξορίας','scroll',{fn:'openLatinText35'}),
               g('Ενότητα 36','Unit 36','Μια απόπειρα δωροδοκίας','scroll',{fn:'openLatinText36'}),
               g('Ενότητα 38','Unit 38','Η μοίρα της Καικιλίας','scroll',{fn:'openLatinText38'}),
               g('Ενότητα 43','Unit 43','Η οργή της μάνας','scroll',{fn:'openLatinText43'}),

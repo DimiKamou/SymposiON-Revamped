@@ -18,6 +18,11 @@ serve, no CDN) that renders **7 parts** from one data file per text:
 5. **Αντωνυμίες** — pronouns.
 6. **Ρήματα** — principal parts grouped by συζυγία (conjugation).
 7. **SOS** — syntax "gotchas".
+8. **Μετατροπές** — *(optional)* syntactic transformations (ανάλυση/μετατροπή
+   μετοχών ↔ προτάσεων, ενεργητική ↔ παθητική σύνταξη, ευθύς ↔ πλάγιος λόγος),
+   grouped into lettered sub-sections (Α, Β, Γ…). The tab **only appears** for a
+   unit whose data file provides a non-empty `transforms` array — units without it
+   are unaffected.
 
 Two visual **directions** (Α · Κώδικας / Β · Εφαρμογή), each with a **dark** variant.
 Teacher (admin) mode enables in-place editing + PDF/print; students get read-only.
@@ -48,3 +53,23 @@ games/latin-texts/
 
 The data schema is the reusable core — the same categorised fields (nouns / verbs /
 adjectives / pronouns / comparatives) feed the grammar exercise games.
+
+### Optional: `transforms` (Μετατροπές)
+
+Add a `transforms` array to a unit to surface the **Part VIII · Μετατροπές** tab
+(sourced from the «Συντακτική επεξεργασία κειμένου» pages). Each entry is one
+lettered sub-section; omit the field entirely and the tab never renders.
+
+```js
+transforms: [
+  { id:"Α", label:"Ανάλυση μετοχών σε δευτ. προτάσεις", items:[
+    { from:"aere collato",                       // original construction (Latin)
+      to:["postquam aes collatum est",           // one or more results (string | string[])
+          "cum aes collatum esset"],
+      note:"Επιρρ. χρονική μετοχή παρακ.· …" }   // Greek explanation (optional)
+  ]},
+  { id:"Γ", label:"Ενεργητική → Παθητική σύνταξη", items:[
+    { from:"Scipionis filiae … dotem acceperunt", to:"A filiis Scipionis … dos accepta est", note:"…" }
+  ]}
+]
+```

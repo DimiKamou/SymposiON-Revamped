@@ -292,7 +292,12 @@
       id: 'sos',
       rn: '✦',
       label: 'SOS'
-    }];
+    }, {
+      id: 'transforms',
+      rn: '⇄',
+      label: 'Μετατροπές'
+    } // Μέρος VIII — μόνο όταν η ενότητα έχει `transforms`
+    ];
     componentDidMount() {
       this.applyTheme();
       const p = this.props || {};
@@ -1463,7 +1468,8 @@
       const q = s.query.trim().toLowerCase();
       const inc = (...vals) => !q || vals.some(v => String(v || '').toLowerCase().includes(q));
       const ready = s.loaded && !s.err && !!u;
-      const parts = this.partDefs.map(p => {
+      const hasTransforms = ready && u && Array.isArray(u.transforms) && u.transforms.length > 0;
+      const parts = this.partDefs.filter(p => p.id !== 'transforms' || hasTransforms).map(p => {
         const active = p.id === s.part;
         return {
           id: p.id,
@@ -1603,6 +1609,23 @@
         n: xi + 1,
         hue: 'oklch(' + sosHueL + ' 0.14 ' + sosHueOf(x.tag) + ')'
       }));
+
+      // ΜΕΡΟΣ VIII — Μετατροπές (προαιρετικό: εμφανίζεται μόνο αν η ενότητα έχει `transforms`)
+      const transforms = (ready && Array.isArray(u.transforms) ? u.transforms : []).map((g, gi) => {
+        const items = (g.items || []).map((it, ii) => ({
+          from: it.from || '',
+          note: it.note || '',
+          n: ii + 1,
+          to: Array.isArray(it.to) ? it.to.slice() : it.to != null && it.to !== '' ? [it.to] : []
+        })).filter(it => inc(it.from, it.note, ...it.to));
+        return {
+          id: g.id || g.key || '§' + (gi + 1),
+          label: g.label || '',
+          intro: g.intro || '',
+          items,
+          hue: 'oklch(' + sosHueL + ' 0.13 ' + sosHueOf(g.id || g.label || gi) + ')'
+        };
+      }).filter(g => g.items.length);
       const greekBase = {
         padding: '11px 16px',
         borderTop: '1px solid var(--line2)',
@@ -1728,6 +1751,7 @@
         showPron: s.part === 'pron' || s.printAll,
         showVerbs: s.part === 'verbs' || s.printAll,
         showSos: s.part === 'sos' || s.printAll,
+        showTransforms: s.part === 'transforms' || s.printAll,
         showSyntax: s.showSyntax,
         showAnalysis: s.showAnalysis,
         hideGreek: s.hideGreek,
@@ -1785,6 +1809,8 @@
         sos,
         hasSos: sos.length > 0,
         noSos: sos.length === 0,
+        transforms,
+        hasTransforms: transforms.length > 0,
         pop: s.pop,
         closePop: this.closePop,
         popStyle: {
@@ -2268,7 +2294,62 @@
         style: s("margin:0;font-family:var(--font-ui);font-size:13.5px;line-height:1.6;color:var(--muted)")
       }, x.body)))), V.noSos && /*#__PURE__*/React.createElement("div", {
         style: s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);padding:16px;border:1px dashed var(--line);border-radius:var(--r-lg)")
-      }, "\u0394\u03B5\u03BD \u03AD\u03C7\u03BF\u03C5\u03BD \u03BF\u03C1\u03B9\u03C3\u03C4\u03B5\u03AF \u03C0\u03B1\u03C1\u03B1\u03C4\u03B7\u03C1\u03AE\u03C3\u03B5\u03B9\u03C2 SOS \u03B3\u03B9\u03B1 \u03B1\u03C5\u03C4\u03AE \u03C4\u03B7\u03BD \u03B5\u03BD\u03CC\u03C4\u03B7\u03C4\u03B1.")))))), V.pop.show && /*#__PURE__*/React.createElement("div", {
+      }, "\u0394\u03B5\u03BD \u03AD\u03C7\u03BF\u03C5\u03BD \u03BF\u03C1\u03B9\u03C3\u03C4\u03B5\u03AF \u03C0\u03B1\u03C1\u03B1\u03C4\u03B7\u03C1\u03AE\u03C3\u03B5\u03B9\u03C2 SOS \u03B3\u03B9\u03B1 \u03B1\u03C5\u03C4\u03AE \u03C4\u03B7\u03BD \u03B5\u03BD\u03CC\u03C4\u03B7\u03C4\u03B1.")), V.showTransforms && V.hasTransforms && /*#__PURE__*/React.createElement("section", {
+        "data-part": true,
+        "data-screen-label": "\u039C\u03AD\u03C1\u03BF\u03C2 VIII \u2014 \u039C\u03B5\u03C4\u03B1\u03C4\u03C1\u03BF\u03C0\u03AD\u03C2",
+        style: s("animation:ltfade .4s ease both")
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("margin-bottom:8px")
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("font-family:var(--font-ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)")
+      }, "\u039C\u03AD\u03C1\u03BF\u03C2 VIII \xB7 \u03A3\u03C5\u03BD\u03C4\u03B1\u03BA\u03C4\u03B9\u03BA\u03AE \u03B5\u03C0\u03B5\u03BE\u03B5\u03C1\u03B3\u03B1\u03C3\u03AF\u03B1"), /*#__PURE__*/React.createElement("h2", {
+        style: s("margin:3px 0 0;font-family:var(--font-serif);font-weight:800;font-size:clamp(23px,3vw,32px)")
+      }, "\u039C\u03B5\u03C4\u03B1\u03C4\u03C1\u03BF\u03C0\u03AD\u03C2")), /*#__PURE__*/React.createElement("p", {
+        style: s("font-family:var(--font-ui);font-size:13.5px;color:var(--muted);margin:0 0 20px")
+      }, "\u0391\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7 & \u03BC\u03B5\u03C4\u03B1\u03C4\u03C1\u03BF\u03C0\u03AE \u03BC\u03B5\u03C4\u03BF\u03C7\u03CE\u03BD \u2194 \u03B4\u03B5\u03C5\u03C4\u03B5\u03C1\u03B5\u03C5\u03BF\u03C5\u03C3\u03CE\u03BD \u03C0\u03C1\u03BF\u03C4\u03AC\u03C3\u03B5\u03C9\u03BD, \u03B5\u03BD\u03B5\u03C1\u03B3\u03B7\u03C4\u03B9\u03BA\u03AE \u2194 \u03C0\u03B1\u03B8\u03B7\u03C4\u03B9\u03BA\u03AE \u03C3\u03CD\u03BD\u03C4\u03B1\u03BE\u03B7, \u03B5\u03C5\u03B8\u03CD\u03C2 \u2194 \u03C0\u03BB\u03AC\u03B3\u03B9\u03BF\u03C2 \u03BB\u03CC\u03B3\u03BF\u03C2."), /*#__PURE__*/React.createElement("div", {
+        style: s("display:flex;flex-direction:column;gap:18px")
+      }, V.transforms.map((g, gi) => /*#__PURE__*/React.createElement("section", {
+        key: gi,
+        style: Object.assign(s("overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel)"), {
+          borderLeft: '4px solid ' + g.hue
+        })
+      }, /*#__PURE__*/React.createElement("header", {
+        style: Object.assign(s("display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:1px solid var(--line)"), {
+          background: 'color-mix(in oklab, ' + g.hue + ' 8%, var(--panel))'
+        })
+      }, /*#__PURE__*/React.createElement("span", {
+        style: Object.assign(s("display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 7px;font-family:var(--font-serif);font-weight:800;font-size:15px;color:var(--on-accent);border-radius:7px"), {
+          background: g.hue
+        })
+      }, g.id), /*#__PURE__*/React.createElement("h3", {
+        style: s("margin:0;font-family:var(--font-serif);font-weight:800;font-size:17px;line-height:1.25;color:var(--fg)")
+      }, g.label)), /*#__PURE__*/React.createElement("div", {
+        style: s("display:flex;flex-direction:column")
+      }, g.items.map((it, ii) => /*#__PURE__*/React.createElement("div", {
+        key: ii,
+        style: Object.assign(s("padding:13px 16px 14px"), {
+          borderTop: ii > 0 ? '1px solid var(--line2)' : 'none'
+        })
+      }, /*#__PURE__*/React.createElement("div", {
+        style: s("display:flex;gap:10px;align-items:flex-start")
+      }, /*#__PURE__*/React.createElement("span", {
+        style: Object.assign(s("flex:none;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:999px;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;margin-top:2px"), {})
+      }, it.n), /*#__PURE__*/React.createElement("div", {
+        style: s("flex:1;min-width:0")
+      }, it.from && /*#__PURE__*/React.createElement("div", {
+        style: s("font-family:var(--font-latin);font-style:italic;font-size:16px;line-height:1.5;color:var(--muted)")
+      }, it.from), it.to.map((t, ti) => /*#__PURE__*/React.createElement("div", {
+        key: ti,
+        style: s("display:flex;gap:8px;align-items:baseline;margin-top:5px")
+      }, /*#__PURE__*/React.createElement("span", {
+        style: Object.assign(s("flex:none;font-weight:800;font-size:17px;line-height:1.3"), {
+          color: g.hue
+        })
+      }, "\u2192"), /*#__PURE__*/React.createElement("span", {
+        style: s("font-family:var(--font-latin);font-style:italic;font-weight:600;font-size:16.5px;line-height:1.5;color:var(--fg)")
+      }, t))), it.note && /*#__PURE__*/React.createElement("p", {
+        style: s("margin:9px 0 0;font-family:var(--font-ui);font-size:13px;line-height:1.6;color:var(--muted)")
+      }, it.note)))))))))))))), V.pop.show && /*#__PURE__*/React.createElement("div", {
         style: V.popStyle
       }, /*#__PURE__*/React.createElement("div", {
         style: s("display:flex;justify-content:space-between;align-items:flex-start;gap:10px")
