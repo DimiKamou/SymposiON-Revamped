@@ -129,7 +129,7 @@
 .co-cyc__nm { font-family:var(--sans); font-weight:800; font-size:15px; }
 .co-cyc__pr { font-size:13px; color:var(--fg-70); }
 .co-cyc__save { margin-top:4px; font-family:var(--disp); font-weight:600; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--sage); background:color-mix(in srgb,var(--sage) 14%,transparent); padding:2px 8px; border-radius:999px; }
-.co-in { width:100%; font-family:var(--sans); font-weight:600; font-size:14.5px; padding:12px 14px; border-radius:11px;
+.co-in { width:100%; font-family:var(--sans); font-weight:600; font-size:16px; padding:12px 14px; border-radius:11px;
   border:1.5px solid var(--line-bold); background:var(--bg); color:var(--fg); margin-bottom:10px; }
 .co-in:focus { outline:none; border-color:var(--terra); }
 .co-coderow { display:flex; gap:10px; } .co-coderow .co-in { margin-bottom:0; }

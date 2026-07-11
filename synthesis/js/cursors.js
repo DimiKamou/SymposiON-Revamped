@@ -72,7 +72,17 @@
     return cache.get(key);
   }
 
+  // A follower "cursor" is meaningless on a touch device (there is no pointer to
+  // track) and, left at the origin with no mousemove, its mark bled ~19px off the
+  // left edge — nudging the layout wide enough to trigger iOS zoom-out. Skip the
+  // whole custom-cursor system on touch-primary devices (phones/tablets w/o a mouse).
+  function isTouchPrimary() {
+    try { return matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fine)').matches; }
+    catch (_) { return false; }
+  }
+
   function init() {
+    if (isTouchPrimary()) return;
     const stage = document.querySelector('.stage');
     if (!stage || document.getElementById('symc-ring')) return;
     ring = document.createElement('div'); ring.id = 'symc-ring'; ring.innerHTML = '<i class="rc"></i>';

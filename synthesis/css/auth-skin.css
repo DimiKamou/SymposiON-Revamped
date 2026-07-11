@@ -117,7 +117,8 @@
   border-radius: 11px;
   color: var(--fg);
   font-family: var(--sans, sans-serif);
-  font-size: 14px;
+  /* 16px min so iOS Safari does not auto-zoom the viewport on input focus. */
+  font-size: 16px;
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }

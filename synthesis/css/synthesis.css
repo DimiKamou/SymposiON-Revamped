@@ -418,6 +418,9 @@
 }
 @media (max-width: 600px) {
   .syn-classes__showw { grid-template-columns: 1fr; }
+  /* larger touch targets for the footer link columns on phones */
+  .syn-foot__col { gap:4px; }
+  .syn-foot__col a { padding-block:8px; }
 }
 @media (max-width: 460px) {
   .syn-classes__showw .syn-show,

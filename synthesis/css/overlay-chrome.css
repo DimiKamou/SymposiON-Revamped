@@ -92,3 +92,26 @@
 .overlay-lang button.active { background: rgba(255,255,255,0.08); color: #F6F2EB; }
 
 .overlay-frame { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+/* ── Mobile: keep the shared game-overlay top bar from cramping / overlapping.
+   On a phone the back button(s) + title + lang/mode toggle were colliding
+   because the title never shrank. Give the title the flexible middle slot with
+   an ellipsis, and trim the horizontal padding so all three fit. ── */
+@media (max-width: 560px) {
+  .overlay-topbar {
+    gap: 8px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .overlay-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .overlay-back { padding: 9px 12px; min-height: 36px; }
+  .overlay-nav-btns, .overlay-lang { flex: 0 0 auto; }
+}

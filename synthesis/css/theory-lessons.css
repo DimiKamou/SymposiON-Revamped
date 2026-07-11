@@ -427,6 +427,14 @@ textarea.tt-input::placeholder { color: var(--fog); font-style: italic; }
   .trm-grid { font-size: 0.9em; }
   .trc-face { padding: 26px; }
   .tr-overlay-close { top: 12px; right: 12px; }
+  /* The conjugation MATRIX has fixed nowrap cells + N mood columns that exceed a
+     phone's width; let it scroll horizontally inside its own box instead of
+     forcing the whole lesson page wide. Same for the tense-tab bar above it. */
+  .trm { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .trm-grid { min-width: max-content; }
+  .trm-tabs { overflow-x: auto; scrollbar-width: none; }
+  .trm-tabs::-webkit-scrollbar { display: none; }
+  .trm-tab { flex: 0 0 auto; white-space: nowrap; }
 }
 
 /* ════════════════════════════════════════════════════════════════════

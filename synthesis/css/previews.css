@@ -135,7 +135,7 @@
 .info-seg__b { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line-bold); background: var(--card); color: var(--muted); font-family: var(--sans, sans-serif); font-weight: 600; font-size: 13px; cursor: pointer; }
 .info-seg__ic { width: 16px; height: 16px; }
 .info-seg__b.on { border-color: var(--terra); color: var(--terra-dk); background: var(--terra-soft); }
-.info-input { width: 100%; padding: 11px 13px; border-radius: 11px; border: 1.5px solid var(--line-bold); background: var(--bg); color: var(--fg); font-family: var(--sans, sans-serif); font-size: 14px; }
+.info-input { width: 100%; padding: 11px 13px; border-radius: 11px; border: 1.5px solid var(--line-bold); background: var(--bg); color: var(--fg); font-family: var(--sans, sans-serif); font-size: 16px; }
 .info-input:focus { outline: none; border-color: var(--terra); }
 .info-textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
 .info-form__foot { display: flex; justify-content: flex-end; }

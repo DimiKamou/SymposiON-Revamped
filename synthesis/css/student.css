@@ -127,6 +127,12 @@
   background:var(--card); color:var(--fg); box-shadow:0 14px 34px var(--shadow); font-family:var(--sans);
   font-weight:700; font-size:14px; transition:transform .16s, border-color .16s; }
 .guide-fab:hover { transform:translateY(-2px); border-color:var(--terra); }
+/* While a full-screen game overlay is open, hide the floating guide button so it
+   never overlaps a game's own on-screen (touch) controls in the bottom-right.
+   :has() is supported on our mobile targets; older engines simply keep the FAB. */
+body:has(.game-overlay.active) .guide-fab,
+body:has(.game-overlay[style*="display: flex"]) .guide-fab,
+body:has(.game-overlay[style*="display:flex"]) .guide-fab { display:none !important; }
 .guide-fab.on { background:var(--terra-dk); color:#fff; border-color:var(--terra-dk); }
 .guide-fab__q { display:grid; place-items:center; width:26px; height:26px; border-radius:50%;
   background:var(--terra-soft); color:var(--terra-dk); font-family:var(--serif); font-weight:800; font-size:15px; }
@@ -246,7 +252,7 @@
 }
 
 /* ── CONSENT / AGE-GATE / COOKIES ───────────────────────────────── */
-.cg-year { width:100%; font-family:var(--sans); font-weight:600; font-size:15px; padding:13px 15px;
+.cg-year { width:100%; font-family:var(--sans); font-weight:600; font-size:16px; padding:13px 15px;
   border-radius:14px; border:1.5px solid var(--line-bold); background:var(--bg); color:var(--fg); margin-bottom:18px; }
 .cg-year:focus { outline:none; border-color:var(--terra); }
 .cg-err { border-color:#C2553A; }
