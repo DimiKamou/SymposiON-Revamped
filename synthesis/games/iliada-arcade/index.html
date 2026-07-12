@@ -41,13 +41,16 @@ html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sa
 .ammo span.on{color:var(--clay);}
 
 /* score */
-.score-hud{top:24px;right:28px;text-align:right;}
+.score-hud{top:64px;right:28px;text-align:right;}
 .score-row{display:flex;gap:18px;justify-content:flex-end;align-items:flex-end;}
 .stat .k{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--fog);text-transform:uppercase;}
 .stat .v{font-family:'Anton',sans-serif;font-size:28px;line-height:1;color:var(--bone);}
 .stat .v.terra{color:var(--terra);}
-.combo{margin-top:7px;font-family:'Anton',sans-serif;font-size:17px;color:var(--gold);opacity:0;transition:.12s;}
+.combo{margin-top:7px;font-family:'Anton',sans-serif;font-size:17px;color:var(--gold);opacity:0;transition:opacity .12s,font-size .16s cubic-bezier(.2,1.6,.4,1),color .2s;transform-origin:right center;}
 .combo.show{opacity:1;}
+.combo.pop{animation:comboPop .2s cubic-bezier(.2,1.8,.4,1);}
+@keyframes comboPop{0%{transform:scale(1.45) rotate(-2.5deg);}100%{transform:scale(1) rotate(0);}}
+@media (prefers-reduced-motion: reduce){ .combo.pop{animation:none;} }
 
 /* boss bar */
 .boss-bar{top:92px;left:50%;transform:translateX(-50%);width:780px;max-width:58%;opacity:0;transition:opacity .3s;}

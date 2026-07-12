@@ -9,6 +9,7 @@
 ════════════════════════════════════════════════════════════════ */
 import * as THREE from 'three';
 import { mesh } from './gfx.js';
+import { G } from './config.js';
 import { QUALITY } from './quality.js';
 
 const C = (hex) => new THREE.Color(hex);
@@ -19,29 +20,29 @@ const PHASES = [
     top: 0x24386e, mid: 0x9a6fa6, bot: 0xf2a86a, haze: 0xf6b07a,
     sunDir: [0.30, 0.13, -1], sunCol: 0xffd7a0, disc: 0xfff0d2, discSize: 1.0, tight: 240, glow: 0.30,
     night: 0.18, fog: 0xdcae86,
-    hemiSky: 0x9bb3d8, hemiGround: 0x6e6a4c, hemiInt: 0.45,
-    sunLight: 0xffd0a0, sunInt: 1.7, exposure: 0.92,
+    hemiSky: 0x9bb3d8, hemiGround: 0x6e6a4c, hemiInt: 0.42,
+    sunLight: 0xffd0a0, sunInt: 1.95, exposure: 0.95,
     mtnFar: 0xc59ab0, mtnNear: 0x7d6a86, sea: 0x6f86a8, seaSun: 0xffc98a },
   { name: 'day',
     top: 0x2E8BD6, mid: 0x83C7F0, bot: 0xFBEFD6, haze: 0xfbe6c2,
-    sunDir: [0.18, 0.55, -1], sunCol: 0xfff3d0, disc: 0xfff6da, discSize: 0.9, tight: 260, glow: 0.16,
+    sunDir: [0.18, 0.55, -1], sunCol: 0xfff3d0, disc: 0xfff6da, discSize: 0.8, tight: 260, glow: 0.16,
     night: 0.0, fog: 0xCDE6F5,
-    hemiSky: 0xbfe3ff, hemiGround: 0x9aa86a, hemiInt: 0.42,
-    sunLight: 0xfff1d2, sunInt: 2.15, exposure: 0.88,
+    hemiSky: 0xbfe3ff, hemiGround: 0x9aa86a, hemiInt: 0.36,
+    sunLight: 0xfff1d2, sunInt: 2.55, exposure: 0.9,
     mtnFar: 0x9fb6cf, mtnNear: 0x6f93b0, sea: 0x2f86c4, seaSun: 0xfff2c0 },
   { name: 'sunset',
     top: 0x223066, mid: 0xd9633a, bot: 0xffce78, haze: 0xff9d52,
     sunDir: [-0.22, 0.08, -1], sunCol: 0xff8a32, disc: 0xffce8a, discSize: 1.7, tight: 90, glow: 0.55,
     night: 0.12, fog: 0xe0935a,
-    hemiSky: 0xc88f7a, hemiGround: 0x6a5238, hemiInt: 0.46,
-    sunLight: 0xff944a, sunInt: 1.8, exposure: 0.92,
+    hemiSky: 0xc88f7a, hemiGround: 0x6a5238, hemiInt: 0.42,
+    sunLight: 0xff944a, sunInt: 2.1, exposure: 0.95,
     mtnFar: 0xc98a6a, mtnNear: 0x6e4a52, sea: 0x9a6a5a, seaSun: 0xffb45a },
   { name: 'night',
     top: 0x070f28, mid: 0x132a52, bot: 0x244069, haze: 0x2a4a78,
     sunDir: [-0.20, 0.52, -1], sunCol: 0xbcd2ff, disc: 0xeef4ff, discSize: 0.75, tight: 420, glow: 0.10,
     night: 1.0, fog: 0x132440,
-    hemiSky: 0x35507f, hemiGround: 0x1a2236, hemiInt: 0.5,
-    sunLight: 0xaec6ff, sunInt: 0.6, exposure: 0.86,
+    hemiSky: 0x35507f, hemiGround: 0x1a2236, hemiInt: 0.4,
+    sunLight: 0xaec6ff, sunInt: 0.56, exposure: 0.86,
     mtnFar: 0x26385f, mtnNear: 0x161f3c, sea: 0x16294a, seaSun: 0xbcd2ff },
 ];
 
@@ -106,16 +107,19 @@ export class Atmosphere {
     this.scene.add(sky);
   }
 
-  /* ── travelling celestial body (sun by day, moon by night) ────── */
+  /* ── travelling celestial body (sun by day, moon by night) ──────
+     Additive-blended: the disc ADDS to the sky-shader glow instead of
+     occluding it, so it can never render darker than the halo around
+     it (the old "eclipse" artifact). */
   _buildCelestial() {
     const g = new THREE.Group();
-    this.disc = mesh(new THREE.CircleGeometry(20, 40),
-      new THREE.MeshBasicMaterial({ color: 0xfff6da, transparent: true, depthWrite: false, fog: false }), 0, 0, 0);
+    this.disc = mesh(new THREE.CircleGeometry(14, 40),
+      new THREE.MeshBasicMaterial({ color: 0xfff6da, transparent: true, opacity: 0.85, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }), 0, 0, 0);
     g.add(this.disc);
     this.halos = [];
     for (let i = 1; i <= 3; i++) {
-      const h = mesh(new THREE.CircleGeometry(20 + i * 13, 40),
-        new THREE.MeshBasicMaterial({ color: 0xfff2cf, transparent: true, opacity: 0.12 / i, depthWrite: false, fog: false }), 0, 0, -i);
+      const h = mesh(new THREE.CircleGeometry(14 + i * 10, 40),
+        new THREE.MeshBasicMaterial({ color: 0xfff2cf, transparent: true, opacity: 0.12 / i, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }), 0, 0, -i);
       g.add(h); this.halos.push(h);
     }
     g.renderOrder = -9;
@@ -182,6 +186,7 @@ export class Atmosphere {
       lerp(a.sunDir[2], b.sunDir[2], f),
     ).normalize();
     const night = lerp(a.night, b.night, f);
+    this.nightF = night;                 // exposed: clouds/props mood-tint off this
     const tight = lerp(a.tight, b.tight, f);
     const glow = lerp(a.glow, b.glow, f);
     const discSize = lerp(a.discSize, b.discSize, f);
@@ -197,10 +202,15 @@ export class Atmosphere {
 
     // celestial disc rides the sun direction, faces the camera
     this.celestial.position.set(dir.x * 300, dir.y * 300, G_CAM_Z + dir.z * 300);
-    this.celestial.lookAt(0, 5.8, G_CAM_Z);
+    this.celestial.lookAt(0, G.CAM_Y, G_CAM_Z);
     this.disc.material.color.copy(T.disc);
     this.disc.scale.setScalar(discSize);
-    for (const h of this.halos) { h.material.color.copy(T.disc); h.material.opacity = (0.13 * glow / 0.16) * (1 - night * 0.6); }
+    for (const h of this.halos) {
+      h.material.color.copy(T.disc);
+      // capped: sunset's big glow value used to stack 3 additive halos into
+      // a blown white blob — clamp keeps the disc reading as a sun, not a hole
+      h.material.opacity = Math.min(0.18, (0.13 * glow / 0.16)) * (1 - night * 0.6);
+    }
 
     // backdrop tints
     this.mtnFar.material.color.copy(T.mtnFar);
@@ -208,9 +218,10 @@ export class Atmosphere {
     this.sea.material.color.copy(T.sea);
     this.seaSun.material.color.copy(T.seaSun);
     this.seaSun.material.opacity = 0.55 * (0.4 + glow);
-    // horizon haze glow — tinted with the sky-haze colour, softened at night
+    // horizon haze glow — tinted with the sky-haze colour, softened at night.
+    // Kept restrained: the old 0.6 white band was the main "milky wash" culprit.
     this.haze.material.color.copy(T.haze);
-    this.haze.material.opacity = 0.6 * (1 - night * 0.5);
+    this.haze.material.opacity = 0.38 * (1 - night * 0.5);
 
     // scene fog
     if (this.scene.fog) this.scene.fog.color.copy(T.fog);
@@ -226,7 +237,7 @@ export class Atmosphere {
   }
 }
 
-const G_CAM_Z = 11.0;
+const G_CAM_Z = G.CAM_Z;
 const BACK_Y = 4.0;
 const BACK_H = 220;
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -237,11 +248,12 @@ function ridgeTexture(peakFrac, peaks, jitter) {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
   x.clearRect(0, 0, W, H);
-  x.fillStyle = '#ffffff';
-  x.beginPath();
-  x.moveTo(0, horizon);
+  // body slightly grey so the pure-white crest stroke reads as a sun-lit rim
+  // once the material colour multiplies through (cheap directional lighting)
+  x.fillStyle = '#d9d9d9';
   const steps = peaks * 22, amp = peakFrac * horizon;
   const ph = Math.random() * 10;
+  const pts = [];
   for (let i = 0; i <= steps; i++) {
     const px = (i / steps) * W;
     const prof = (
@@ -249,10 +261,19 @@ function ridgeTexture(peakFrac, peaks, jitter) {
       0.30 * (0.5 + 0.5 * Math.sin(i * 0.9 + ph * 2)) +
       0.15 * Math.random()
     );
-    const ridgeY = horizon - amp * prof - (Math.random() - 0.5) * jitter * H;
-    x.lineTo(px, ridgeY);
+    pts.push([px, horizon - amp * prof - (Math.random() - 0.5) * jitter * H]);
   }
+  x.beginPath();
+  x.moveTo(0, horizon);
+  for (const [px, py] of pts) x.lineTo(px, py);
   x.lineTo(W, horizon); x.closePath(); x.fill();
+  // lit crest line along the ridge profile
+  x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 3.5;
+  x.lineJoin = 'round';
+  x.beginPath();
+  x.moveTo(pts[0][0], pts[0][1]);
+  for (const [px, py] of pts) x.lineTo(px, py);
+  x.stroke();
 
   x.globalCompositeOperation = 'destination-in';
   const fade = x.createLinearGradient(0, horizon - amp, 0, horizon + 2);
@@ -274,13 +295,13 @@ function hazeTexture() {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
   x.clearRect(0, 0, W, H);
-  const g = x.createLinearGradient(0, horizon - 70, 0, horizon + 56);
+  const g = x.createLinearGradient(0, horizon - 52, 0, horizon + 42);
   g.addColorStop(0.00, 'rgba(255,255,255,0)');
   g.addColorStop(0.42, 'rgba(255,255,255,0.55)');
   g.addColorStop(0.55, 'rgba(255,255,255,1)');
   g.addColorStop(0.70, 'rgba(255,255,255,0.7)');
   g.addColorStop(1.00, 'rgba(255,255,255,0)');
-  x.fillStyle = g; x.fillRect(0, horizon - 70, W, 126);
+  x.fillStyle = g; x.fillRect(0, horizon - 52, W, 94);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;

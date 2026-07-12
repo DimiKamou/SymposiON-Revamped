@@ -64,6 +64,23 @@ const Hegemonia = (() => {
   /* fire a cinematic-FX event; no-op if nothing is listening (standalone-safe) */
   function _fx(type, detail){ try{ window.dispatchEvent(new CustomEvent('hg:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){} }
 
+  /* presentation helpers (visual only — no game logic) */
+  const REDUCE_FX = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  /* lighten (amt>0) / darken (amt<0) a #rrggbb — used for tile lighting */
+  function shade(hex, amt){
+    const n = parseInt(hex.slice(1), 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    if (amt >= 0) { r += (255-r)*amt; g += (255-g)*amt; b += (255-b)*amt; }
+    else { r *= (1+amt); g *= (1+amt); b *= (1+amt); }
+    const h = v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0');
+    return '#' + h(r) + h(g) + h(b);
+  }
+  /* #rrggbb → rgba() string — used for faction-tinted light washes */
+  function hexRGBA(hex, a){
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+  }
+
   /* ───────── public ───────── */
   function open(gp) {
     if (gp && gp.lang) window.siteLang = gp.lang;
@@ -71,6 +88,7 @@ const Hegemonia = (() => {
     if (gp && gp.title) { const _t=document.querySelector('#hg-overlay .overlay-title'); if(_t) _t.textContent=gp.title; }
     document.getElementById('hg-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('hg-live');   // scopes fx z-lift while the game is open
     if (!document.getElementById('hg-screen-intro')) build();
     syncLang();
     show('hg-screen-intro');
@@ -79,6 +97,7 @@ const Hegemonia = (() => {
     stopTimer(); clearSelTimer();
     document.getElementById('hg-overlay').classList.remove('active');
     document.body.style.overflow = '';
+    document.body.classList.remove('hg-live');
   }
 
   // Build the overlay shell on demand (drop-in: works with or without host markup).
@@ -169,6 +188,29 @@ const Hegemonia = (() => {
     <button class="sym-btn ghost" onclick="Hegemonia.close()" data-i18n="exit"></button>
   </div>
 </div>`;
+    _mountAmbient();
+  }
+
+  /* scoped ambience inside the overlay (the shared .fx-ambient mounts on
+     <body> BELOW the overlay plate, so the war-embers live here instead) */
+  function _mountAmbient() {
+    const wrap = document.getElementById('hg-wrap');
+    if (!wrap || wrap.querySelector('.hg-ambient')) return;
+    const amb = document.createElement('div');
+    amb.className = 'hg-ambient';
+    let h = '<div class="hg-blob b1"></div><div class="hg-blob b2"></div><div class="hg-blob b3"></div>';
+    if (!REDUCE_FX) {
+      for (let i = 0; i < 14; i++) {
+        const x  = (Math.random()*100).toFixed(1),
+              sz = (2 + Math.random()*3.4).toFixed(1),
+              d  = (7 + Math.random()*9).toFixed(1),
+              dl = (-Math.random()*16).toFixed(1),
+              dr = ((Math.random()-0.5)*90).toFixed(0);
+        h += `<span class="hg-em" style="--x:${x}%;--sz:${sz}px;--d:${d}s;--dl:${dl}s;--drift:${dr}px"></span>`;
+      }
+    }
+    amb.innerHTML = h;
+    wrap.insertBefore(amb, wrap.firstChild);
   }
 
   const I18N = {
@@ -236,7 +278,7 @@ const Hegemonia = (() => {
     let tiles = '<div class="hg-tiles" id="hg-tiles">';
     for (let i=0;i<N;i++) tiles += `<div class="hg-tile" data-i="${i}"></div>`;
     tiles += '</div>';
-    g.innerHTML = tiles;
+    g.innerHTML = '<div class="hg-glowbed"></div>' + tiles + '<div class="hg-frame"></div>';
     g.querySelector('#hg-tiles').onclick = (e)=>{
       const t=e.target.closest('.hg-tile'); if(!t||!st.selecting) return;
       const i=+t.dataset.i; if(t.classList.contains('sel')) placeFlag(i);
@@ -249,12 +291,36 @@ const Hegemonia = (() => {
   function updateBoard(flash) {
     const fresh=new Set(flash||[]);
     const tiles=document.getElementById('hg-tiles').children;
+    let rank=0;                                   // stagger multi-tile advances into a wave
     for (let i=0;i<N;i++){
       const t=tiles[i], o=st.grid[i].owner;
-      t.style.background = o!=null ? color(o) : 'rgba(240,235,224,0.045)';
+      if (o!=null){
+        const c=color(o);
+        t.classList.add('own');
+        t.style.setProperty('--tc', c);
+        t.style.setProperty('--tc-lt', shade(c, 0.34));
+        t.style.setProperty('--tc-dk', shade(c, -0.42));
+        t.style.background='';
+      } else {
+        t.classList.remove('own');
+        t.style.removeProperty('--tc'); t.style.removeProperty('--tc-lt'); t.style.removeProperty('--tc-dk');
+        t.style.background='';
+      }
       const isCap = o!=null && st.caps[o]===i;
-      t.innerHTML = isCap ? `<span class="hg-cap" style="color:${darkOn(color(o))?'#2A1E08':'#F4ECE0'}">⚑</span>` : '';
-      if (fresh.has(i)){ t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); }
+      t.classList.toggle('cap-tile', isCap);
+      let inner = isCap ? capSVG(darkOn(color(o))) : '';
+      if (o!=null) inner += edgeSpans(i, o);
+      let dl = 0;
+      if (fresh.has(i)) dl = rank++ * 70;
+      if (fresh.has(i) && o!=null && o!==0 && !REDUCE_FX) inner += `<i class="hg-sweep" style="--dl:${dl+80}ms"></i>`;
+      t.innerHTML = inner;
+      if (fresh.has(i)){
+        t.style.animationDelay = dl+'ms';
+        t.classList.remove('flash','mine'); void t.offsetWidth; t.classList.add('flash');
+        if (o===0) t.classList.add('mine');
+      } else {
+        t.style.animationDelay = '';
+      }
     }
     renderLadder();
   }
@@ -266,13 +332,48 @@ const Hegemonia = (() => {
   function renderLadder() {
     const board=standings();
     if(window.SymStandings) SymStandings.feed('hg', board, {key:'terr', unit:'χώρες', accent:'var(--sym-blood)', title:'ΗΓΕΜΟΝΙΑ'});
-    document.getElementById('hg-ladder').innerHTML = board.map(p=>
-      `<div class="hg-ladder-row${p.me?' me':''}">
-        <span class="hg-ladder-swatch" style="background:${p.color}"></span>
-        <span class="hg-ladder-name">${p.name}</span>
-        <span class="hg-ladder-terr">${p.terr}</span>
-        <span class="hg-ladder-pct">${Math.round(p.terr/N*100)}%</span>
-      </div>`).join('');
+    const lad=document.getElementById('hg-ladder');
+    /* patch rows in place (keyed by player idx) so bars ease and rank swaps
+       slide (FLIP) instead of teleporting — presentation only */
+    const canPatch = lad.children.length===board.length &&
+      board.every(p=> lad.querySelector(`[data-p="${p.idx}"]`));
+    if (!canPatch) {
+      lad.innerHTML = board.map((p,ri)=>
+        `<div class="hg-ladder-row${p.me?' me':''}${ri===0?' lead':''}" data-p="${p.idx}">
+          <span class="hg-ladder-swatch" style="background:${p.color}; color:${p.color}"></span>
+          <span class="hg-ladder-name">${p.name}</span>
+          <span class="hg-ladder-terr">${p.terr}</span>
+          <span class="hg-ladder-pct">${Math.round(p.terr/N*100)}%</span>
+          <span class="hg-ladder-bar" style="--w:${Math.max(3, Math.round(p.terr/N*100))}%; --pc:${p.color}"></span>
+        </div>`).join('');
+    } else {
+      const oldTop=new Map();
+      Array.from(lad.children).forEach(r=> oldTop.set(r.dataset.p, r.getBoundingClientRect().top));
+      board.forEach((p,ri)=>{
+        const row=lad.querySelector(`[data-p="${p.idx}"]`);
+        row.className='hg-ladder-row'+(p.me?' me':'')+(ri===0?' lead':'');
+        const t=row.querySelector('.hg-ladder-terr');
+        if (t.textContent!==String(p.terr)){
+          t.textContent=p.terr;
+          if(!REDUCE_FX){ try{ t.animate(
+            [{transform:'scale(1)'},{transform:'scale(1.4)',offset:.35},{transform:'scale(1)'}],
+            {duration:380, easing:'cubic-bezier(.2,.9,.3,1.35)'}); }catch(_){}}
+        }
+        row.querySelector('.hg-ladder-pct').textContent=Math.round(p.terr/N*100)+'%';
+        row.querySelector('.hg-ladder-bar').style.setProperty('--w', Math.max(3, Math.round(p.terr/N*100))+'%');
+        lad.appendChild(row);                       // reorder into standings order
+      });
+      if(!REDUCE_FX) Array.from(lad.children).forEach(r=>{
+        const ot=oldTop.get(r.dataset.p); if(ot==null) return;
+        const dy=ot - r.getBoundingClientRect().top;
+        if (Math.abs(dy)>2){ try{ r.animate(
+          [{transform:`translateY(${dy}px)`},{transform:'translateY(0)'}],
+          {duration:430, easing:'cubic-bezier(.2,.8,.2,1)'}); }catch(_){}}
+      });
+    }
+    /* torch bed + board glow lean toward whoever rules the map right now */
+    const grid=document.getElementById('hg-grid');
+    if (grid) grid.style.setProperty('--hg-leadc', board[0].color);
     document.getElementById('hg-glory').textContent = st.glory;
   }
 
@@ -296,6 +397,8 @@ const Hegemonia = (() => {
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('hg-qcount').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum;
     document.getElementById('hg-qtext').textContent = QT(st.cur.q);
+    const card=document.querySelector('#hg-screen-game .hg-q-card');
+    if (card){ card.classList.remove('q-in'); void card.offsetWidth; card.classList.add('q-in'); }
     const fb=document.getElementById('hg-feedback'); fb.textContent=''; fb.className='hg-feedback';
     const wrap=document.getElementById('hg-answers'); wrap.innerHTML='';
     const inks=['#2A140C','#08171A','#2A2208','#0E1808'];
@@ -327,7 +430,7 @@ const Hegemonia = (() => {
       st.glory += gain;
       fb.className='hg-feedback hg-fb-ok';
       fb.textContent = T(`+${gain} ΔΟΞΑ — ${flags} ${flags===1?'σημαία':'σημαίες'}! Άπλωσε το βασίλειο`, `+${gain} GLORY — ${flags} ${flags===1?'flag':'flags'}! Expand your kingdom`);
-      _fx('correct',{el:btn, flags});
+      _fx('correct',{el:btn, flags, gain, speed});
       enterPlace(flags);
     } else {
       fb.className='hg-feedback hg-fb-bad';
@@ -346,6 +449,8 @@ const Hegemonia = (() => {
       return;
     }
     st.placing = count; st.selecting = true;
+    const tilesEl=document.getElementById('hg-tiles');
+    if (tilesEl) tilesEl.setAttribute('data-momentum', String(count));   // combo speed → frontier pulse
     highlightFrontier();
     showHint();
     clearSelTimer();
@@ -373,9 +478,11 @@ const Hegemonia = (() => {
     if (!st.selecting || i<0) return;
     clearSelTimer();
     const prev=st.grid[i].owner;
+    const src=neighbors(i).find(n=>st.grid[n].owner===0);   // the land we marched from (visual trail)
     st.grid[i].owner=0;
     updateBoard([i]);
-    _fx('plant',{i});
+    rippleFrom(i);
+    _fx('plant',{i, from:(src!=null?src:st.caps[0]), conquest: prev!=null});
     st.placing--;
     if (st.placing>0 && frontier(0).length){
       highlightFrontier(); showHint();
@@ -384,6 +491,8 @@ const Hegemonia = (() => {
     }
     // done placing
     st.selecting=false;
+    const tilesEl=document.getElementById('hg-tiles');
+    if (tilesEl) tilesEl.removeAttribute('data-momentum');
     document.getElementById('hg-select-hint').classList.remove('on');
     Array.from(document.getElementById('hg-tiles').children).forEach(t=>t.classList.remove('sel','frontier-open','frontier-foe'));
     setTimeout(()=>{ rivalsTurn(); afterTurn(); }, 650);
@@ -391,7 +500,7 @@ const Hegemonia = (() => {
 
   /* ───────── rival hegemons expand & block ───────── */
   function rivalsTurn() {
-    const flash=[];
+    const flash=[]; let raided=0;
     // each rival hegemon expands its connected empire
     for (let p=1; p<st.players.length; p++) {
       const skill=st.players[p].skill;
@@ -408,11 +517,13 @@ const Hegemonia = (() => {
           const foe = front.filter(i=>st.grid[i].owner===lead);
           pick = (foe.length?foe:front)[(Math.random()*(foe.length?foe.length:front.length))|0];
         }
+        if (st.grid[pick].owner===0) raided++;          // visual only: they took OUR land
         st.grid[pick].owner=p; flash.push(pick);
         st.players[p].glory += 300 + ((Math.random()*450)|0);
       }
     }
     updateBoard(flash);
+    _fx('march',{tiles:flash.slice(), raided});
   }
   function leaderExcept(p){
     let best=-1, bi=0; st.players.forEach((_,i)=>{ if(i!==p){ const t=terr(i); if(t>best){best=t; bi=i;} } });
@@ -428,7 +539,9 @@ const Hegemonia = (() => {
     stopTimer(); clearSelTimer();
     show('hg-screen-end');
     const board=standings(); const won=board[0].me; const mine=board.find(x=>x.me);
-    _fx(won?'win':'lose');
+    const scr=document.getElementById('hg-screen-end');   // the winner's colour floods the field
+    if (scr){ scr.style.setProperty('--hg-win', board[0].color); scr.classList.remove('sweep-go'); void scr.offsetWidth; scr.classList.add('sweep-go'); }
+    _fx(won?'win':'lose', {color: board[0].color});
     const title=document.getElementById('hg-end-title'); const sub=document.getElementById('hg-end-sub');
     if (won) {
       title.textContent=T('Η ΗΓΕΜΟΝΙΑ ΕΙΝΑΙ ΔΙΚΗ ΣΟΥ','THE HEGEMONY IS YOURS'); title.className='hg-end-title win';
@@ -448,6 +561,51 @@ const Hegemonia = (() => {
   }
 
   /* ───────── art ───────── */
+  /* capital pennant: pole + forked banner that flutters (CSS: .hg-cap-cloth) */
+  function capSVG(dark){
+    const ink  = dark ? '#2A1E08' : '#F7EFE2';
+    const edge = dark ? 'rgba(255,255,255,0.28)' : 'rgba(0,0,0,0.35)';
+    return `<span class="hg-cap"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <ellipse cx="12.2" cy="19.9" rx="5.6" ry="1.4" fill="rgba(0,0,0,0.28)"/>
+      <path d="M8.6 4.4v15.3" stroke="${ink}" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="8.6" cy="3.3" r="1.35" fill="${ink}"/>
+      <path class="hg-cap-cloth" d="M9.7 5.2 L20.6 7.1 L17 9.4 L20.6 11.7 L9.7 13.6 Z" fill="${ink}" stroke="${edge}" stroke-width="0.4"/>
+    </svg></span>`;
+  }
+  /* smouldering front-line strips on edges that touch a DIFFERENT empire */
+  function edgeSpans(i, o){
+    const [r,c]=rc(i); let out='';
+    const ph=(-((i*37)%160)/100).toFixed(2);   // deterministic flicker phase
+    const add=(n,cls)=>{ const no=st.grid[n].owner; if(no!=null && no!==o) out+=`<i class="hg-edge ${cls}" style="animation-delay:${ph}s"></i>`; };
+    if (r>0)      add(i-COLS,'e-t');
+    if (r<ROWS-1) add(i+COLS,'e-b');
+    if (c>0)      add(i-1,'e-l');
+    if (c<COLS-1) add(i+1,'e-r');
+    return out;
+  }
+  /* claim ripple: brightness wave rolling outward through neighbouring land —
+     your own banners also catch a wash of the faction colour as it passes */
+  function rippleFrom(i){
+    if (REDUCE_FX) return;
+    const tilesEl=document.getElementById('hg-tiles'); if(!tilesEl) return;
+    const tiles=tilesEl.children; const [r0,c0]=rc(i);
+    const wash=hexRGBA(color(0), 0.55);
+    for (let j=0;j<N;j++){
+      if (j===i) continue;
+      const [r,c]=rc(j); const d=Math.abs(r-r0)+Math.abs(c-c0);
+      if (d>2) continue;
+      const mine = st.grid[j].owner===0;
+      try{
+        tiles[j].animate(
+          mine
+          ? [{filter:'brightness(1) saturate(1)',    boxShadow:'inset 0 0 0 0 rgba(0,0,0,0)'},
+             {filter:'brightness(1.55) saturate(1.2)', boxShadow:`inset 0 0 16px ${wash}`, offset:.4},
+             {filter:'brightness(1) saturate(1)',    boxShadow:'inset 0 0 0 0 rgba(0,0,0,0)'}]
+          : [{filter:'brightness(1) saturate(1)'},{filter:'brightness(1.5) saturate(1.15)',offset:.4},{filter:'brightness(1) saturate(1)'}],
+          {duration:480, delay:70*d, easing:'ease-out'});
+      }catch(_){}
+    }
+  }
   function shapeSVG(type, ink){
     const f=`fill="${ink}"`;
     if (type==='triangle') return `<svg viewBox="0 0 32 32"><path d="M16 4l12 24H4z" ${f}/></svg>`;

@@ -40,6 +40,8 @@
   const loadPrefs = () => { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { return {}; } };
   const savePrefs = p => { try { localStorage.setItem(LS, JSON.stringify(p)); } catch (e) {} };
   const T = (gr, en) => (_rf.lang === 'en' ? en : gr);
+  // presentation only: skip count-up tweens for users who prefer reduced motion
+  const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // ── open / close (drop-in) ───────────────────────────────
   window.openRapidFire = function (cfg) {
@@ -78,6 +80,7 @@
     // result can't resume into a closed/replaced screen
     _rf._loadToken = (_rf._loadToken || 0) + 1;
     if (_rf.raf) cancelAnimationFrame(_rf.raf), (_rf.raf = null);
+    if (_rf._scoreRaf) cancelAnimationFrame(_rf._scoreRaf), (_rf._scoreRaf = null);
     if (_rf._to) clearTimeout(_rf._to);
     removeKeys();
     if (arena) { arena.stop(); arena = null; }
@@ -99,6 +102,8 @@
 
     const wrap = document.getElementById('rf-wrap');
     wrap.innerHTML = `
+    <canvas class="sf-bg-canvas" id="storm-lobby-canvas"></canvas>
+    <div class="sf-bg-scrim"></div>
     <div class="sf-screen sf-lobby active" id="rf-screen-menu">
       <div class="sf-l-inner">
         <div class="sf-l-kicker">RAPID FIRE · REIMAGINED</div>
@@ -149,6 +154,9 @@
       if (el) el.click();
     }
     refreshStart();
+
+    // ambient distant storm behind the menu (visual only; torn down with the screen)
+    if (window.StormArena) { cdArena = new window.StormArena('storm-lobby-canvas', {}); cdArena.start(); cdArena.setIntensity(0.2); }
   }
 
   // Start → if the source has levels, go to the level-select screen (like the Games Panel);
@@ -244,6 +252,8 @@
 
     const wrap = document.getElementById('rf-wrap');
     wrap.innerHTML = `
+    <canvas class="sf-bg-canvas" id="storm-levels-canvas"></canvas>
+    <div class="sf-bg-scrim"></div>
     <div class="sf-screen sf-lobby sf-levels active" id="rf-screen-levels">
       <div class="sf-l-inner">
         <button class="sf-lv-back" id="sf-lv-back">← ${T('Πίσω', 'Back')}</button>
@@ -286,6 +296,9 @@
     });
     document.getElementById('sf-lv-back').addEventListener('click', renderLobby);
     document.getElementById('sf-lv-start').addEventListener('click', () => _rfBegin());
+
+    // the storm creeps closer on the level screen (visual only)
+    if (window.StormArena) { cdArena = new window.StormArena('storm-levels-canvas', {}); cdArena.start(); cdArena.setIntensity(0.3); }
   }
 
   // ── COUNTDOWN (drop-in name _rfBegin) ────────────────────
@@ -303,6 +316,7 @@
     wrap.innerHTML = `
     <div class="sf-screen sf-countdown active" id="rf-screen-countdown">
       <canvas class="sf-cd-canvas" id="storm-cd-canvas"></canvas>
+      <div class="sf-cd-ring" id="sf-cd-ring" style="display:none;"></div>
       <div class="sf-cd-num" id="sf-cd-num" style="display:none;">3</div>
       <div class="sf-cd-label" id="sf-cd-label">${T('Φόρτωση ύλης…', 'Loading content…')}</div>
     </div>`;
@@ -327,6 +341,8 @@
     if (cdLabel) cdLabel.textContent = T('Μαζεύονται τα σύννεφα…', 'The clouds gather…');
     const cdNum = document.getElementById('sf-cd-num');
     if (cdNum) cdNum.style.display = '';
+    const cdRing = document.getElementById('sf-cd-ring');
+    if (cdRing) cdRing.style.display = '';
 
     let n = 3;
     const tick = () => {
@@ -334,8 +350,11 @@
       if (!el) return;
       if (n === 0) { startRun(); return; }
       el.textContent = n; el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-      if (cdArena) cdArena.strike(0.6);
-      if (window.StormAudio) window.StormAudio.thunder(0.6);
+      const ring = document.getElementById('sf-cd-ring');
+      if (ring) { ring.style.animation = 'none'; void ring.offsetWidth; ring.style.animation = ''; }
+      const inten = n === 1 ? 0.95 : n === 2 ? 0.75 : 0.55;   // storm builds as the count falls
+      if (cdArena) cdArena.strike(inten);
+      if (window.StormAudio) window.StormAudio.thunder(0.35 + inten * 0.4);
       n--; _rf._to = setTimeout(tick, 850);
     };
     tick();
@@ -353,8 +372,10 @@
       charge: 0, mult: 1, overdrive: false, odRemain: 0,
       lastFormat: null, locked: false, running: true, qStart: 0, lastLowTick: 99,
     });
+    _rf._dispScore = 0;   // presentation: last score value shown by the HUD tween
 
     renderGame();
+    if (arena) arena.strike(0.85);   // opening thunderclap (visual only)
     nextQuestion();
     startClock();
   }
@@ -377,7 +398,7 @@
         <div class="sf-gauges">
           <div class="sf-gauge">
             <div class="sf-gauge-head"><span class="sf-gauge-name charge">⚡ ${T('Φόρτιση', 'Charge')}</span></div>
-            <div class="sf-gauge-track"><div class="sf-charge-fill" id="sf-charge"></div></div>
+            <div class="sf-gauge-track sf-charge-track"><div class="sf-charge-fill" id="sf-charge" data-tier="1"></div></div>
           </div>
           <div class="sf-gauge">
             <div class="sf-gauge-head"><span class="sf-gauge-name storm">${T('Καταιγίδα', 'Storm')}</span></div>
@@ -396,6 +417,14 @@
     if (window.StormArena) { arena = new window.StormArena('storm-canvas', {}); arena.start(); arena.setIntensity(0.45); }
     if (window.StormAudio) window.StormAudio.startRain();
     addKeys();
+
+    // presentation only — remember the last tile the player pressed so the
+    // lightning can land ON it (works for pointer and keyboard-driven clicks)
+    const ansHost = document.getElementById('sf-answers');
+    if (ansHost) ansHost.addEventListener('click', (e) => {
+      const b = e.target && e.target.closest ? e.target.closest('button') : null;
+      if (b) _rf._lastBtn = b;
+    }, true);
   }
 
   // ── question cycle (randomised formats via StormContent) ──
@@ -406,6 +435,7 @@
     });
     if (!round) { return gameOver(); }
     _rf._round = round; _rf.lastFormat = round.format; _rf.locked = false;
+    _rf._lastBtn = null;   // presentation: forget the previous round's tile
 
     setText('sf-qnum', `${round.badge} · ${_rf.answered + 1}`);
     const stem = document.getElementById('sf-qstem');
@@ -429,6 +459,7 @@
     const speed = clamp(1 - elapsed / d.ref, 0, 1);
 
     if (ok) {
+      const prevMult = _rf.mult;
       _rf.streak++; _rf.correct++;
       _rf.maxStreak = Math.max(_rf.maxStreak, _rf.streak);
       _rf.mult = multFor(_rf.streak);
@@ -439,17 +470,39 @@
       _rf.score += pts;
       if (!_rf.overdrive) { _rf.charge += 0.13 + 0.05 * speed + (_rf.streak >= 3 ? 0.03 : 0); if (_rf.charge >= 1) startOverdrive(); }
       const inten = clamp(0.45 + speed * 0.35 + (_rf.overdrive ? 0.2 : 0), 0.3, 1);
-      if (arena) arena.strike(inten);
+      // the bolt lands ON the struck tile when we know it (presentation only)
+      const target = (_rf._lastBtn && document.contains(_rf._lastBtn)) ? _rf._lastBtn : null;
+      if (arena) {
+        if (target && arena.strikeTo) strikeToEl(target, inten); else arena.strike(inten);
+        if (arena.setStreak) arena.setStreak(_rf.streak);
+      }
+      if (target) { target.classList.add('struck'); spawnSparks(target); }
+      // storm light licks the whole stage for a beat (presentation only)
+      if (!RM) {
+        const gi = document.querySelector('.sf-game-inner');
+        if (gi) { gi.classList.remove('sf-jolt', 'sf-stage-flash'); void gi.offsetWidth; gi.classList.add('sf-stage-flash'); }
+      }
+      // multiplier milestone → thunderhead applause + a second bolt a beat later (visual only)
+      if (arena && _rf.mult > prevMult && _rf.mult >= 2) {
+        const m = _rf.mult;
+        if (arena.milestone) arena.milestone(m); else if (arena.sheetBurst) arena.sheetBurst();
+        setTimeout(() => { if (arena && _rf.running) arena.strike(clamp(0.5 + m * 0.13, 0, 1)); }, 150);
+      }
       if (window.StormAudio) { window.StormAudio.strike(inten); window.StormAudio.gust(gift); if (_rf.mult >= 2) window.StormAudio.combo(_rf.mult); }
-      pop('+' + pts, 'pos');
+      pop('+' + pts, 'pos', 0, target);
       pop('+' + gift.toFixed(1) + 's', 'time', 120);
     } else {
       _rf.streak = 0; _rf.mult = 1;
       _rf.clock -= d.pen;
       _rf.charge = Math.max(0, _rf.charge * 0.4);
       if (_rf.overdrive) endOverdrive();
-      if (arena) arena.flashWrong();
+      if (arena) { arena.flashWrong(); if (arena.setStreak) arena.setStreak(0); }
       if (window.StormAudio) window.StormAudio.wrong();
+      // thunder-jolt on the whole stage (presentation only)
+      if (!RM) {
+        const gi = document.querySelector('.sf-game-inner');
+        if (gi) { gi.classList.remove('sf-jolt', 'sf-stage-flash'); void gi.offsetWidth; gi.classList.add('sf-jolt'); }
+      }
       pop('−' + d.pen.toFixed(1) + 's', 'neg');
       if (api && api.mistake) logMistake(api.mistake);
     }
@@ -493,7 +546,11 @@
       else if (_rf.clock > 5) _rf.lastLowTick = 99;
 
       const health = clamp(_rf.clock / _rf.clockCap, 0, 1);
-      if (arena) { arena.setCharge(_rf.charge); arena.setIntensity(clamp(0.35 + _rf.charge * 0.3 + (1 - health) * 0.35, 0, 1)); }
+      if (arena) {
+        arena.setCharge(_rf.charge);
+        arena.setIntensity(clamp(0.35 + _rf.charge * 0.3 + (1 - health) * 0.35, 0, 1));
+        if (arena.setDanger) arena.setDanger(clamp(1 - _rf.clock / 8, 0, 1));   // crimson storm-light as time runs dry
+      }
       if (window.StormAudio) window.StormAudio.setRain(clamp(0.4 + (1 - health) * 0.5 + (_rf.overdrive ? 0.3 : 0), 0, 1));
 
       updateClock();
@@ -504,22 +561,64 @@
   }
 
   // ── HUD ──────────────────────────────────────────────────
-  function updateHUD() { setText('sf-score', _rf.score); updateMult(); updateGauges(); }
+  function updateHUD() { updateScore(); updateMult(); updateGauges(); }
+  // count-up tween + bump on the HUD score (presentation only — _rf.score is untouched)
+  function updateScore() {
+    const el = document.getElementById('sf-score'); if (!el) return;
+    const from = (typeof _rf._dispScore === 'number') ? _rf._dispScore : _rf.score;
+    const to = _rf.score;
+    _rf._dispScore = to;
+    if (from === to || RM) { el.textContent = to; return; }
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    if (_rf._scoreRaf) cancelAnimationFrame(_rf._scoreRaf);
+    const t0 = performance.now(), dur = 420;
+    const step = (now) => {
+      if (!document.contains(el)) { _rf._scoreRaf = null; return; }
+      const k = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      _rf._scoreRaf = k < 1 ? requestAnimationFrame(step) : null;
+    };
+    _rf._scoreRaf = requestAnimationFrame(step);
+  }
   function updateMult() {
     const el = document.getElementById('sf-mult'); if (!el) return;
     el.textContent = '⚡ ×' + _rf.mult;
     el.classList.toggle('show', _rf.mult >= 2);
     el.classList.toggle('big', _rf.mult >= 3);
+    el.classList.toggle('t3', _rf.mult === 3);   // flame-tier colours (presentation)
+    el.classList.toggle('t4', _rf.mult >= 4);
+    // thunder-ring flare when the multiplier climbs (presentation only)
+    if (_rf.mult > (_rf._multShown || 1) && !RM) {
+      el.classList.remove('surge'); void el.offsetWidth; el.classList.add('surge');
+    } else if (_rf.mult <= 1) el.classList.remove('surge');
+    _rf._multShown = _rf.mult;
   }
   function updateGauges() {
     const cf = document.getElementById('sf-charge');
-    if (cf) { cf.style.width = (clamp(_rf.charge, 0, 1) * 100) + '%'; cf.classList.toggle('full', _rf.charge >= 1 && !_rf.overdrive); }
+    if (cf) {
+      cf.style.width = (clamp(_rf.charge, 0, 1) * 100) + '%';
+      cf.classList.toggle('full', _rf.charge >= 1 && !_rf.overdrive);
+      // the streak meter burns as a growing flame (presentation only)
+      cf.dataset.tier = String(multFor(_rf.streak));
+      cf.classList.toggle('lit', _rf.charge > 0.03 || _rf.overdrive);
+    }
     updateClock();
   }
   function updateClock() {
     const sec = Math.max(0, _rf.clock);
     const num = document.getElementById('sf-clock');
-    if (num) { num.innerHTML = Math.ceil(sec) + '<span class="sf-clock-unit">s</span>'; num.classList.toggle('low', sec <= 5); }
+    if (num) {
+      const s = Math.ceil(sec);
+      num.innerHTML = s + '<span class="sf-clock-unit">s</span>';
+      num.classList.toggle('low', sec <= 5);
+      num.classList.toggle('mid', sec > 5 && sec <= 10);
+      // kinetic numerals: each falling second squashes the digit — harder as time runs out
+      if (s !== _rf._lastSecShown) {
+        _rf._lastSecShown = s;
+        if (!RM && sec <= 10 && sec > 0) { num.classList.remove('tick'); void num.offsetWidth; num.classList.add('tick'); }
+      }
+    }
     const bar = document.getElementById('sf-storm');
     if (bar) { bar.style.width = clamp(sec / _rf.clockCap, 0, 1) * 100 + '%'; bar.className = 'sf-storm-fill' + (sec <= 4 ? ' danger' : sec <= 8 ? ' warn' : ''); }
   }
@@ -530,19 +629,28 @@
     if (_rf.raf) cancelAnimationFrame(_rf.raf), (_rf.raf = null);
     removeKeys();
     if (_rf.overdrive) endOverdrive();
-    if (arena) arena.calm();
     if (window.StormAudio) { window.StormAudio.stopRain(); window.StormAudio.end(); }
-    setTimeout(() => { if (arena) { arena.stop(); arena = null; } }, 900);
+    // the game canvas is destroyed by the innerHTML swap below — stop its arena
+    // now and hand the end screen a calm sea of its own
+    if (arena) { arena.stop(); arena = null; }
 
     const acc = _rf.answered > 0 ? Math.round((_rf.correct / _rf.answered) * 100) : 0;
     if(typeof awardGameRewards==='function' && _rf.score > 0){ awardGameRewards('rapid-fire', { score: _rf.score, perfect: _rf.answered > 0 && _rf.correct === _rf.answered }); }
+    // decorative storm rank — pure flavour, scoring untouched
+    const rank = _rf.score >= 6000 ? T('Κεραυνός του Διός', 'Bolt of Zeus')
+      : _rf.score >= 3000 ? T('Θύελλα', 'Tempest')
+      : _rf.score >= 1200 ? T('Μπόρα', 'Squall')
+      : T('Ψιχάλα', 'Drizzle');
     const wrap = document.getElementById('rf-wrap');
     wrap.innerHTML = `
+    <canvas class="sf-bg-canvas" id="storm-end-canvas"></canvas>
+    <div class="sf-bg-scrim"></div>
     <div class="sf-screen sf-end active" id="rf-screen-over">
       <div class="sf-end-inner">
         <div class="sf-end-glyph">⛈</div>
         <h1 class="sf-end-title">${T('Η καταιγίδα πέρασε', 'The storm has passed')}</h1>
         <p class="sf-end-sub">${T('Άντεξες ' + _rf.correct + ' κεραυνούς.', 'You summoned ' + _rf.correct + ' bolts.')}</p>
+        <div><span class="sf-end-rank">⚡ ${rank}</span></div>
         <div class="sf-end-score">${_rf.score}</div>
         <div class="sf-end-score-lbl">${T('Τελικό σκορ', 'Final score')}</div>
         <div class="sf-end-stats">
@@ -558,6 +666,25 @@
     </div>`;
     document.getElementById('sf-again').addEventListener('click', () => _rfBegin());
     document.getElementById('sf-menu').addEventListener('click', renderLobby);
+
+    // calm sea behind the aftermath (visual only; torn down with the screen)
+    if (window.StormArena) { cdArena = new window.StormArena('storm-end-canvas', {}); cdArena.start(); cdArena.calm(); }
+
+    // final-score count-up (presentation only; markup above already holds the real value)
+    const scoreEl = wrap.querySelector('.sf-end-score');
+    if (scoreEl && !RM && _rf.score > 0) {
+      const total = _rf.score, t0 = performance.now();
+      const dur = Math.min(1300, 500 + total * 0.1);
+      scoreEl.textContent = '0';
+      const step = (now) => {
+        if (!document.contains(scoreEl)) { _rf._scoreRaf = null; return; }
+        const k = Math.min(1, (now - t0) / dur);
+        const e = 1 - Math.pow(1 - k, 3);
+        scoreEl.textContent = Math.round(total * e);
+        _rf._scoreRaf = k < 1 ? requestAnimationFrame(step) : null;
+      };
+      _rf._scoreRaf = requestAnimationFrame(step);
+    }
 
     // ScoreTracker (leaderboard / share) — preserved
     const screen = document.getElementById('rf-screen-over');
@@ -582,11 +709,50 @@
     } catch (e) {}
   }
 
-  // ── pops ─────────────────────────────────────────────────
-  function pop(txt, cls, delay) {
+  // ── pops & strike FX (presentation only) ─────────────────
+  function pop(txt, cls, delay, anchor) {
     const host = document.querySelector('.sf-game-inner'); if (!host) return;
-    const go = () => { const el = document.createElement('div'); el.className = 'sf-pop ' + cls; el.textContent = txt; host.appendChild(el); setTimeout(() => el.remove(), 820); };
+    const go = () => {
+      const el = document.createElement('div'); el.className = 'sf-pop ' + cls; el.textContent = txt;
+      // rise from the struck tile when we know it, else from centre stage
+      if (anchor && document.contains(anchor)) {
+        const hr = host.getBoundingClientRect(), ar = anchor.getBoundingClientRect();
+        el.style.left = (ar.left + ar.width / 2 - hr.left) + 'px';
+        el.style.top = Math.max(28, ar.top - hr.top - 12) + 'px';
+      }
+      host.appendChild(el); setTimeout(() => el.remove(), 820);
+    };
     delay ? setTimeout(go, delay) : go();
+  }
+
+  // map a DOM tile to normalized storm-canvas coords and land the bolt on it
+  function strikeToEl(el, inten) {
+    const cv = document.getElementById('storm-canvas');
+    if (!cv || !arena || !arena.strikeTo) { if (arena) arena.strike(inten); return; }
+    const cr = cv.getBoundingClientRect(), r = el.getBoundingClientRect();
+    if (!cr.width || !cr.height) { arena.strike(inten); return; }
+    const xn = clamp((r.left + r.width / 2 - cr.left) / cr.width, 0.04, 0.96);
+    const yn = clamp((r.top + 4 - cr.top) / cr.height, 0.08, 0.97);
+    arena.strikeTo(xn, yn, inten);
+  }
+
+  // a burst of gold sparks flying off a correctly-struck tile
+  function spawnSparks(el) {
+    if (RM || !el || !document.contains(el)) return;
+    const burst = document.createElement('span');
+    burst.className = 'sf-burst';
+    for (let i = 0; i < 12; i++) {
+      const s = document.createElement('i');
+      s.className = 'sf-spk';
+      const a = Math.random() * 6.283, d = 26 + Math.random() * 52;
+      s.style.setProperty('--dx', (Math.cos(a) * d).toFixed(1) + 'px');
+      s.style.setProperty('--dy', (Math.sin(a) * d - 22).toFixed(1) + 'px');
+      s.style.setProperty('--s', (0.65 + Math.random() * 0.8).toFixed(2));
+      s.style.animationDelay = ((Math.random() * 70) | 0) + 'ms';
+      burst.appendChild(s);
+    }
+    el.appendChild(burst);
+    setTimeout(() => burst.remove(), 800);
   }
 
   // ── keyboard (MC / TF only — 1-4 / A-D) ──────────────────

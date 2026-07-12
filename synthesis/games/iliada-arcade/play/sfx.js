@@ -50,7 +50,24 @@ function ult(){ if(!ac) return; const t=ac.currentTime;
   const o2=ac.createOscillator(); o2.type='triangle'; o2.frequency.setValueAtTime(880,t+0.08); o2.frequency.linearRampToValueAtTime(1340,t+0.5);
   const g3=ac.createGain(); env(g3,t+0.08,0.02,0.42,0.18); o2.connect(g3).connect(master); o2.start(t+0.08); o2.stop(t+0.56); }
 
-window.SFX={ init, slash, ranged, block, parry, hurt, ult,
+/* --- combat-feel additions (enriched synth; original API untouched) --- */
+function impact(crit){ if(!ac) return; const t=ac.currentTime;   // meaty connect thud
+  const o=ac.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(crit?150:120,t); o.frequency.exponentialRampToValueAtTime(42,t+0.11);
+  const g=ac.createGain(); env(g,t,0.001,0.12,crit?0.5:0.36); o.connect(g).connect(master); o.start(t); o.stop(t+0.14);
+  const s=noise(0.05), hp=ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2400;
+  const g2=ac.createGain(); env(g2,t,0.001,0.035,0.16); s.connect(hp).connect(g2).connect(master); s.start(t); s.stop(t+0.06); }
+
+function kill(boss){ if(!ac) return; const t=ac.currentTime;     // deep finishing boom
+  const o=ac.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(boss?90:110,t); o.frequency.exponentialRampToValueAtTime(30,t+(boss?0.5:0.3));
+  const g=ac.createGain(); env(g,t,0.004,boss?0.5:0.3,boss?0.7:0.45); o.connect(g).connect(master); o.start(t); o.stop(t+(boss?0.56:0.36));
+  const s=noise(boss?0.4:0.22), lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(2200,t); lp.frequency.exponentialRampToValueAtTime(240,t+(boss?0.36:0.2));
+  const g2=ac.createGain(); env(g2,t,0.002,boss?0.36:0.2,0.3); s.connect(lp).connect(g2).connect(master); s.start(t); s.stop(t+(boss?0.42:0.24)); }
+
+function land(){ if(!ac) return; const t=ac.currentTime;         // soft footfall thump
+  const o=ac.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(95,t); o.frequency.exponentialRampToValueAtTime(48,t+0.07);
+  const g=ac.createGain(); env(g,t,0.001,0.07,0.18); o.connect(g).connect(master); o.start(t); o.stop(t+0.09); }
+
+window.SFX={ init, slash, ranged, block, parry, hurt, ult, impact, kill, land,
   setMuted(m){ try{ if(master) master.gain.value = m?0:0.32; }catch(e){} },
   toggleMute(){ const m = master? master.gain.value>0 : false; this.setMuted(m); return m; } };
 })();
