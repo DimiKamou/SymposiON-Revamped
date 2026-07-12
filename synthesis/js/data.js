@@ -262,9 +262,28 @@ Object.assign(SUBJECTS, {
               g('Ουσιαστικά ανά Κείμενο','Nouns by Text','Κλίση ανά κείμενο','column',{fn:'openLatNounsKata'}),
               g('Επίθετα ανά Κείμενο','Adjectives by Text','Κλίση & βαθμοί ανά κείμενο','wreath',{fn:'openLatEpithetaKata'}),
               g('Θεωρία','Theory','Σημειώσεις · κανόνες','book',{fn:'openLatAnwmalaTheory'}) ] },
-    // ── Κείμενα — full per-Ενότητα text-analysis panels (separate from the
-    //    grammar games above). One tile → one link per text. ──
-    { id:'gl-texts', roman:'IV', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
+    // ── Κείμενα · Β΄ Λυκείου — per-Ενότητα text-analysis panels (Lectiones 1–15).
+    //    Coming-soon placeholders for now; each flips to g('…',…,{fn:'openLatinTextN'})
+    //    once its units/unitN.js data file lands (same textbook, contiguous with 16–50). ──
+    { id:'gl-texts-b', roman:'IV', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Β΄ Λυκείου',
+      summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
+      games:[ gSoon('Ενότητα 1','Unit 1','σύντομα','scroll'),
+              gSoon('Ενότητα 2','Unit 2','σύντομα','scroll'),
+              gSoon('Ενότητα 3','Unit 3','σύντομα','scroll'),
+              gSoon('Ενότητα 4','Unit 4','σύντομα','scroll'),
+              gSoon('Ενότητα 5','Unit 5','σύντομα','scroll'),
+              gSoon('Ενότητα 6','Unit 6','σύντομα','scroll'),
+              gSoon('Ενότητα 7','Unit 7','σύντομα','scroll'),
+              gSoon('Ενότητα 8','Unit 8','σύντομα','scroll'),
+              gSoon('Ενότητα 9','Unit 9','σύντομα','scroll'),
+              gSoon('Ενότητα 10','Unit 10','σύντομα','scroll'),
+              gSoon('Ενότητα 11','Unit 11','σύντομα','scroll'),
+              gSoon('Ενότητα 12','Unit 12','σύντομα','scroll'),
+              gSoon('Ενότητα 13','Unit 13','σύντομα','scroll'),
+              gSoon('Ενότητα 14','Unit 14','σύντομα','scroll'),
+              gSoon('Ενότητα 15','Unit 15','σύντομα','scroll') ] },
+    // ── Κείμενα · Γ΄ Λυκείου (Προσανατολισμού) — full per-Ενότητα panels (16–50). ──
+    { id:'gl-texts', roman:'V', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
       summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
       games:[ g('Εισαγωγή','Introduction','Ρωμαϊκή λογοτεχνία · συγγραφείς · ασκήσεις','book',{fn:'openLatinIntro'}),
               g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
