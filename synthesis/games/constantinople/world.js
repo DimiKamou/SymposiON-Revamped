@@ -18,6 +18,8 @@
       lead:  new THREE.MeshStandardMaterial({ color: 0x8f979f, metalness: 0.3, roughness: 0.5 }),
       gold:  new THREE.MeshStandardMaterial({ color: 0xd9b45c, metalness: 0.85, roughness: 0.3 }),
       porph: new THREE.MeshStandardMaterial({ color: 0x5e3140, roughness: 0.5 }),
+      bronze:new THREE.MeshStandardMaterial({ color: 0x7a5a2e, metalness: 0.75, roughness: 0.45 }),
+      gran:  new THREE.MeshStandardMaterial({ color: 0x9a6553, roughness: 0.8 }),
       dark:  new THREE.MeshStandardMaterial({ color: 0x4a4238, roughness: 0.9 }),
       green: new THREE.MeshStandardMaterial({ color: 0x51663d, roughness: 0.95 }),
       tent:  new THREE.MeshStandardMaterial({ color: 0xe3d7b8, roughness: 0.9 }),
@@ -41,7 +43,7 @@
     }
     // peninsula (x, z): z drawn negative-north / positive-south, shape uses (x, -z)
     const PEN = [[-255, -155], [-40, -128], [60, -120], [160, -95], [230, -60], [258, -32],
-                 [245, 12], [200, 42], [140, 82], [60, 100], [-40, 112], [-150, 148], [-258, 165]];
+                 [245, 12], [212, 56], [140, 82], [60, 100], [-40, 112], [-150, 148], [-258, 165]];
     const GAL = [[118, -202], [232, -196], [238, -122], [148, -118]];
     world.add(new THREE.Mesh(landShape(PEN.map(p => [p[0], -p[1]])), M.land));
     world.add(new THREE.Mesh(landShape(GAL.map(p => [p[0], -p[1]])), M.land2));
@@ -74,19 +76,29 @@
       bs.forEach((m, i) => { ib.setMatrixAt(i, m); ir.setMatrixAt(i, m); });
       group.add(ib, ir);
     }
-    function inPeninsula(x, z) {   // crude interior test: within coast box + off streets
-      if (x < -232 || x > 240) return false;
-      if (z < -118 + (x < -40 ? (-40 - x) * 0.16 : 0)) return false;
-      if (z > 100 + (x < -40 ? (x + 40) * -0.22 : (x > 140 ? (140 - x) * 0.5 : 0))) return false;
+    function pip(poly, x, z) {          // point-in-polygon (ray cast)
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i][0], zi = poly[i][1], xj = poly[j][0], zj = poly[j][1];
+        if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+    function inland(poly, x, z, m) {    // strictly inside, ≥ m units from every coast
+      return pip(poly, x, z) && pip(poly, x - m, z) && pip(poly, x + m, z)
+          && pip(poly, x, z - m) && pip(poly, x, z + m);
+    }
+    function inPeninsula(x, z) {
+      if (!inland(PEN, x, z, 7)) return false;
       if (Math.abs(z - 8) < 5 && x > -220) return false;          // keep the Mese clear
       return true;
     }
 
-    function domedChurch(b, x, z, s, domeMat) {
+    function domedChurch(b, x, z, s, domeB) {
       const base = new THREE.BoxGeometry(6 * s, 3.6 * s, 6 * s); base.translate(0, 1.8 * s, 0);
       b.add(base, x, 1.4, z);
       const dome = new THREE.SphereGeometry(2.4 * s, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-      (domeMat || bLead).add(dome, x, 1.4 + 3.6 * s, z);
+      (domeB || bLead).add(dome, x, 1.4 + 3.6 * s, z);
     }
 
     function wallLine(builder, x0, z0, x1, z1, h, t, towerEvery, towerH) {
@@ -131,7 +143,7 @@
     }
 
     /* ══ ERA GROUPS ══ */
-    for (const k of ['constantine', 'theod', 'hsBasilica', 'just', 'maced', 'sack', 'late', 'ottoman', 'denseC', 'denseB', 'denseX', 'galata'])
+    for (const k of ['constantine', 'theod', 'hsBasilica', 'just', 'maced', 'sack', 'late', 'ottoman', 'denseC', 'denseB', 'denseX', 'galata', 'horses', 'chainWorks', 'chain', 'chainBrk'])
       { G[k] = new THREE.Group(); world.add(G[k]); }
 
     /* — era 0+: Constantine — */
@@ -143,12 +155,24 @@
       b.add(stand, 172, 1.4 + 2.25, 12, 0); b.add(stand, 172, 1.4 + 2.25, 30, 0);
       const sph = new THREE.CylinderGeometry(11, 11, 4.5, 20, 1, false, 0, Math.PI);
       b.add(sph, 153, 1.4 + 2.25, 21, -Math.PI / 2);
-      const ob = new THREE.CylinderGeometry(0.5, 0.7, 7, 4);     // obelisk + serpent column
-      bMarble.add(ob, 176, 1.4 + 3.5, 21);
-      bDark.add(new THREE.CylinderGeometry(0.25, 0.4, 4, 8), 168, 1.4 + 2, 21);
+      b.add(new THREE.BoxGeometry(3, 3.6, 22), 192.5, 1.4 + 1.8, 21);   // carceres (start gates)
+      // spina: the Serpent Column of Delphi (Constantine's Plataia trophy)
+      const bBr = XP.builder(M.bronze);
+      bBr.add(new THREE.CylinderGeometry(0.34, 0.46, 1.8, 8), 168, 1.4 + 0.9, 21);
+      bBr.add(new THREE.CylinderGeometry(0.24, 0.34, 1.6, 8), 168.12, 1.4 + 2.55, 21);
+      bBr.add(new THREE.CylinderGeometry(0.15, 0.24, 1.5, 8), 168, 1.4 + 4.05, 20.9);
+      for (const a of [-0.7, 0, 0.7])
+        bBr.add(new THREE.SphereGeometry(0.2, 8, 6), 168 + Math.sin(a) * 0.45, 1.4 + 4.95, 21 - 0.45 + Math.abs(a) * 0.3);
+      bBr.flush(G.constantine);
+      // kathisma (imperial box) + the Milion tetrapylon
+      b.add(new THREE.BoxGeometry(4.6, 5.5, 3.6), 172, 1.4 + 2.75, 34.4);
+      bGold.add(new THREE.SphereGeometry(1.4, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), 172, 1.4 + 5.5, 34.4);
+      for (const [mx, mz] of [[185.5, 6.5], [188.5, 6.5], [185.5, 9.5], [188.5, 9.5]])
+        bMarble.add(new THREE.CylinderGeometry(0.16, 0.16, 3.4, 6), mx, 1.4 + 1.7, mz);
+      bMarble.add(new THREE.BoxGeometry(4.2, 0.7, 4.2), 187, 1.4 + 3.75, 8);
       // Great Palace terraces
       const t1 = new THREE.BoxGeometry(26, 5, 20), t2 = new THREE.BoxGeometry(20, 4, 14), t3 = new THREE.BoxGeometry(14, 3, 10);
-      b.add(t1, 196, 1.4 + 2.5, 38); b.add(t2, 203, 1.4 + 2, 52); b.add(t3, 209, 1.4 + 1.5, 63);
+      b.add(t1, 196, 1.4 + 2.5, 38); b.add(t2, 202, 1.4 + 2, 50); b.add(t3, 206, 1.4 + 1.5, 57);
       bGold.add(new THREE.SphereGeometry(3.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), 196, 1.4 + 5, 38); // Chrysotriklinos-ish
       // Forum of Constantine + porphyry column
       bMarble.add(new THREE.CylinderGeometry(9, 9, 0.5, 24), 148, 1.65, 8);
@@ -173,10 +197,18 @@
       G.theod.children[G.theod.children.length - 1].position.set(-263, 1.2, 4);
       G.theod.children[G.theod.children.length - 1].rotation.y = 0.02;
       // Golden Gate
-      bMarble.add(new THREE.BoxGeometry(9, 8, 4), -239, 1.4 + 4, 96);
-      bMarble.add(new THREE.BoxGeometry(3.4, 10, 4.4), -245, 1.4 + 5, 96);
-      bMarble.add(new THREE.BoxGeometry(3.4, 10, 4.4), -233, 1.4 + 5, 96);
-      bGold.add(new THREE.BoxGeometry(2.2, 3.4, 0.5), -239, 1.4 + 1.8, 94.2);
+      const bm1 = XP.builder(M.marble), bg1 = XP.builder(M.gold);
+      bm1.add(new THREE.BoxGeometry(9, 8, 4), -239, 1.4 + 4, 96);
+      bm1.add(new THREE.BoxGeometry(3.4, 10, 4.4), -245, 1.4 + 5, 96);
+      bm1.add(new THREE.BoxGeometry(3.4, 10, 4.4), -233, 1.4 + 5, 96);
+      bg1.add(new THREE.BoxGeometry(2.2, 3.4, 0.5), -239, 1.4 + 1.8, 94.2);
+      // spina: the obelisk of Theodosius (raised 390 on its sculpted base)
+      bm1.add(new THREE.BoxGeometry(1.9, 1.5, 1.9), 176, 1.4 + 0.75, 21);
+      const bGr = XP.builder(M.gran);
+      const obl = new THREE.CylinderGeometry(0.34, 0.5, 5.6, 4); obl.rotateY(Math.PI / 4);
+      bGr.add(obl, 176, 1.4 + 1.5 + 2.8, 21); bGr.flush(G.theod);
+      bg1.add(new THREE.ConeGeometry(0.4, 0.7, 4), 176, 1.4 + 7.45, 21);
+      bm1.flush(G.theod); bg1.flush(G.theod);
       // Aqueduct of Valens
       for (let i = 0; i < 20; i++) {
         const x = 58 - i * 5.2;
@@ -210,23 +242,36 @@
       bg.add(new THREE.BoxGeometry(0.25, 1.6, 0.25), 195, 1.4 + 12.2, -8);
       b.flush(G.just); bl.flush(G.just); bg.flush(G.just);
       // Hagia Eirene + Sergius&Bacchus + Holy Apostles (Justinian rebuild)
-      const b2 = XP.builder(M.marble);
-      domedChurch(b2, 208, -22, 0.9); domedChurch(b2, 186, 52, 0.8); domedChurch(b2, -18, -52, 1.1);
-      b2.flush(G.just);
+      const b2 = XP.builder(M.marble), bl2 = XP.builder(M.lead);
+      domedChurch(b2, 208, -22, 0.9, bl2); domedChurch(b2, 186, 52, 0.8, bl2); domedChurch(b2, -18, -52, 1.1, bl2);
+      // Boukoleon: the palace harbour front on the Marmara
+      b2.add(new THREE.BoxGeometry(10, 4.2, 4.6), 200, 1.4 + 2.1, 58.5);
+      b2.add(new THREE.BoxGeometry(13, 1.1, 2.6), 200, 1.4 + 0.55, 61.4);
+      b2.flush(G.just); bl2.flush(G.just);
       XP.label('Ἁγία Σοφία', 195, 26, -8, 1.1);
+      XP.label('Βουκολέων', 200, 11, 59, 0.55);
+      G.just.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
     }
 
     /* — era 3+: apogee — */
     {
       houseField(G.denseX, XP.rng(303), 200, (x, z) => inPeninsula(x, z));
-      const b = XP.builder(M.marble);
+      const b = XP.builder(M.marble), bl3 = XP.builder(M.lead);
       for (const [x, z, s] of [[80, -40, 0.8], [40, 60, 0.75], [-80, 30, 0.85], [-140, -40, 0.8], [-60, -80, 0.75], [120, 30, 0.7]])
-        domedChurch(b, x, z, s);
+        domedChurch(b, x, z, s, bl3);
       // Blachernae palace NW
       b.add(new THREE.BoxGeometry(16, 8, 10), -206, 1.4 + 4, -132);
       b.add(new THREE.BoxGeometry(10, 11, 8), -196, 1.4 + 5.5, -138);
-      b.flush(G.maced);
-      houseField(G.galata, XP.rng(404), 80, (x, z) => x > 128 && x < 228 && z > -192 && z < -128);
+      // Pharos beacon tower over the palace + the Walled Obelisk on the spina
+      b.add(new THREE.CylinderGeometry(0.9, 1.2, 7, 8), 207, 1.4 + 3.5, 52);
+      const wob = new THREE.CylinderGeometry(0.3, 0.62, 5.2, 4); wob.rotateY(Math.PI / 4);
+      b.add(wob, 160, 1.4 + 3.1, 21);
+      b.add(new THREE.BoxGeometry(1.5, 1.0, 1.5), 160, 1.4 + 0.5, 21);
+      b.flush(G.maced); bl3.flush(G.maced);
+      const bg3 = XP.builder(M.gold);
+      bg3.add(new THREE.SphereGeometry(0.5, 8, 6), 207, 1.4 + 7.4, 52);
+      bg3.flush(G.maced);
+      houseField(G.galata, XP.rng(404), 80, (x, z) => inland(GAL, x, z, 6));
       XP.label('Βλαχέρναι', -201, 26, -134, 0.85);
       XP.label('Γαλατᾶς', 185, 22, -160, 0.85);
     }
@@ -279,28 +324,87 @@
       ships(G.ottoman, [[248, -150, 1.9, 1.4], [258, -140, 1.9, 1.4], [268, -130, 1.9, 1.4]], M.red); // on land!
       XP.label('Ὀθωμανικὸν στρατόπεδον', -295, 30, -30, 0.95);
       G.ottoman.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
-      // Galata tower (1348) + the chain
+      // Galata tower (built by the Genoese, 1348)
       const gt = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 12, 12), M.wall);
       gt.position.set(185, 1.4 + 6, -152); G.late.add(gt);
       const gtc = new THREE.Mesh(new THREE.ConeGeometry(2.8, 3, 12), M.lead);
       gtc.position.set(185, 1.4 + 13.5, -152); G.late.add(gtc);
-      const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 46, 6), M.dark);
-      chain.rotation.z = Math.PI / 2; chain.rotation.y = Math.atan2(-30, 38);
-      chain.position.set(166, 1.1, -122); G.late.add(chain);
-      XP.label('Ἡ Ἅλυσις', 166, 12, -122, 0.75);
+      XP.label('Πύργος Γαλατᾶ', 185, 20, -152, 0.65);
       G.late.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
     }
 
-    // sea-wall ribbon around the peninsula coast (era 1+, kept simple)
+    /* — the chain of the Golden Horn (attested from 717; rammed open 1203) — */
+    {
+      const CT = [227, -57], KT = [206, -122];       // tower of Eugenios · the Kastellion
+      const bT = XP.builder(M.wall);
+      bT.add(new THREE.BoxGeometry(4, 7, 4), CT[0], 1.4 + 3.5, CT[1]);
+      bT.add(new THREE.BoxGeometry(3.4, 6, 3.4), KT[0], 1.4 + 3, KT[1]);
+      bT.flush(G.chainWorks);
+      XP.label('Πύργος Εὐγενίου', CT[0], 13, CT[1], 0.55);
+      G.chainWorks.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Καστέλλιον', KT[0], 12, KT[1], 0.55);
+      G.chainWorks.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      function boom(group, t0, t1, dropStart, dropEnd) {
+        const bC = XP.builder(M.dark), N = 14;
+        let px = null, py = 0, pz = 0;
+        for (let i = 0; i <= N; i++) {
+          const t = t0 + (t1 - t0) * i / N, u = i / N;
+          const x = CT[0] + (KT[0] - CT[0]) * t, z = CT[1] + (KT[1] - CT[1]) * t;
+          const y = 2.3 - 6.4 * t * (1 - t) - dropEnd * u * u - dropStart * (1 - u) * (1 - u);
+          if (px !== null) {
+            const dx = x - px, dz = z - pz, len = Math.hypot(dx, dz);
+            const seg = new THREE.CylinderGeometry(0.26, 0.26, len + 0.2, 6);
+            seg.rotateZ(Math.PI / 2);
+            bC.add(seg, (x + px) / 2, (y + py) / 2, (z + pz) / 2, Math.atan2(dx, dz) - Math.PI / 2);
+            if (i % 2 === 0 && y > 0.2)
+              bC.add(new THREE.BoxGeometry(1.7, 0.5, 0.9), x, Math.max(y - 0.15, 0.25), z, Math.atan2(dx, dz) - Math.PI / 2);
+          }
+          px = x; py = y; pz = z;
+        }
+        bC.flush(group);
+      }
+      boom(G.chain, 0, 1, 0, 0);
+      XP.label('Ἡ Ἅλυσις', (CT[0] + KT[0]) / 2, 10, (CT[1] + KT[1]) / 2, 0.7);
+      G.chain.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      boom(G.chainBrk, 0, 0.38, 0, 3.4);             // 1204: both halves droop into the Horn
+      boom(G.chainBrk, 0.72, 1, 3.4, 0);
+      ships(G.chainBrk, [[218, -92, 2.35], [224, -82, 2.5]], M.sailW);
+      XP.label('1204 — ἡ ἅλυσις σπασμένη', 217, 12, -90, 0.6);
+      G.chainBrk.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+    }
+
+    /* — the four bronze horses over the carceres (to Venice, 1204) — */
+    {
+      const hs = new THREE.Shape();
+      [[-1.05, 0.5], [-1.1, 0.9], [-0.75, 1.02], [-0.2, 0.98], [0.45, 1.02], [0.7, 1.5],
+       [0.92, 1.62], [1.18, 1.5], [1.05, 1.28], [0.95, 0.9], [0.78, 0.52], [0.6, 0.52],
+       [0.55, 0.06], [0.4, 0.06], [0.38, 0.5], [-0.35, 0.5], [-0.5, 0.06], [-0.68, 0.06],
+       [-0.72, 0.52], [-0.95, 0.4]]
+        .forEach((p, i) => i ? hs.lineTo(p[0], p[1]) : hs.moveTo(p[0], p[1]));
+      hs.closePath();
+      const hg = new THREE.ExtrudeGeometry(hs, { depth: 0.26, bevelEnabled: false });
+      const bh = XP.builder(M.gold);
+      for (const hz of [14.5, 18.5, 22.5, 26.5]) bh.add(hg, 192.4, 1.4 + 3.6, hz, Math.PI / 2);
+      bh.flush(G.horses);
+    }
+
+    // sea walls: the single-line coastal circuit, joined to the land walls at
+    // both ends (completed under the prefect Cyrus, 439) — towers all the way
     {
       const b = XP.builder(M.wall);
-      for (let i = 0; i < PEN.length - 1; i++) {
-        const [x0, z0] = PEN[i], [x1, z1] = PEN[i + 1];
-        const len = Math.hypot(x1 - x0, z1 - z0);
-        b.add(new THREE.BoxGeometry(len, 2.6, 1.2), (x0 + x1) / 2, 1.4 + 1.3, (z0 + z1) / 2,
-          Math.atan2(x1 - x0, z1 - z0) + Math.PI / 2);
+      const path = [[-235, -152]].concat(PEN, [[-242, 162]]);
+      const twr = new THREE.CylinderGeometry(1.15, 1.35, 5.2, 8);
+      for (let i = 0; i < path.length - 1; i++) {
+        const [x0, z0] = path[i], [x1, z1] = path[i + 1];
+        const dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
+        b.add(new THREE.BoxGeometry(len + 1.2, 3.4, 1.4), (x0 + x1) / 2, 1.4 + 1.7, (z0 + z1) / 2,
+          Math.atan2(dx, dz) + Math.PI / 2);
+        const n = Math.max(1, Math.round(len / 16));
+        for (let k = 1; k <= n; k++) b.add(twr, x0 + dx * k / n, 1.4 + 2.6, z0 + dz * k / n);
       }
       b.flush(G.theod);
+      XP.label('Παράλια Τείχη', 30, 14, 100, 0.75);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
     }
 
     [bWall, bMarble, bLead, bGold, bDark, bPorph].forEach(b => b.flush(world));
@@ -317,8 +421,12 @@
     G.denseX.visible = i >= 3 && i !== 5;
     G.maced.visible = i >= 3;
     G.galata.visible = i >= 3;
+    G.horses.visible = i <= 3;                 // looted to San Marco in 1204
+    G.chainWorks.visible = i >= 3;
+    G.chain.visible = i === 3 || i === 5;      // intact — 1453: Mehmed goes over land
+    G.chainBrk.visible = i === 4;              // 1203: the Venetians ram it open
     G.sack.visible = i === 4;
-    G.late.visible = i >= 4;
+    G.late.visible = i === 5;                  // Galata tower is 1348
     G.ottoman.visible = i === 5;
   };
 })();
