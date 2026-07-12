@@ -206,6 +206,9 @@ const ENGINES = [
   { gr:'Λαβύρινθος', en:'Labyrinth', meta:{gr:'Maze · Μυθολογία',en:'Maze · Mythology'}, illu:'labyrinth' },
   { gr:'Συμπόσιον', en:'Symposion', meta:{gr:'Επιτραπέζιο · 2–8 παίκτες',en:'Board game · 2–8 players'}, illu:'amphora' },
   { gr:'Αγία Σοφία 537', en:'Hagia Sophia 537', meta:{gr:'3D Μουσείο · Περιήγηση στον ναό',en:'3D museum · walk the Great Church'}, illu:'acropolis' },
+  { gr:'Κωνσταντινούπολις', en:'Constantinople 330–1453', meta:{gr:'3D Διόραμα · 6 εποχές εξέλιξης',en:'3D diorama · 6 eras of growth'}, illu:'walls' },
+  { gr:'Κνωσός', en:'Knossos', meta:{gr:'3D Μουσείο · Μινωικό ανάκτορο',en:'3D museum · the Minoan palace'}, illu:'labyrinth' },
+  { gr:'Ακρόπολις 432 π.Χ.', en:'Acropolis 432 BC', meta:{gr:'3D Μουσείο · Παρθενώνας',en:'3D museum · the Parthenon'}, illu:'column' },
 ];
 
 window.SYM = { STR, CLASSES, SUBJECTS, ENGINES, L };

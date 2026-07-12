@@ -13,10 +13,37 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES || {}, {
     overlay: 'hagia-sophia-overlay',
     eager:   false,
     fb:      false
+  },
+  openConstantinople: {
+    js:      ['games/constantinople/launcher.js'],
+    css:     [],
+    overlay: 'constantinople-overlay',
+    eager:   false,
+    fb:      false
+  },
+  openKnossos: {
+    js:      ['games/knossos/launcher.js'],
+    css:     [],
+    overlay: 'knossos-overlay',
+    eager:   false,
+    fb:      false
+  },
+  openAcropolis: {
+    js:      ['games/acropolis/launcher.js'],
+    css:     [],
+    overlay: 'acropolis-overlay',
+    eager:   false,
+    fb:      false
   }
 });
 
 window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP || {}, {
-  'Hagia Sophia 537':  'openHagiaSophia',
-  'Αγία Σοφία 537':    'openHagiaSophia'
+  'Hagia Sophia 537':       'openHagiaSophia',
+  'Αγία Σοφία 537':         'openHagiaSophia',
+  'Constantinople 330–1453':'openConstantinople',
+  'Κωνσταντινούπολις':      'openConstantinople',
+  'Knossos':                'openKnossos',
+  'Κνωσός':                 'openKnossos',
+  'Acropolis 432 BC':       'openAcropolis',
+  'Ακρόπολις 432 π.Χ.':     'openAcropolis'
 });
