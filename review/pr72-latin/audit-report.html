@@ -1,0 +1,313 @@
+<title>SymposiON — Latin PR #72 Audit</title>
+<style>
+:root{
+  --paper:#f4f6f2; --paper2:#ecefe8; --card:#fbfcf9; --ink:#171b19; --ink2:#3c463f; --muted:#5d6a60;
+  --line:#dde2d7; --line2:#e8ebe2; --accent:#2f7d63; --accent2:#276a54; --on-accent:#f4faf2;
+  --crit:#b3261e; --high:#c2410c; --med:#9a6b00; --low:#456280; --ok:#2f7d63;
+  --crit-bg:#f7e4e2; --high-bg:#f8e7dd; --med-bg:#f6efd9; --low-bg:#e4ebf1; --ok-bg:#e0efe7;
+  --shadow:0 1px 2px rgba(20,30,24,.05),0 8px 30px -18px rgba(20,30,24,.25);
+  --serif:Georgia,'Iowan Old Style','Palatino Linotype',Palatino,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#12160f; --paper2:#171c15; --card:#1a1f18; --ink:#e8ebe1; --ink2:#c2c9bd; --muted:#93a08f;
+  --line:#2b332a; --line2:#232a22; --accent:#5cbf9c; --accent2:#6fcdac; --on-accent:#0c130f;
+  --crit:#f08b83; --high:#f0a375; --med:#e0bd5c; --low:#8fb0cf; --ok:#5cbf9c;
+  --crit-bg:#2c1a19; --high-bg:#2b1f16; --med-bg:#2a2513; --low-bg:#182430; --ok-bg:#14251d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 34px -18px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --paper:#12160f; --paper2:#171c15; --card:#1a1f18; --ink:#e8ebe1; --ink2:#c2c9bd; --muted:#93a08f;
+  --line:#2b332a; --line2:#232a22; --accent:#5cbf9c; --accent2:#6fcdac; --on-accent:#0c130f;
+  --crit:#f08b83; --high:#f0a375; --med:#e0bd5c; --low:#8fb0cf; --ok:#5cbf9c;
+  --crit-bg:#2c1a19; --high-bg:#2b1f16; --med-bg:#2a2513; --low-bg:#182430; --ok-bg:#14251d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 34px -18px rgba(0,0,0,.6);
+}
+:root[data-theme="light"]{
+  --paper:#f4f6f2; --paper2:#ecefe8; --card:#fbfcf9; --ink:#171b19; --ink2:#3c463f; --muted:#5d6a60;
+  --line:#dde2d7; --line2:#e8ebe2; --accent:#2f7d63; --accent2:#276a54; --on-accent:#f4faf2;
+  --crit:#b3261e; --high:#c2410c; --med:#9a6b00; --low:#456280; --ok:#2f7d63;
+  --crit-bg:#f7e4e2; --high-bg:#f8e7dd; --med-bg:#f6efd9; --low-bg:#e4ebf1; --ok-bg:#e0efe7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
+  -webkit-font-smoothing:antialiased;font-size:16px}
+.wrap{max-width:940px;margin:0 auto;padding:clamp(20px,4vw,56px) clamp(16px,4vw,40px) 90px}
+h1,h2,h3{text-wrap:balance;line-height:1.15;margin:0}
+.mono{font-family:var(--mono)}
+.tnum{font-variant-numeric:tabular-nums}
+code{font-family:var(--mono);font-size:.86em;background:var(--paper2);padding:.1em .4em;border-radius:4px;
+  border:1px solid var(--line2);word-break:break-word}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+/* ── masthead ── */
+.eyebrow{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+header.mast{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:8px}
+header.mast h1{font-family:var(--serif);font-weight:800;font-size:clamp(30px,5vw,46px);letter-spacing:-.01em;margin:10px 0 6px}
+.sub{color:var(--muted);font-size:15.5px;max-width:66ch}
+.meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:16px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink2);font-weight:600}
+
+/* ── verdict band ── */
+.verdict{margin:26px 0 6px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);
+  border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+.verdict h2{font-family:var(--serif);font-size:19px;margin-bottom:6px}
+.verdict p{margin:6px 0 0;font-size:14.5px;color:var(--ink2)}
+
+/* ── metric tiles ── */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:22px 0 8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 15px;box-shadow:var(--shadow)}
+.tile .n{font-family:var(--serif);font-weight:800;font-size:30px;line-height:1;letter-spacing:-.01em}
+.tile .l{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
+.tile.good .n{color:var(--ok)} .tile.warn .n{color:var(--med)} .tile.bad .n{color:var(--high)}
+
+/* ── sections ── */
+section{margin-top:42px}
+section > h2{font-family:var(--serif);font-size:24px;font-weight:800;padding-bottom:9px;border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:11px}
+section > h2 .rn{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:400;flex:none}
+.lead{color:var(--ink2);font-size:15px;margin:14px 0 4px;max-width:70ch}
+
+/* ── table ── */
+.tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:11px;margin-top:16px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);min-width:560px}
+th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  padding:11px 14px;background:var(--paper2);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 14px;border-top:1px solid var(--line2);vertical-align:top}
+tbody tr:hover{background:var(--paper2)}
+td.c{text-align:center}
+
+/* ── status pills ── */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;
+  white-space:nowrap;letter-spacing:.01em}
+.pill.merged{color:var(--ok);background:var(--ok-bg)}
+.pill.open{color:var(--med);background:var(--med-bg)}
+.pill.closed{color:var(--muted);background:var(--paper2);border:1px solid var(--line)}
+.pill.yes{color:var(--ok);background:var(--ok-bg)}
+.pill.no{color:var(--high);background:var(--high-bg)}
+
+/* ── severity chips ── */
+.sev{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:5px}
+.sev.crit{color:var(--crit);background:var(--crit-bg)}
+.sev.high{color:var(--high);background:var(--high-bg)}
+.sev.med{color:var(--med);background:var(--med-bg)}
+.sev.low{color:var(--low);background:var(--low-bg)}
+.sev.ok{color:var(--ok);background:var(--ok-bg)}
+
+/* ── finding cards ── */
+.finding{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px;
+  box-shadow:var(--shadow);border-left:4px solid var(--line)}
+.finding.crit{border-left-color:var(--crit)} .finding.high{border-left-color:var(--high)}
+.finding.med{border-left-color:var(--med)} .finding.low{border-left-color:var(--low)}
+.finding .top{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:8px}
+.finding .top h3{font-family:var(--sans);font-size:15.5px;font-weight:700;flex:1;min-width:220px}
+.finding .loc{font-family:var(--mono);font-size:11.5px;color:var(--muted);word-break:break-all}
+.finding p{margin:7px 0 0;font-size:14px;color:var(--ink2)}
+.finding .fix{margin-top:9px;font-size:13.5px;padding:9px 12px;background:var(--ok-bg);border-radius:8px;color:var(--ink2)}
+.finding .fix b{color:var(--ok)}
+.tag{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+@media(max-width:640px){.two{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px;box-shadow:var(--shadow)}
+.panel h3{font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line2);font-size:14px}
+.kv:first-of-type{border-top:0}
+.kv .v{font-weight:600;font-family:var(--mono);font-size:13px}
+.note{font-size:13px;color:var(--muted);margin-top:14px;padding-left:14px;border-left:3px solid var(--line)}
+ul.clean{margin:10px 0 0;padding-left:20px}ul.clean li{margin:5px 0;font-size:14px;color:var(--ink2)}
+footer{margin-top:54px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.disclaim{background:var(--med-bg);border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin-top:16px;font-size:13.5px;color:var(--ink2)}
+</style>
+
+<div class="wrap">
+<header class="mast">
+  <div class="eyebrow">SymposiON · Revamped — Audit</div>
+  <h1>The Latin panel, debugged</h1>
+  <p class="sub">How the last 15 pull requests were applied to the site, and a deep debug + mock-test + security pass on the “Latin one” — PR&nbsp;#72, <i>Λατινικά · Κείμενα</i>.</p>
+  <div class="meta">
+    <span><b>Repo</b> DimiKamou/symposion-revamped</span>
+    <span><b>Focus</b> PR #72 · <span class="mono">claude/latin-analysis-template-i1ug2i</span></span>
+    <span><b>Method</b> static + schema validation + headless-Chromium mock tests + 34-agent adversarial review</span>
+    <span><b>Date</b> 12 Jul 2026</span>
+  </div>
+</header>
+
+<div class="verdict">
+  <h2>Verdict — the Latin panel works; it is not yet live; the real risks sit in the backend, not the panel.</h2>
+  <p>All <b>33 published Ενότητες + the Εισαγωγή render with zero console errors</b> across a headless-browser sweep, and the client-side attack surface is clean (no HTML sinks; even a fully attacker-controlled cache cannot achieve XSS). But <b>PR #72 is still an open draft — merged into no branch</b>, along with the six other newest PRs. The two findings that actually matter are outside the panel: a <span class="sev high">high</span> Firestore rule that lets any signed-in user self-grant “Pro”, and one <span class="sev high">high</span> content bug — Ενότητα&nbsp;26 ships the text of Ενότητα&nbsp;27.</p>
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="n tnum">15</div><div class="l">recent PRs reviewed</div></div>
+  <div class="tile bad"><div class="n tnum">7</div><div class="l">newest PRs still unmerged (incl. #72)</div></div>
+  <div class="tile good"><div class="n tnum">33<span style="font-size:16px">/33</span></div><div class="l">Latin units render, 0 console errors</div></div>
+  <div class="tile good"><div class="n tnum">0</div><div class="l">real XSS / injection sinks in the panel</div></div>
+  <div class="tile warn"><div class="n tnum">18</div><div class="l">findings confirmed <span style="opacity:.7">(2 high · 7 med · 9 low)</span></div></div>
+</div>
+
+<!-- ══ 1 · PR application ══ -->
+<section>
+  <h2><span class="rn">I</span> How the last 15 PRs were applied</h2>
+  <p class="lead">The repository’s default branch is <code>claude/chat-remote-disconnect-uedp66</code> (the game-integration branch, HEAD 19 Jun). <code>main</code> is a strict superset — <b>162 commits ahead</b> and containing everything the default branch has. Merged content PRs land on <code>main</code>; the newest game PRs target the integration branch and <b>have not been merged anywhere</b>. Net: the last real deploy of new work was PRs #70/#71 to <code>main</code> on 7 Jul. Everything after — the Latin panel included — is still in flight.</p>
+  <div class="tbl-scroll">
+  <table>
+    <thead><tr><th>PR</th><th>Title</th><th>State</th><th>Base</th><th class="c">Applied?</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">#77</td><td>Mobile-usability fixes</td><td><span class="pill open">open</span></td><td class="mono">integration</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#76</td><td>Αγία Σοφία 537 — 3D museum</td><td><span class="pill open">open</span></td><td class="mono">main</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#75</td><td>Ιστορία Άτλας — history units</td><td><span class="pill open">open</span></td><td class="mono">integration</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#74</td><td>Έκθεση &amp; Λογοτεχνία theory enrich</td><td><span class="pill open">open</span></td><td class="mono">main</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr style="background:var(--ok-bg)"><td class="mono">#72</td><td><b>Λατινικά · Κείμενα (the Latin one) — draft</b></td><td><span class="pill open">open</span></td><td class="mono">integration</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#73</td><td>Greek Chronicles trilogy</td><td><span class="pill open">open</span></td><td class="mono">main</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#69</td><td>Teacher Agent — AI authoring</td><td><span class="pill open">open</span></td><td class="mono">integration</td><td class="c"><span class="pill no">no</span></td></tr>
+      <tr><td class="mono">#71</td><td>Admin edit coverage + mobile</td><td><span class="pill merged">merged</span></td><td class="mono">main</td><td class="c"><span class="pill yes">main</span></td></tr>
+      <tr><td class="mono">#70</td><td>Home UI polish</td><td><span class="pill merged">merged</span></td><td class="mono">main</td><td class="c"><span class="pill yes">main</span></td></tr>
+      <tr><td class="mono">#68</td><td>Gitignore functions/.env (secret)</td><td><span class="pill closed">closed</span></td><td class="mono">main</td><td class="c"><span class="pill no">unmerged</span></td></tr>
+      <tr><td class="mono">#67</td><td>Διδαγμένο + Συντακτικό + Αδίδακτο</td><td><span class="pill merged">merged</span></td><td class="mono">main</td><td class="c"><span class="pill yes">main</span></td></tr>
+      <tr><td class="mono">#66</td><td>Γραμματική — admins add lessons</td><td><span class="pill merged">merged</span></td><td class="mono">main</td><td class="c"><span class="pill yes">main</span></td></tr>
+      <tr><td class="mono">#65</td><td>Διδαγμένο port (supersedes #59)</td><td><span class="pill closed">closed</span></td><td class="mono">main</td><td class="c"><span class="pill no">unmerged</span></td></tr>
+      <tr><td class="mono">#61</td><td>Backfill 2020/2021 past exams</td><td><span class="pill merged">merged</span></td><td class="mono">main</td><td class="c"><span class="pill yes">main</span></td></tr>
+      <tr><td class="mono">#59</td><td>Διδαγμένο module (superseded)</td><td><span class="pill closed">closed</span></td><td class="mono">main</td><td class="c"><span class="pill no">unmerged</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note"><b>5 merged</b> (all to <code>main</code>) · <b>7 open</b> (none merged) · <b>3 closed without merge</b>. Note #68 — the PR that would have git-ignored <code>functions/.env</code> so the ANTHROPIC key can’t be committed — was closed unmerged; the <code>.gitignore</code> still has no <code>.env</code> rule (see §IV).</p>
+</section>
+
+<!-- ══ 2 · Latin PR debug ══ -->
+<section>
+  <h2><span class="rn">II</span> The Latin panel, under the microscope</h2>
+  <p class="lead">PR #72 has grown far past its title (“Ενότητα 16”): it now ships a self-contained React 18 study panel — vendored React &amp; fonts, precompiled JSX (no runtime Babel), opened in an overlay iframe — covering <b>Ενότητες 16–50 + an Εισαγωγή</b>, 108 files, +16,524 lines. Each unit regenerates 7–9 parts: text + syntax (clause brackets, role chips, dependency arrows), aligned translation, nouns/adjectives, degrees, pronouns, verbs, SOS, and optional Μετατροπές/Ετυμολογικά.</p>
+
+  <div class="two">
+    <div class="panel">
+      <h3>Mock tests — headless Chromium</h3>
+      <div class="kv"><span>Unit files <code>node --check</code></span><span class="v" style="color:var(--ok)">35/35 ✓</span></div>
+      <div class="kv"><span>Schema validation</span><span class="v" style="color:var(--ok)">0 err · 10 warn</span></div>
+      <div class="kv"><span>Published units mount</span><span class="v" style="color:var(--ok)">33/33 ✓</span></div>
+      <div class="kv"><span>Real console / page errors</span><span class="v" style="color:var(--ok)">0</span></div>
+      <div class="kv"><span>Parts render per unit</span><span class="v">7–9 ✓</span></div>
+      <div class="kv"><span>Practice mode starts</span><span class="v" style="color:var(--ok)">all ✓</span></div>
+      <div class="kv"><span>Εισαγωγή chapter</span><span class="v" style="color:var(--ok)">renders ✓</span></div>
+    </div>
+    <div class="panel">
+      <h3>Security mock tests — the panel</h3>
+      <div class="kv"><span>XSS via poisoned data-cache</span><span class="v" style="color:var(--ok)">escaped, no exec</span></div>
+      <div class="kv"><span>Malformed cache JSON</span><span class="v" style="color:var(--ok)">graceful fallback</span></div>
+      <div class="kv"><span>HTML sinks in <code>panel.js</code></span><span class="v" style="color:var(--ok)">0</span></div>
+      <div class="kv"><span><code>eval</code> / <code>new Function</code></span><span class="v" style="color:var(--ok)">0</span></div>
+      <div class="kv"><span>Dynamic unit import</span><span class="v" style="color:var(--ok)">parseInt-guarded</span></div>
+      <div class="kv"><span>Admin PIN <code>5384</code></span><span class="v" style="color:var(--med)">local-only, bypassable</span></div>
+      <div class="kv"><span>Compiled matches source</span><span class="v" style="color:var(--ok)">verified</span></div>
+    </div>
+  </div>
+  <p class="note">Units <code>unit28.js</code> and <code>unit30.js</code> ship as <b>empty stubs</b> — but they’re wired to no tile and no opener, so they’re unreachable (they degrade to a blank panel, no crash). Dead weight worth removing, not a defect.</p>
+</section>
+
+<!-- ══ 3 · Findings — Latin panel ══ -->
+<section>
+  <h2><span class="rn">III</span> Findings — the panel &amp; its content</h2>
+
+  <div class="finding high">
+    <div class="top"><span class="sev high">high</span><h3>Ενότητα 26 ships the text of Ενότητα 27</h3><span class="tag">content</span></div>
+    <div class="loc">games/latin-texts/units/unit26.js</div>
+    <p><code>unit26.js</code> (labelled “Lectio XXVI”) contains the same Accius/Pacuvius passage as <code>unit27.js</code> — both tiles are even titled <i>“Το πνεύμα ωριμάζει όπως… οι καρποί.”</i> The two files then disagree on identical tokens (e.g. <code>quidem</code>: “βεβαιωτικό μόριο” vs “τροπικό επίρρημα”; lemma of <code>multo</code>). A student opening Ενότητα 26 gets Lectio 27, and the genuine Lectio XXVI material is absent.</p>
+    <div class="fix"><b>Fix:</b> replace <code>unit26.js</code> with the real Lectio XXVI text (or drop the tile), and reconcile the divergent per-token analyses.</div>
+  </div>
+
+  <div class="finding med">
+    <div class="top"><span class="sev med">med</span><h3>The Εισαγωγή tile is dead — opener never registered</h3><span class="tag">functional · in-scope</span></div>
+    <div class="loc">js/manifest/latin-texts.js:14</div>
+    <p>The manifest loop registers <code>SYN_GAMES['openLatinText'+n]</code> for every unit but <b>never <code>openLatinIntro</code></b>. Both the dispatcher (<code>screens.js:70</code>) and <code>synLaunch()</code> bail when <code>SYN_GAMES[fn]</code> is missing — so clicking the “Εισαγωγή / Introduction” tile does nothing (console: <i>“no manifest entry”</i>). Verified against the actual launch path.</p>
+    <div class="fix"><b>Fix (1 line):</b> add <code>G['openLatinIntro'] = entry;</code> to the manifest loop.</div>
+  </div>
+
+  <div class="finding med">
+    <div class="top"><span class="sev med">med</span><h3>A single missing array field blanks the whole panel</h3><span class="tag">robustness</span></div>
+    <div class="loc">games/latin-texts/app/panel.jsx:383–413</div>
+    <p><code>renderVals()</code> reads seven parts as <code>(ready?u.nouns:[]).map(…)</code> — the ternary only guards a null <code>u</code>. If an author ships a unit missing <code>verbs</code>/<code>nouns</code>/<code>alignment</code> (easy when copying a template), <code>.map</code> throws inside <code>render()</code> with no error boundary → white screen. Current data is clean, so this is latent.</p>
+    <div class="fix"><b>Fix:</b> coerce each with <code>Array.isArray(...)?...:[]</code> (mirroring the existing <code>transforms/etymology</code> guard) and default nested arrays.</div>
+  </div>
+
+  <div class="finding low">
+    <div class="top"><span class="sev low">low</span><h3>Admin mode restores from a plain localStorage flag — PIN offers no protection</h3><span class="tag">client-security · known</span></div>
+    <div class="loc">games/latin-texts/app/panel.jsx:124 · 200</div>
+    <p>Setting <code>localStorage.latinAdmin='1'</code> unlocks teacher/edit mode on reload with no PIN prompt (confirmed live). Impact is contained: edits persist only to the local browser and export a <code>.js</code> file — <b>nothing server-side</b>. The PR already flags the PIN as a placeholder pending the real teacher account.</p>
+    <div class="fix"><b>Fix:</b> acceptable as an interim, but swap the static flag for the authenticated teacher session before launch (as planned).</div>
+  </div>
+
+  <div class="finding low">
+    <div class="top"><span class="sev low">low</span><h3>Pinned word-popup doesn’t follow the text on scroll</h3><span class="tag">UX</span></div>
+    <div class="loc">games/latin-texts/app/panel.jsx:285 · 443</div>
+    <p>A click-pinned analysis card is <code>position:fixed</code> at captured viewport coordinates; scrolling the passage leaves it stranded over unrelated text until dismissed.</p>
+    <div class="fix"><b>Fix:</b> reposition against the stored element on scroll, or auto-unpin when the container scrolls.</div>
+  </div>
+
+  <div class="disclaim">
+    <b>Content nits flagged for the teacher (7 more, low).</b> The adversarial pass also flagged specific Latin data points for a subject-expert to confirm — e.g. <code>deprensi</code>→<code>deprendi</code> (u19), <code>quodam</code>/<code>nocte</code> gender mismatch (u38), a wrong SOS period reference (u43), <code>stabilis</code> attachment (u44), <code>nolo</code> derivation shown two ways (u47), <code>introrumpo</code> prefix (u48), <code>pater</code> lemma (u50). These are grammar judgments, not code bugs — the PR is explicitly “awaiting the teacher’s sign-off,” so treat this as the punch-list, not gospel. The structurally-verifiable ones (a unit contradicting <i>itself</i> across two tabs) are the highest-confidence.</div>
+</section>
+
+<!-- ══ 4 · Backend security ══ -->
+<section>
+  <h2><span class="rn">IV</span> Security — where the real risk lives</h2>
+  <p class="lead">The Latin PR adds no backend, so the panel’s own surface is clean. The security-relevant findings are all <b>pre-existing</b> in the app that ships around it — surfaced here because you asked for a security pass, and worth fixing regardless of #72.</p>
+
+  <div class="finding high">
+    <div class="top"><span class="sev high">high</span><h3>Any signed-in user can self-grant “Pro” access — payment bypass</h3><span class="tag">pre-existing · Firestore rules</span></div>
+    <div class="loc">firestore.rules:75</div>
+    <p>The <code>users/{uid}</code> self-update rule pins only <code>role</code> (<code>request.resource.data.role == resource.data.role</code>) and leaves <code>plan</code>, <code>expiresAt</code>, <code>classes</code> unconstrained — the exact fields the Stripe webhook writes to mark someone paid. A free user can <code>setDoc(merge)</code> their own doc with <code>plan:'pro'</code> + all classes + a far-future expiry and the client treats them as a paid subscriber. <span style="color:var(--muted)">Mitigant: paid content docs are world-readable anyway, so this forges client-trusted entitlement/billing UI rather than exposing otherwise-protected data.</span></p>
+    <div class="fix"><b>Fix:</b> pin the entitlement fields the way <code>role</code> is pinned (or make them Admin-SDK-only), and gate Pro off a custom claim clients can’t forge.</div>
+  </div>
+
+  <div class="finding med">
+    <div class="top"><span class="sev med">med</span><h3><code>config/*</code> (incl. pricing) is directly writable by staff roles</h3><span class="tag">pre-existing · Firestore rules</span></div>
+    <div class="loc">firestore.rules:179</div>
+    <p><code>allow write: if can('subs') || can('content')</code> lets any holder of those custom-claim roles write <code>config/pricing</code> straight from the client, bypassing the <code>adminSaveConfig</code> validation (no €0 paid plans, price caps, coupon bounds). A content editor could set every plan to €0.01.</p>
+    <div class="fix"><b>Fix:</b> set <code>allow write: if false</code> and route all config writes through the validated Cloud Function (as <code>siteCatalog</code>/<code>gameContent</code> already do).</div>
+  </div>
+
+  <div class="finding med">
+    <div class="top"><span class="sev med">med</span><h3><code>gradeAnswer</code> is an open, unauthenticated proxy to the Anthropic API</h3><span class="tag">pre-existing · Cloud Function</span></div>
+    <div class="loc">functions/index.js:1016</div>
+    <p><code>onRequest</code> with <code>Access-Control-Allow-Origin:*</code>, no <code>context.auth</code>, no App Check, no rate limit — it forwards any POST to Claude using the server’s <code>ANTHROPIC_KEY</code>. Anyone who finds the URL can burn your token quota / bill. (The comment assumes same-origin in prod, but CORS <code>*</code> permits cross-origin.)</p>
+    <div class="fix"><b>Fix:</b> require Firebase Auth / App Check, drop CORS to the site origin, and add per-user rate limiting.</div>
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <h3>Secrets — what’s committed</h3>
+      <div class="kv"><span>Real API secret in tree</span><span class="v" style="color:var(--ok)">none</span></div>
+      <div class="kv"><span><code>functions/.env.example</code></span><span class="v">placeholder only</span></div>
+      <div class="kv"><span>Firebase client apiKey</span><span class="v" style="color:var(--ok)">public by design</span></div>
+      <div class="kv"><span><code>.gitignore</code> covers <code>.env</code></span><span class="v" style="color:var(--med)">no — gap</span></div>
+    </div>
+    <div class="panel">
+      <h3>Backend that checks out</h3>
+      <div class="kv"><span>Super-admin gate</span><span class="v" style="color:var(--ok)">email claim ✓</span></div>
+      <div class="kv"><span>Stripe callables</span><span class="v" style="color:var(--ok)">auth-gated ✓</span></div>
+      <div class="kv"><span>Webhook signature</span><span class="v" style="color:var(--ok)">verified ✓</span></div>
+      <div class="kv"><span><code>adminGrantAccess</code></span><span class="v" style="color:var(--ok)">server-checked ✓</span></div>
+    </div>
+  </div>
+  <p class="note">Hardening leftover from closed PR #68: add <code>functions/.env</code> (and <code>.env</code>) to <code>.gitignore</code>. No key is leaked today, but nothing prevents a future accidental commit of the real ANTHROPIC key.</p>
+</section>
+
+<!-- ══ 5 · Recommendations ══ -->
+<section>
+  <h2><span class="rn">V</span> What to do next</h2>
+  <ul class="clean">
+    <li><b>Ship the panel with confidence</b> — it’s functionally sound and secure client-side. Before merging #72, apply the one-line Εισαγωγή-tile fix and the <code>renderVals</code> array guards, and clean out the two empty stub units.</li>
+    <li><b>Fix Ενότητα 26</b> — the duplicate-of-27 is the one content issue that will visibly confuse students; everything else on the content list is a teacher sign-off item.</li>
+    <li><b>Treat the Firestore rules as the priority</b> — the self-grant-Pro rule (§IV) is independent of this PR and affects the live billing model now. Pin entitlement fields and lock <code>config/*</code>.</li>
+    <li><b>Close the gaps PR #68 meant to close</b> — gitignore <code>.env</code>, and put <code>gradeAnswer</code> behind auth + a tighter CORS origin.</li>
+    <li><b>Branch hygiene</b> — <code>main</code> is 162 commits ahead of the default branch yet PRs still target the older integration branch; decide which is canonical so “applied” has one clear meaning.</li>
+  </ul>
+</section>
+
+<footer>
+  Method: 35-file syntax + schema validation · headless-Chromium mock tests across all 33 published units, the intro chapter, and three client-side attack scenarios · a 34-agent adversarial review (25 raw → 18 confirmed, 7 rejected) with each finding independently re-verified. Content (Latin-grammar) findings are flagged for subject-expert confirmation; code, wiring, and security findings were reproduced against the source. Severity reflects real, verified impact.
+</footer>
+</div>
