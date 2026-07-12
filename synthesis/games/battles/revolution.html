@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Eleftheria: The Modern Greek Chronicles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  window.tailwind = window.tailwind || {};
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Cinzel', 'serif'],
+          body: ['"Plus Jakarta Sans"', 'sans-serif'],
+        },
+        boxShadow: {
+          'glow-cyan': '0 0 24px rgba(34,211,238,0.25), 0 0 60px rgba(34,211,238,0.08)',
+          'glow-tyrian': '0 0 24px rgba(192,132,252,0.25), 0 0 60px rgba(192,132,252,0.08)',
+          'glow-ivory': '0 0 24px rgba(232,217,160,0.22), 0 0 60px rgba(232,217,160,0.07)',
+        },
+        colors: {
+          marble: { 100: '#f6f2e7', 200: '#e9e3d1', 300: '#d9d0b6', 400: '#c4b78f' },
+          laurel: { 300: '#e8d9a0', 400: '#d9c47c' },
+        },
+      },
+    },
+  };
+</script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script>
+  /* lucide-react's UMD factory expects lowercase `global.react` — alias it before it loads */
+  window.react = window.React; window['react-dom'] = window.ReactDOM;
+</script>
+<script src="https://unpkg.com/framer-motion@10.18.0/dist/framer-motion.js"></script>
+<script src="https://unpkg.com/lucide-react@0.294.0/dist/umd/lucide-react.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body {
+    background-color: #060a13; /* aegean ink */
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.07), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 110%, rgba(168,85,247,0.06), transparent),
+      radial-gradient(ellipse 40% 30% at 6% 100%, rgba(232,217,160,0.04), transparent);
+    background-attachment: fixed;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #e2e8f0;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #060a13; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; border: 2px solid #060a13; }
+  ::-webkit-scrollbar-thumb:hover { background: #0e7490; }
+  .glass-card {
+    background: linear-gradient(160deg, rgba(15,23,42,0.82), rgba(6,10,19,0.9));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(103,232,249,0.16);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.6), 0 24px 70px rgba(0,0,0,0.65), 0 0 42px rgba(34,211,238,0.05) inset;
+  }
+  .map-frame {
+    background: radial-gradient(ellipse at center, rgba(15,23,42,0.9), rgba(6,10,19,0.95));
+    border: 1px solid rgba(103,232,249,0.2);
+  }
+  .greek-key-border {
+    border-image: repeating-linear-gradient(90deg, rgba(233,227,209,0.5) 0 12px, transparent 12px 20px) 1;
+  }
+  @keyframes pulseGlow { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+  .anim-pulse-glow { animation: pulseGlow 2.6s ease-in-out infinite; }
+  @keyframes dashFlow { to { stroke-dashoffset: -40; } }
+  .anim-dash { animation: dashFlow 2.2s linear infinite; }
+  .font-display { letter-spacing: 0.04em; }
+  /* --- living map animations --- */
+  .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick { transform-box: fill-box; transform-origin: center; }
+  @keyframes unitBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.4px); } }
+  .anim-bob { animation: unitBob 1.7s ease-in-out infinite; }
+  @keyframes shipRock { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+  .anim-rock { animation: shipRock 3.4s ease-in-out infinite; }
+  @keyframes flameFlick { 0%,100% { transform: scaleY(1); } 35% { transform: scaleY(1.2) skewX(2deg); } 70% { transform: scaleY(0.88); } }
+  .anim-flick { animation: flameFlick 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes clashPop { 0%,100% { transform: scale(0.8) rotate(-4deg); opacity: 0.65; } 50% { transform: scale(1.2) rotate(4deg); opacity: 1; } }
+  .anim-clash { animation: clashPop 1.15s ease-in-out infinite; }
+  @keyframes paraDrop { 0% { transform: translateY(-30px); opacity: 0; } 10% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(32px); opacity: 0; } }
+  .anim-drop { animation: paraDrop 5.2s linear infinite; }
+  @keyframes gunKick { 0%, 88%, 100% { transform: translateX(0); } 90% { transform: translateX(-1.8px); } 95% { transform: translateX(0.7px); } }
+  .anim-kick { animation: gunKick 3.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-bob, .anim-rock, .anim-flick, .anim-clash, .anim-drop, .anim-kick, .anim-dash, .anim-pulse-glow { animation: none !important; }
+  }
+  #boot-fallback { display:flex; align-items:center; justify-content:center; height:100vh; color:#94a3b8; font-family:'Plus Jakarta Sans',sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"><div id="boot-fallback">Raising the Banner&hellip; / Ύψωση του Λαβάρου&hellip;</div></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useCallback } = React;
+
+/* ============================================================
+   FRAMER MOTION BINDING (with graceful shim so the app always boots)
+   ============================================================ */
+const __FM = window.Motion || window.FramerMotion || window.framerMotion || null;
+let motion, AnimatePresence;
+if (__FM && __FM.motion && __FM.AnimatePresence) {
+  motion = __FM.motion;
+  AnimatePresence = __FM.AnimatePresence;
+} else {
+  const MOTION_ONLY_PROPS = ['initial','animate','exit','transition','variants','whileHover','whileTap','whileInView','layout','layoutId','drag','dragConstraints','onAnimationComplete','viewport'];
+  const shimFactory = (tag) => React.forwardRef((props, ref) => {
+    const clean = { ...props };
+    MOTION_ONLY_PROPS.forEach((k) => delete clean[k]);
+    const animStyle = props.animate && typeof props.animate === 'object'
+      ? { width: props.animate.width, transition: 'all 0.6s ease' } : {};
+    clean.style = { ...(clean.style || {}), ...animStyle };
+    return React.createElement(tag, { ...clean, ref });
+  });
+  const shimCache = {};
+  motion = new Proxy({}, { get: (_, tag) => shimCache[tag] || (shimCache[tag] = shimFactory(tag)) });
+  AnimatePresence = ({ children }) => React.createElement(React.Fragment, null, children);
+}
+
+/* ============================================================
+   LUCIDE REACT ICONS (with inline SVG fallbacks — zero placeholders)
+   ============================================================ */
+const __LUCIDE = window.LucideReact || window.lucideReact || window['lucide-react'] || null;
+const ICON_FALLBACK_PATHS = {
+  Scroll: '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
+  Map: '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>',
+  Swords: '<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>',
+  Shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  Landmark: '<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  Anchor: '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+  Crown: '<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.735H5.81a1 1 0 0 1-.957-.735L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>',
+  Flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  Languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  ChevronRight: '<polyline points="9 18 15 12 9 6"/>',
+  RotateCcw: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  TrendingUp: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  BookOpen: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  Trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+  Play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  Home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  Ship: '<path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/>',
+  AlertTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  Compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+  Hourglass: '<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>',
+  Columns: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>',
+};
+function Icon({ name, size = 18, className = '', strokeWidth = 2 }) {
+  if (__LUCIDE && __LUCIDE[name]) {
+    return React.createElement(__LUCIDE[name], { size, className, strokeWidth });
+  }
+  const inner = ICON_FALLBACK_PATHS[name] || ICON_FALLBACK_PATHS.Shield;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+      className={className} dangerouslySetInnerHTML={{ __html: inner }} />
+  );
+}
+
+/* ============================================================
+   BILINGUAL UI STRINGS
+   ============================================================ */
+const UI = {
+  en: {
+    appTitle: 'ELEFTHERIA',
+    appSubtitle: 'The Modern Greek Chronicles',
+    hubTagline: 'An interactive strategic chronicle of the 3rd Year Gymnasio (IEP) modern history curriculum — lead the nation from the oath of 1821 to the olive groves of Crete.',
+    grandCampaign: 'Full Grand Campaign',
+    grandCampaignDesc: 'All 9 scenarios in historical sequence — from 1821 to 1941. Your National Unity and Standing carry across every era.',
+    scenariosLabel: 'Scenarios',
+    standaloneLabel: 'Standalone Era',
+    beginCampaign: 'Begin the Grand Campaign',
+    playEra: 'Command this Era',
+    unity: 'National Unity',
+    power: 'National Standing',
+    step1Title: 'Step I — Primary Source Analysis',
+    step2Title: 'Step II — Strategic Choice & Terrain',
+    step3Title: 'Step III — Historical Outcome',
+    analyzeSource: 'Analyze Source',
+    theSourceSays: 'The Chronicler Records',
+    dilemmaTitle: 'Geopolitical & Terrain Assessment',
+    mapTitle: 'Tactical Map Schematic',
+    choicePrompt: 'Issue your command, Archistrategos:',
+    optionA: 'DIRECTIVE ALPHA',
+    optionB: 'DIRECTIVE BETA',
+    outcomeTriumph: 'Strategic Consequence — Advantage Secured',
+    outcomeSetback: 'Strategic Consequence — Grave Setback',
+    metricShift: 'Geopolitical Shift',
+    nextScenario: 'Advance to Next Crisis',
+    concludePhase: 'Conclude the Era',
+    concludeCampaign: 'Witness the Final Verdict',
+    continueCampaign: 'March into the Next Era',
+    phaseComplete: 'Era Concluded',
+    campaignComplete: 'Grand Campaign Concluded',
+    finalStanding: 'Final Geopolitical Standing',
+    verdict: 'Verdict of History',
+    chronicleOfDecisions: 'Chronicle of Your Decisions',
+    returnHub: 'Return to the Hall of Eras',
+    replay: 'Replay',
+    scenarioOf: (a, b) => `Crisis ${a} of ${b}`,
+    era: 'Era',
+    langToggle: 'Ελληνικά',
+    year: (y) => `${y}`,
+    location: 'Theatre',
+    unityDelta: 'Unity',
+    powerDelta: 'Standing',
+    briefing: 'Strategic Briefing',
+    keyTerms: 'Key Terms',
+    histNote: "Historian's Note",
+    rankLabel: 'Title Earned',
+    hubFooter: 'Curriculum alignment: History of 3rd Year Gymnasio (IEP) — 1821 · Balkan Wars & WWI · 1940–41. Sources: Kolokotronis, Venizelos, Katsimitros, war communiqués & eyewitnesses.',
+  },
+  el: {
+    appTitle: 'ΕΛΕΥΘΕΡΙΑ',
+    appSubtitle: 'Τα Χρονικά του Νέου Ελληνισμού',
+    hubTagline: 'Διαδραστικό στρατηγικό χρονικό βασισμένο στην ύλη Ιστορίας της Γ΄ Γυμνασίου (ΙΕΠ) — οδηγήστε το έθνος από τον όρκο του 1821 ώς τους ελαιώνες της Κρήτης.',
+    grandCampaign: 'Πλήρης Μεγάλη Εκστρατεία',
+    grandCampaignDesc: 'Και τα 9 σενάρια σε ιστορική αλληλουχία — από το 1821 έως το 1941. Η Εθνική Ενότητα και το Κύρος μεταφέρονται σε κάθε εποχή.',
+    scenariosLabel: 'Σενάρια',
+    standaloneLabel: 'Αυτοτελής Εποχή',
+    beginCampaign: 'Έναρξη Μεγάλης Εκστρατείας',
+    playEra: 'Ανάληψη Διοίκησης',
+    unity: 'Εθνική Ενότητα',
+    power: 'Εθνικό Κύρος',
+    step1Title: 'Βήμα Ι — Ανάλυση Πρωτογενούς Πηγής',
+    step2Title: 'Βήμα ΙΙ — Στρατηγική Επιλογή & Ανάγλυφο',
+    step3Title: 'Βήμα ΙΙΙ — Ιστορική Έκβαση',
+    analyzeSource: 'Ανάλυση Πηγής',
+    theSourceSays: 'Ο Χρονικογράφος Καταγράφει',
+    dilemmaTitle: 'Γεωπολιτική & Τοπογραφική Εκτίμηση',
+    mapTitle: 'Τακτικό Σχεδιάγραμμα Χάρτη',
+    choicePrompt: 'Δώσε τη διαταγή σου, Αρχιστράτηγε:',
+    optionA: 'ΕΝΤΟΛΗ ΑΛΦΑ',
+    optionB: 'ΕΝΤΟΛΗ ΒΗΤΑ',
+    outcomeTriumph: 'Στρατηγική Συνέπεια — Εξασφάλιση Πλεονεκτήματος',
+    outcomeSetback: 'Στρατηγική Συνέπεια — Βαρύ Πλήγμα',
+    metricShift: 'Γεωπολιτική Μεταβολή',
+    nextScenario: 'Προέλαση στην Επόμενη Κρίση',
+    concludePhase: 'Ολοκλήρωση της Εποχής',
+    concludeCampaign: 'Η Τελική Ετυμηγορία',
+    continueCampaign: 'Πορεία προς την Επόμενη Εποχή',
+    phaseComplete: 'Η Εποχή Ολοκληρώθηκε',
+    campaignComplete: 'Η Μεγάλη Εκστρατεία Ολοκληρώθηκε',
+    finalStanding: 'Τελική Γεωπολιτική Θέση',
+    verdict: 'Η Ετυμηγορία της Ιστορίας',
+    chronicleOfDecisions: 'Το Χρονικό των Αποφάσεών σου',
+    returnHub: 'Επιστροφή στην Αίθουσα των Εποχών',
+    replay: 'Νέα Απόπειρα',
+    scenarioOf: (a, b) => `Κρίση ${a} από ${b}`,
+    era: 'Εποχή',
+    langToggle: 'English',
+    year: (y) => `${y}`,
+    location: 'Θέατρο Επιχειρήσεων',
+    unityDelta: 'Ενότητα',
+    powerDelta: 'Κύρος',
+    briefing: 'Στρατηγική Ενημέρωση',
+    keyTerms: 'Όροι-Κλειδιά',
+    histNote: 'Σημείωμα του Ιστορικού',
+    rankLabel: 'Τίτλος που Απονεμήθηκε',
+    hubFooter: 'Ευθυγράμμιση με την ύλη: Ιστορία Γ΄ Γυμνασίου (ΙΕΠ) — 1821 · Βαλκανικοί & Α΄ ΠΠ · 1940–41. Πηγές: Κολοκοτρώνης, Βενιζέλος, Κατσιμήτρος, πολεμικά ανακοινωθέντα & αυτόπτες.',
+  },
+};
+
+/* ============================================================
+   PHASE (ERA) DEFINITIONS
+   ============================================================ */
+const PHASES = [
+  {
+    key: 'phase1',
+    icon: 'Flame',
+    accent: 'cyan',
+    range: { en: '1821–1827', el: '1821–1827' },
+    name: { en: 'The Revolution of 1821', el: 'Η Επανάσταση του 1821' },
+    blurb: {
+      en: 'A stateless people rises against an empire — with oaths, mountain passes, and finally the fleets of three Great Powers.',
+      el: 'Ένας λαός χωρίς κράτος ξεσηκώνεται ενάντια σε μια αυτοκρατορία — με όρκους, ορεινά περάσματα, και στο τέλος τους στόλους τριών Μεγάλων Δυνάμεων.',
+    },
+  },
+  {
+    key: 'phase2',
+    icon: 'Swords',
+    accent: 'marble',
+    range: { en: '1912–1918', el: '1912–1918' },
+    name: { en: 'Balkan Wars & the Great War', el: 'Βαλκανικοί & Α΄ Παγκόσμιος' },
+    blurb: {
+      en: 'Six years that double the nation — races for cities, bayonets on entrenched hills, and a schism that cuts to the bone.',
+      el: 'Έξι χρόνια που διπλασιάζουν το έθνος — κούρσες για πόλεις, λόγχες σε οχυρωμένα υψώματα, κι ένας διχασμός που κόβει ώς το κόκαλο.',
+    },
+  },
+  {
+    key: 'phase3',
+    icon: 'Shield',
+    accent: 'tyrian',
+    range: { en: '1940–1941', el: '1940–1941' },
+    name: { en: 'The Epic of 1940', el: 'Το Έπος του \'40' },
+    blurb: {
+      en: 'From “OXI” at dawn to the paratroopers over Crete — the small country that handed the Axis its first defeats.',
+      el: 'Από το «ΟΧΙ» της αυγής ώς τους αλεξιπτωτιστές πάνω από την Κρήτη — η μικρή χώρα που έδωσε στον Άξονα τις πρώτες του ήττες.',
+    },
+  },
+];
+
+/* ============================================================
+   HISTORICAL DATABASE — 9 MODERN GREEK SCENARIOS, BILINGUAL
+   ============================================================ */
+const SCENARIOS = [
+  /* ---------------- PHASE 1: THE REVOLUTION OF 1821 ---------------- */
+  {
+    id: 'outbreak1821',
+    phase: 'phase1',
+    year: 1821,
+    mapId: 'outbreak1821',
+    title: { en: 'The Outbreak in the Morea', el: 'Η Έκρηξη στον Μοριά' },
+    location: { en: 'Peloponnese', el: 'Πελοπόννησος' },
+    source: {
+      author: { en: 'Theodoros Kolokotronis, Memoirs', el: 'Θεόδωρος Κολοκοτρώνης, Απομνημονεύματα' },
+      quote: {
+        en: '“Our revolution did not resemble any other in Europe; ours was not a rising of a party — it was the rising of a whole nation that had kept the faith for four hundred years.”',
+        el: '«Η επανάστασή μας δεν ομοιάζει με καμμίαν από όσας γίνονται την σήμερον εις την Ευρώπην· η ιδική μας δεν ήτο κίνημα κόμματος — ήτο ξεσηκωμός ολόκληρου έθνους που εφύλαξε την πίστιν του τετρακόσια χρόνια.»',
+      },
+    },
+    context: {
+      en: 'For years the Filiki Etaireia — a secret brotherhood founded by three merchants in Odessa — has been swearing in captains, bishops and shipowners across the Ottoman world. In February 1821 Ypsilantis crosses the Pruth and the rising in the Danubian lands falters; the Sultan, distracted, is at war with Ali Pasha of Ioannina. The Morea, with its armed klephts and its mountains, waits for a signal.',
+      el: 'Επί χρόνια η Φιλική Εταιρεία — μυστική αδελφότητα που ίδρυσαν τρεις έμποροι στην Οδησσό — ορκίζει οπλαρχηγούς, δεσποτάδες και καραβοκύρηδες σε όλη την οθωμανική επικράτεια. Τον Φεβρουάριο του 1821 ο Υψηλάντης περνά τον Προύθο και η εξέγερση στις Παραδουνάβιες Ηγεμονίες κλονίζεται· ο σουλτάνος, αφηρημένος, πολεμά τον Αλή Πασά των Ιωαννίνων. Ο Μοριάς, με τους ένοπλους κλέφτες και τα βουνά του, περιμένει το σύνθημα.',
+    },
+    terms: [
+      { term: { en: 'Filiki Etaireia', el: 'Φιλική Εταιρεία' }, def: { en: 'The secret society (Odessa, 1814) that organized the national uprising.', el: 'Η μυστική εταιρεία (Οδησσός, 1814) που οργάνωσε τον εθνικό ξεσηκωμό.' } },
+      { term: { en: 'Klephts & Armatoloi', el: 'Κλέφτες & Αρματολοί' }, def: { en: 'The armed men of the mountains — outlaws and militia — who became the Revolution\'s soldiers.', el: 'Οι ένοπλοι των βουνών — αντάρτες και πολιτοφύλακες — που έγιναν οι στρατιώτες της Επανάστασης.' } },
+      { term: { en: 'Liberty or Death', el: 'Ελευθερία ή Θάνατος' }, def: { en: 'The oath and battle-cry of 1821, embroidered on the revolutionary banners.', el: 'Ο όρκος και το σύνθημα του 1821, κεντημένο στα επαναστατικά λάβαρα.' } },
+    ],
+    dilemma: {
+      en: 'The Etaireia\'s plan is compromised — Ottoman notables demand the Moreot primates present themselves at Tripolitsa as hostages. To rise now means war with an empire, with no regular army, no treasury and no promise of Russian help; to submit and wait means the leaders walk into the Ottoman citadel — and perhaps the moment, with Ali Pasha tying down 20,000 Ottoman troops, never returns.',
+      el: 'Το σχέδιο της Εταιρείας έχει διαρρεύσει — οι Οθωμανοί αξιωματούχοι απαιτούν οι πρόκριτοι του Μοριά να παρουσιαστούν στην Τριπολιτσά ως όμηροι. Ξεσηκωμός τώρα σημαίνει πόλεμος με μια αυτοκρατορία, χωρίς τακτικό στρατό, χωρίς ταμείο, χωρίς υπόσχεση ρωσικής βοήθειας· υποταγή και αναμονή σημαίνει οι ηγέτες να μπουν μόνοι τους στο οθωμανικό κάστρο — και ίσως η ευκαιρία, με τον Αλή Πασά να δεσμεύει 20.000 οθωμανικό στρατό, να μην ξανάρθει.',
+    },
+    choices: [
+      {
+        unity: 15, power: 10,
+        text: {
+          en: 'Raise the land now: refuse the summons, proclaim the Revolution across the Morea — Kalamata, Patras, the mountain passes — and let the captains besiege the Ottoman garrisons in their scattered fortresses before they can concentrate.',
+          el: 'Ξεσηκωμός τώρα: άρνηση της πρόσκλησης, κήρυξη της Επανάστασης σε όλο τον Μοριά — Καλαμάτα, Πάτρα, τα ορεινά περάσματα — και οι οπλαρχηγοί να πολιορκήσουν τις οθωμανικές φρουρές στα σκόρπια κάστρα τους πριν προλάβουν να συγκεντρωθούν.',
+        },
+        outcome: {
+          en: 'Within weeks the Morea belongs to the Revolution: Kalamata falls on 23 March, the garrisons lock themselves in their citadels, and by autumn Tripolitsa itself is taken. Europe\'s philhellenes awake — a nation has stepped back onto the stage of history.',
+          el: 'Μέσα σε εβδομάδες ο Μοριάς ανήκει στην Επανάσταση: η Καλαμάτα πέφτει στις 23 Μαρτίου, οι φρουρές κλείνονται στα κάστρα τους, και ώς το φθινόπωρο πέφτει και η ίδια η Τριπολιτσά. Οι φιλέλληνες της Ευρώπης ξυπνούν — ένα έθνος ξαναπάτησε στη σκηνή της ιστορίας.',
+        },
+      },
+      {
+        unity: -15, power: -10,
+        text: {
+          en: 'Wait for the Great Powers: comply with the summons to buy time, keep the network underground, and postpone the rising until Russia openly commits — a war of empires being the only war a stateless people can safely join.',
+          el: 'Αναμονή των Μεγάλων Δυνάμεων: συμμόρφωση με την πρόσκληση για να κερδηθεί χρόνος, το δίκτυο να μείνει υπόγειο, και αναβολή του ξεσηκωμού ώσπου να δεσμευτεί ανοιχτά η Ρωσία — γιατί μόνο σε πόλεμο αυτοκρατοριών μπορεί να μπει με ασφάλεια ένας λαός χωρίς κράτος.',
+        },
+        outcome: {
+          en: 'The hostages enter Tripolitsa and do not come out; the network is rolled up name by name. Russia, committed to the Concert of Europe, never gives the signal — and the generation that memorized Rigas\' hymn grows old waiting for a permission history does not grant.',
+          el: 'Οι όμηροι μπαίνουν στην Τριπολιτσά και δεν βγαίνουν· το δίκτυο ξηλώνεται όνομα-όνομα. Η Ρωσία, δεμένη στην Ιερή Συμμαχία, δεν δίνει ποτέ το σύνθημα — και η γενιά που αποστήθισε τον Θούριο του Ρήγα γερνά περιμένοντας μια άδεια που η ιστορία δεν δίνει.',
+        },
+      },
+    ],
+    note: {
+      en: 'Tradition places the blessing of the banner at Agia Lavra on 25 March — the feast of the Annunciation — though the rising had already begun days earlier at Kalamata and elsewhere. The date became the national day precisely because faith and freedom were proclaimed together.',
+      el: 'Η παράδοση τοποθετεί την ευλογία του λαβάρου στην Αγία Λαύρα στις 25 Μαρτίου — του Ευαγγελισμού — αν και ο ξεσηκωμός είχε ήδη αρχίσει μέρες νωρίτερα στην Καλαμάτα και αλλού. Η ημερομηνία έγινε εθνική εορτή ακριβώς επειδή πίστη και ελευθερία διακηρύχθηκαν μαζί.',
+    },
+  },
+  {
+    id: 'dervenakia',
+    phase: 'phase1',
+    year: 1822,
+    mapId: 'dervenakia',
+    title: { en: 'The Gorge of Dervenakia', el: 'Τα Δερβενάκια' },
+    location: { en: 'Dervenakia Pass, Argolis', el: 'Στενά Δερβενακίων, Αργολίδα' },
+    source: {
+      author: { en: 'Theodoros Kolokotronis, Memoirs', el: 'Θεόδωρος Κολοκοτρώνης, Απομνημονεύματα' },
+      quote: {
+        en: '“I closed the passes, and the army of Dramali was lost. There, in the narrow places, the fate of the Morea was judged in a single day.”',
+        el: '«Έκλεισα τα περάσματα, και ο στρατός του Δράμαλη εχάθη. Εκεί, στα στενά, εκρίθη η τύχη του Μοριά σε μια μέρα.»',
+      },
+    },
+    context: {
+      en: 'Summer 1822: Mahmud Dramali Pasha crosses the Isthmus with 25,000 men — the largest Ottoman army ever to enter the Morea — to drown the Revolution in its cradle. The revolutionary government panics and flees; the plain of Argos cannot be held against his cavalry. Kolokotronis, against the politicians\' orders, empties the countryside of food and water and looks instead to the waterless hills between Corinth and Argos.',
+      el: 'Καλοκαίρι 1822: ο Μαχμούτ Δράμαλης πασάς περνά τον Ισθμό με 25.000 άνδρες — τον μεγαλύτερο οθωμανικό στρατό που μπήκε ποτέ στον Μοριά — για να πνίξει την Επανάσταση στην κούνια της. Η επαναστατική κυβέρνηση πανικοβάλλεται και φεύγει· ο κάμπος του Άργους δεν κρατιέται απέναντι στο ιππικό του. Ο Κολοκοτρώνης, ενάντια στις εντολές των πολιτικών, αδειάζει την ύπαιθρο από τρόφιμα και νερό και κοιτάζει τα άνυδρα βουνά ανάμεσα σε Κόρινθο και Άργος.',
+    },
+    terms: [
+      { term: { en: 'Klephtic Warfare', el: 'Κλεφτοπόλεμος' }, def: { en: 'Guerrilla war of ambush and terrain — the mountain art the klephts perfected.', el: 'Ανταρτοπόλεμος ενέδρας και εδάφους — η ορεινή τέχνη που τελειοποίησαν οι κλέφτες.' } },
+      { term: { en: 'Dervenia', el: 'Δερβένια' }, def: { en: 'The guarded mountain passes; who held them, held the Morea.', el: 'Τα φυλασσόμενα ορεινά περάσματα· όποιος τα κρατούσε, κρατούσε τον Μοριά.' } },
+      { term: { en: 'Tampouria', el: 'Ταμπούρια' }, def: { en: 'Improvised stone breastworks thrown up by irregulars before a fight.', el: 'Πρόχειρα πέτρινα προχώματα που έστηναν οι άτακτοι πριν από τη μάχη.' } },
+    ],
+    dilemma: {
+      en: 'Dramali, starving in a stripped and burning plain, must retreat toward Corinth — through the narrow gorge of Dervenakia. Kolokotronis has perhaps 8,000 irregulars who cannot face cavalry in the open but own every rock above the defile. Give battle in the plain before Argos as the government demands, with proper honor — or let the enemy march himself into the shadowed narrows where numbers and horses count for nothing?',
+      el: 'Ο Δράμαλης, λιμοκτονώντας σε έναν κάμπο γυμνό και καμένο, πρέπει να υποχωρήσει προς την Κόρινθο — μέσα από το στενό φαράγγι των Δερβενακίων. Ο Κολοκοτρώνης έχει ίσως 8.000 άτακτους που δεν μπορούν να σταθούν απέναντι σε ιππικό στα ανοιχτά, αλλά ορίζουν κάθε βράχο πάνω από το στενό. Μάχη στον κάμπο προ του Άργους όπως απαιτεί η κυβέρνηση, με την «πρέπουσα τιμή» — ή να αφεθεί ο εχθρός να βαδίσει μόνος του στα ισκιωμένα στενά, όπου αριθμοί και άλογα δεν μετρούν;',
+    },
+    choices: [
+      {
+        unity: 10, power: 20,
+        text: {
+          en: 'Set the trap in the gorge: man the heights above Dervenakia with hidden tampouria, block the exits with felled trees and stones, and fall upon the strung-out column from above when it is deepest in the narrows.',
+          el: 'Στήσιμο της παγίδας στο φαράγγι: επάνδρωση των υψωμάτων πάνω από τα Δερβενάκια με κρυφά ταμπούρια, φράξιμο των εξόδων με κορμούς και πέτρες, και έφοδος από ψηλά πάνω στην τεντωμένη φάλαγγα όταν θα είναι βαθιά μέσα στα στενά.',
+        },
+        outcome: {
+          en: 'The Morea is saved in an afternoon. Dramali\'s host disintegrates in the defile — thousands fall, the baggage and treasury are taken, and the pasha dies of grief within months. The Revolution\'s deadliest year ends with its greatest victory, and Kolokotronis becomes "the Old Man of the Morea".',
+          el: 'Ο Μοριάς σώζεται σε ένα απόγευμα. Η στρατιά του Δράμαλη διαλύεται μέσα στο στενό — χιλιάδες πέφτουν, τα μεταγωγικά και το ταμείο πιάνονται, και ο πασάς πεθαίνει από το κακό του μέσα σε μήνες. Η φονικότερη χρονιά της Επανάστασης κλείνει με τη μεγαλύτερη νίκη της, και ο Κολοκοτρώνης γίνεται «ο Γέρος του Μοριά».',
+        },
+      },
+      {
+        unity: -15, power: -25,
+        text: {
+          en: 'Give honorable battle on the plain: mass every available fighter before Argos and meet Dramali\'s army in the open field, as the government insists a "proper army of a proper state" must.',
+          el: 'Έντιμη μάχη στον κάμπο: συγκέντρωση κάθε διαθέσιμου πολεμιστή προ του Άργους και αναμέτρηση με τη στρατιά του Δράμαλη στο ανοιχτό πεδίο, όπως επιμένει η κυβέρνηση ότι οφείλει «τακτικός στρατός τακτικού κράτους».',
+        },
+        outcome: {
+          en: 'Ottoman cavalry does in the plain what it was born to do. The irregular bands, brave but unformed, are ridden down and scattered; the road to Tripolitsa and Nafplio lies open, and the Revolution\'s heartland burns two years after it rose.',
+          el: 'Το οθωμανικό ιππικό κάνει στον κάμπο αυτό για το οποίο γεννήθηκε. Τα άτακτα σώματα, γενναία αλλά ασχημάτιστα, ποδοπατούνται και σκορπίζουν· ο δρόμος για Τριπολιτσά και Ναύπλιο ανοίγει, και η καρδιά της Επανάστασης καίγεται δύο χρόνια αφότου ξεσηκώθηκε.',
+        },
+      },
+    ],
+    note: {
+      en: 'Folk song fixed the disaster in a single couplet: "Fly out, black birds of the plain — Dramali is fleeing." Of the 25,000 who crossed the Isthmus in July, only a broken fraction recrossed it; the campaign is studied to this day as a masterclass in terrain-based defence.',
+      el: 'Το δημοτικό τραγούδι αποτύπωσε την καταστροφή σε έναν στίχο: «Πουλάκια, βγάτε στον κάμπο — φεύγει ο Δράμαλης». Από τους 25.000 που πέρασαν τον Ισθμό τον Ιούλιο, μόνο ένα τσακισμένο κλάσμα τον ξαναπέρασε· η εκστρατεία διδάσκεται ώς σήμερα ως υπόδειγμα άμυνας με βάση το έδαφος.',
+    },
+  },
+  {
+    id: 'navarino',
+    phase: 'phase1',
+    year: 1827,
+    mapId: 'navarino',
+    title: { en: 'The Battle of Navarino', el: 'Η Ναυμαχία του Ναυαρίνου' },
+    location: { en: 'Bay of Navarino, Pylos', el: 'Όρμος Ναυαρίνου, Πύλος' },
+    source: {
+      author: { en: 'Admiral Codrington, to the Ottoman command', el: 'Ναύαρχος Κόδριγκτον, προς την οθωμανική διοίκηση' },
+      quote: {
+        en: '“I come not to receive orders, but to give them. If a single shot is fired at the allied flag, the Ottoman fleet shall be destroyed.”',
+        el: '«Δεν έρχομαι να λάβω διαταγάς, αλλά να δώσω. Αν ριφθεί έστω και μία βολή κατά της συμμαχικής σημαίας, ο οθωμανικός στόλος θα καταστραφεί.»',
+      },
+    },
+    context: {
+      en: 'The Revolution is dying. Ibrahim Pasha\'s Egyptian army has burned the Morea village by village, Missolonghi fell after its heroic exodus, and Athens has followed. But the suffering has moved Europe: by the Treaty of London (1827), Britain, France and Russia demand an armistice and send their squadrons to enforce it. Ibrahim refuses to halt the devastation — and the allied fleet stands off Navarino Bay, where his armada lies at anchor in a horseshoe of 89 ships.',
+      el: 'Η Επανάσταση πεθαίνει. Ο στρατός του Ιμπραήμ πασά έχει κάψει τον Μοριά χωριό-χωριό, το Μεσολόγγι έπεσε μετά την ηρωική Έξοδο, και η Αθήνα ακολούθησε. Όμως ο πόνος συγκίνησε την Ευρώπη: με τη Συνθήκη του Λονδίνου (1827), Αγγλία, Γαλλία και Ρωσία απαιτούν ανακωχή και στέλνουν τις μοίρες τους να την επιβάλουν. Ο Ιμπραήμ αρνείται να σταματήσει τον όλεθρο — και ο συμμαχικός στόλος στέκεται έξω από τον όρμο του Ναυαρίνου, όπου η αρμάδα του αγκυροβολεί σε πέταλο 89 πλοίων.',
+    },
+    terms: [
+      { term: { en: 'Treaty of London 1827', el: 'Συνθήκη του Λονδίνου 1827' }, def: { en: 'The three-power pact imposing mediation — the Revolution\'s diplomatic salvation.', el: 'Το σύμφωνο των τριών Δυνάμεων που επέβαλε μεσολάβηση — η διπλωματική σωτηρία της Επανάστασης.' } },
+      { term: { en: 'Philhellenism', el: 'Φιλελληνισμός' }, def: { en: 'The European movement — poets, soldiers, funds — that kept the Greek cause alive.', el: 'Το ευρωπαϊκό ρεύμα — ποιητές, στρατιώτες, έρανοι — που κράτησε ζωντανή την ελληνική υπόθεση.' } },
+      { term: { en: 'Ships of the Line', el: 'Πλοία της Γραμμής' }, def: { en: 'The great sailing battleships; Navarino was their last great battle.', el: 'Τα μεγάλα ιστιοφόρα πολεμικά· το Ναυαρίνο ήταν η τελευταία μεγάλη τους ναυμαχία.' } },
+    ],
+    dilemma: {
+      en: 'For the Greek leadership the question is bitter: accept the Powers\' mediation — an armistice that freezes the lines while diplomats decide Greece\'s borders, trusting salvation to foreign fleets — or reject tutelage, fight Ibrahim alone with the last exhausted bands, and keep the nation\'s fate in purely Greek hands whatever the cost. The allied admirals, meanwhile, only await a pretext.',
+      el: 'Για την ελληνική ηγεσία το ερώτημα είναι πικρό: αποδοχή της μεσολάβησης των Δυνάμεων — ανακωχή που παγώνει τις γραμμές όσο οι διπλωμάτες αποφασίζουν τα σύνορα της Ελλάδας, με τη σωτηρία στα χέρια ξένων στόλων — ή απόρριψη της κηδεμονίας, μάχη με τον Ιμπραήμ μόνοι, με τα τελευταία εξαντλημένα σώματα, και η τύχη του έθνους σε καθαρά ελληνικά χέρια ό,τι κι αν στοιχίσει. Οι σύμμαχοι ναύαρχοι, στο μεταξύ, περιμένουν μόνο μια αφορμή.',
+    },
+    choices: [
+      {
+        unity: 10, power: 20,
+        text: {
+          en: 'Embrace the mediation: order every Greek force to observe the armistice scrupulously, place the fleet under the armistice terms, and let Ibrahim\'s defiance stand alone before the guns of three empires.',
+          el: 'Αγκάλιασμα της μεσολάβησης: εντολή σε κάθε ελληνική δύναμη να τηρήσει την ανακωχή σχολαστικά, ο στόλος υπό τους όρους της, και η αψηφισιά του Ιμπραήμ να μείνει ολομόναχη μπροστά στα κανόνια τριών αυτοκρατοριών.',
+        },
+        outcome: {
+          en: 'On 20 October the allied squadrons glide into the bay; a musket shot at a British boat gives the pretext, and in four hours the Ottoman-Egyptian armada ceases to exist — sixty ships sunk or burning. No allied vessel is lost. Greek independence stops being a question of if.',
+          el: 'Στις 20 Οκτωβρίου οι συμμαχικές μοίρες γλιστρούν μέσα στον όρμο· ένας πυροβολισμός σε αγγλική βάρκα δίνει την αφορμή, και σε τέσσερις ώρες η τουρκοαιγυπτιακή αρμάδα παύει να υπάρχει — εξήντα πλοία βυθισμένα ή φλεγόμενα. Κανένα συμμαχικό σκάφος δεν χάνεται. Η ελληνική ανεξαρτησία παύει να είναι ερώτημα του «αν».',
+        },
+      },
+      {
+        unity: -10, power: -25,
+        text: {
+          en: 'Reject foreign tutelage: refuse the armistice as a partition of sovereignty, recall the captains for a final national effort against Ibrahim, and stake the cause on Greek arms alone.',
+          el: 'Απόρριψη της ξένης κηδεμονίας: άρνηση της ανακωχής ως διαμελισμού της κυριαρχίας, ανάκληση των οπλαρχηγών για ύστατη εθνική προσπάθεια κατά του Ιμπραήμ, και το στοίχημα της υπόθεσης μόνο στα ελληνικά όπλα.',
+        },
+        outcome: {
+          en: 'The Powers, rebuffed, withdraw their squadrons "until Greece desires peace" — and Ibrahim resumes the methodical burning. Against fresh Egyptian regulars the exhausted bands can raid but not stop; the Revolution grinds toward extinction with Europe watching, offended, from over the horizon.',
+          el: 'Οι Δυνάμεις, προσβεβλημένες, αποσύρουν τις μοίρες τους «έως ότου η Ελλάς θελήσει την ειρήνην» — και ο Ιμπραήμ ξαναπιάνει το μεθοδικό κάψιμο. Απέναντι σε φρέσκους Αιγύπτιους τακτικούς, τα εξαντλημένα σώματα μπορούν να παρενοχλούν αλλά όχι να σταματήσουν· η Επανάσταση σέρνεται προς τον αφανισμό με την Ευρώπη να κοιτά, θιγμένη, πίσω από τον ορίζοντα.',
+        },
+      },
+    ],
+    note: {
+      en: 'Navarino was the last great naval battle fought entirely under sail — and the only one in history where one side lost sixty ships and the other none. In London the news was awkwardly called an "untoward event"; in Greece, church bells rang for days. Independence was recognized by the London Protocol of 1830.',
+      el: 'Το Ναυαρίνο ήταν η τελευταία μεγάλη ναυμαχία που δόθηκε εξ ολοκλήρου με πανιά — και η μόνη στην ιστορία όπου η μία πλευρά έχασε εξήντα πλοία και η άλλη κανένα. Στο Λονδίνο η είδηση ονομάστηκε αμήχανα «ατυχές συμβάν»· στην Ελλάδα οι καμπάνες χτυπούσαν μέρες. Η ανεξαρτησία αναγνωρίστηκε με το Πρωτόκολλο του Λονδίνου το 1830.',
+    },
+  },
+  /* ---------------- PHASE 2: BALKAN WARS & THE GREAT WAR ---------------- */
+  {
+    id: 'thessaloniki1912',
+    phase: 'phase2',
+    year: 1912,
+    mapId: 'thessaloniki1912',
+    title: { en: 'The Race for Thessaloniki', el: 'Ο Αγώνας Δρόμου για τη Θεσσαλονίκη' },
+    location: { en: 'Macedonia', el: 'Μακεδονία' },
+    source: {
+      author: { en: 'Eleftherios Venizelos, telegram to Crown Prince Constantine', el: 'Ελευθέριος Βενιζέλος, τηλεγράφημα προς τον διάδοχο Κωνσταντίνο' },
+      quote: {
+        en: '“Thessaloniki at any sacrifice! I expect you to enter it before the Bulgarians do.”',
+        el: '«Θεσσαλονίκη πάση θυσία! Αναμένω να εισέλθετε εις αυτήν προ των Βουλγάρων.»',
+      },
+    },
+    context: {
+      en: 'October 1912: Greece, Serbia, Bulgaria and Montenegro strike the Ottoman Empire together. The Army of Thessaly storms the Sarantaporo pass — Greece\'s first great victory of the war — and the road into Macedonia opens. But the alliance is a race in disguise: whoever\'s army stands in Thessaloniki when the guns stop will keep her. A Bulgarian division is already marching south for the same prize.',
+      el: 'Οκτώβριος 1912: Ελλάδα, Σερβία, Βουλγαρία και Μαυροβούνιο χτυπούν μαζί την Οθωμανική Αυτοκρατορία. Η Στρατιά Θεσσαλίας παίρνει με έφοδο το πέρασμα του Σαρανταπόρου — πρώτη μεγάλη ελληνική νίκη του πολέμου — και ο δρόμος προς τη Μακεδονία ανοίγει. Όμως η συμμαχία είναι συγκαλυμμένος αγώνας δρόμου: όποιου ο στρατός βρίσκεται στη Θεσσαλονίκη όταν σιγήσουν τα όπλα, εκείνος θα την κρατήσει. Μια βουλγαρική μεραρχία κατεβαίνει ήδη νότια για το ίδιο έπαθλο.',
+    },
+    terms: [
+      { term: { en: 'First Balkan War', el: 'Α΄ Βαλκανικός Πόλεμος' }, def: { en: 'The 1912–13 alliance war that ended five centuries of Ottoman rule in the southern Balkans.', el: 'Ο συμμαχικός πόλεμος του 1912–13 που τερμάτισε πέντε αιώνες οθωμανικής κυριαρχίας στα νότια Βαλκάνια.' } },
+      { term: { en: 'Army of Thessaly', el: 'Στρατιά Θεσσαλίας' }, def: { en: 'Greece\'s main field army under Crown Prince Constantine.', el: 'Ο κύριος ελληνικός στρατός εκστρατείας υπό τον διάδοχο Κωνσταντίνο.' } },
+      { term: { en: 'Sarantaporo', el: 'Σαρανταπόρο' }, def: { en: 'The fortified pass stormed on 9–10 October 1912 — the gateway to Macedonia.', el: 'Το οχυρωμένο πέρασμα που καταλήφθηκε στις 9–10 Οκτωβρίου 1912 — η πύλη της Μακεδονίας.' } },
+    ],
+    dilemma: {
+      en: 'The military logic and the national logic point in different directions. Constantine\'s staff wants to wheel west toward Monastir, to destroy the retreating Ottoman army in the field — the textbook objective. Venizelos, reading the diplomatic map, orders the dash east to Thessaloniki: cities, not battles, will draw the new borders, and the Bulgarians are two days\' march away. The army can do one, not both.',
+      el: 'Η στρατιωτική λογική και η εθνική λογική δείχνουν αντίθετες κατευθύνσεις. Το επιτελείο του Κωνσταντίνου θέλει στροφή δυτικά προς το Μοναστήρι, να συντρίψει τον υποχωρούντα οθωμανικό στρατό στο πεδίο — ο κατά το εγχειρίδιο στόχος. Ο Βενιζέλος, διαβάζοντας τον διπλωματικό χάρτη, διατάζει την κούρσα ανατολικά προς τη Θεσσαλονίκη: οι πόλεις, όχι οι μάχες, θα χαράξουν τα νέα σύνορα, και οι Βούλγαροι απέχουν δύο μέρες πορεία. Ο στρατός προλαβαίνει το ένα, όχι και τα δύο.',
+    },
+    choices: [
+      {
+        unity: 10, power: 25,
+        text: {
+          en: 'Obey the telegram — east at forced-march pace: cross the Axios, accept Tahsin Pasha\'s surrender of the city and its 26,000-man garrison, and present the Bulgarians with an accomplished fact.',
+          el: 'Υπακοή στο τηλεγράφημα — ανατολικά με εξαντλητικές πορείες: διάβαση του Αξιού, αποδοχή της παράδοσης της πόλης και της φρουράς των 26.000 από τον Ταχσίν πασά, και οι Βούλγαροι προ τετελεσμένου γεγονότος.',
+        },
+        outcome: {
+          en: 'On 26 October 1912 — the feast of the city\'s patron, St Demetrios — the Greek army enters Thessaloniki. The Bulgarian division arrives the next morning and is politely offered hospitality "as guests". The city that will anchor northern Greece for the next century is won by hours.',
+          el: 'Στις 26 Οκτωβρίου 1912 — του πολιούχου Αγίου Δημητρίου — ο ελληνικός στρατός μπαίνει στη Θεσσαλονίκη. Η βουλγαρική μεραρχία φτάνει το άλλο πρωί και της προσφέρεται ευγενικά φιλοξενία «ως φιλοξενουμένων». Η πόλη που θα στηρίξει τη βόρεια Ελλάδα για τον επόμενο αιώνα κερδίζεται με διαφορά ωρών.',
+        },
+      },
+      {
+        unity: -20, power: -10,
+        text: {
+          en: 'Follow the military textbook — west to Monastir: pursue and destroy the Ottoman field army first, treating cities as fruit that falls once the enemy\'s force is broken.',
+          el: 'Κατά το στρατιωτικό εγχειρίδιο — δυτικά προς το Μοναστήρι: πρώτα καταδίωξη και συντριβή του οθωμανικού στρατού εκστρατείας, με τις πόλεις ως καρπούς που πέφτουν όταν σπάσει η δύναμη του εχθρού.',
+        },
+        outcome: {
+          en: 'The Ottoman rearguard buys its army out with ground Greece did not need — and Bulgarian boots enter Thessaloniki first. When the peace maps are drawn, possession proves nine tenths of the law; the National Schism arrives early, as king and prime minister blame each other for the loss of the century.',
+          el: 'Η οθωμανική οπισθοφυλακή εξαγοράζει τη διάσωση του στρατού της με έδαφος που η Ελλάδα δεν χρειαζόταν — και βουλγαρικές αρβύλες μπαίνουν πρώτες στη Θεσσαλονίκη. Όταν χαράσσονται οι χάρτες της ειρήνης, η κατοχή αποδεικνύεται τα εννέα δέκατα του δικαίου· ο Εθνικός Διχασμός έρχεται πρόωρα, με βασιλιά και πρωθυπουργό να αλληλοκατηγορούνται για τη χαμένη ευκαιρία του αιώνα.',
+        },
+      },
+    ],
+    note: {
+      en: 'Tahsin Pasha signed the surrender at 11 p.m. on 26 October; the Bulgarian 7th Rila Division appeared the very next day, asking to "share" the city. Greece\'s territory and population nearly doubled in the Balkan Wars — and Thessaloniki, the "co-reigning city" of Byzantium, became the second pole of the modern state.',
+      el: 'Ο Ταχσίν πασάς υπέγραψε την παράδοση στις 11 το βράδυ της 26ης Οκτωβρίου· η βουλγαρική 7η Μεραρχία της Ρίλας εμφανίστηκε την αμέσως επόμενη μέρα, ζητώντας να «μοιραστεί» την πόλη. Η Ελλάδα σχεδόν διπλασίασε έδαφος και πληθυσμό στους Βαλκανικούς — και η Θεσσαλονίκη, η «συμβασιλεύουσα» του Βυζαντίου, έγινε ο δεύτερος πόλος του νέου κράτους.',
+    },
+  },
+  {
+    id: 'kilkis1913',
+    phase: 'phase2',
+    year: 1913,
+    mapId: 'kilkis1913',
+    title: { en: 'Kilkis–Lachanas', el: 'Κιλκίς–Λαχανάς' },
+    location: { en: 'Central Macedonia', el: 'Κεντρική Μακεδονία' },
+    source: {
+      author: { en: 'King Constantine I, order to the army', el: 'Βασιλεύς Κωνσταντίνος Α΄, διαταγή προς τον στρατό' },
+      quote: {
+        en: '“The position of Kilkis shall be taken with the bayonet, within three days.”',
+        el: '«Η τοποθεσία του Κιλκίς θα καταληφθή διά της λόγχης, εντός τριών ημερών.»',
+      },
+    },
+    context: {
+      en: 'June 1913: the victors have fallen out over the spoils. Bulgaria, feeling cheated of Macedonia, launches a surprise night attack on its Greek and Serbian allies — the Second Balkan War. Between the Bulgarian army and Thessaloniki stand the fortified hills of Kilkis and Lachanas, entrenched for months and bristling with artillery. If the position holds, Bulgarian columns can converge on the city Greece won eight months ago.',
+      el: 'Ιούνιος 1913: οι νικητές μάλωσαν πάνω στα λάφυρα. Η Βουλγαρία, νιώθοντας αδικημένη για τη Μακεδονία, εξαπολύει αιφνιδιαστική νυχτερινή επίθεση κατά των Ελλήνων και Σέρβων συμμάχων της — ο Β΄ Βαλκανικός Πόλεμος. Ανάμεσα στον βουλγαρικό στρατό και τη Θεσσαλονίκη ορθώνονται τα οχυρωμένα υψώματα Κιλκίς και Λαχανά, ταμπουρωμένα επί μήνες και γεμάτα πυροβολικό. Αν η τοποθεσία κρατήσει, βουλγαρικές φάλαγγες μπορούν να συγκλίνουν στην πόλη που κέρδισε η Ελλάδα πριν οκτώ μήνες.',
+    },
+    terms: [
+      { term: { en: 'Second Balkan War', el: 'Β΄ Βαλκανικός Πόλεμος' }, def: { en: 'The 1913 war of the former allies against Bulgaria over Macedonia.', el: 'Ο πόλεμος του 1913 των πρώην συμμάχων κατά της Βουλγαρίας για τη Μακεδονία.' } },
+      { term: { en: 'The Bayonet', el: 'Η Λόγχη' }, def: { en: 'Symbol of the frontal assault doctrine — and of its terrible cost.', el: 'Σύμβολο του δόγματος της κατά μέτωπο εφόδου — και του φοβερού της κόστους.' } },
+      { term: { en: 'Treaty of Bucharest', el: 'Συνθήκη Βουκουρεστίου' }, def: { en: 'The August 1913 peace that fixed Greece\'s northern gains — Kavala included.', el: 'Η ειρήνη του Αυγούστου 1913 που κατοχύρωσε τα βόρεια κέρδη της Ελλάδας — με την Καβάλα.' } },
+    ],
+    dilemma: {
+      en: 'Time fights for Bulgaria: every day of delay lets her disengage divisions from the Serbian front and dig deeper. The king orders the position carried by frontal assault in three days — a butcher\'s bill accepted in advance to break the invasion\'s hinge while it is still unsupported. The staff alternative is a slower flanking campaign up the Strymon: fewer graves, more days, and the risk that the front hardens with Thessaloniki under the guns.',
+      el: 'Ο χρόνος πολεμά για τη Βουλγαρία: κάθε μέρα καθυστέρησης της επιτρέπει να αποδεσμεύει μεραρχίες από το σερβικό μέτωπο και να σκάβει βαθύτερα. Ο βασιλιάς διατάζει κατάληψη της τοποθεσίας με κατά μέτωπο έφοδο σε τρεις μέρες — λογαριασμός αίματος αποδεκτός εκ των προτέρων, για να σπάσει ο άξονας της εισβολής όσο είναι ακόμη αστήρικτος. Η εναλλακτική του επιτελείου είναι βραδύτερος ελιγμός από τον Στρυμόνα: λιγότεροι τάφοι, περισσότερες μέρες, και ο κίνδυνος το μέτωπο να παγιώσει με τη Θεσσαλονίκη στο βεληνεκές των πυροβόλων.',
+    },
+    choices: [
+      {
+        unity: 5, power: 15,
+        text: {
+          en: 'Storm the hills as ordered: three days, five divisions, bayonets fixed — take Kilkis and Lachanas by direct assault whatever the cost, and turn the Bulgarian invasion into a rout before it can be reinforced.',
+          el: 'Έφοδος στα υψώματα όπως διατάχθηκε: τρεις μέρες, πέντε μεραρχίες, εφ\' όπλου λόγχη — κατάληψη Κιλκίς και Λαχανά με κατευθείαν έφοδο ό,τι κι αν στοιχίσει, και μετατροπή της βουλγαρικής εισβολής σε άτακτη φυγή πριν ενισχυθεί.',
+        },
+        outcome: {
+          en: 'The position falls on the third day, exactly as ordered — at the price of 8,700 Greek dead and wounded, the war\'s bloodiest bill. But the Bulgarian 2nd Army is shattered, the road north opens, and at Bucharest the bayonet\'s arithmetic buys Greece her modern northern frontier.',
+          el: 'Η τοποθεσία πέφτει την τρίτη μέρα, ακριβώς όπως διατάχθηκε — με τίμημα 8.700 Έλληνες νεκρούς και τραυματίες, τον βαρύτερο λογαριασμό του πολέμου. Όμως η βουλγαρική 2η Στρατιά συντρίβεται, ο δρόμος προς βορρά ανοίγει, και στο Βουκουρέστι η αριθμητική της λόγχης αγοράζει στην Ελλάδα το σύγχρονο βόρειο σύνορό της.',
+        },
+      },
+      {
+        unity: -10, power: -15,
+        text: {
+          en: 'Refuse the frontal butchery: fix the position with artillery, swing the main weight up the Strymon valley to turn it from the east, and let maneuver do slowly what the bayonet would do at once.',
+          el: 'Άρνηση της μετωπικής σφαγής: αγκίστρωση της τοποθεσίας με πυροβολικό, μεταφορά του κύριου όγκου από την κοιλάδα του Στρυμόνα για υπερκέραση από ανατολικά, και ο ελιγμός να κάνει αργά ό,τι θα έκανε αμέσως η λόγχη.',
+        },
+        outcome: {
+          en: 'The maneuver is elegant and late. Bulgarian reserves released from the Serbian front fill the gap before the flanking column arrives; the war congeals into trench lines within shelling distance of Thessaloniki\'s harbour, and at the peace table Greece bargains from a front, not from a victory.',
+          el: 'Ο ελιγμός είναι κομψός και αργοπορημένος. Βουλγαρικές εφεδρείες που αποδεσμεύονται από το σερβικό μέτωπο γεμίζουν το κενό πριν φτάσει η φάλαγγα υπερκέρασης· ο πόλεμος πήζει σε χαρακώματα σε απόσταση βολής από το λιμάνι της Θεσσαλονίκης, και στο τραπέζι της ειρήνης η Ελλάδα διαπραγματεύεται από ένα μέτωπο, όχι από μια νίκη.',
+        },
+      },
+    ],
+    note: {
+      en: 'Kilkis remains one of the costliest three days in Greek military history — the 2nd Division alone lost half its strength. The town was rebuilt after the battle; its war museum still displays the field guns of June 1913. Two months later the Treaty of Bucharest doubled Greece.',
+      el: 'Το Κιλκίς μένει από τα πιο αιματηρά τριήμερα της ελληνικής στρατιωτικής ιστορίας — μόνη η 2η Μεραρχία έχασε τη μισή της δύναμη. Η πόλη ξαναχτίστηκε μετά τη μάχη· το πολεμικό της μουσείο εκθέτει ακόμη τα πυροβόλα του Ιουνίου 1913. Δύο μήνες αργότερα η Συνθήκη του Βουκουρεστίου διπλασίασε την Ελλάδα.',
+    },
+  },
+  {
+    id: 'schismSkra',
+    phase: 'phase2',
+    year: 1917,
+    mapId: 'schismSkra',
+    title: { en: 'The National Schism & Skra', el: 'Ο Εθνικός Διχασμός & το Σκρα' },
+    location: { en: 'Athens & the Macedonian Front', el: 'Αθήνα & Μακεδονικό Μέτωπο' },
+    source: {
+      author: { en: 'Eleftherios Venizelos, to Parliament', el: 'Ελευθέριος Βενιζέλος, προς τη Βουλή' },
+      quote: {
+        en: '“Greece cannot stand apart while the fate of nations is being decided. Her place is at the side of the sea powers — her history, her geography and her future permit no other.”',
+        el: '«Η Ελλάς δεν δύναται να μείνει θεατής ενώ κρίνεται η τύχη των εθνών. Η θέσις της είναι στο πλευρόν των θαλασσίων δυνάμεων — η ιστορία της, η γεωγραφία της και το μέλλον της δεν επιτρέπουν άλλην.»',
+      },
+    },
+    context: {
+      en: 'The Great War has split the country in two. King Constantine, trusting German victory and his army\'s exhaustion, insists on neutrality; Venizelos sees the Entente\'s command of the sea as destiny and Bulgaria\'s entry as mortal threat. Allied troops already hold Thessaloniki; Fort Roupel has been surrendered to the Germans and Bulgarians without a shot; in Athens, royalist irregulars have fired on French marines. Two governments now claim to be Greece.',
+      el: 'Ο Μεγάλος Πόλεμος έκοψε τη χώρα στα δύο. Ο βασιλιάς Κωνσταντίνος, πιστεύοντας στη γερμανική νίκη και στην εξάντληση του στρατού, επιμένει στην ουδετερότητα· ο Βενιζέλος βλέπει την κυριαρχία της Αντάντ στη θάλασσα ως πεπρωμένο και την είσοδο της Βουλγαρίας ως θανάσιμη απειλή. Συμμαχικά στρατεύματα κατέχουν ήδη τη Θεσσαλονίκη· το οχυρό Ρούπελ παραδόθηκε σε Γερμανούς και Βουλγάρους χωρίς βολή· στην Αθήνα, επίστρατοι πυροβόλησαν Γάλλους πεζοναύτες. Δύο κυβερνήσεις διεκδικούν πλέον το όνομα της Ελλάδας.',
+    },
+    terms: [
+      { term: { en: 'National Schism', el: 'Εθνικός Διχασμός' }, def: { en: 'The split between King and Venizelos that scarred Greek politics for decades.', el: 'Η ρήξη Βασιλιά–Βενιζέλου που σημάδεψε την ελληνική πολιτική για δεκαετίες.' } },
+      { term: { en: 'National Defence', el: 'Κίνημα Εθνικής Αμύνης' }, def: { en: 'The 1916 Thessaloniki movement that raised a Venizelist army for the Entente.', el: 'Το κίνημα της Θεσσαλονίκης (1916) που συγκρότησε βενιζελικό στρατό στο πλευρό της Αντάντ.' } },
+      { term: { en: 'Macedonian Front', el: 'Μακεδονικό Μέτωπο' }, def: { en: 'The Allied line from the Aegean to Albania; Skra was its Greek proving ground.', el: 'Η συμμαχική γραμμή από το Αιγαίο ώς την Αλβανία· το Σκρα ήταν το ελληνικό της βάπτισμα.' } },
+    ],
+    dilemma: {
+      en: 'The choice is now inescapable: throw Greece\'s reunited weight behind the Entente — accepting the King\'s forced departure, allied oversight, and the bitterness of half the nation — and prove the army\'s worth on the Macedonian Front; or cling to armed neutrality between the blockading fleets and the Bulgarian trenches, preserving formal unity at the price of every claim when the victors divide the world.',
+      el: 'Η επιλογή είναι πια αναπόδραστη: να ριχτεί το επανενωμένο βάρος της Ελλάδας στο πλευρό της Αντάντ — με αποδοχή της εκβιασμένης αναχώρησης του βασιλιά, της συμμαχικής επιτήρησης και της πίκρας του μισού έθνους — και να αποδειχθεί η αξία του στρατού στο Μακεδονικό Μέτωπο· ή προσκόλληση στην ένοπλη ουδετερότητα ανάμεσα στους στόλους του αποκλεισμού και στα βουλγαρικά χαρακώματα, με διατήρηση τυπικής ενότητας και τίμημα κάθε διεκδίκηση όταν οι νικητές θα μοιράζουν τον κόσμο.',
+    },
+    choices: [
+      {
+        unity: -10, power: 25,
+        text: {
+          en: 'Enter the war united under Venizelos: reunify the army, take over a sector of the Macedonian Front, and assault the fortified mountain of Skra di Legen to announce Greece\'s return with a victory no ally can ignore.',
+          el: 'Είσοδος στον πόλεμο υπό τον Βενιζέλο: επανένωση του στρατού, ανάληψη τομέα στο Μακεδονικό Μέτωπο, και έφοδος στο οχυρωμένο βουνό Σκρα ντι Λέγκεν — αναγγελία της επιστροφής της Ελλάδας με μια νίκη που κανένας σύμμαχος δεν μπορεί να αγνοήσει.',
+        },
+        outcome: {
+          en: 'On 30 May 1918 three Greek divisions take Skra in a single morning — trenches, summit and 2,000 prisoners. The army\'s honor is restored in Allied eyes, and when the front collapses in September, Greece marches with the victors toward a doubled state. But the Schism\'s wound — exiles, courts-martial, two Greeces — will bleed for a generation.',
+          el: 'Στις 30 Μαΐου 1918 τρεις ελληνικές μεραρχίες παίρνουν το Σκρα σε ένα πρωινό — χαρακώματα, κορυφή και 2.000 αιχμαλώτους. Η τιμή του στρατού αποκαθίσταται στα συμμαχικά μάτια, και όταν το μέτωπο καταρρέει τον Σεπτέμβριο, η Ελλάδα βαδίζει με τους νικητές προς ένα διπλασιασμένο κράτος. Όμως η πληγή του Διχασμού — εξορίες, στρατοδικεία, δύο Ελλάδες — θα αιμορραγεί μια γενιά.',
+        },
+      },
+      {
+        unity: -20, power: -20,
+        text: {
+          en: 'Hold to royal neutrality: refuse both camps, keep the army mobilized but idle, and trust that a compromise peace will reward the Balkan state that stayed clean of the slaughter.',
+          el: 'Εμμονή στη βασιλική ουδετερότητα: άρνηση και στα δύο στρατόπεδα, ο στρατός επιστρατευμένος αλλά αδρανής, και ελπίδα ότι μια συμβιβαστική ειρήνη θα ανταμείψει το βαλκανικό κράτος που έμεινε καθαρό από τη σφαγή.',
+        },
+        outcome: {
+          en: 'Neutrality proves the most expensive side of all. The Allied blockade starves Athens through the winter; Bulgaria administers "temporarily occupied" eastern Macedonia; and at Versailles the map-makers hear no advocate for claims written in no soldier\'s blood. The Schism deepens anyway — now with nothing to show for it.',
+          el: 'Η ουδετερότητα αποδεικνύεται η ακριβότερη πλευρά απ\' όλες. Ο συμμαχικός αποκλεισμός λιμοκτονεί την Αθήνα όλο τον χειμώνα· η Βουλγαρία διοικεί την «προσωρινώς κατεχόμενη» ανατολική Μακεδονία· και στις Βερσαλλίες οι χαρτογράφοι δεν ακούν συνήγορο για διεκδικήσεις που δεν γράφτηκαν με αίμα στρατιώτη. Ο Διχασμός βαθαίνει ούτως ή άλλως — τώρα χωρίς κανένα αντίκρισμα.',
+        },
+      },
+    ],
+    note: {
+      en: 'French premier Clemenceau read the Skra communiqué aloud in the Chamber of Deputies as proof of "the reborn Greek army". Six months later Greece sat among the victors at Versailles — the springboard for the gains, and the tragedies, of the decade that followed.',
+      el: 'Ο Γάλλος πρωθυπουργός Κλεμανσό διάβασε το ανακοινωθέν του Σκρα μεγαλόφωνα στη Βουλή ως απόδειξη «του αναγεννημένου ελληνικού στρατού». Έξι μήνες αργότερα η Ελλάδα καθόταν ανάμεσα στους νικητές των Βερσαλλιών — εφαλτήριο των κερδών, και των τραγωδιών, της δεκαετίας που ακολούθησε.',
+    },
+  },
+  /* ---------------- PHASE 3: THE EPIC OF 1940 ---------------- */
+  {
+    id: 'elaiaKalamas',
+    phase: 'phase3',
+    year: 1940,
+    mapId: 'elaiaKalamas',
+    title: { en: '“OXI” — Elaia–Kalamas', el: '«ΟΧΙ» — Ελαία–Καλαμάς' },
+    location: { en: 'Epirus frontier', el: 'Μέτωπο της Ηπείρου' },
+    source: {
+      author: { en: 'Maj. Gen. Charalambos Katsimitros, VIII Division, to GHQ', el: 'Υποστράτηγος Χαράλαμπος Κατσιμήτρος, VIII Μεραρχία, προς το ΓΕΣ' },
+      quote: {
+        en: '“The VIII Division will defend the Elaia–Kalamas line to the end. I assume full responsibility.”',
+        el: '«Η VIII Μεραρχία θα αμυνθή επί της τοποθεσίας Ελαίας–Καλαμά μέχρις εσχάτων. Αναλαμβάνω πλήρη την ευθύνην.»',
+      },
+    },
+    context: {
+      en: 'At 3 a.m. on 28 October 1940 the Italian ambassador wakes Prime Minister Metaxas with an ultimatum: free passage for Italian troops, or war. The answer — remembered by the people as a single word, "OXI" — is war at dawn. Mussolini\'s army pours over the Epirus frontier in rain and mud. Pre-war planning had written off Epirus as indefensible, ordering a fighting withdrawal to the Arachthos river; but the VIII Division\'s commander believes the swollen Kalamas and the hills of Elaia can stop an army.',
+      el: 'Στις 3 τα ξημερώματα της 28ης Οκτωβρίου 1940 ο Ιταλός πρέσβης ξυπνά τον πρωθυπουργό Μεταξά με τελεσίγραφο: ελεύθερη διέλευση των ιταλικών στρατευμάτων, ή πόλεμος. Η απάντηση — που ο λαός τη θυμάται ως μία λέξη, «ΟΧΙ» — είναι πόλεμος με την αυγή. Ο στρατός του Μουσολίνι ξεχύνεται στο ηπειρωτικό μέτωπο μέσα σε βροχή και λάσπη. Ο προπολεμικός σχεδιασμός είχε ξεγράψει την Ήπειρο ως μη υπερασπίσιμη, διατάσσοντας ελαστική σύμπτυξη στον Άραχθο· όμως ο διοικητής της VIII Μεραρχίας πιστεύει ότι ο φουσκωμένος Καλαμάς και τα υψώματα της Ελαίας μπορούν να σταματήσουν στρατιά.',
+    },
+    terms: [
+      { term: { en: '“OXI” — 28 October', el: '«ΟΧΙ» — 28 Οκτωβρίου' }, def: { en: 'The refusal of the Italian ultimatum, celebrated as a national anniversary.', el: 'Η απόρριψη του ιταλικού τελεσιγράφου, εθνική επέτειος έκτοτε.' } },
+      { term: { en: 'Elaia–Kalamas Line', el: 'Τοποθεσία Ελαίας–Καλαμά' }, def: { en: 'The river-and-hills position where the VIII Division chose to stand.', el: 'Η τοποθεσία ποταμού και υψωμάτων όπου η VIII Μεραρχία επέλεξε να σταθεί.' } },
+      { term: { en: 'Julia Division', el: 'Μεραρχία Τζούλια' }, def: { en: 'Italy\'s elite alpine division, sent through the Pindos toward Metsovo.', el: 'Η επίλεκτη ιταλική αλπινιστική μεραρχία, που ρίχτηκε στην Πίνδο προς το Μέτσοβο.' } },
+    ],
+    dilemma: {
+      en: 'Doctrine and the capital say: trade space for time, fall back to the Arachthos, let mobilization complete behind a deep buffer — Epirus, including Ioannina, is the price. Katsimitros says: the ground itself fights here — the flooded Kalamas, the marsh of Kalpaki, registered artillery on every approach — and yielding it gifts Mussolini the triumphal entry his propaganda has already printed. Disobeying the spirit of GHQ\'s plan means courting ruin if the line breaks.',
+      el: 'Το δόγμα και η πρωτεύουσα λένε: ανταλλαγή χώρου με χρόνο, σύμπτυξη στον Άραχθο, ολοκλήρωση της επιστράτευσης πίσω από βαθύ προκάλυμμα — με τίμημα την Ήπειρο, μαζί και τα Γιάννενα. Ο Κατσιμήτρος λέει: εδώ πολεμά το ίδιο το έδαφος — ο πλημμυρισμένος Καλαμάς, ο βάλτος του Καλπακίου, πυροβολικό ρυθμισμένο σε κάθε προσπέλαση — και η εγκατάλειψή του χαρίζει στον Μουσολίνι τη θριαμβευτική είσοδο που η προπαγάνδα του έχει ήδη τυπώσει. Η ανυπακοή στο πνεύμα του σχεδίου του ΓΕΣ φλερτάρει με την καταστροφή αν η γραμμή σπάσει.',
+    },
+    choices: [
+      {
+        unity: 20, power: 15,
+        text: {
+          en: 'Stand at Elaia–Kalamas: hold the forward line on the general\'s responsibility, wire the bridges, sight every gun on the Kalpaki bottleneck — and meanwhile let Davakis\' detachment bleed the Julia Division white in the Pindos passes.',
+          el: 'Άμυνα στην Ελαία–Καλαμά: η προωθημένη γραμμή κρατιέται με ευθύνη του στρατηγού, οι γέφυρες ναρκοθετούνται, κάθε πυροβόλο σκοπεύει το στένωμα του Καλπακίου — και συγχρόνως το απόσπασμα Δαβάκη να αφαιμάξει τη Μεραρχία Τζούλια στα περάσματα της Πίνδου.',
+        },
+        outcome: {
+          en: 'The invasion breaks on the river. Italian armor drowns in the Kalpaki marsh under pre-registered fire; in the Pindos, villagers — women famously carrying shells up the mule-paths — help Davakis cut off the Julia. Within three weeks the invaders are back across the border, and the world\'s front pages carry their first Axis defeat.',
+          el: 'Η εισβολή σπάει πάνω στο ποτάμι. Τα ιταλικά άρματα πνίγονται στον βάλτο του Καλπακίου κάτω από προρυθμισμένα πυρά· στην Πίνδο, οι χωρικοί — με τις γυναίκες να ανεβάζουν οβίδες στα μονοπάτια — βοηθούν τον Δαβάκη να αποκόψει την Τζούλια. Μέσα σε τρεις εβδομάδες οι εισβολείς είναι πίσω από τα σύνορα, και τα πρωτοσέλιδα του κόσμου γράφουν την πρώτη ήττα του Άξονα.',
+        },
+      },
+      {
+        unity: -10, power: -15,
+        text: {
+          en: 'Execute the pre-war plan: fight delaying actions only, abandon Epirus to its fate, and form the real defence on the Arachthos while mobilization completes in the interior.',
+          el: 'Εκτέλεση του προπολεμικού σχεδίου: μόνο επιβραδυντικοί αγώνες, εγκατάλειψη της Ηπείρου στην τύχη της, και συγκρότηση της πραγματικής άμυνας στον Άραχθο όσο ολοκληρώνεται η επιστράτευση στο εσωτερικό.',
+        },
+        outcome: {
+          en: 'Ioannina falls in the first week and the newsreels get their parade. Strategically the Arachthos line holds — but the moral spark never fires: no Kalamas miracle, no Pindos legend, a hesitant counter-offensive into ground the enemy has organized, and a people asked to believe in victory after beginning with retreat.',
+          el: 'Τα Γιάννενα πέφτουν την πρώτη εβδομάδα και τα επίκαιρα παίρνουν την παρέλασή τους. Στρατηγικά η γραμμή του Αράχθου κρατά — όμως η ηθική σπίθα δεν ανάβει ποτέ: χωρίς θαύμα του Καλαμά, χωρίς θρύλο της Πίνδου, με διστακτική αντεπίθεση σε έδαφος που ο εχθρός έχει οργανώσει, και με έναν λαό που καλείται να πιστέψει στη νίκη έχοντας αρχίσει με υποχώρηση.',
+        },
+      },
+    ],
+    note: {
+      en: 'Metaxas\' actual reply to the ambassador was in French — "Alors, c\'est la guerre" — but the people compressed it into "OXI" before the day was out. Katsimitros had quietly disregarded the withdrawal doctrine for months, fortifying Kalpaki; GHQ\'s plan would have handed over the very ground on which the war was won.',
+      el: 'Η πραγματική απάντηση του Μεταξά στον πρέσβη δόθηκε στα γαλλικά — «Alors, c\'est la guerre» — αλλά ο λαός τη συμπύκνωσε σε «ΟΧΙ» πριν τελειώσει η μέρα. Ο Κατσιμήτρος αγνοούσε σιωπηλά το δόγμα της σύμπτυξης επί μήνες, οχυρώνοντας το Καλπάκι· το σχέδιο του ΓΕΣ θα παρέδιδε ακριβώς το έδαφος πάνω στο οποίο κερδήθηκε ο πόλεμος.',
+    },
+  },
+  {
+    id: 'korytsa',
+    phase: 'phase3',
+    year: 1940,
+    mapId: 'korytsa',
+    title: { en: 'The Counter-Offensive — Korytsa & Klisura', el: 'Η Αντεπίθεση — Κορυτσά & Κλεισούρα' },
+    location: { en: 'Northern Epirus', el: 'Βόρειος Ήπειρος' },
+    source: {
+      author: { en: 'Greek Army communiqué, December 1940', el: 'Ανακοινωθέν Ελληνικού Στρατού, Δεκέμβριος 1940' },
+      quote: {
+        en: '“Our troops entered Korytsa. The enemy is retreating in disorder, abandoning arms, guns and supplies.”',
+        el: '«Τα στρατεύματά μας εισήλθον εις Κορυτσάν. Ο εχθρός συμπτύσσεται ατάκτως, εγκαταλείπων όπλα, πυροβόλα και εφόδια.»',
+      },
+    },
+    context: {
+      en: 'The invader has been thrown out of Greece — and the question nobody dared ask in October is suddenly real: pursue into Italian-held Albania? Winter in the Pindos kills as surely as bullets — frostbite will claim more men than combat — and every kilometre forward stretches mule-track supply lines. But the Italian army is off balance, Britain\'s only fighting ally is watching the world watch Greece, and in the villages of Northern Epirus Greek church bells are waiting.',
+      el: 'Ο εισβολέας πετάχτηκε έξω από την Ελλάδα — και το ερώτημα που κανείς δεν τολμούσε να κάνει τον Οκτώβριο είναι ξαφνικά αληθινό: καταδίωξη μέσα στην ιταλοκρατούμενη Αλβανία; Ο χειμώνας στην Πίνδο σκοτώνει όσο και οι σφαίρες — τα κρυοπαγήματα θα πάρουν περισσότερους άνδρες από τη μάχη — και κάθε χιλιόμετρο μπροστά τεντώνει γραμμές ανεφοδιασμού από μουλαρόδρομους. Όμως ο ιταλικός στρατός είναι εκτός ισορροπίας, ο μόνος μαχόμενος σύμμαχος της Βρετανίας βλέπει τον κόσμο να κοιτά την Ελλάδα, και στα χωριά της Βορείου Ηπείρου οι ελληνικές καμπάνες περιμένουν.',
+    },
+    terms: [
+      { term: { en: 'Epic of 1940', el: 'Έπος του \'40' }, def: { en: 'The collective name for Greece\'s victorious winter war of 1940–41.', el: 'Η συλλογική ονομασία του νικηφόρου ελληνικού χειμερινού πολέμου 1940–41.' } },
+      { term: { en: 'Northern Epirus', el: 'Βόρειος Ήπειρος' }, def: { en: 'The Greek-inhabited districts of southern Albania — Korytsa, Argyrokastro, Himara.', el: 'Οι ελληνόφωνες περιοχές της νότιας Αλβανίας — Κορυτσά, Αργυρόκαστρο, Χειμάρρα.' } },
+      { term: { en: 'Winter Operations', el: 'Χειμερινές Επιχειρήσεις' }, def: { en: 'Mountain warfare at −20°C; frostbite caused most Greek casualties.', el: 'Ορεινός πόλεμος στους −20°C· τα κρυοπαγήματα προκάλεσαν τις περισσότερες ελληνικές απώλειες.' } },
+    ],
+    dilemma: {
+      en: 'Press the pursuit through the snow — take the Morova heights and Korytsa, then the Klisura gorge, denying Italy the spring springboard and liberating the Greek villages — at the price of fighting the mountains themselves through the worst winter in memory. Or halt on the border, entrench what is already a famous victory, and rebuild for the spring — knowing Mussolini is shipping fifteen fresh divisions across the Adriatic for exactly that season.',
+      el: 'Συνέχιση της καταδίωξης μέσα στο χιόνι — κατάληψη των υψωμάτων της Μόροβας και της Κορυτσάς, έπειτα του φαραγγιού της Κλεισούρας, στέρηση από την Ιταλία του ανοιξιάτικου εφαλτηρίου και απελευθέρωση των ελληνικών χωριών — με τίμημα τη μάχη με τα ίδια τα βουνά στον χειρότερο χειμώνα που θυμούνται. Ή στάση στα σύνορα, εδραίωση μιας ήδη περίφημης νίκης, και ανασυγκρότηση για την άνοιξη — γνωρίζοντας ότι ο Μουσολίνι περνά δεκαπέντε φρέσκες μεραρχίες από την Αδριατική ακριβώς για εκείνη την εποχή.',
+    },
+    choices: [
+      {
+        unity: 15, power: 15,
+        text: {
+          en: 'Advance through the winter: storm the Morova–Ivan heights, enter Korytsa, force the Klisura gorge in January — keep the Italian army falling backward so that no spring offensive can form on Greek soil\'s doorstep.',
+          el: 'Προέλαση μέσα στον χειμώνα: έφοδος στα υψώματα Μόροβα–Ιβάν, είσοδος στην Κορυτσά, διάρρηξη της Κλεισούρας τον Ιανουάριο — ο ιταλικός στρατός να πέφτει διαρκώς προς τα πίσω, ώστε καμιά ανοιξιάτικη επίθεση να μη στηθεί στο κατώφλι του ελληνικού εδάφους.',
+        },
+        outcome: {
+          en: 'Korytsa falls on 22 November to pealing bells, Klisura in January; a quarter of Albania is in Greek hands and the Italian spring offensive, when it comes, breaks in nine days against soldiers standing on conquered ground. The cost is written in frostbitten feet — but the Epic is complete, and Hitler must now do what Mussolini could not.',
+          el: 'Η Κορυτσά πέφτει στις 22 Νοεμβρίου με τις καμπάνες να χτυπούν, η Κλεισούρα τον Ιανουάριο· το ένα τέταρτο της Αλβανίας είναι σε ελληνικά χέρια και η ιταλική εαρινή επίθεση, όταν έρχεται, σπάει σε εννέα μέρες πάνω σε στρατιώτες που πατούν κατακτημένο έδαφος. Το κόστος γράφεται σε κρυοπαγημένα πόδια — αλλά το Έπος ολοκληρώνεται, και ο Χίτλερ πρέπει τώρα να κάνει ό,τι δεν μπόρεσε ο Μουσολίνι.',
+        },
+      },
+      {
+        unity: -5, power: -10,
+        text: {
+          en: 'Halt at the frontier: declare the defensive war won, dig winter lines on Greek soil, husband men and ammunition, and meet the spring offensive rested behind prepared positions.',
+          el: 'Στάση στα σύνορα: ο αμυντικός πόλεμος κηρύσσεται κερδισμένος, χειμερινές γραμμές σε ελληνικό έδαφος, φειδώ σε άνδρες και πυρομαχικά, και υποδοχή της εαρινής επίθεσης με ξεκούραστο στρατό πίσω από οργανωμένες θέσεις.',
+        },
+        outcome: {
+          en: 'The army winters warm — and the enemy winters unmolested. By March, twenty-eight Italian divisions stand on the border heights that pursuit would have taken cheaply in December, and the Primavera offensive must be broken on Greek soil at Greek cost. The defensive victory stands, but the Epic remains half-written.',
+          el: 'Ο στρατός ξεχειμωνιάζει ζεστός — και ο εχθρός ξεχειμωνιάζει ανενόχλητος. Ώς τον Μάρτιο, είκοσι οκτώ ιταλικές μεραρχίες πατούν στα συνοριακά υψώματα που η καταδίωξη θα έπαιρνε φτηνά τον Δεκέμβριο, και η επίθεση «Primavera» πρέπει να σπάσει πάνω σε ελληνικό έδαφος με ελληνικό κόστος. Η αμυντική νίκη στέκει, αλλά το Έπος μένει μισογραμμένο.',
+        },
+      },
+    ],
+    note: {
+      en: 'Greece\'s winter victories were the Allies\' first land defeats inflicted on the Axis, celebrated from London to New York. Churchill\'s tribute became proverbial: "Hence we will not say that Greeks fight like heroes, but that heroes fight like Greeks." The frostbite toll — some 25,000 — exceeded battle casualties.',
+      el: 'Οι χειμερινές νίκες της Ελλάδας ήταν οι πρώτες χερσαίες ήττες του Άξονα, πανηγυρισμένες από το Λονδίνο ώς τη Νέα Υόρκη. Ο φόρος τιμής του Τσόρτσιλ έγινε παροιμιώδης: «Ως εκ τούτου δεν θα λέμε ότι οι Έλληνες πολεμούν σαν ήρωες, αλλά ότι οι ήρωες πολεμούν σαν Έλληνες». Τα κρυοπαγήματα — περίπου 25.000 — ξεπέρασαν τις απώλειες μάχης.',
+    },
+  },
+  {
+    id: 'crete1941',
+    phase: 'phase3',
+    year: 1941,
+    mapId: 'crete1941',
+    title: { en: 'The Battle of Crete', el: 'Η Μάχη της Κρήτης' },
+    location: { en: 'Maleme, Crete', el: 'Μάλεμε, Κρήτη' },
+    source: {
+      author: { en: 'Defender\'s diary, Chania sector, 20 May 1941', el: 'Ημερολόγιο υπερασπιστή, τομέας Χανίων, 20 Μαΐου 1941' },
+      quote: {
+        en: '“The sky filled with white blossoms of death. Every olive grove became a battlefield; even the old men came out with shotguns and sickles.”',
+        el: '«Ο ουρανός γέμισε λευκά λουλούδια θανάτου. Κάθε λιόφυτο έγινε πεδίο μάχης· ακόμη και οι γέροντες βγήκαν με καριοφίλια και δρεπάνια.»',
+      },
+    },
+    context: {
+      en: 'The mainland has fallen to the German invasion; king and government have withdrawn to Crete with the Allied remnant — 40,000 British, Australian, New Zealand and Greek troops, short of everything but resolve. On 20 May 1941 Germany launches history\'s first mainly airborne invasion: thousands of Fallschirmjäger blossom over Maleme airfield and the Chania road. Ultra intercepts told the defenders they were coming — the question was always what to guard: the airfields, or the coast against a sea landing.',
+      el: 'Η ηπειρωτική Ελλάδα έπεσε στη γερμανική εισβολή· βασιλιάς και κυβέρνηση αποσύρθηκαν στην Κρήτη με ό,τι απέμεινε από τους Συμμάχους — 40.000 Βρετανοί, Αυστραλοί, Νεοζηλανδοί και Έλληνες, με έλλειψη σε όλα εκτός από αποφασιστικότητα. Στις 20 Μαΐου 1941 η Γερμανία εξαπολύει την πρώτη κυρίως αεροκίνητη εισβολή της ιστορίας: χιλιάδες αλεξιπτωτιστές ανθίζουν πάνω από το αεροδρόμιο του Μάλεμε και τον δρόμο των Χανίων. Οι υποκλοπές Ultra είχαν προειδοποιήσει ότι έρχονται — το ερώτημα ήταν πάντα τι να φυλαχθεί: τα αεροδρόμια, ή η ακτή από θαλάσσια απόβαση.',
+    },
+    terms: [
+      { term: { en: 'Fallschirmjäger', el: 'Αλεξιπτωτιστές' }, def: { en: 'German paratroopers — elite, but never more vulnerable than in the first hour.', el: 'Οι Γερμανοί αλεξιπτωτιστές — επίλεκτοι, αλλά ποτέ πιο ευάλωτοι από την πρώτη ώρα.' } },
+      { term: { en: 'Maleme Airfield', el: 'Αεροδρόμιο Μάλεμε' }, def: { en: 'The western airstrip whose loss let the Germans fly in a mountain division.', el: 'Ο δυτικός διάδρομος που η απώλειά του επέτρεψε την αερομεταφορά ορεινής μεραρχίας.' } },
+      { term: { en: 'Cretan Resistance', el: 'Κρητική Αντίσταση' }, def: { en: 'The spontaneous rising of civilians — the first mass popular resistance of the war.', el: 'Ο αυθόρμητος ξεσηκωμός των αμάχων — η πρώτη μαζική λαϊκή αντίσταση του πολέμου.' } },
+    ],
+    dilemma: {
+      en: 'By nightfall of the first day the invasion has failed everywhere — except that Hill 107 above Maleme hangs in the balance and the counterattack question must be answered in hours, not days. Strike tonight with everything at hand to retake the hill and keep the runway under fire — accepting the risk that the "real" seaborne invasion doctrine still expects may hit an unguarded coast — or hold the coastal positions as doctrine demands and counterattack methodically, tomorrow, when the reserve can move by daylight.',
+      el: 'Ώς το βράδυ της πρώτης μέρας η εισβολή έχει αποτύχει παντού — μόνο που το Ύψωμα 107 πάνω από το Μάλεμε κρέμεται στη ζυγαριά, και το ερώτημα της αντεπίθεσης πρέπει να απαντηθεί σε ώρες, όχι σε μέρες. Χτύπημα απόψε με ό,τι υπάρχει για ανακατάληψη του υψώματος και τον διάδρομο υπό πυρ — με αποδοχή του κινδύνου η «πραγματική» θαλάσσια απόβαση που ακόμη περιμένει το δόγμα να βρει ακτή αφύλακτη — ή τήρηση των παράκτιων θέσεων όπως απαιτεί το δόγμα και μεθοδική αντεπίθεση, αύριο, όταν η εφεδρεία θα κινηθεί με το φως.',
+    },
+    choices: [
+      {
+        unity: 10, power: 10,
+        text: {
+          en: 'Counterattack tonight: throw every reserve at Hill 107 and the airfield in darkness, when the scattered paratroopers are weakest and the Luftwaffe blind — the coast be risked, the runway is the battle.',
+          el: 'Αντεπίθεση απόψε: κάθε εφεδρεία πάνω στο Ύψωμα 107 και στο αεροδρόμιο μέσα στο σκοτάδι, όταν οι διασκορπισμένοι αλεξιπτωτιστές είναι στο ασθενέστερο σημείο τους και η Λουφτβάφε τυφλή — ας ριψοκινδυνεύσει η ακτή, ο διάδρομος είναι η μάχη.',
+        },
+        outcome: {
+          en: 'Hill 107 changes hands in the dark and dawn finds the runway a kill-zone: the Ju-52s carrying the mountain division circle, burn, or turn back. Student\'s gamble collapses — the war\'s only all-airborne invasion is defeated, Crete holds as an unsinkable Allied base, and the Wehrmacht\'s aura of inevitability cracks in full view of the world.',
+          el: 'Το Ύψωμα 107 αλλάζει χέρια μέσα στη νύχτα και η αυγή βρίσκει τον διάδρομο ζώνη θανάτου: τα Ju-52 με την ορεινή μεραρχία κάνουν κύκλους, καίγονται ή γυρίζουν πίσω. Το στοίχημα του Στούντεντ καταρρέει — η μόνη αμιγώς αεροκίνητη εισβολή του πολέμου ηττάται, η Κρήτη κρατά ως αβύθιστη συμμαχική βάση, και η αύρα του αναπόφευκτου της Βέρμαχτ ραγίζει μπροστά στα μάτια του κόσμου.',
+        },
+      },
+      {
+        unity: -15, power: -20,
+        text: {
+          en: 'Hold for the sea landing: keep the reserves on the coast as the invasion doctrine requires, let the airfield stay disputed overnight, and mount the counterattack tomorrow with proper coordination.',
+          el: 'Αναμονή της θαλάσσιας απόβασης: οι εφεδρείες μένουν στην ακτή όπως απαιτεί το δόγμα της εισβολής, το αεροδρόμιο μένει αμφισβητούμενο τη νύχτα, και η αντεπίθεση οργανώνεται αύριο με «κανονικό» συντονισμό.',
+        },
+        outcome: {
+          en: 'The night that mattered is spent watching an empty sea — the German convoys were never the main effort, and the Royal Navy scatters them anyway. At dawn the Ju-52s crash-land on Maleme\'s disputed strip faster than shells can wreck them; a mountain division grows out of the runway, and ten days later the Allied remnant is evacuating over the White Mountains to Egypt.',
+          el: 'Η νύχτα που μετρούσε ξοδεύεται σε παρατήρηση μιας άδειας θάλασσας — οι γερμανικές νηοπομπές δεν ήταν ποτέ η κύρια προσπάθεια, και το Βασιλικό Ναυτικό ούτως ή άλλως τις σκορπίζει. Την αυγή τα Ju-52 προσγειώνονται ετσιθελικά στον αμφισβητούμενο διάδρομο του Μάλεμε γρηγορότερα απ\' όσο τα κατεστρέφουν οι οβίδες· μια ορεινή μεραρχία ξεφυτρώνει από τον διάδρομο, και δέκα μέρες μετά τα συμμαχικά υπολείμματα εκκενώνουν πάνω από τα Λευκά Όρη προς την Αίγυπτο.',
+        },
+      },
+    ],
+    note: {
+      en: 'German paratroop losses on Crete were so severe — some 6,000 in ten days — that Hitler forbade all future large airborne operations: "the day of the paratrooper is over." Crete thus both fell and avenged itself; the island\'s resistance never stopped until 1945, at terrible cost to its villages.',
+      el: 'Οι απώλειες των Γερμανών αλεξιπτωτιστών στην Κρήτη ήταν τόσο βαριές — περίπου 6.000 σε δέκα μέρες — που ο Χίτλερ απαγόρευσε κάθε μελλοντική μεγάλη αεροκίνητη επιχείρηση: «η εποχή του αλεξιπτωτιστή πέρασε». Έτσι η Κρήτη έπεσε και συνάμα εκδικήθηκε· η αντίσταση του νησιού δεν σταμάτησε ώς το 1945, με φρικτό τίμημα για τα χωριά της.',
+    },
+  },
+];
+
+/* ============================================================
+   ERA OUTCOME SCREENS — tier resolved from final Unity/Power
+   ============================================================ */
+function resolveTier(unity, power) {
+  if (unity >= 60 && power >= 45) return 'golden';
+  if (unity >= 35 && power >= 20) return 'endured';
+  return 'collapse';
+}
+const PHASE_ENDINGS = {
+  phase1: {
+    golden: {
+      title: { en: 'A Nation Reborn', el: 'Έθνος Αναγεννημένο' },
+      text: {
+        en: 'Against an empire, with no state, no treasury and no regular army, the Revolution wins. By the London Protocol of 1830 the Powers recognize an independent Greece — the first new nation-state carved from the Ottoman world, and the first successful national revolution of its century. Four hundred years of night end with church bells; now the harder work begins: building a state worthy of the dead.',
+        el: 'Απέναντι σε μια αυτοκρατορία, χωρίς κράτος, χωρίς ταμείο, χωρίς τακτικό στρατό, η Επανάσταση νικά. Με το Πρωτόκολλο του Λονδίνου του 1830 οι Δυνάμεις αναγνωρίζουν ανεξάρτητη Ελλάδα — το πρώτο νέο εθνικό κράτος που ξεπηδά από τον οθωμανικό κόσμο, και η πρώτη νικηφόρα εθνική επανάσταση του αιώνα της. Τετρακόσια χρόνια νύχτας τελειώνουν με καμπάνες· τώρα αρχίζει το δυσκολότερο έργο: ένα κράτος αντάξιο των νεκρών.',
+      },
+    },
+    endured: {
+      title: { en: 'Freedom at a Price', el: 'Λευτεριά με Τίμημα' },
+      text: {
+        en: 'The Revolution survives itself — the civil wars, Ibrahim\'s scorched earth, the fall of Missolonghi — and limps to independence on the decks of foreign fleets. The new state is small, poor and owes its existence to three ambassadors\' signatures; two thirds of the Greek world remains outside its borders. Yet the impossible thing exists: on the map of Europe, after four centuries, there is written again the word GREECE.',
+        el: 'Η Επανάσταση επιβιώνει από τον ίδιο της τον εαυτό — τους εμφυλίους, την καμένη γη του Ιμπραήμ, την πτώση του Μεσολογγίου — και φτάνει κουτσαίνοντας στην ανεξαρτησία πάνω στα καταστρώματα ξένων στόλων. Το νέο κράτος είναι μικρό, φτωχό και χρωστά την ύπαρξή του σε υπογραφές τριών πρέσβεων· τα δύο τρίτα του ελληνισμού μένουν έξω από τα σύνορά του. Κι όμως το αδύνατο υπάρχει: στον χάρτη της Ευρώπης, μετά από τέσσερις αιώνες, γράφεται ξανά η λέξη ΕΛΛΑΣ.',
+      },
+    },
+    collapse: {
+      title: { en: 'The Rising Drowned', el: 'Ο Πνιγμένος Ξεσηκωμός' },
+      text: {
+        en: 'Divided counsels, open plains and missed hours undo what oaths began. The Morea is pacified village by village, the leaders die in fortress cells or exile, and Europe\'s chancelleries file Greece away as a romantic episode. But revolutions of whole nations do not die — they wait: the songs remain, the diaspora schools remain, and somewhere a new generation memorizes the map of a country that does not yet exist.',
+        el: 'Οι διχασμένες βουλές, οι ανοιχτοί κάμποι και οι χαμένες ώρες ξηλώνουν ό,τι άρχισαν οι όρκοι. Ο Μοριάς «ειρηνεύεται» χωριό-χωριό, οι αρχηγοί πεθαίνουν σε κάστρα ή εξορίες, και οι καγκελαρίες της Ευρώπης αρχειοθετούν την Ελλάδα ως ρομαντικό επεισόδιο. Όμως οι επαναστάσεις ολόκληρων εθνών δεν πεθαίνουν — περιμένουν: τα τραγούδια μένουν, τα σχολειά της διασποράς μένουν, και κάπου μια νέα γενιά αποστηθίζει τον χάρτη μιας πατρίδας που δεν υπάρχει ακόμη.',
+      },
+    },
+  },
+  phase2: {
+    golden: {
+      title: { en: 'The Greece of Two Continents and Five Seas', el: 'Η Ελλάς των Δύο Ηπείρων και των Πέντε Θαλασσών' },
+      text: {
+        en: 'In six years the state doubles: Macedonia, Epirus, the islands, Crete — and at Versailles, Greece sits with the victors, her army proven from Sarantaporo to Skra. Venizelos\' phrase no longer sounds like rhetoric. The gains are real, sealed by treaty and garrison alike; what remains is the statesman\'s hardest art — knowing where destiny ends and hubris begins.',
+        el: 'Σε έξι χρόνια το κράτος διπλασιάζεται: Μακεδονία, Ήπειρος, τα νησιά, η Κρήτη — και στις Βερσαλλίες η Ελλάδα κάθεται με τους νικητές, με στρατό δοκιμασμένο από το Σαρανταπόρο ώς το Σκρα. Η φράση του Βενιζέλου δεν ακούγεται πια ρητορεία. Τα κέρδη είναι πραγματικά, σφραγισμένα με συνθήκες και με φρουρές· μένει η δυσκολότερη τέχνη του πολιτικού — να ξέρει πού τελειώνει το πεπρωμένο και πού αρχίζει η ύβρις.',
+      },
+    },
+    endured: {
+      title: { en: 'Doubled and Divided', el: 'Διπλασιασμένη και Διχασμένη' },
+      text: {
+        en: 'The map is transformed — Thessaloniki Greek, Macedonia held, the northern frontier fixed at Bucharest — but the cost is written inside the nation: a King and a Prime Minister who can no longer share a country, courts-martial and counter-oaths, two Greeces wearing one flag. The territorial victory is complete; the political wound will choose the worst possible moment to reopen.',
+        el: 'Ο χάρτης μεταμορφώνεται — η Θεσσαλονίκη ελληνική, η Μακεδονία κρατημένη, το βόρειο σύνορο κλειδωμένο στο Βουκουρέστι — αλλά το κόστος γράφεται μέσα στο έθνος: ένας Βασιλιάς κι ένας Πρωθυπουργός που δεν χωρούν πια στην ίδια χώρα, στρατοδικεία και αντίορκοι, δύο Ελλάδες με μία σημαία. Η εδαφική νίκη είναι πλήρης· η πολιτική πληγή θα διαλέξει την χειρότερη δυνατή στιγμή για να ξανανοίξει.',
+      },
+    },
+    collapse: {
+      title: { en: 'The Encircled Kingdom', el: 'Το Κυκλωμένο Βασίλειο' },
+      text: {
+        en: 'Hesitation at the hour of the cities, blood spent on the wrong hills, neutrality mistaken for safety — and the neighbors write the peace. Bulgaria reaches the Aegean, the Powers\' patience is spent elsewhere, and the Great Idea shrinks back into the coffee-house talk it came from. Greece remains — smaller than her songs, waiting again for an hour that history does not owe her.',
+        el: 'Δισταγμός την ώρα των πόλεων, αίμα ξοδεμένο σε λάθος υψώματα, η ουδετερότητα περασμένη για ασφάλεια — και την ειρήνη τη γράφουν οι γείτονες. Η Βουλγαρία φτάνει στο Αιγαίο, η υπομονή των Δυνάμεων ξοδεύεται αλλού, και η Μεγάλη Ιδέα ξαναμαζεύεται στα καφενεία απ\' όπου ξεκίνησε. Η Ελλάδα απομένει — μικρότερη από τα τραγούδια της, να περιμένει ξανά μιαν ώρα που η ιστορία δεν της χρωστά.',
+      },
+    },
+  },
+  phase3: {
+    golden: {
+      title: { en: 'The Epic Fulfilled', el: 'Το Έπος Ολοκληρωμένο' },
+      text: {
+        en: 'From the "OXI" of October to the olive groves of Crete, Greece hands the Axis its first defeats and its costliest victory — and buys the world time whose value generals still debate. Whatever occupation brings, it is now settled forever what this war was about here: a small country that could have stepped aside, and chose not to. The mountains kept the oath the politicians made.',
+        el: 'Από το «ΟΧΙ» του Οκτώβρη ώς τους ελαιώνες της Κρήτης, η Ελλάδα δίνει στον Άξονα τις πρώτες του ήττες και την ακριβότερη νίκη του — και αγοράζει στον κόσμο χρόνο που την αξία του συζητούν ακόμη οι στρατηγοί. Ό,τι κι αν φέρει η Κατοχή, έχει πια κριθεί για πάντα τι σήμαινε εδώ αυτός ο πόλεμος: μια μικρή χώρα που μπορούσε να παραμερίσει, και δεν το διάλεξε. Τα βουνά κράτησαν τον όρκο που έδωσαν οι πολιτικοί.',
+      },
+    },
+    endured: {
+      title: { en: 'Honor Kept, Land Lost', el: 'Η Τιμή Κρατήθηκε, η Γη Χάθηκε' },
+      text: {
+        en: 'The mainland falls, Crete falls, the swastika flies over the Acropolis — and yet nothing essential surrendered. The army was defeated only when a second empire joined the first; the people\'s resistance begins before the occupiers finish their parades. Greece enters the long night of occupation hungry and unbeaten in spirit, her 1940 already a legend the enemy cannot garrison.',
+        el: 'Η ηπειρωτική χώρα πέφτει, η Κρήτη πέφτει, η σβάστικα κυματίζει στην Ακρόπολη — κι όμως τίποτε ουσιώδες δεν παραδόθηκε. Ο στρατός νικήθηκε μόνο όταν μια δεύτερη αυτοκρατορία ενώθηκε με την πρώτη· η αντίσταση του λαού αρχίζει πριν τελειώσουν οι παρελάσεις των κατακτητών. Η Ελλάδα μπαίνει στη μακριά νύχτα της Κατοχής πεινασμένη και αδούλωτη στο πνεύμα, με το \'40 της ήδη θρύλο που κανένας κατακτητής δεν μπορεί να φρουρήσει.',
+      },
+    },
+    collapse: {
+      title: { en: 'The Unwritten Epic', el: 'Το Άγραφο Έπος' },
+      text: {
+        en: 'Retreats begun too early, counterattacks launched too late — the campaign that should have astonished the world dissolves into a competent, forgettable defeat. There is no Korytsa to ring bells for, no Churchill aphorism, no legend to feed the resistance through the famine winters. The nation endures the occupation all the same — but without the story that made endurance feel like victory.',
+        el: 'Υποχωρήσεις που άρχισαν νωρίς, αντεπιθέσεις που ξεκίνησαν αργά — η εκστρατεία που έπρεπε να θαμπώσει τον κόσμο διαλύεται σε μια ικανή, ξεχάσιμη ήττα. Δεν υπάρχει Κορυτσά για να χτυπήσουν καμπάνες, δεν υπάρχει αφορισμός του Τσόρτσιλ, δεν υπάρχει θρύλος να θρέψει την αντίσταση στους χειμώνες της πείνας. Το έθνος αντέχει την Κατοχή έτσι κι αλλιώς — αλλά χωρίς την ιστορία που έκανε την αντοχή να μοιάζει με νίκη.',
+      },
+    },
+  },
+};
+const GRAND_VERDICT = {
+  golden: {
+    title: { en: 'LIBERTY FULFILLED', el: 'ΕΛΕΥΘΕΡΙΑ ΔΙΚΑΙΩΜΕΝΗ' },
+    text: {
+      en: 'From the oath of the Filiki Etaireia to the night counterattack at Maleme, you steered a stateless people into a nation that chose its battles — and its refusals — wisely. Independence won, the state doubled, the Epic written: three generations kept faith with one another across a century, and the word ΕΛΕΥΘΕΡΙΑ on the first banner of 1821 was, in the end, kept.',
+      el: 'Από τον όρκο της Φιλικής Εταιρείας ώς τη νυχτερινή αντεπίθεση στο Μάλεμε, οδήγησες έναν λαό χωρίς κράτος σε ένα έθνος που διάλεξε τις μάχες του — και τις αρνήσεις του — με σοφία. Η ανεξαρτησία κερδήθηκε, το κράτος διπλασιάστηκε, το Έπος γράφτηκε: τρεις γενιές κράτησαν την πίστη τους η μία στην άλλη μέσα σε έναν αιώνα, και η λέξη ΕΛΕΥΘΕΡΙΑ στο πρώτο λάβαρο του 1821 τηρήθηκε, στο τέλος.',
+    },
+  },
+  endured: {
+    title: { en: 'A CENTURY OF STRUGGLE', el: 'ΕΝΑΣ ΑΙΩΝΑΣ ΑΓΩΝΩΝ' },
+    text: {
+      en: 'Your Greece stumbled where the real one stumbled — civil strife, schisms, bills paid in blood for hills of stone — and rose where the real one rose. This is the true shape of modern Greek history: no unbroken triumph, but an unbroken refusal to disappear. The borders moved, the governments fell, the flag stayed up.',
+      el: 'Η Ελλάδα σου παραπάτησε όπου παραπάτησε και η αληθινή — εμφύλιες έριδες, διχασμοί, λογαριασμοί πληρωμένοι με αίμα για πέτρινα υψώματα — και σηκώθηκε όπου σηκώθηκε κι εκείνη. Αυτό είναι το αληθινό σχήμα της νεότερης ελληνικής ιστορίας: όχι αδιατάρακτος θρίαμβος, αλλά αδιατάρακτη άρνηση να εξαφανιστεί. Τα σύνορα μετακινήθηκαν, οι κυβερνήσεις έπεσαν, η σημαία έμεινε ψηλά.',
+    },
+  },
+  collapse: {
+    title: { en: 'THE UNHEEDED BELL', el: 'Η ΚΑΜΠΑΝΑ ΠΟΥ ΔΕΝ ΑΚΟΥΣΤΗΚΕ' },
+    text: {
+      en: 'Waiting for permissions history never grants, fighting on ground the enemy chose, guarding coasts while runways fell — the classic errors claimed your century. Study the sources again, Archistrategos: at every turning point the men on the spot — a Kolokotronis, a Venizelos, a Katsimitros — saw the answer. The nation\'s fortune turned on whether anyone in authority listened.',
+      el: 'Περιμένοντας άδειες που η ιστορία δεν δίνει, πολεμώντας σε έδαφος που διάλεξε ο εχθρός, φυλάγοντας ακτές ενώ έπεφταν αεροδρόμια — τα κλασικά λάθη σφράγισαν τον αιώνα σου. Μελέτησε ξανά τις πηγές, Αρχιστράτηγε: σε κάθε καμπή, οι άνθρωποι επί τόπου — ένας Κολοκοτρώνης, ένας Βενιζέλος, ένας Κατσιμήτρος — έβλεπαν την απάντηση. Η τύχη του έθνους κρίθηκε στο αν κάποιος με εξουσία τους άκουσε.',
+    },
+  },
+};
+const RANKS = {
+  golden: { en: 'Ethnarch', el: 'Εθνάρχης' },
+  endured: { en: 'Strategos of the Nation', el: 'Στρατηγός του Έθνους' },
+  collapse: { en: 'Exile of the Diaspora', el: 'Εξόριστος της Διασποράς' },
+};
+
+/* ============================================================
+   CINEMATIC TACTICAL SVG MAPS — terrain art, unit silhouettes
+   ============================================================ */
+const MC = {
+  greek: '#5eead4', greekDeep: '#14b8a6',
+  enemy: '#fb7185', enemyDeep: '#e11d48',
+  admin: '#c084fc',
+  water: '#60a5fa', gold: '#e8d9a0',
+  label: '#e2e8f0', dim: '#94a3b8',
+  land: '#22261b', landLine: '#5a5343',
+};
+
+function MapShell({ children, legend }) {
+  return (
+    <div className="map-frame rounded-xl overflow-hidden">
+      <svg viewBox="0 0 400 250" className="w-full h-auto block" role="img">
+        <defs>
+          <marker id="arrGreek" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.greek} />
+          </marker>
+          <marker id="arrEnemy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.enemy} />
+          </marker>
+          <marker id="arrGold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.gold} />
+          </marker>
+          <marker id="arrAdmin" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={MC.admin} />
+          </marker>
+          <linearGradient id="seaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0f5a85" stopOpacity="0.85" />
+            <stop offset="0.6" stopColor="#0b3f5f" stopOpacity="0.9" />
+            <stop offset="1" stopColor="#07293f" stopOpacity="0.95" />
+          </linearGradient>
+          <pattern id="seaG" width="400" height="250" patternUnits="userSpaceOnUse">
+            <rect width="400" height="250" fill="url(#seaGrad)" />
+            <ellipse cx="200" cy="118" rx="230" ry="140" fill="rgba(88,175,235,0.06)" />
+            <ellipse cx="200" cy="112" rx="140" ry="82" fill="rgba(125,200,247,0.05)" />
+          </pattern>
+          <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#3d4230" />
+            <stop offset="0.55" stopColor="#2d3226" />
+            <stop offset="1" stopColor="#1b1e15" />
+          </linearGradient>
+          <pattern id="soilDots" width="26" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="4" cy="6" r="0.7" fill="rgba(196,183,143,0.11)" />
+            <circle cx="15" cy="14" r="0.6" fill="rgba(128,158,96,0.11)" />
+            <circle cx="22" cy="4" r="0.5" fill="rgba(196,183,143,0.08)" />
+            <circle cx="9" cy="19" r="0.6" fill="rgba(128,158,96,0.08)" />
+            <circle cx="20" cy="18" r="0.5" fill="rgba(96,90,70,0.14)" />
+          </pattern>
+          <pattern id="landG" width="400" height="250" patternUnits="userSpaceOnUse">
+            <rect width="400" height="250" fill="url(#landGrad)" />
+            <ellipse cx="200" cy="220" rx="250" ry="95" fill="rgba(104,140,72,0.10)" />
+            <ellipse cx="90" cy="55" rx="160" ry="85" fill="rgba(158,130,80,0.09)" />
+            <ellipse cx="330" cy="80" rx="150" ry="95" fill="rgba(158,130,80,0.07)" />
+            <ellipse cx="260" cy="170" rx="120" ry="60" fill="rgba(104,140,72,0.06)" />
+            <rect width="400" height="250" fill="url(#soilDots)" />
+          </pattern>
+          <linearGradient id="mtnG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#5c553f" />
+            <stop offset="1" stopColor="#26291e" />
+          </linearGradient>
+          <radialGradient id="plainG" cx="0.5" cy="0.5" r="0.7">
+            <stop offset="0" stopColor="#77784f" stopOpacity="0.26" />
+            <stop offset="1" stopColor="#77784f" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="vignG" cx="0.5" cy="0.5" r="0.72">
+            <stop offset="0" stopColor="#000" stopOpacity="0" />
+            <stop offset="0.62" stopColor="#000" stopOpacity="0" />
+            <stop offset="1" stopColor="#000" stopOpacity="0.52" />
+          </radialGradient>
+          <radialGradient id="gloAmber" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#22d3ee" stopOpacity="0.30" />
+            <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="gloGold" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#e8d9a0" stopOpacity="0.34" />
+            <stop offset="1" stopColor="#e8d9a0" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="gloGreen" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#a3e635" stopOpacity="0.24" />
+            <stop offset="1" stopColor="#a3e635" stopOpacity="0" />
+          </radialGradient>
+          <pattern id="waterWaves" width="26" height="12" patternUnits="userSpaceOnUse">
+            <path d="M0 8 q6.5 -6 13 0 t13 0" stroke="rgba(96,165,250,0.26)" strokeWidth="1" fill="none" />
+          </pattern>
+          <pattern id="reeds" width="14" height="12" patternUnits="userSpaceOnUse">
+            <g stroke="rgba(74,222,128,0.55)" strokeWidth="0.9" strokeLinecap="round">
+              <path d="M3 11 L3 5 M3 6.5 L1.2 4 M3 6.5 L4.8 4.2" fill="none" />
+              <path d="M10 12 L10 7 M10 8 L8.4 5.8 M10 8 L11.6 6" fill="none" />
+            </g>
+          </pattern>
+          <pattern id="fields" width="16" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)">
+            <path d="M0 4.5 L16 4.5" stroke="rgba(217,180,90,0.30)" strokeWidth="0.8" />
+            <path d="M0 8.5 L16 8.5" stroke="rgba(217,180,90,0.18)" strokeWidth="0.8" />
+          </pattern>
+
+          {/* ---------- UNIT SILHOUETTES (fill/stroke = currentColor) ---------- */}
+          <symbol id="uHop" viewBox="0 0 14 16">
+            <line x1="1.4" y1="14.4" x2="13.2" y2="2.2" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+            <path d="M12 1.4 L13.9 0.6 L13.2 2.5 Z" fill="currentColor" />
+            <path d="M5.7 1.7 Q7.1 -0.7 8.7 1.6 L8.2 2.7 L6.3 2.7 Z" fill="currentColor" />
+            <circle cx="7.1" cy="3.3" r="1.65" fill="currentColor" />
+            <path d="M6 5.1 L8.5 5.1 L9.1 10 L10.1 15.2 L8.4 15.2 L7.3 11.1 L6.4 15.2 L4.7 15.2 L5.7 10 Z" fill="currentColor" />
+            <circle cx="4.7" cy="8.7" r="3.3" fill="currentColor" />
+            <circle cx="4.7" cy="8.7" r="1.9" fill="#060a13" opacity="0.28" />
+            <circle cx="4.7" cy="8.7" r="0.75" fill="currentColor" />
+          </symbol>
+          <symbol id="uPers" viewBox="0 0 14 16">
+            <path d="M6.5 1.9 L9.3 1.9 L8.9 0.5 L6.9 0.5 Z" fill="currentColor" />
+            <circle cx="7.9" cy="3.2" r="1.55" fill="currentColor" />
+            <path d="M6.9 5 L9.2 5 L9.8 9.8 L10.7 15.2 L9.1 15.2 L8.1 11.2 L7.2 15.2 L5.6 15.2 L6.4 9.8 Z" fill="currentColor" />
+            <rect x="2.7" y="4.7" width="2.9" height="9.6" rx="1" fill="currentColor" />
+            <line x1="4.15" y1="6.4" x2="4.15" y2="12.7" stroke="#060a13" strokeWidth="0.5" opacity="0.3" />
+            <path d="M11.6 4.4 Q14.4 7.9 11.6 11.4" stroke="currentColor" strokeWidth="0.85" fill="none" />
+            <line x1="11.6" y1="4.4" x2="11.6" y2="11.4" stroke="currentColor" strokeWidth="0.45" />
+          </symbol>
+          <symbol id="uPike" viewBox="0 0 26 16">
+            <line x1="1" y1="13.4" x2="24.6" y2="5" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" />
+            <path d="M23.5 4.2 L25.8 4.6 L24.1 6.2 Z" fill="currentColor" />
+            <circle cx="7.7" cy="3.6" r="1.6" fill="currentColor" />
+            <path d="M6.9 1.9 Q7.7 0.7 8.7 1.9 L8.4 2.6 L7.1 2.6 Z" fill="currentColor" />
+            <path d="M6.7 5.4 L9 5.4 L9.6 10 L10.5 15.2 L8.9 15.2 L8 11.3 L7.1 15.2 L5.5 15.2 L6.4 10 Z" fill="currentColor" />
+            <circle cx="5.2" cy="8.9" r="2.35" fill="currentColor" />
+            <circle cx="5.2" cy="8.9" r="1.3" fill="#060a13" opacity="0.28" />
+          </symbol>
+          <symbol id="uCav" viewBox="0 0 22 17">
+            <line x1="5.2" y1="8.2" x2="17.4" y2="1" stroke="currentColor" strokeWidth="0.75" strokeLinecap="round" />
+            <circle cx="9.7" cy="2.7" r="1.4" fill="currentColor" />
+            <path d="M8.7 4.1 L10.8 4.1 L11.4 7 L8.3 7 Z" fill="currentColor" />
+            <path d="M2.8 9.7 Q3.2 6.9 6.2 6.5 L13.4 6.1 Q14 4.1 15.6 3.5 L16.4 4.9 L19 5.4 L17 6.7 Q16.4 7.3 15.2 7.3 L15 9.5 Q14.9 10.7 13.8 11.1 L14.6 15.6 L13.1 15.6 L12.2 11.5 L7.8 11.6 L7 15.6 L5.5 15.6 L6.1 11.1 Q3.2 10.7 2.8 9.7 Z" fill="currentColor" />
+            <path d="M2.9 9.2 Q1.1 9.7 0.7 11.8 Q2.4 11.2 3.2 10.3 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uShip" viewBox="0 0 26 13">
+            <path d="M2 5.2 Q10 8.6 18.6 7.3 L23.4 5.7 Q23 8.8 18.9 9.8 Q10.4 11.4 5 8.8 Q2.4 7.6 2 5.2 Z" fill="currentColor" />
+            <path d="M2 5.2 L0.2 6.3 L2.5 7.4 Z" fill="currentColor" />
+            <path d="M23.4 5.7 Q25.3 4.9 25.5 2.9 Q23.8 3.6 22.8 4.9 Z" fill="currentColor" />
+            <line x1="12.6" y1="0.8" x2="12.6" y2="7.8" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="9.4" y1="1.7" x2="15.8" y2="1.7" stroke="currentColor" strokeWidth="0.7" />
+            <g stroke="currentColor" strokeWidth="0.55">
+              <line x1="5.4" y1="8.9" x2="4.3" y2="11.6" /><line x1="8.4" y1="9.4" x2="7.3" y2="12" />
+              <line x1="11.4" y1="9.7" x2="10.3" y2="12.3" /><line x1="14.4" y1="9.7" x2="13.3" y2="12.3" />
+              <line x1="17.4" y1="9.3" x2="16.3" y2="11.9" /><line x1="20.2" y1="8.7" x2="19.1" y2="11.2" />
+            </g>
+          </symbol>
+          <symbol id="uChar" viewBox="0 0 27 15">
+            <circle cx="8" cy="10.8" r="3.1" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <line x1="5.9" y1="8.6" x2="10.1" y2="13" stroke="currentColor" strokeWidth="0.6" />
+            <line x1="5.9" y1="13" x2="10.1" y2="8.6" stroke="currentColor" strokeWidth="0.6" />
+            <path d="M8 10.8 Q4.6 11.6 2.4 13.6" stroke="currentColor" strokeWidth="0.9" fill="none" />
+            <path d="M5.4 4.4 L10.8 4.4 L10.8 8.3 L5.6 8.3 Q5 6.3 5.4 4.4 Z" fill="currentColor" />
+            <circle cx="8.2" cy="3.1" r="1.25" fill="currentColor" />
+            <line x1="10.8" y1="7" x2="18.4" y2="6.8" stroke="currentColor" strokeWidth="0.7" />
+            <path d="M18 8.9 Q18.4 6.4 20.8 6.1 L21.6 4.2 L22.6 5.5 L24.9 5.9 L23.2 7.2 L23 9.1 Q22.9 10.1 22 10.4 L22.6 13.8 L21.3 13.8 L20.6 10.7 L19.6 10.7 L19 13.8 L17.7 13.8 L18.2 10.3 Q17.9 9.6 18 8.9 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uTemple" viewBox="0 0 16 13">
+            <path d="M1 4.7 L8 0.5 L15 4.7 Z" fill="currentColor" />
+            <rect x="1.7" y="5" width="12.6" height="0.9" fill="currentColor" />
+            <rect x="2.6" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="5.6" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="8.8" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="11.8" y="6.4" width="1.4" height="4" fill="currentColor" />
+            <rect x="1.2" y="10.8" width="13.6" height="1.4" fill="currentColor" />
+          </symbol>
+          <symbol id="uZig" viewBox="0 0 16 12">
+            <rect x="1" y="8.6" width="14" height="3" fill="currentColor" />
+            <rect x="3.4" y="5.4" width="9.2" height="3" fill="currentColor" />
+            <rect x="5.7" y="2.4" width="4.6" height="2.8" fill="currentColor" />
+            <line x1="8" y1="2.4" x2="8" y2="11.6" stroke="#060a13" strokeWidth="0.7" opacity="0.35" />
+          </symbol>
+          <symbol id="uFlame" viewBox="0 0 10 13">
+            <path d="M5 0 Q8 3.4 6.6 5.4 Q8.6 4.8 9.2 3.2 Q10.8 7.2 8.6 9.8 Q7 11.8 5 11.8 Q3 11.8 1.6 9.9 Q-0.4 7 2 3.3 Q2.4 4.9 3.6 5.5 Q2.6 2.7 5 0 Z" fill="currentColor" />
+            <path d="M5 6.2 Q6.4 7.9 5.6 9.6 Q5.1 10.6 4.2 10.2 Q3 9.5 3.7 7.8 Q4.2 6.9 5 6.2 Z" fill="#060a13" opacity="0.4" />
+          </symbol>
+          <symbol id="uClash" viewBox="0 0 16 16">
+            <path d="M8 0 L9.3 4.6 L13.8 2.6 L11 6.6 L16 8 L11 9.4 L13.4 13.6 L9.2 11.3 L8 16 L6.8 11.3 L2.6 13.6 L5 9.4 L0 8 L5 6.6 L2.2 2.6 L6.7 4.6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uBombard" viewBox="0 0 22 13">
+            <rect x="4" y="4.6" width="13" height="3.6" rx="1.8" fill="currentColor" />
+            <rect x="15.5" y="5.3" width="5" height="2.2" rx="1.1" fill="currentColor" />
+            <circle cx="7.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="13.5" cy="10.2" r="2.4" fill="none" stroke="currentColor" strokeWidth="0.9" />
+            <circle cx="2.6" cy="9.8" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uChurch" viewBox="0 0 16 14">
+            <path d="M3.4 8.2 Q3.4 4.6 8 4.2 Q12.6 4.6 12.6 8.2 Z" fill="currentColor" />
+            <rect x="2.6" y="8.2" width="10.8" height="4.6" fill="currentColor" />
+            <line x1="8" y1="4" x2="8" y2="1.2" stroke="currentColor" strokeWidth="0.9" />
+            <line x1="6.7" y1="2.4" x2="9.3" y2="2.4" stroke="currentColor" strokeWidth="0.9" />
+          </symbol>
+          <symbol id="uCrescent" viewBox="0 0 12 12">
+            <path d="M9.5 6 A4.3 4.3 0 1 1 5.4 1.8 A3.4 3.4 0 0 0 9.5 6 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uCross" viewBox="0 0 10 12">
+            <rect x="4.1" y="1" width="1.8" height="10" fill="currentColor" />
+            <rect x="1.4" y="3.4" width="7.2" height="1.8" fill="currentColor" />
+          </symbol>
+          <symbol id="uRifle" viewBox="0 0 14 16">
+            <circle cx="6.8" cy="2.6" r="1.6" fill="currentColor" />
+            <path d="M6.6 1 Q7.9 0.2 8.6 1.3 L8.3 2 L6.8 2 Z" fill="currentColor" />
+            <path d="M5.8 4.4 L8.2 4.4 L8.8 9.6 L9.7 15.2 L8.1 15.2 L7.2 11 L6.3 15.2 L4.7 15.2 L5.6 9.6 Z" fill="currentColor" />
+            <line x1="2.4" y1="9.8" x2="12.4" y2="3.2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            <line x1="10.6" y1="4.4" x2="11.4" y2="5.6" stroke="currentColor" strokeWidth="0.8" />
+          </symbol>
+          <symbol id="uPlane" viewBox="0 0 22 12">
+            <path d="M2 6.2 L15 5.4 Q18.4 5.4 20 6.6 Q18.2 7.8 15 7.6 L2 7 Q1 6.6 2 6.2 Z" fill="currentColor" />
+            <path d="M9 5.6 L7 1.4 L9 1.6 L11.6 5.5 Z" fill="currentColor" />
+            <path d="M9 7.2 L7 11 L9 10.8 L11.6 7.3 Z" fill="currentColor" />
+            <path d="M2.6 6.6 L1 3.8 L2.6 4 L4 6.3 Z" fill="currentColor" />
+          </symbol>
+          <symbol id="uPara" viewBox="0 0 12 14">
+            <path d="M1 6 Q6 -1.4 11 6 Q8.5 4.8 6 4.9 Q3.5 4.8 1 6 Z" fill="currentColor" />
+            <line x1="1.4" y1="6" x2="5.4" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="10.6" y1="6" x2="6.6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <line x1="6" y1="5" x2="6" y2="11" stroke="currentColor" strokeWidth="0.55" />
+            <circle cx="6" cy="11.6" r="1.3" fill="currentColor" />
+          </symbol>
+          <symbol id="uSteam" viewBox="0 0 26 13">
+            <path d="M1.6 6.6 L24 6.6 L21.6 10.6 Q13 12.4 5 10.6 Z" fill="currentColor" />
+            <rect x="9" y="3.4" width="7.5" height="3.2" rx="0.6" fill="currentColor" />
+            <rect x="11.4" y="0.8" width="2.2" height="2.8" fill="currentColor" />
+            <path d="M13.8 0.6 Q16 -0.4 17.6 0.9" stroke="currentColor" strokeWidth="0.7" fill="none" />
+            <line x1="3.4" y1="6.6" x2="3.4" y2="3.4" stroke="currentColor" strokeWidth="0.8" />
+            <line x1="21.8" y1="6.6" x2="21.8" y2="4.2" stroke="currentColor" strokeWidth="0.8" />
+          </symbol>
+          <symbol id="uTent" viewBox="0 0 12 9">
+            <path d="M0.8 8.4 L6 0.8 L11.2 8.4 Z" fill="currentColor" />
+            <path d="M4.6 8.4 L6 4.6 L7.4 8.4 Z" fill="#060a13" opacity="0.45" />
+          </symbol>
+        </defs>
+        <rect width="400" height="250" fill="url(#landG)" />
+        {children}
+        <rect width="400" height="250" fill="url(#vignG)" style={{ pointerEvents: 'none' }} />
+        <g opacity="0.75">
+          <circle cx="376" cy="226" r="10" fill="rgba(6,10,19,0.55)" stroke={MC.landLine} strokeWidth="0.8" />
+          <path d="M376 219 L378.4 226.5 L376 225 L373.6 226.5 Z" fill={MC.greek} />
+          <text x="376" y="216" fill={MC.dim} fontSize="6" textAnchor="middle" fontFamily="'Plus Jakarta Sans', sans-serif">N</text>
+        </g>
+      </svg>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-3 py-2 border-t border-cyan-400/15 text-[10px] uppercase tracking-wider text-slate-400 bg-slate-950/60">
+        {legend.map((l, i) => (
+          <span key={i} className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: l.c }}></span>{l.t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const T = ({ x, y, children, fill = MC.label, size = 8.5, anchor = 'middle', bold = false, rotate = 0, o = 1 }) => (
+  <text x={x} y={y} fill={fill} fontSize={size} textAnchor={anchor} opacity={o}
+    transform={rotate ? `rotate(${rotate} ${x} ${y})` : undefined}
+    paintOrder="stroke" stroke="rgba(6,10,19,0.85)" strokeWidth="2.6" strokeLinejoin="round"
+    fontFamily="'Plus Jakarta Sans', sans-serif" fontWeight={bold ? 700 : 500} letterSpacing="0.07em">{children}</text>
+);
+
+const FX_BY_SYM = {
+  uHop: 'anim-bob', uPers: 'anim-bob', uPike: 'anim-bob', uRifle: 'anim-bob', uCav: 'anim-bob', uChar: 'anim-bob',
+  uShip: 'anim-rock', uSteam: 'anim-rock', uFlame: 'anim-flick', uClash: 'anim-clash', uPara: 'anim-drop', uBombard: 'anim-kick',
+};
+function Unit({ sym, x, y, w = 13, color, mirror = false, rot = 0, o = 1, fx }) {
+  const t = `translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}${mirror ? ' scale(-1 1)' : ''}`;
+  const cls = fx === 'none' ? undefined : (fx || FX_BY_SYM[sym]);
+  const delay = -(((x * 7 + y * 13) % 17) / 10);
+  return (
+    <g transform={t} style={{ color }} opacity={o}>
+      <g className={cls} style={cls ? { animationDelay: `${delay}s` } : undefined}>
+        <use href={`#${sym}`} x={mirror ? -w : 0} y={0} width={w} height={w} />
+      </g>
+    </g>
+  );
+}
+function Rank({ sym, x, y, n, dx = 11, dy = 0, ...rest }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Unit key={i} sym={sym} x={x + i * dx} y={y + i * dy} {...rest} />
+    ))}</g>
+  );
+}
+/* A unit that travels along an SVG path, looping — the moving soldier/ship/rider */
+function Mover({ sym, path, w = 13, color, mirror = false, o = 1, dur = 6, begin = '0s' }) {
+  return (
+    <g style={{ color }} opacity={o}>
+      <g transform={mirror ? 'scale(-1 1)' : undefined}>
+        <use href={`#${sym}`} x={-w / 2} y={-w / 2} width={w} height={w} />
+      </g>
+      <animateMotion dur={`${dur}s`} begin={begin} repeatCount="indefinite" path={path} />
+    </g>
+  );
+}
+/* A steady stream of movers on the same route — a marching column */
+function Column({ sym, path, n = 3, dur = 8, w = 13, color, mirror = false, o = 1 }) {
+  return (
+    <g>{Array.from({ length: n }).map((_, i) => (
+      <Mover key={i} sym={sym} path={path} dur={dur} w={w} color={color} mirror={mirror} o={o} begin={`${-(dur / n) * i}s`} />
+    ))}</g>
+  );
+}
+function Ridge({ d, o = 1, snow = false }) {
+  const nums = d.replace(/[A-Za-z]/g, ' ').trim().split(/[\s,]+/).map(Number);
+  const pts = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
+  const peaks = [];
+  for (let i = 1; i < pts.length - 1; i++) {
+    if (pts[i][1] < pts[i - 1][1] && pts[i][1] < pts[i + 1][1]) peaks.push(i);
+  }
+  return (
+    <g opacity={o}>
+      <path d={d} fill="url(#mtnG)" stroke="#4c4636" strokeWidth="0.8" strokeLinejoin="round" />
+      {peaks.map((i) => {
+        const P = pts[i], A = pts[i - 1], B = pts[i + 1];
+        const baseY = Math.max(A[1], B[1]);
+        const h = baseY - P[1];
+        const capA = [P[0] + (A[0] - P[0]) * 0.3, P[1] + (A[1] - P[1]) * 0.3];
+        const capB = [P[0] + (B[0] - P[0]) * 0.3, P[1] + (B[1] - P[1]) * 0.3];
+        return (
+          <g key={i}>
+            <path d={`M${A[0]} ${A[1]} L${P[0]} ${P[1]} L${P[0]} ${baseY} Z`} fill="rgba(214,198,150,0.16)" />
+            <path d={`M${P[0]} ${baseY} L${P[0]} ${P[1]} L${B[0]} ${B[1]} Z`} fill="rgba(8,10,15,0.38)" />
+            {(snow || h > 40) && (
+              <path d={`M${capA[0]} ${capA[1]} L${P[0]} ${P[1]} L${capB[0]} ${capB[1]} Z`} fill="rgba(230,236,242,0.85)" />
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+const Contour = ({ d, o = 0.16 }) => (
+  <path d={d} fill="none" stroke="#d5d8c0" strokeWidth="0.6" opacity={o} />
+);
+
+/* ---------- 1. OUTBREAK 1821 ---------- */
+function MapOutbreak1821({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Επαναστάτες' : 'Revolutionaries' },
+      { c: MC.enemy, t: L ? 'Οθωμανικές φρουρές' : 'Ottoman garrisons' },
+      { c: MC.water, t: L ? 'Θάλασσα' : 'Sea' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* Peloponnese */}
+      <path d="M120 26 Q210 10 286 34 Q330 52 322 96 Q358 122 336 160 Q322 186 286 184 Q296 222 258 236 Q226 246 206 220 Q170 240 140 220 Q100 196 118 160 Q76 150 82 110 Q88 66 120 26 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Ridge d="M170 90 L192 62 L212 86 L234 60 L254 88 L246 108 L178 108 Z" o={0.7} />
+      <T x={214} y={124} size={6.5} fill={MC.dim}>{L ? 'ΜΑΙΝΑΛΟ' : 'MT. MAINALON'}</T>
+      {/* Risings */}
+      <Unit sym="uRifle" x={148} y={196} w={13} color={MC.greek} />
+      <Unit sym="uFlame" x={166} y={192} w={9} color={MC.gold} />
+      <T x={160} y={228} fill={MC.greek} bold size={7}>{L ? 'ΚΑΛΑΜΑΤΑ — 23 ΜΑΡΤΙΟΥ' : 'KALAMATA — 23 MARCH'}</T>
+      <Unit sym="uRifle" x={130} y={52} w={13} color={MC.greek} />
+      <Unit sym="uFlame" x={148} y={48} w={9} color={MC.gold} />
+      <T x={118} y={40} fill={MC.greek} bold size={7}>{L ? 'ΠΑΤΡΑ' : 'PATRAS'}</T>
+      <Unit sym="uRifle" x={252} y={210} w={12} color={MC.greek} o={0.9} />
+      <T x={272} y={230} fill={MC.greek} size={6.5}>{L ? 'ΜΑΝΗ' : 'MANI'}</T>
+      {/* Tripolitsa garrison at centre */}
+      <rect x="196" y="140" width="30" height="20" rx="3" fill="none" stroke={MC.enemy} strokeWidth="2" />
+      <Unit sym="uCrescent" x={206} y={144} w={10} color={MC.enemy} />
+      <T x={212} y={174} fill={MC.enemy} bold size={7}>{L ? 'ΤΡΙΠΟΛΙΤΣΑ' : 'TRIPOLITSA'}</T>
+      {/* Converging siege arrows */}
+      <path d="M162 196 Q184 176 198 162" fill="none" stroke={MC.greek} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M146 66 Q176 104 196 138" fill="none" stroke={MC.greek} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M256 206 Q240 182 228 162" fill="none" stroke={MC.greek} strokeWidth="2" strokeDasharray="5 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={294} y={112} fill={MC.dim} size={6.2}>{L ? 'ΟΙ ΦΡΟΥΡΕΣ ΚΛΕΙΝΟΝΤΑΙ ΣΤΑ ΚΑΣΤΡΑ' : 'GARRISONS LOCK IN THEIR FORTS'}</T>
+      {/* Flag */}
+      <line x1="96" y1="120" x2="96" y2="96" stroke={MC.greek} strokeWidth="1.2" />
+      <path d="M96 96 L114 101 L96 106 Z" fill={MC.greek} />
+      <T x={66} y={136} fill={MC.greek} size={6.2}>{L ? 'ΕΛΕΥΘΕΡΙΑ Ή ΘΑΝΑΤΟΣ' : 'LIBERTY OR DEATH'}</T>
+      <T x={356} y={214} fill={MC.water} size={7} rotate={-90}>{L ? 'ΑΙΓΑΙΟ' : 'AEGEAN'}</T>
+      <T x={38} y={60} fill={MC.water} size={7} rotate={90}>{L ? 'ΙΟΝΙΟ' : 'IONIAN'}</T>
+    {/* the bands converge, live */}
+      <Mover sym="uRifle" path="M162 196 Q184 176 200 164" dur={4.5} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M146 66 Q176 104 194 136" dur={5.5} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M256 206 Q240 182 230 164" dur={4.5} w={11} color={MC.greek} mirror />
+      </MapShell>
+  );
+}
+
+/* ---------- 2. DERVENAKIA ---------- */
+function MapDervenakia({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Ενέδρα Κολοκοτρώνη' : 'Kolokotronis’ ambush' },
+      { c: MC.enemy, t: L ? 'Στρατιά Δράμαλη' : 'Dramali’s army' },
+      { c: MC.gold, t: L ? 'Ταμπούρια' : 'Tampouria' }]}>
+      <ellipse cx="200" cy="125" rx="180" ry="105" fill="url(#plainG)" />
+      {/* Gorge walls */}
+      <Ridge d="M40 30 L90 8 L150 26 L196 12 L240 34 L226 78 L150 92 L64 76 Z" />
+      <Ridge d="M84 246 L140 190 L216 176 L296 190 L340 240 L320 250 L100 250 Z" />
+      <T x={130} y={52} size={6.5} fill={MC.dim}>{L ? 'ΥΨΩΜΑΤΑ ΔΕΡΒΕΝΑΚΙΩΝ' : 'DERVENAKIA HEIGHTS'}</T>
+      <T x={214} y={218} size={6.5} fill={MC.dim}>{L ? 'ΑΓΙΟΣ ΣΩΣΤΗΣ' : 'AGIOS SOSTIS'}</T>
+      {/* The defile */}
+      <path d="M30 140 Q120 118 210 128 Q300 138 382 118" fill="none" stroke="#3b3629" strokeWidth="16" opacity="0.55" />
+      <T x={330} y={104} fill={MC.dim} size={6.2}>{L ? 'ΠΡΟΣ ΚΟΡΙΝΘΟ' : 'TO CORINTH'}</T>
+      <T x={44} y={162} fill={MC.dim} size={6.2}>{L ? 'ΑΠΟ ΑΡΓΟΣ' : 'FROM ARGOS'}</T>
+      {/* Ottoman column strung out */}
+      <Rank sym="uPers" x={80} y={122} n={7} dx={34} color={MC.enemy} w={12} />
+      <Unit sym="uCav" x={150} y={132} w={15} color={MC.enemy} o={0.85} />
+      <Unit sym="uCav" x={250} y={126} w={15} color={MC.enemy} o={0.85} />
+      <T x={196} y={158} fill={MC.enemy} bold size={7}>{L ? 'ΦΑΛΑΓΓΑ ΔΡΑΜΑΛΗ — 25.000 ΣΤΟ ΣΤΕΝΟ' : 'DRAMALI’S COLUMN — 25,000 IN THE DEFILE'}</T>
+      {/* Ambushers on both rims */}
+      <Rank sym="uRifle" x={100} y={78} n={4} dx={40} color={MC.greek} w={12} />
+      <Rank sym="uRifle" x={130} y={176} n={4} dx={42} color={MC.greek} w={12} />
+      {[96, 178, 260, 342].map((x, i) => (
+        <rect key={i} x={x} y={90} width="14" height="3.4" rx="1.5" fill={MC.gold} opacity="0.9" />
+      ))}
+      {[126, 208, 292].map((x, i) => (
+        <rect key={i} x={x} y={172} width="14" height="3.4" rx="1.5" fill={MC.gold} opacity="0.9" />
+      ))}
+      {/* Plunging fire */}
+      <path d="M150 94 L166 116" stroke={MC.greek} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M232 94 L244 114" stroke={MC.greek} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M188 174 L200 148" stroke={MC.greek} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M280 172 L288 146" stroke={MC.greek} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <Unit sym="uClash" x={196} y={120} w={12} color={MC.gold} />
+      <Unit sym="uClash" x={300} y={116} w={10} color={MC.gold} o={0.9} />
+      {/* Blocked exit */}
+      <line x1="356" y1="104" x2="368" y2="132" stroke={MC.greek} strokeWidth="3.4" strokeDasharray="4 3" />
+      <T x={344} y={148} fill={MC.greek} size={6.2} bold>{L ? 'ΕΞΟΔΟΣ ΦΡΑΓΜΕΝΗ' : 'EXIT BLOCKED'}</T>
+      <T x={90} y={240} fill={MC.greek} bold size={7}>{L ? '26 ΙΟΥΛΙΟΥ 1822 — «ΦΕΥΓΕΙ Ο ΔΡΑΜΑΛΗΣ»' : '26 JULY 1822 — “DRAMALI IS FLEEING”'}</T>
+    {/* the doomed column streams through the defile */}
+      <Column sym="uPers" path="M30 140 Q120 118 210 128 Q300 138 380 120" n={4} dur={11} w={11} color={MC.enemy} />
+      </MapShell>
+  );
+}
+
+/* ---------- 3. NAVARINO ---------- */
+function MapNavarino({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Συμμαχικός στόλος' : 'Allied fleet' },
+      { c: MC.enemy, t: L ? 'Τουρκοαιγυπτιακή αρμάδα' : 'Ottoman–Egyptian armada' },
+      { c: MC.water, t: L ? 'Όρμος' : 'Bay' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* Coast enclosing the bay + Sphacteria on the west */}
+      <path d="M400 0 L120 0 Q150 30 158 66 L162 190 Q152 224 118 250 L400 250 Z" fill="none" />
+      <path d="M400 0 L212 0 Q244 40 250 96 Q252 150 240 196 Q232 228 210 250 L400 250 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <path d="M96 26 Q116 24 120 52 L124 170 Q126 200 108 216 Q88 224 84 194 L82 60 Q82 32 96 26 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <T x={104} y={130} size={6.5} fill={MC.dim} rotate={87}>{L ? 'ΣΦΑΚΤΗΡΙΑ' : 'SPHACTERIA'}</T>
+      <T x={302} y={40} bold size={8}>{L ? 'ΠΥΛΟΣ' : 'PYLOS'}</T>
+      <Unit sym="uTemple" x={252} y={52} w={12} color={MC.dim} o={0.8} />
+      <T x={282} y={68} size={6.2} fill={MC.dim}>{L ? 'ΝΙΟΚΑΣΤΡΟ' : 'NEOKASTRO'}</T>
+      {/* Ottoman horseshoe */}
+      <Unit sym="uShip" x={168} y={70} w={18} color={MC.enemy} mirror rot={22} />
+      <Unit sym="uShip" x={150} y={104} w={18} color={MC.enemy} mirror rot={8} />
+      <Unit sym="uShip" x={148} y={140} w={18} color={MC.enemy} mirror rot={-6} />
+      <Unit sym="uShip" x={162} y={176} w={18} color={MC.enemy} mirror rot={-22} o={0.9} />
+      <Unit sym="uShip" x={196} y={196} w={18} color={MC.enemy} mirror rot={-38} o={0.85} />
+      <Unit sym="uShip" x={216} y={88} w={17} color={MC.enemy} mirror rot={14} o={0.85} />
+      <Unit sym="uShip" x={212} y={130} w={17} color={MC.enemy} mirror rot={-4} o={0.8} />
+      <T x={196} y={62} fill={MC.enemy} bold size={7}>{L ? '89 ΠΛΟΙΑ ΣΕ ΠΕΤΑΛΟ' : '89 SHIPS IN A HORSESHOE'}</T>
+      {/* Allied line entering the mouth */}
+      <Unit sym="uShip" x={118} y={222} w={20} color={MC.greek} rot={-24} />
+      <Unit sym="uShip" x={146} y={234} w={20} color={MC.greek} rot={-20} o={0.9} />
+      <path d="M136 232 Q152 206 172 182" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="6 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={92} y={244} fill={MC.greek} bold size={7}>{L ? 'ΚΟΔΡΙΓΚΤΟΝ — ΑΓΓΛΙΑ·ΓΑΛΛΙΑ·ΡΩΣΙΑ' : 'CODRINGTON — GB · FR · RU'}</T>
+      <Unit sym="uClash" x={182} y={150} w={13} color={MC.gold} />
+      <Unit sym="uFlame" x={158} y={108} w={9} color={MC.gold} o={0.95} />
+      <Unit sym="uFlame" x={206} y={176} w={9} color={MC.gold} o={0.9} />
+      <T x={306} y={160} fill={MC.dim} size={6.5}>{L ? '20 ΟΚΤΩΒΡΙΟΥ 1827' : '20 OCTOBER 1827'}</T>
+      <T x={306} y={172} fill={MC.dim} size={6.2}>{L ? '4 ΩΡΕΣ — 60 ΠΛΟΙΑ ΒΥΘΙΣΜΕΝΑ' : '4 HOURS — 60 SHIPS SUNK'}</T>
+      <T x={306} y={184} fill={MC.greek} size={6.2}>{L ? 'ΣΥΜΜΑΧΙΚΕΣ ΑΠΩΛΕΙΕΣ: 0 ΠΛΟΙΑ' : 'ALLIED LOSSES: 0 SHIPS'}</T>
+    {/* the allied line glides in */}
+      <Column sym="uShip" path="M132 234 Q150 208 170 184" n={2} dur={6} w={17} color={MC.greek} />
+      </MapShell>
+  );
+}
+
+/* ---------- 4. THESSALONIKI 1912 ---------- */
+function MapThessaloniki1912({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Στρατιά Θεσσαλίας' : 'Army of Thessaly' },
+      { c: MC.enemy, t: L ? 'Οθωμανοί' : 'Ottomans' },
+      { c: MC.admin, t: L ? 'Βουλγαρική κούρσα' : 'Bulgarian race' }]}>
+      <ellipse cx="200" cy="120" rx="180" ry="105" fill="url(#plainG)" />
+      {/* Thermaic gulf */}
+      <path d="M400 250 L400 168 Q356 158 330 176 Q302 196 306 250 Z" fill="url(#seaG)" />
+      <path d="M400 250 L400 168 Q356 158 330 176 Q302 196 306 250 Z" fill="url(#waterWaves)" />
+      <T x={356} y={228} fill={MC.water} size={6.5}>{L ? 'ΘΕΡΜΑΪΚΟΣ' : 'THERMAIC GULF'}</T>
+      {/* Sarantaporo pass */}
+      <Ridge d="M26 190 L60 158 L96 186 L82 208 L36 208 Z" o={0.85} />
+      <Ridge d="M104 196 L136 166 L168 194 L154 214 L112 214 Z" o={0.85} />
+      <path d="M92 196 L112 196" stroke="#3b3629" strokeWidth="9" opacity="0.6" />
+      <T x={100} y={232} size={6.5} fill={MC.greek} bold>{L ? 'ΣΑΡΑΝΤΑΠΟΡΟ — Η ΠΥΛΗ' : 'SARANTAPORO — THE GATE'}</T>
+      <Unit sym="uClash" x={96} y={186} w={10} color={MC.gold} />
+      {/* Greek army at the fork */}
+      <Rank sym="uRifle" x={120} y={150} n={3} dx={13} color={MC.greek} w={12} />
+      <T x={128} y={140} fill={MC.greek} bold size={7}>{L ? 'ΣΤΡΑΤΙΑ ΘΕΣΣΑΛΙΑΣ' : 'ARMY OF THESSALY'}</T>
+      {/* Fork: east to Thessaloniki (solid), west to Monastir (dashed) */}
+      <path d="M164 152 Q240 140 308 172" fill="none" stroke={MC.greek} strokeWidth="3" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={240} y={136} fill={MC.greek} bold size={7} rotate={6}>{L ? '«ΘΕΣΣΑΛΟΝΙΚΗ ΠΑΣΗ ΘΥΣΙΑ!»' : '“THESSALONIKI AT ANY SACRIFICE!”'}</T>
+      <path d="M148 144 Q120 96 92 60" fill="none" stroke={MC.dim} strokeWidth="1.8" strokeDasharray="4 4" markerEnd="url(#arrGreek)" opacity="0.6" />
+      <T x={84} y={48} fill={MC.dim} size={6.5}>{L ? 'ΠΡΟΣ ΜΟΝΑΣΤΗΡΙ;' : 'TO MONASTIR?'}</T>
+      {/* Thessaloniki */}
+      <circle cx="322" cy="176" r="9" fill="none" stroke={MC.gold} strokeWidth="2" strokeDasharray="4 3" className="anim-pulse-glow" />
+      <Unit sym="uChurch" x={314} y={158} w={13} color={MC.gold} />
+      <T x={314} y={206} fill={MC.gold} bold size={7.5}>{L ? 'ΘΕΣΣΑΛΟΝΙΚΗ' : 'THESSALONIKI'}</T>
+      <Unit sym="uCrescent" x={340} y={168} w={8} color={MC.enemy} o={0.9} />
+      <T x={368} y={158} fill={MC.enemy} size={6} anchor="middle">{L ? 'ΤΑΧΣΙΝ — 26.000' : 'TAHSIN — 26,000'}</T>
+      {/* Bulgarian race from NE */}
+      <Rank sym="uRifle" x={300} y={34} n={2} dx={13} color={MC.admin} w={12} />
+      <path d="M318 56 Q324 108 322 160" fill="none" stroke={MC.admin} strokeWidth="2.4" strokeDasharray="6 4" markerEnd="url(#arrAdmin)" className="anim-dash" />
+      <T x={344} y={44} fill={MC.admin} bold size={6.8}>{L ? '7η ΜΕΡΑΡΧΙΑ ΡΙΛΑΣ' : '7th RILA DIVISION'}</T>
+      <T x={352} y={100} fill={MC.admin} size={6.2} rotate={85}>{L ? 'ΔΥΟ ΜΕΡΕΣ ΠΙΣΩ' : 'TWO DAYS BEHIND'}</T>
+      <T x={196} y={26} fill={MC.dim} size={6.8}>{L ? 'ΟΚΤΩΒΡΙΟΣ 1912 — Ο ΧΑΡΤΗΣ ΓΡΑΦΕΤΑΙ ΜΕ ΠΟΡΕΙΕΣ' : 'OCTOBER 1912 — THE MAP IS DRAWN BY MARCHES'}</T>
+    {/* the race, live */}
+      <Column sym="uRifle" path="M166 152 Q240 140 304 170" n={3} dur={6} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M318 58 Q324 108 322 156" dur={7} w={11} color={MC.admin} />
+      </MapShell>
+  );
+}
+
+/* ---------- 5. KILKIS–LACHANAS ---------- */
+function MapKilkis1913({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Ελληνικές μεραρχίες' : 'Greek divisions' },
+      { c: MC.enemy, t: L ? 'Βουλγαρικές οχυρώσεις' : 'Bulgarian entrenchments' },
+      { c: MC.gold, t: L ? 'Έφοδος λόγχης' : 'Bayonet assault' }]}>
+      <ellipse cx="200" cy="125" rx="185" ry="108" fill="url(#plainG)" />
+      {/* Entrenched hills */}
+      <Ridge d="M60 74 L104 40 L150 70 L136 96 L74 96 Z" />
+      <Ridge d="M240 66 L286 34 L332 64 L318 90 L254 90 Z" />
+      <T x={104} y={30} fill={MC.enemy} bold size={7.5}>{L ? 'ΚΙΛΚΙΣ' : 'KILKIS'}</T>
+      <T x={288} y={24} fill={MC.enemy} bold size={7.5}>{L ? 'ΛΑΧΑΝΑΣ' : 'LACHANAS'}</T>
+      {/* trench lines */}
+      <path d="M56 92 Q106 78 152 92" fill="none" stroke={MC.enemy} strokeWidth="2.6" strokeDasharray="8 3" />
+      <path d="M238 86 Q288 70 334 84" fill="none" stroke={MC.enemy} strokeWidth="2.6" strokeDasharray="8 3" />
+      <path d="M64 104 Q106 92 146 104" fill="none" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="6 3" opacity="0.7" />
+      <Rank sym="uRifle" x={84} y={56} n={3} dx={16} color={MC.enemy} mirror w={11} />
+      <Rank sym="uRifle" x={266} y={50} n={3} dx={16} color={MC.enemy} mirror w={11} />
+      <Unit sym="uBombard" x={118} y={44} w={15} color={MC.enemy} o={0.9} />
+      <Unit sym="uBombard" x={302} y={40} w={15} color={MC.enemy} o={0.9} />
+      <T x={196} y={64} fill={MC.enemy} size={6.5}>{L ? 'ΟΧΥΡΩΜΕΝΑ ΕΠΙ ΜΗΝΕΣ' : 'ENTRENCHED FOR MONTHS'}</T>
+      {/* Greek assault waves */}
+      <Rank sym="uRifle" x={70} y={170} n={4} dx={22} color={MC.greek} w={12} />
+      <Rank sym="uRifle" x={86} y={188} n={4} dx={22} color={MC.greek} w={12} o={0.8} />
+      <Rank sym="uRifle" x={246} y={166} n={4} dx={22} color={MC.greek} w={12} />
+      <T x={130} y={222} fill={MC.greek} bold size={7}>{L ? '5 ΜΕΡΑΡΧΙΕΣ — ΕΦ\' ΟΠΛΟΥ ΛΟΓΧΗ' : '5 DIVISIONS — BAYONETS FIXED'}</T>
+      {/* Assault arrows */}
+      <path d="M100 166 Q102 134 104 102" fill="none" stroke={MC.gold} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGold)" className="anim-dash" />
+      <path d="M130 166 Q130 136 128 104" fill="none" stroke={MC.gold} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGold)" className="anim-dash" />
+      <path d="M282 162 Q284 128 288 96" fill="none" stroke={MC.gold} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGold)" className="anim-dash" />
+      <Unit sym="uClash" x={106} y={92} w={12} color={MC.gold} />
+      <Unit sym="uClash" x={286} y={84} w={12} color={MC.gold} />
+      <T x={196} y={242} fill={MC.dim} size={6.8}>{L ? '19–21 ΙΟΥΝΙΟΥ 1913 — «ΕΝΤΟΣ ΤΡΙΩΝ ΗΜΕΡΩΝ»' : '19–21 JUNE 1913 — “WITHIN THREE DAYS”'}</T>
+      <T x={330} y={150} fill={MC.dim} size={6.2}>{L ? 'ΠΡΟΣ ΣΤΡΥΜΟΝΑ →' : 'TO THE STRYMON →'}</T>
+    {/* the waves go up the hill */}
+      <Mover sym="uRifle" path="M100 164 Q102 134 104 106" dur={4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M130 164 Q130 136 128 108" dur={4.4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M282 160 Q284 128 288 100" dur={4.2} w={11} color={MC.greek} />
+      </MapShell>
+  );
+}
+
+/* ---------- 6. SCHISM & SKRA ---------- */
+function MapSchismSkra({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Ελληνικές μεραρχίες' : 'Greek divisions' },
+      { c: MC.enemy, t: L ? 'Βουλγαρικά χαρακώματα' : 'Bulgarian trenches' },
+      { c: MC.gold, t: L ? 'Σύμμαχοι (Αντάντ)' : 'Allies (Entente)' }]}>
+      <ellipse cx="200" cy="120" rx="185" ry="108" fill="url(#plainG)" />
+      {/* Mountain of Skra */}
+      <Ridge d="M150 66 L200 26 L254 62 L238 96 L166 96 Z" />
+      <T x={202} y={16} fill={MC.enemy} bold size={7.5}>{L ? 'ΣΚΡΑ ΝΤΙ ΛΕΓΚΕΝ — 1.096μ' : 'SKRA DI LEGEN — 1,096m'}</T>
+      {/* Bulgarian trench tiers */}
+      <path d="M148 92 Q202 74 256 88" fill="none" stroke={MC.enemy} strokeWidth="2.6" strokeDasharray="8 3" />
+      <path d="M156 106 Q202 90 248 102" fill="none" stroke={MC.enemy} strokeWidth="2" strokeDasharray="6 3" opacity="0.8" />
+      <path d="M164 120 Q202 106 240 116" fill="none" stroke={MC.enemy} strokeWidth="1.6" strokeDasharray="5 3" opacity="0.6" />
+      <Rank sym="uRifle" x={182} y={62} n={2} dx={16} color={MC.enemy} mirror w={11} />
+      <T x={286} y={76} fill={MC.enemy} size={6.2}>{L ? 'ΤΡΕΙΣ ΖΩΝΕΣ ΧΑΡΑΚΩΜΑΤΩΝ' : 'THREE TRENCH TIERS'}</T>
+      {/* Greek assault */}
+      <Rank sym="uRifle" x={130} y={158} n={3} dx={18} color={MC.greek} w={12} />
+      <Rank sym="uRifle" x={200} y={162} n={3} dx={18} color={MC.greek} w={12} />
+      <path d="M162 154 Q176 130 186 108" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M222 158 Q218 132 214 110" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <Unit sym="uClash" x={196} y={94} w={12} color={MC.gold} />
+      <T x={196} y={196} fill={MC.greek} bold size={7}>{L ? '3 ΕΛΛΗΝΙΚΕΣ ΜΕΡΑΡΧΙΕΣ — 30 ΜΑΪΟΥ 1918' : '3 GREEK DIVISIONS — 30 MAY 1918'}</T>
+      {/* Allied artillery support */}
+      <Unit sym="uBombard" x={64} y={150} w={16} color={MC.gold} />
+      <Unit sym="uBombard" x={318} y={148} w={16} color={MC.gold} />
+      <path d="M84 148 Q140 110 172 92" fill="none" stroke={MC.gold} strokeWidth="1.4" strokeDasharray="2.5 3" opacity="0.7" />
+      <path d="M318 146 Q262 108 232 92" fill="none" stroke={MC.gold} strokeWidth="1.4" strokeDasharray="2.5 3" opacity="0.7" />
+      <T x={64} y={176} fill={MC.gold} size={6.2}>{L ? 'ΓΑΛΛΙΚΟ ΠΥΡΟΒΟΛΙΚΟ' : 'FRENCH ARTILLERY'}</T>
+      {/* Schism inset */}
+      <line x1="30" y1="206" x2="370" y2="206" stroke={MC.landLine} strokeWidth="0.6" opacity="0.5" />
+      <T x={110} y={224} fill={MC.dim} size={6.5}>{L ? 'ΑΘΗΝΑ: ΚΡΑΤΟΣ ΤΟΥ ΒΑΣΙΛΙΑ' : 'ATHENS: THE KING’S STATE'}</T>
+      <Unit sym="uClash" x={196} y={216} w={9} color={MC.enemy} o={0.8} />
+      <T x={286} y={224} fill={MC.dim} size={6.5}>{L ? 'ΘΕΣΣΑΛΟΝΙΚΗ: ΕΘΝΙΚΗ ΑΜΥΝΑ' : 'THESSALONIKI: NATIONAL DEFENCE'}</T>
+      <T x={196} y={242} fill={MC.dim} size={6.5} bold>{L ? 'Ο ΔΙΧΑΣΜΟΣ: ΔΥΟ ΚΥΒΕΡΝΗΣΕΙΣ, ΜΙΑ ΣΗΜΑΙΑ' : 'THE SCHISM: TWO GOVERNMENTS, ONE FLAG'}</T>
+    {/* the assault climbs */}
+      <Mover sym="uRifle" path="M162 152 Q176 130 186 110" dur={4} w={11} color={MC.greek} />
+      <Mover sym="uRifle" path="M222 156 Q218 132 214 112" dur={4.3} w={11} color={MC.greek} />
+      </MapShell>
+  );
+}
+
+/* ---------- 7. ELAIA–KALAMAS 1940 ---------- */
+function MapElaiaKalamas({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'VIII Μεραρχία' : 'VIII Division' },
+      { c: MC.enemy, t: L ? 'Ιταλική εισβολή' : 'Italian invasion' },
+      { c: MC.water, t: L ? 'Καλαμάς' : 'Kalamas river' }]}>
+      <ellipse cx="200" cy="120" rx="185" ry="108" fill="url(#plainG)" />
+      {/* Ionian sea west */}
+      <path d="M0 250 L0 150 Q30 140 44 170 Q60 210 40 250 Z" fill="url(#seaG)" />
+      <T x={20} y={236} fill={MC.water} size={6} rotate={-80}>{L ? 'ΙΟΝΙΟ' : 'IONIAN'}</T>
+      {/* Border ridge (north) */}
+      <Ridge d="M20 44 L64 16 L110 40 L158 14 L206 42 L254 18 L300 44 L290 66 L34 66 Z" o={0.85} />
+      <T x={160} y={78} size={6.5} fill={MC.dim}>{L ? 'ΕΛΛΗΝΟΑΛΒΑΝΙΚΑ ΣΥΝΟΡΑ — 28 ΟΚΤΩΒΡΙΟΥ, 05:30' : 'GREEK-ALBANIAN BORDER — 28 OCT, 05:30'}</T>
+      {/* Pindos east */}
+      <Ridge snow d="M310 30 L342 8 L374 34 L396 16 L400 60 L390 96 L330 92 L316 60 Z" />
+      <T x={356} y={110} size={6.5} fill={MC.dim}>{L ? 'ΠΙΝΔΟΣ' : 'PINDOS'}</T>
+      {/* Kalamas river */}
+      <path d="M60 172 Q140 150 220 158 Q290 164 340 148" fill="none" stroke="url(#seaG)" strokeWidth="9" opacity="0.95" />
+      <path d="M60 172 Q140 150 220 158 Q290 164 340 148" fill="none" stroke={MC.water} strokeWidth="1.2" opacity="0.7" />
+      <T x={116} y={186} fill={MC.water} size={6.8} rotate={-6}>{L ? 'ΚΑΛΑΜΑΣ — ΠΛΗΜΜΥΡΙΣΜΕΝΟΣ' : 'KALAMAS — IN FLOOD'}</T>
+      {/* Kalpaki / Elaia position */}
+      <Contour d="M186 118 Q216 104 246 118 Q232 136 200 134 Q184 128 186 118" o={0.35} />
+      <Unit sym="uBombard" x={206} y={112} w={16} color={MC.greek} />
+      <Rank sym="uRifle" x={172} y={128} n={3} dx={16} color={MC.greek} w={12} />
+      <T x={216} y={148} fill={MC.greek} bold size={7}>{L ? 'ΚΑΛΠΑΚΙ — ΕΛΑΙΑ' : 'KALPAKI — ELAIA'}</T>
+      {/* Italian thrusts */}
+      <path d="M120 62 Q150 90 178 112" fill="none" stroke={MC.enemy} strokeWidth="2.6" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M220 60 Q222 84 220 104" fill="none" stroke={MC.enemy} strokeWidth="2.6" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M64 62 Q60 110 62 156" fill="none" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" opacity="0.85" />
+      <Rank sym="uRifle" x={130} y={34} n={3} dx={15} color={MC.enemy} mirror w={11} />
+      <T x={92} y={26} fill={MC.enemy} bold size={7}>{L ? 'ΙΤΑΛΙΚΗ ΕΙΣΒΟΛΗ — ΒΡΟΧΗ & ΛΑΣΠΗ' : 'ITALIAN INVASION — RAIN & MUD'}</T>
+      <Unit sym="uClash" x={206} y={102} w={12} color={MC.gold} />
+      {/* Julia through Pindos */}
+      <path d="M330 56 Q344 96 356 128" fill="none" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="6 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={378} y={132} fill={MC.enemy} size={6.2} rotate={70}>{L ? 'ΤΖΟΥΛΙΑ' : 'JULIA DIV.'}</T>
+      <Unit sym="uRifle" x={344} y={134} w={11} color={MC.greek} />
+      <T x={330} y={158} fill={MC.greek} size={6.2}>{L ? 'ΑΠΟΣΠΑΣΜΑ ΔΑΒΑΚΗ' : 'DAVAKIS DETACHMENT'}</T>
+      {/* Fallback line */}
+      <path d="M120 226 Q220 214 320 222" fill="none" stroke={MC.dim} strokeWidth="1.6" strokeDasharray="8 5" opacity="0.6" />
+      <T x={220} y={240} fill={MC.dim} size={6.2}>{L ? 'ΓΡΑΜΜΗ ΑΡΑΧΘΟΥ — ΤΟ ΣΧΕΔΙΟ ΠΟΥ ΑΓΝΟΗΘΗΚΕ' : 'ARACHTHOS LINE — THE PLAN SET ASIDE'}</T>
+    {/* the invasion presses, live */}
+      <Mover sym="uRifle" path="M120 62 Q150 90 174 110" dur={5} w={11} color={MC.enemy} />
+      <Mover sym="uRifle" path="M220 60 Q222 84 220 102" dur={5.4} w={11} color={MC.enemy} />
+      <Mover sym="uRifle" path="M330 56 Q344 96 354 124" dur={6} w={11} color={MC.enemy} />
+      </MapShell>
+  );
+}
+
+/* ---------- 8. KORYTSA & KLISURA ---------- */
+function MapKorytsa({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Ελληνική προέλαση' : 'Greek advance' },
+      { c: MC.enemy, t: L ? 'Ιταλική υποχώρηση' : 'Italian retreat' },
+      { c: '#e2e8f0', t: L ? 'Χιονισμένα υψίπεδα' : 'Snowbound heights' }]}>
+      <ellipse cx="200" cy="120" rx="185" ry="108" fill="url(#plainG)" />
+      {/* Snow ridges */}
+      <Ridge snow d="M40 90 L84 52 L128 86 L112 112 L54 112 Z" />
+      <path d="M60 78 L84 56 L108 80" fill="none" stroke="#e2e8f0" strokeWidth="1.6" opacity="0.75" />
+      <Ridge snow d="M170 70 L216 30 L262 66 L246 96 L184 96 Z" />
+      <path d="M192 58 L216 34 L240 60" fill="none" stroke="#e2e8f0" strokeWidth="1.6" opacity="0.75" />
+      <T x={216} y={110} size={6.5} fill={MC.dim}>{L ? 'ΥΨΩΜΑΤΑ ΜΟΡΟΒΑ — ΙΒΑΝ' : 'MOROVA–IVAN HEIGHTS'}</T>
+      <T x={84} y={126} size={6.2} fill={MC.dim}>{L ? '−20°C' : '−20°C'}</T>
+      {/* Korytsa & Klisura */}
+      <circle cx="290" cy="70" r="8" fill="none" stroke={MC.gold} strokeWidth="2" strokeDasharray="4 3" className="anim-pulse-glow" />
+      <Unit sym="uChurch" x={283} y={54} w={13} color={MC.gold} />
+      <T x={296} y={96} fill={MC.gold} bold size={7.5}>{L ? 'ΚΟΡΥΤΣΑ — 22 ΝΟΕΜΒΡΙΟΥ' : 'KORYTSA — 22 NOVEMBER'}</T>
+      <path d="M108 158 L134 148 L128 170 Z" fill="none" stroke={MC.gold} strokeWidth="1.8" />
+      <T x={104} y={186} fill={MC.gold} bold size={7}>{L ? 'ΚΛΕΙΣΟΥΡΑ — ΙΑΝΟΥΑΡΙΟΣ' : 'KLISURA — JANUARY'}</T>
+      {/* Greek advance arrows */}
+      <path d="M212 190 Q236 140 276 84" fill="none" stroke={MC.greek} strokeWidth="3" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M170 196 Q140 180 122 168" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <path d="M240 196 Q300 176 348 160" fill="none" stroke={MC.greek} strokeWidth="2.2" strokeDasharray="7 4" markerEnd="url(#arrGreek)" className="anim-dash" opacity="0.85" />
+      <T x={356} y={178} fill={MC.greek} size={6.2}>{L ? 'ΠΡΟΣ ΧΕΙΜΑΡΡΑ' : 'TO HIMARA'}</T>
+      <Rank sym="uRifle" x={176} y={200} n={4} dx={18} color={MC.greek} w={12} />
+      <Unit sym="uBombard" x={252} y={206} w={15} color={MC.greek} o={0.9} />
+      <T x={216} y={236} fill={MC.greek} bold size={7}>{L ? 'ΧΕΙΜΕΡΙΝΗ ΑΝΤΕΠΙΘΕΣΗ — ΜΟΥΛΑΡΙΑ & ΟΒΙΔΕΣ ΣΤΑ ΜΟΝΟΠΑΤΙΑ' : 'WINTER OFFENSIVE — MULES & SHELLS UP THE TRAILS'}</T>
+      {/* Italian retreat */}
+      <Rank sym="uRifle" x={296} y={26} n={2} dx={14} color={MC.enemy} mirror w={11} o={0.85} />
+      <path d="M300 44 Q322 30 344 22" fill="none" stroke={MC.enemy} strokeWidth="2.2" strokeDasharray="5 4" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <T x={330} y={40} fill={MC.enemy} size={6.5}>{L ? 'ΑΤΑΚΤΗ ΣΥΜΠΤΥΞΗ' : 'RETREAT IN DISORDER'}</T>
+      <Unit sym="uClash" x={272} y={78} w={11} color={MC.gold} />
+      <T x={60} y={36} fill={MC.dim} size={6.8} anchor="start">{L ? 'ΒΟΡΕΙΟΣ ΗΠΕΙΡΟΣ — ΟΙ ΚΑΜΠΑΝΕΣ ΠΕΡΙΜΕΝΟΥΝ' : 'NORTHERN EPIRUS — THE BELLS ARE WAITING'}</T>
+    {/* the winter advance, live */}
+      <Column sym="uRifle" path="M212 190 Q236 140 274 88" n={3} dur={6} w={11} color={MC.greek} />
+      </MapShell>
+  );
+}
+
+/* ---------- 9. CRETE 1941 ---------- */
+function MapCrete1941({ lang }) {
+  const L = lang === 'el';
+  return (
+    <MapShell legend={[
+      { c: MC.greek, t: L ? 'Σύμμαχοι & Κρήτες' : 'Allies & Cretans' },
+      { c: MC.enemy, t: L ? 'Αλεξιπτωτιστές' : 'Paratroopers' },
+      { c: MC.water, t: L ? 'Θάλασσα' : 'Sea' }]}>
+      <rect width="400" height="250" fill="url(#seaG)" />
+      <rect width="400" height="250" fill="url(#waterWaves)" />
+      {/* Crete west section */}
+      <path d="M16 130 Q80 108 160 116 Q260 122 330 112 Q382 108 396 128 Q384 168 320 176 Q240 188 150 182 Q60 178 16 154 Q8 140 16 130 Z" fill="url(#landG)" stroke={MC.landLine} strokeWidth="1" />
+      <Ridge d="M160 160 L196 136 L232 158 L220 174 L172 174 Z" o={0.8} />
+      <T x={196} y={188} size={6.2} fill={MC.dim}>{L ? 'ΛΕΥΚΑ ΟΡΗ' : 'WHITE MOUNTAINS'}</T>
+      {/* Maleme + Hill 107 */}
+      <rect x="52" y="128" width="26" height="7" rx="1.5" fill="none" stroke={MC.gold} strokeWidth="1.6" />
+      <T x={64} y={122} fill={MC.gold} bold size={6.8}>{L ? 'ΜΑΛΕΜΕ' : 'MALEME'}</T>
+      <Contour d="M84 142 Q98 132 112 142 Q104 152 88 150 Q82 146 84 142" o={0.4} />
+      <T x={120} y={152} fill={MC.greek} size={6.2} anchor="start">{L ? 'ΥΨΩΜΑ 107' : 'HILL 107'}</T>
+      {/* Chania, Rethymno, Heraklion */}
+      <circle cx="150" cy="132" r="3.4" fill={MC.greek} />
+      <T x={150} y={124} fill={MC.dim} size={6.2}>{L ? 'ΧΑΝΙΑ' : 'CHANIA'}</T>
+      <circle cx="252" cy="130" r="3.4" fill={MC.greek} o="0.9" />
+      <T x={252} y={122} fill={MC.dim} size={6.2}>{L ? 'ΡΕΘΥΜΝΟ' : 'RETHYMNO'}</T>
+      <circle cx="340" cy="126" r="3.4" fill={MC.greek} />
+      <T x={340} y={118} fill={MC.dim} size={6.2}>{L ? 'ΗΡΑΚΛΕΙΟ' : 'HERAKLION'}</T>
+      {/* Planes + paratroopers */}
+      <Unit sym="uPlane" x={30} y={36} w={20} color={MC.enemy} />
+      <Unit sym="uPlane" x={80} y={22} w={20} color={MC.enemy} o={0.9} />
+      <Unit sym="uPlane" x={130} y={40} w={20} color={MC.enemy} o={0.8} />
+      <Unit sym="uPara" x={56} y={62} w={11} color={MC.enemy} />
+      <Unit sym="uPara" x={82} y={76} w={11} color={MC.enemy} o={0.9} />
+      <Unit sym="uPara" x={108} y={58} w={11} color={MC.enemy} />
+      <Unit sym="uPara" x={134} y={78} w={11} color={MC.enemy} o={0.85} />
+      <Unit sym="uPara" x={160} y={64} w={11} color={MC.enemy} o={0.9} />
+      <T x={104} y={16} fill={MC.enemy} bold size={7}>{L ? '20 ΜΑΪΟΥ 1941 — «ΛΕΥΚΑ ΛΟΥΛΟΥΔΙΑ ΘΑΝΑΤΟΥ»' : '20 MAY 1941 — “WHITE BLOSSOMS OF DEATH”'}</T>
+      <path d="M70 90 L68 122" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      <path d="M110 92 L98 128" stroke={MC.enemy} strokeWidth="1.8" strokeDasharray="3 2.5" markerEnd="url(#arrEnemy)" className="anim-dash" />
+      {/* Defenders + night counterattack */}
+      <Rank sym="uRifle" x={120} y={160} n={3} dx={14} color={MC.greek} w={12} />
+      <path d="M126 158 Q106 150 92 146" fill="none" stroke={MC.greek} strokeWidth="2.6" strokeDasharray="5 3.5" markerEnd="url(#arrGreek)" className="anim-dash" />
+      <T x={148} y={202} fill={MC.greek} bold size={7}>{L ? 'ΝΥΧΤΕΡΙΝΗ ΑΝΤΕΠΙΘΕΣΗ ΣΤΟ ΥΨΩΜΑ 107' : 'NIGHT COUNTERATTACK ON HILL 107'}</T>
+      <Unit sym="uClash" x={88} y={140} w={11} color={MC.gold} />
+      {/* Royal Navy */}
+      <Unit sym="uSteam" x={280} y={216} w={22} color={MC.greek} />
+      <Unit sym="uSteam" x={322} y={226} w={22} color={MC.greek} o={0.85} />
+      <T x={310} y={210} fill={MC.greek} size={6.2}>{L ? 'ΒΑΣΙΛΙΚΟ ΝΑΥΤΙΚΟ — ΟΙ ΝΗΟΠΟΜΠΕΣ ΔΕΝ ΠΕΡΝΟΥΝ' : 'ROYAL NAVY — THE CONVOYS DON’T PASS'}</T>
+      <T x={40} y={238} fill={MC.dim} size={6.5} anchor="start">{L ? 'ΓΕΡΟΝΤΕΣ ΜΕ ΚΑΡΙΟΦΙΛΙΑ, ΓΥΝΑΙΚΕΣ ΜΕ ΔΡΕΠΑΝΙΑ — Η ΠΡΩΤΗ ΛΑΪΚΗ ΑΝΤΙΣΤΑΣΗ' : 'OLD MEN WITH MUSKETS, WOMEN WITH SICKLES — THE FIRST POPULAR RESISTANCE'}</T>
+    {/* the Ju-52s cross the sky */}
+      <Mover sym="uPlane" path="M-24 28 L424 28" dur={11} w={20} color={MC.enemy} />
+      <Mover sym="uPlane" path="M-24 46 L424 46" dur={11} w={18} color={MC.enemy} o={0.8} begin="-5.5s" />
+      </MapShell>
+  );
+}
+
+const MAPS = {
+  outbreak1821: MapOutbreak1821,
+  dervenakia: MapDervenakia,
+  navarino: MapNavarino,
+  thessaloniki1912: MapThessaloniki1912,
+  kilkis1913: MapKilkis1913,
+  schismSkra: MapSchismSkra,
+  elaiaKalamas: MapElaiaKalamas,
+  korytsa: MapKorytsa,
+  crete1941: MapCrete1941,
+};
+
+/* ============================================================
+   SHARED UI COMPONENTS
+   ============================================================ */
+const clamp = (v) => Math.max(0, Math.min(100, v));
+const fadeUp = {
+  initial: { opacity: 0, y: 24, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -16, scale: 0.985 },
+  transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+};
+
+function MetricBar({ label, value, icon, color }) {
+  const isTyrian = color === 'tyrian';
+  return (
+    <div className="flex-1 min-w-[140px]">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest ${isTyrian ? 'text-purple-300' : 'text-cyan-300'}`}>
+          <Icon name={icon} size={13} /> {label}
+        </span>
+        <span className={`text-sm font-bold tabular-nums ${isTyrian ? 'text-purple-300' : 'text-cyan-200'}`}>{value}%</span>
+      </div>
+      <div className="h-2.5 rounded-full bg-slate-800/80 border border-slate-700/50 overflow-hidden">
+        <motion.div
+          className={`h-full rounded-full ${isTyrian
+            ? 'bg-gradient-to-r from-purple-700 via-purple-500 to-fuchsia-400'
+            : 'bg-gradient-to-r from-cyan-700 via-cyan-500 to-cyan-300'}`}
+          initial={false}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          style={{ boxShadow: isTyrian ? '0 0 12px rgba(192,132,252,0.5)' : '0 0 12px rgba(34,211,238,0.5)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LangToggle({ lang, setLang }) {
+  const t = UI[lang];
+  return (
+    <motion.button
+      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+      onClick={() => setLang(lang === 'en' ? 'el' : 'en')}
+      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-cyan-400/30 bg-slate-900/70 text-cyan-300 text-xs font-bold uppercase tracking-widest hover:border-cyan-400/70 hover:shadow-glow-cyan transition-colors"
+    >
+      <Icon name="Languages" size={14} /> {t.langToggle}
+    </motion.button>
+  );
+}
+
+function DeltaChip({ label, delta, color }) {
+  const pos = delta >= 0;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border ${pos
+      ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
+      : 'text-rose-300 border-rose-500/40 bg-rose-500/10'}`}>
+      <Icon name={color === 'tyrian' ? 'Crown' : 'Users'} size={13} />
+      {label} {pos ? '+' : ''}{delta}%
+    </span>
+  );
+}
+
+function StepPips({ step }) {
+  return (
+    <div className="flex items-center gap-2">
+      {[1, 2, 3].map((s) => (
+        <span key={s} className={`h-1.5 rounded-full transition-all duration-500 ${s === step ? 'w-8 bg-cyan-400 shadow-glow-cyan' : s < step ? 'w-4 bg-cyan-700' : 'w-4 bg-slate-700'}`} />
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   MAIN HUB / ERA SELECTION MENU
+   ============================================================ */
+function Hub({ lang, setLang, onStart }) {
+  const t = UI[lang];
+  return (
+    <motion.div key="hub" {...fadeUp} className="w-full max-w-5xl mx-auto">
+      <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
+      <div className="text-center mb-10">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7 }}
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl border border-cyan-400/40 bg-slate-900/80 shadow-glow-cyan mb-5 text-cyan-300">
+          <Icon name="Landmark" size={32} strokeWidth={1.5} />
+        </motion.div>
+        <h1 className="font-display font-black text-4xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-marble-100 via-marble-200 to-cyan-200 drop-shadow-[0_0_28px_rgba(233,227,209,0.22)]">
+          {t.appTitle}
+        </h1>
+        <p className="font-display text-cyan-300 text-sm sm:text-lg tracking-[0.3em] uppercase mt-2">{t.appSubtitle}</p>
+        <p className="text-slate-400 text-sm max-w-2xl mx-auto mt-4 leading-relaxed">{t.hubTagline}</p>
+      </div>
+
+      {/* Grand campaign card */}
+      <motion.button
+        whileHover={{ y: -4, scale: 1.01 }} whileTap={{ scale: 0.99 }}
+        onClick={() => onStart('all')}
+        className="glass-card w-full rounded-2xl p-6 sm:p-8 text-left mb-6 group hover:border-cyan-400/60 hover:shadow-glow-cyan transition-all duration-300"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="w-14 h-14 shrink-0 rounded-xl border border-laurel-300/40 bg-laurel-300/10 flex items-center justify-center text-laurel-300">
+            <Icon name="Trophy" size={28} strokeWidth={1.6} />
+          </div>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-display font-bold text-xl sm:text-2xl text-marble-200">{t.grandCampaign}</h2>
+              <span className="px-2.5 py-1 rounded-md bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[10px] font-bold uppercase tracking-widest">9 {t.scenariosLabel}</span>
+            </div>
+            <p className="text-slate-400 text-sm mt-2 leading-relaxed">{t.grandCampaignDesc}</p>
+          </div>
+          <span className="inline-flex items-center gap-2 text-cyan-300 font-bold text-sm uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+            <Icon name="Play" size={16} /> {t.beginCampaign}
+          </span>
+        </div>
+      </motion.button>
+
+      {/* Chronological strip */}
+      <div className="glass-card rounded-xl px-5 py-3.5 mb-6 overflow-x-auto">
+        <div className="flex items-center min-w-[640px]">
+          {SCENARIOS.map((s, i) => {
+            const dot = { phase1: 'bg-cyan-400', phase2: 'bg-marble-300', phase3: 'bg-purple-400' }[s.phase];
+            return (
+              <React.Fragment key={s.id}>
+                {i > 0 && <span className="flex-1 h-px bg-slate-700/70 mx-1.5" />}
+                <span className="flex flex-col items-center gap-1 shrink-0" title={s.title[lang]}>
+                  <span className={`w-2 h-2 rounded-full ${dot}`} />
+                  <span className="text-[9px] font-semibold text-slate-500 tabular-nums">{t.year(s.year)}</span>
+                </span>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Era cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {PHASES.map((ph, i) => {
+          const eraScenarios = SCENARIOS.filter((s) => s.phase === ph.key);
+          const AC = {
+            cyan: { card: 'hover:border-cyan-400/60 hover:shadow-glow-cyan', tile: 'border-cyan-400/40 bg-cyan-400/10 text-cyan-300', label: 'text-cyan-300/80', chev: 'text-cyan-600', play: 'text-cyan-300' },
+            marble: { card: 'hover:border-marble-300/60 hover:shadow-glow-ivory', tile: 'border-marble-300/40 bg-marble-300/10 text-marble-200', label: 'text-marble-300/80', chev: 'text-marble-400', play: 'text-marble-200' },
+            tyrian: { card: 'hover:border-purple-400/60 hover:shadow-glow-tyrian', tile: 'border-purple-400/40 bg-purple-400/10 text-purple-300', label: 'text-purple-300/80', chev: 'text-purple-500', play: 'text-purple-300' },
+          }[ph.accent];
+          return (
+            <motion.button
+              key={ph.key}
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 * i + 0.2, duration: 0.5 }}
+              whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={() => onStart(ph.key)}
+              className={`glass-card rounded-2xl p-6 text-left group transition-all duration-300 ${AC.card}`}
+            >
+              <div className={`w-11 h-11 rounded-lg border flex items-center justify-center mb-4 ${AC.tile}`}>
+                <Icon name={ph.icon} size={22} strokeWidth={1.7} />
+              </div>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.25em] mb-1 ${AC.label}`}>
+                {t.era} {['I', 'II', 'III'][i]} · {ph.range[lang]}
+              </p>
+              <h3 className="font-display font-bold text-lg text-slate-100 leading-snug">{ph.name[lang]}</h3>
+              <p className="text-slate-400 text-xs mt-2.5 leading-relaxed">{ph.blurb[lang]}</p>
+              <ul className="mt-4 space-y-1.5 border-t border-slate-700/50 pt-3">
+                {eraScenarios.map((s) => (
+                  <li key={s.id} className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <Icon name="ChevronRight" size={11} className={AC.chev} />
+                    <span className="truncate">{s.title[lang]} · {t.year(s.year)}</span>
+                  </li>
+                ))}
+              </ul>
+              <span className={`mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${AC.play} group-hover:translate-x-1 transition-transform`}>
+                <Icon name="Swords" size={14} /> {t.playEra}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
+      <p className="text-center text-[11px] text-slate-600 mt-8 leading-relaxed max-w-3xl mx-auto">{t.hubFooter}</p>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   SCENARIO VIEW — 3-step loop
+   ============================================================ */
+function ScenarioView({ lang, setLang, scenario, scenarioNum, totalScenarios, step, setStep, unity, power, chosenIndex, onChoose, onAdvance, isLastOfRun }) {
+  const t = UI[lang];
+  const phase = PHASES.find((p) => p.key === scenario.phase);
+  const MapComp = MAPS[scenario.mapId];
+  const chosen = chosenIndex != null ? scenario.choices[chosenIndex] : null;
+  const positive = chosen ? (chosen.unity + chosen.power) > 0 : false;
+
+  return (
+    <motion.div key={scenario.id} {...fadeUp} className="w-full max-w-4xl mx-auto">
+      {/* Command header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+            <Icon name={phase.icon} size={13} className="text-cyan-300" /> {phase.name[lang]}
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">{t.scenarioOf(scenarioNum, totalScenarios)}</span>
+        </div>
+        <LangToggle lang={lang} setLang={setLang} />
+      </div>
+
+      {/* Metrics dashboard */}
+      <div className="glass-card rounded-2xl px-5 py-4 mb-5 flex flex-col sm:flex-row gap-4 sm:gap-8">
+        <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+        <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
+      </div>
+
+      {/* Main tactical card */}
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="px-6 sm:px-8 pt-6 pb-5 border-b border-marble-300/15 greek-key-border">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-marble-300/90 text-[11px] font-bold uppercase tracking-[0.25em] mb-1">{t.year(scenario.year)} · {t.location}: {scenario.location[lang]}</p>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl text-slate-100">{scenario.title[lang]}</h2>
+            </div>
+            <StepPips step={step} />
+          </div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {/* ---- STEP 1: SOURCE ANALYSIS ---- */}
+          {step === 1 && (
+            <motion.div key="s1" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Scroll" size={15} /> {t.step1Title}
+              </p>
+              {scenario.context && (
+                <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                  <p className="flex items-center gap-2 text-marble-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="Compass" size={13} /> {t.briefing}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed">{scenario.context[lang]}</p>
+                </div>
+              )}
+              <div className="relative rounded-xl border border-cyan-400/25 bg-cyan-400/5 px-6 py-6 sm:px-8">
+                <span className="absolute -top-3 left-6 px-2.5 bg-slate-900 text-cyan-300 text-[10px] font-bold uppercase tracking-widest border border-cyan-400/25 rounded">
+                  {t.theSourceSays}
+                </span>
+                <blockquote className="font-display text-lg sm:text-xl text-slate-200 leading-relaxed italic">
+                  {scenario.source.quote[lang]}
+                </blockquote>
+                <p className="mt-4 text-cyan-300/90 text-sm font-semibold flex items-center gap-2">
+                  <Icon name="BookOpen" size={14} /> — {scenario.source.author[lang]}
+                </p>
+              </div>
+              {scenario.terms && (
+                <div className="mt-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.keyTerms}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {scenario.terms.map((k, i) => (
+                      <div key={i} className="rounded-lg border border-slate-700/60 bg-slate-900/50 px-3.5 py-2.5">
+                        <p className="text-cyan-200 text-xs font-bold">{k.term[lang]}</p>
+                        <p className="text-slate-400 text-[11px] leading-snug mt-1">{k.def[lang]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="mt-7 flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => setStep(2)}
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan hover:from-cyan-500 hover:to-teal-400 transition-colors"
+                >
+                  <Icon name="Compass" size={17} /> {t.analyzeSource}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ---- STEP 2: STRATEGIC CHOICE & MAP ---- */}
+          {step === 2 && (
+            <motion.div key="s2" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Map" size={15} /> {t.step2Title}
+              </p>
+              <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-5 py-4 mb-5">
+                <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                  <Icon name="AlertTriangle" size={13} /> {t.dilemmaTitle}
+                </p>
+                <p className="text-slate-300 text-sm leading-relaxed">{scenario.dilemma[lang]}</p>
+              </div>
+              <p className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-2.5">
+                <Icon name="Compass" size={13} className="text-cyan-300" /> {t.mapTitle}
+              </p>
+              <MapComp lang={lang} />
+              <p className="mt-6 mb-3 font-display text-marble-200 text-base font-bold">{t.choicePrompt}</p>
+              <div className="grid grid-cols-1 gap-4">
+                {scenario.choices.map((c, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ y: -4, scale: 1.012 }} whileTap={{ scale: 0.99 }}
+                    onClick={() => onChoose(i)}
+                    className="text-left rounded-xl border border-slate-700/70 bg-slate-900/60 px-5 py-4 hover:border-cyan-400/70 hover:shadow-glow-cyan hover:bg-slate-900/90 transition-all duration-300 group"
+                  >
+                    <span className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] mb-2 ${i === 0 ? 'text-cyan-300' : 'text-purple-300'}`}>
+                      <Icon name="Swords" size={12} /> {i === 0 ? t.optionA : t.optionB}
+                    </span>
+                    <p className="text-slate-200 text-sm leading-relaxed group-hover:text-slate-50 transition-colors">{c.text[lang]}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ---- STEP 3: OUTCOME FEEDBACK ---- */}
+          {step === 3 && chosen && (
+            <motion.div key="s3" {...fadeUp} className="px-6 sm:px-8 py-7">
+              <p className="flex items-center gap-2 text-cyan-300 text-xs font-bold uppercase tracking-[0.2em] mb-5">
+                <Icon name="Hourglass" size={15} /> {t.step3Title}
+              </p>
+              <div className={`rounded-xl border px-6 py-6 ${positive ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
+                <p className={`flex items-center gap-2 font-display font-bold text-lg mb-3 ${positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <Icon name={positive ? 'TrendingUp' : 'Flame'} size={19} />
+                  {positive ? t.outcomeTriumph : t.outcomeSetback}
+                </p>
+                <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">{chosen.outcome[lang]}</p>
+                <div className="mt-5 pt-4 border-t border-slate-700/50">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-2.5">{t.metricShift}</p>
+                  <div className="flex flex-wrap gap-2.5">
+                    <DeltaChip label={t.unityDelta} delta={chosen.unity} color="cyan" />
+                    <DeltaChip label={t.powerDelta} delta={chosen.power} color="tyrian" />
+                  </div>
+                </div>
+              </div>
+              {scenario.note && (
+                <div className="mt-5 rounded-xl border border-laurel-300/25 bg-laurel-300/5 px-5 py-4">
+                  <p className="flex items-center gap-2 text-laurel-300 text-[11px] font-bold uppercase tracking-widest mb-2">
+                    <Icon name="BookOpen" size={13} /> {t.histNote}
+                  </p>
+                  <p className="text-slate-300 text-sm leading-relaxed italic">{scenario.note[lang]}</p>
+                </div>
+              )}
+              <div className="mt-7 flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
+                  onClick={onAdvance}
+                  className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-500 text-white font-bold text-sm uppercase tracking-widest shadow-glow-tyrian hover:from-purple-500 hover:to-fuchsia-400 transition-colors"
+                >
+                  {isLastOfRun ? t.concludePhase : t.nextScenario} <Icon name="ChevronRight" size={17} />
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   ERA / GRAND CAMPAIGN OUTCOME SCREENS
+   ============================================================ */
+function EndingScreen({ lang, setLang, phaseKey, unity, power, mode, history, onContinue, onReplay, onHub, isGrandFinale }) {
+  const t = UI[lang];
+  const tier = resolveTier(unity, power);
+  const phase = PHASES.find((p) => p.key === phaseKey);
+  const ending = PHASE_ENDINGS[phaseKey][tier];
+  const grand = GRAND_VERDICT[tier];
+  const tierStyles = {
+    golden: { ring: 'border-laurel-300/60', glow: 'shadow-glow-ivory', text: 'text-laurel-300', icon: 'Trophy' },
+    endured: { ring: 'border-cyan-400/50', glow: 'shadow-glow-cyan', text: 'text-cyan-300', icon: 'Shield' },
+    collapse: { ring: 'border-rose-500/50', glow: '', text: 'text-rose-400', icon: 'Flame' },
+  }[tier];
+  const canContinue = mode === 'all' && !isGrandFinale;
+
+  return (
+    <motion.div key={`end-${phaseKey}-${isGrandFinale}`} {...fadeUp} className="w-full max-w-3xl mx-auto">
+      <div className="flex justify-end mb-4"><LangToggle lang={lang} setLang={setLang} /></div>
+      <div className={`glass-card rounded-2xl overflow-hidden ${tierStyles.glow}`}>
+        <div className="px-6 sm:px-10 pt-9 pb-7 text-center border-b border-slate-700/50">
+          <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.6, delay: 0.15 }}
+            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl border bg-slate-900/80 mb-4 ${tierStyles.ring} ${tierStyles.text}`}>
+            <Icon name={tierStyles.icon} size={30} strokeWidth={1.6} />
+          </motion.div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-2">
+            {isGrandFinale ? t.campaignComplete : `${t.phaseComplete} — ${phase.name[lang]}`}
+          </p>
+          <h2 className={`font-display font-black text-2xl sm:text-4xl ${tierStyles.text}`}>
+            {isGrandFinale ? grand.title[lang] : ending.title[lang]}
+          </h2>
+          {typeof RANKS !== 'undefined' && (
+            <p className="mt-3 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-700/60 bg-slate-900/60 text-[11px] font-bold uppercase tracking-widest text-slate-300">
+              <Icon name="Trophy" size={13} className={tierStyles.text} /> {t.rankLabel}: <span className={tierStyles.text}>{RANKS[tier][lang]}</span>
+            </p>
+          )}
+        </div>
+        <div className="px-6 sm:px-10 py-7">
+          <p className="flex items-center gap-2 text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mb-3">
+            <Icon name="BookOpen" size={13} /> {t.verdict}
+          </p>
+          <p className="text-slate-200 text-sm sm:text-[15px] leading-relaxed">
+            {isGrandFinale ? grand.text[lang] : ending.text[lang]}
+          </p>
+          {isGrandFinale && (
+            <p className="text-slate-400 text-sm leading-relaxed mt-4 border-l-2 border-laurel-300/40 pl-4 italic">
+              {ending.text[lang]}
+            </p>
+          )}
+          <div className="mt-7">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.finalStanding}</p>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+              <MetricBar label={t.unity} value={unity} icon="Users" color="cyan" />
+              <MetricBar label={t.power} value={power} icon="Crown" color="tyrian" />
+            </div>
+          </div>
+          {history.length > 0 && (
+            <div className="mt-7">
+              <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 mb-3">{t.chronicleOfDecisions}</p>
+              <ul className="space-y-2">
+                {history.map((h, i) => {
+                  const sc = SCENARIOS.find((s) => s.id === h.id);
+                  const ch = sc.choices[h.choice];
+                  const good = (ch.unity + ch.power) > 0;
+                  return (
+                    <li key={i} className="flex items-center justify-between gap-3 rounded-lg border border-slate-700/50 bg-slate-900/50 px-4 py-2.5">
+                      <span className="flex items-center gap-2.5 text-xs text-slate-300 min-w-0">
+                        <Icon name={good ? 'TrendingUp' : 'Flame'} size={13} className={good ? 'text-emerald-400 shrink-0' : 'text-rose-400 shrink-0'} />
+                        <span className="truncate">{sc.title[lang]}</span>
+                        <span className="text-slate-600 shrink-0">· {h.choice === 0 ? 'Α' : 'Β'}</span>
+                      </span>
+                      <span className="text-[11px] font-bold tabular-nums shrink-0">
+                        <span className={ch.unity >= 0 ? 'text-cyan-300' : 'text-rose-400'}>{ch.unity >= 0 ? '+' : ''}{ch.unity}U</span>
+                        <span className="text-slate-600 mx-1">/</span>
+                        <span className={ch.power >= 0 ? 'text-purple-300' : 'text-rose-400'}>{ch.power >= 0 ? '+' : ''}{ch.power}P</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {canContinue && (
+              <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onContinue}
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-500 text-slate-950 font-bold text-sm uppercase tracking-widest shadow-glow-cyan">
+                <Icon name="Swords" size={16} /> {t.continueCampaign}
+              </motion.button>
+            )}
+            <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onReplay}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-purple-400/40 bg-slate-900/70 text-purple-300 font-bold text-sm uppercase tracking-widest hover:border-purple-400/80 hover:shadow-glow-tyrian transition-all">
+              <Icon name="RotateCcw" size={16} /> {t.replay}
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} onClick={onHub}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-xl border border-slate-600/60 bg-slate-900/70 text-slate-300 font-bold text-sm uppercase tracking-widest hover:border-slate-400/60 transition-all">
+              <Icon name="Home" size={16} /> {t.returnHub}
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+   ROOT APP — STATE MACHINE
+   ============================================================ */
+const BASELINE = { unity: 50, power: 20 };
+
+function App() {
+  const [lang, setLang] = useState('en');
+  const [selectedPlayMode, setSelectedPlayMode] = useState(null); // "all" | "phase1" | "phase2" | "phase3" | null (hub)
+  const [screen, setScreen] = useState('hub'); // 'hub' | 'game' | 'ending'
+  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1); // 1: Source, 2: Choice & Map, 3: Outcome
+  const [unity, setUnity] = useState(BASELINE.unity);
+  const [power, setPower] = useState(BASELINE.power);
+  const [chosenIndex, setChosenIndex] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [endedPhase, setEndedPhase] = useState(null);
+  const [isGrandFinale, setIsGrandFinale] = useState(false);
+
+  const runScenarios = useMemo(() => {
+    if (!selectedPlayMode) return [];
+    return selectedPlayMode === 'all' ? SCENARIOS : SCENARIOS.filter((s) => s.phase === selectedPlayMode);
+  }, [selectedPlayMode]);
+
+  const startRun = useCallback((mode) => {
+    setSelectedPlayMode(mode);
+    setCurrentScenarioIndex(0);
+    setCurrentStep(1);
+    setUnity(BASELINE.unity);
+    setPower(BASELINE.power);
+    setChosenIndex(null);
+    setHistory([]);
+    setEndedPhase(null);
+    setIsGrandFinale(false);
+    setScreen('game');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const scenario = runScenarios[currentScenarioIndex] || null;
+
+  const handleChoose = useCallback((i) => {
+    if (!scenario) return;
+    const c = scenario.choices[i];
+    setChosenIndex(i);
+    setUnity((u) => clamp(u + c.unity));
+    setPower((p) => clamp(p + c.power));
+    setHistory((h) => [...h, { id: scenario.id, choice: i }]);
+    setCurrentStep(3);
+  }, [scenario]);
+
+  const handleAdvance = useCallback(() => {
+    if (!scenario) return;
+    const isLastInRun = currentScenarioIndex === runScenarios.length - 1;
+    const nextScenario = runScenarios[currentScenarioIndex + 1];
+    const phaseBoundary = isLastInRun || (nextScenario && nextScenario.phase !== scenario.phase);
+    if (phaseBoundary) {
+      setEndedPhase(scenario.phase);
+      setIsGrandFinale(selectedPlayMode === 'all' && isLastInRun);
+      setScreen('ending');
+    } else {
+      setCurrentScenarioIndex((x) => x + 1);
+      setCurrentStep(1);
+      setChosenIndex(null);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [scenario, currentScenarioIndex, runScenarios, selectedPlayMode]);
+
+  const handleContinueCampaign = useCallback(() => {
+    setScreen('game');
+    setCurrentScenarioIndex((x) => x + 1);
+    setCurrentStep(1);
+    setChosenIndex(null);
+    setEndedPhase(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const goHub = useCallback(() => {
+    setSelectedPlayMode(null);
+    setScreen('hub');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const isLastOfRun = scenario
+    ? (currentScenarioIndex === runScenarios.length - 1 ||
+       (runScenarios[currentScenarioIndex + 1] && runScenarios[currentScenarioIndex + 1].phase !== scenario.phase))
+    : false;
+
+  const endingHistory = useMemo(() => {
+    if (!endedPhase) return history;
+    if (isGrandFinale) return history;
+    return history.filter((h) => {
+      const sc = SCENARIOS.find((s) => s.id === h.id);
+      return sc && sc.phase === endedPhase;
+    });
+  }, [history, endedPhase, isGrandFinale]);
+
+  return (
+    <div className="min-h-screen w-full px-4 py-8 sm:py-12 font-body">
+      <AnimatePresence mode="wait">
+        {screen === 'hub' && (
+          <Hub key="hub" lang={lang} setLang={setLang} onStart={startRun} />
+        )}
+        {screen === 'game' && scenario && (
+          <ScenarioView
+            key={`game-${scenario.id}`}
+            lang={lang} setLang={setLang}
+            scenario={scenario}
+            scenarioNum={currentScenarioIndex + 1}
+            totalScenarios={runScenarios.length}
+            step={currentStep} setStep={setCurrentStep}
+            unity={unity} power={power}
+            chosenIndex={chosenIndex}
+            onChoose={handleChoose}
+            onAdvance={handleAdvance}
+            isLastOfRun={isLastOfRun}
+          />
+        )}
+        {screen === 'ending' && endedPhase && (
+          <EndingScreen
+            key={`ending-${endedPhase}-${isGrandFinale}`}
+            lang={lang} setLang={setLang}
+            phaseKey={endedPhase}
+            unity={unity} power={power}
+            mode={selectedPlayMode}
+            history={endingHistory}
+            onContinue={handleContinueCampaign}
+            onReplay={() => startRun(selectedPlayMode)}
+            onHub={goHub}
+            isGrandFinale={isGrandFinale}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
