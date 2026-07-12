@@ -88,9 +88,12 @@
       return pip(poly, x, z) && pip(poly, x - m, z) && pip(poly, x + m, z)
           && pip(poly, x, z - m) && pip(poly, x, z + m);
     }
+    const EXCL = [[190, 0, 7.5], [52, 8, 9.5], [-75, -70, 10], [-135, -85, 9], [203, 20, 6.5], [-205, 75, 6]];
     function inPeninsula(x, z) {
       if (!inland(PEN, x, z, 7)) return false;
       if (Math.abs(z - 8) < 5 && x > -220) return false;          // keep the Mese clear
+      for (const [ex, ez, er] of EXCL)                            // plazas, cisterns, baths
+        if ((x - ex) * (x - ex) + (z - ez) * (z - ez) < er * er) return false;
       return true;
     }
 
@@ -178,6 +181,28 @@
       bMarble.add(new THREE.CylinderGeometry(9, 9, 0.5, 24), 148, 1.65, 8);
       bPorph.add(new THREE.CylinderGeometry(0.9, 1.05, 11, 10), 148, 1.4 + 5.5, 8);
       bGold.add(new THREE.SphereGeometry(0.9, 8, 6), 148, 1.4 + 11.4, 8);
+      // the colonnaded porticoes of the Mese (both branches)
+      XP.columnType('stoa', { profile: 'doric', r: 0.14, h: 1.6, taper: 0.85, mat: M.marble, capMat: M.marble, capH: 0.14, seg: 6, collide: false });
+      for (let sx = -218; sx <= 182; sx += 5)
+        for (const so of [-2.6, 2.6]) XP.column('stoa', sx, 8 + so, 1.4);
+      b.add(new THREE.BoxGeometry(402, 0.12, 1.7), -18, 1.4 + 1.62, 8 - 2.6);
+      b.add(new THREE.BoxGeometry(402, 0.12, 1.7), -18, 1.4 + 1.62, 8 + 2.6);
+      {
+        const nx = 0.382, nz = 0.924, yawB = Math.atan2(-208, 86) + Math.PI / 2;
+        for (let t = 0.03; t < 0.99; t += 0.027) {
+          const bx = -30 - 208 * t, bz = 10 + 86 * t;
+          for (const s of [-1, 1]) XP.column('stoa', bx + s * nx * 2.4, bz + s * nz * 2.4, 1.4);
+        }
+        for (const s of [-1, 1])
+          b.add(new THREE.BoxGeometry(224, 0.12, 1.7), -134 + s * nx * 2.4, 1.4 + 1.62, 53 + s * nz * 2.4, yawB);
+      }
+      // Augoustaion square + the baths of Zeuxippos
+      bMarble.add(new THREE.CylinderGeometry(6.5, 6.5, 0.22, 20), 190, 1.51, 0);
+      b.add(new THREE.BoxGeometry(9, 4, 7), 203, 1.4 + 2, 20);
+      bLead.add(new THREE.SphereGeometry(1.8, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), 201.5, 1.4 + 4, 18.5);
+      bLead.add(new THREE.SphereGeometry(1.3, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), 205, 1.4 + 4, 22);
+      XP.label('Αὐγουσταῖον', 190, 9, 0, 0.6);
+      XP.label('Ζεύξιππον', 203, 10.5, 20, 0.55);
       // old Byzantion acropolis point: two temples
       bMarble.add(new THREE.BoxGeometry(7, 3, 4.6), 226, 1.4 + 1.5, -38);
       bMarble.add(new THREE.BoxGeometry(5.4, 2.6, 3.6), 234, 1.4 + 1.3, -28);
@@ -208,7 +233,41 @@
       const obl = new THREE.CylinderGeometry(0.34, 0.5, 5.6, 4); obl.rotateY(Math.PI / 4);
       bGr.add(obl, 176, 1.4 + 1.5 + 2.8, 21); bGr.flush(G.theod);
       bg1.add(new THREE.ConeGeometry(0.4, 0.7, 4), 176, 1.4 + 7.45, 21);
+      // Forum Tauri (Theodosius, 393): plaza, spiral column, triumphal arch
+      bm1.add(new THREE.CylinderGeometry(8, 8, 0.4, 20), 52, 1.6, 8);
+      bm1.add(new THREE.CylinderGeometry(0.75, 0.9, 9, 10), 52, 1.4 + 4.5, 8);
+      bg1.add(new THREE.BoxGeometry(0.5, 0.9, 0.5), 52, 1.4 + 9.5, 8);
+      bm1.add(new THREE.BoxGeometry(1.4, 5, 1.4), 44, 1.4 + 2.5, 5.2);
+      bm1.add(new THREE.BoxGeometry(1.4, 5, 1.4), 44, 1.4 + 2.5, 10.8);
+      bm1.add(new THREE.BoxGeometry(1.4, 1.4, 8.4), 44, 1.4 + 5.7, 8);
+      // columns of Arcadius (403, on the SW branch) and Marcian (~455)
+      bm1.add(new THREE.CylinderGeometry(0.7, 0.85, 8.5, 10), -146, 1.4 + 4.25, 64);
+      bg1.add(new THREE.BoxGeometry(0.45, 0.8, 0.45), -146, 1.4 + 9, 64);
+      bm1.add(new THREE.CylinderGeometry(0.5, 0.6, 6, 10), 30, 1.4 + 3, -25);
+      // monastery of Stoudios (462) inland of the Golden Gate
+      bm1.add(new THREE.BoxGeometry(7, 3.2, 4.6), -205, 1.4 + 1.6, 75);
+      bm1.add(new THREE.BoxGeometry(7.4, 0.9, 1.2), -205, 1.4 + 3.6, 75);
+      // the great open cisterns of Aspar and Aetius
+      for (const [cxr, czr, s] of [[-75, -70, 16], [-135, -85, 14]]) {
+        bm1.add(new THREE.BoxGeometry(s + 1.6, 1.2, 0.8), cxr, 1.4 + 0.6, czr - s / 2);
+        bm1.add(new THREE.BoxGeometry(s + 1.6, 1.2, 0.8), cxr, 1.4 + 0.6, czr + s / 2);
+        bm1.add(new THREE.BoxGeometry(0.8, 1.2, s + 1.6), cxr - s / 2, 1.4 + 0.6, czr);
+        bm1.add(new THREE.BoxGeometry(0.8, 1.2, s + 1.6), cxr + s / 2, 1.4 + 0.6, czr);
+        const w = new THREE.Mesh(new THREE.PlaneGeometry(s - 0.6, s - 0.6), M.sea);
+        w.rotation.x = -Math.PI / 2; w.position.set(cxr, 2.25, czr);
+        G.theod.add(w);
+      }
       bm1.flush(G.theod); bg1.flush(G.theod);
+      XP.label('Φόρον Ταύρου', 52, 14, 8, 0.7);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Στήλη Ἀρκαδίου', -146, 13.5, 64, 0.55);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Μονὴ Στουδίου', -205, 9.5, 75, 0.6);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Κινστέρνα Ἄσπαρος', -75, 8.5, -70, 0.55);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Κινστέρνα Ἀετίου', -135, 8.5, -85, 0.55);
+      G.theod.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
       // Aqueduct of Valens
       for (let i = 0; i < 20; i++) {
         const x = 58 - i * 5.2;
@@ -247,9 +306,16 @@
       // Boukoleon: the palace harbour front on the Marmara
       b2.add(new THREE.BoxGeometry(10, 4.2, 4.6), 200, 1.4 + 2.1, 58.5);
       b2.add(new THREE.BoxGeometry(13, 1.1, 2.6), 200, 1.4 + 0.55, 61.4);
-      b2.flush(G.just); bl2.flush(G.just);
+      // the column of Justinian on the Augoustaion (543) — Prokopios' horseman
+      b2.add(new THREE.CylinderGeometry(0.55, 0.7, 10, 10), 190, 1.4 + 5, 0);
+      bg.add(new THREE.BoxGeometry(0.95, 0.32, 0.3), 190, 1.4 + 10.45, 0);
+      bg.add(new THREE.SphereGeometry(0.17, 6, 5), 190.45, 1.4 + 10.72, 0);
+      bg.add(new THREE.BoxGeometry(0.17, 0.5, 0.17), 190, 1.4 + 10.85, 0);
+      b2.flush(G.just); bl2.flush(G.just); bg.flush(G.just);
       XP.label('Ἁγία Σοφία', 195, 26, -8, 1.1);
       XP.label('Βουκολέων', 200, 11, 59, 0.55);
+      G.just.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
+      XP.label('Στήλη Ἰουστινιανοῦ', 190, 15, 0, 0.55);
       G.just.add(XP.labelGroup.children[XP.labelGroup.children.length - 1]);
     }
 

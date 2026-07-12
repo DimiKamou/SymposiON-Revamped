@@ -457,6 +457,24 @@
       XP.addBox(cx - 4, cx + 6, cz - 19, cz - 11, 0, 8);
       mb.add(new THREE.BoxGeometry(10, 6.5, 6), cx + 1, y0 + 3.25, cz + 14);
       XP.addBox(cx - 4, cx + 6, cz + 11, cz + 17, 0, 8);
+      // gabled roof + plain pediments over the central hall
+      const pr = new THREE.Shape();
+      pr.moveTo(-10.5, 0); pr.lineTo(10.5, 0); pr.lineTo(0, 2.2); pr.closePath();
+      const prg = new THREE.ExtrudeGeometry(pr, { depth: 25, bevelEnabled: false });
+      prg.rotateY(Math.PI / 2);
+      tb.add(prg, cx - 12.5, y0 + 11.1, cz);
+      const ptri = new THREE.Shape();
+      ptri.moveTo(-10.2, 0); ptri.lineTo(10.2, 0); ptri.lineTo(0, 1.9); ptri.closePath();
+      const ptg = new THREE.ExtrudeGeometry(ptri, { depth: 0.4, bevelEnabled: false });
+      ptg.rotateY(Math.PI / 2);
+      mb.add(ptg, cx + 12.1, y0 + 11.15, cz); mb.add(ptg, cx - 12.5, y0 + 11.15, cz);
+      // the Pinakotheke (north wing picture gallery): door + windows
+      const wd = XP.builder(M.wood);
+      wd.add(new THREE.BoxGeometry(1.1, 2.6, 0.14), cx - 1, y0 + 1.3, cz - 10.94);
+      wd.add(new THREE.BoxGeometry(1.0, 1.2, 0.14), cx + 2.4, y0 + 3.2, cz - 10.94);
+      wd.add(new THREE.BoxGeometry(1.0, 1.2, 0.14), cx - 3.8, y0 + 3.2, cz - 10.94);
+      wd.flush(world);
+      XP.label('Πινακοθήκη', cx + 1, y0 + 9.6, cz - 15, 0.5);
       // approach ramp from the west edge
       XP.addFloor({ x0: -170, x1: -136, z0: -8, z1: 8, y: y0, ramp: { axis: 'x', from: -170, to: -136, y0: 0.02, y1: y0 } });
       rb.add(new THREE.BoxGeometry(34, 0.14, 12), -153, 0.4, 0, 0, 0, -0.04);
@@ -609,9 +627,32 @@
       XP.label('Ἡ ἐλαία τῆς Ἀθηνᾶς', cx - 15, 8.6, cz + 4, 0.55);
     }
 
-    /* ---- altar of Athena + dressing ---- */
-    mb.add(new THREE.BoxGeometry(6, 1.4, 3.4), 44, 0.72, -22);
-    XP.addBox(41, 47, -23.7, -20.3, 0, 2);
+    /* ---- the great altar of Athena (stepped) ---- */
+    mb.add(new THREE.BoxGeometry(8, 0.55, 4.6), 44, 0.3, -22);
+    mb.add(new THREE.BoxGeometry(6.6, 0.55, 3.8), 44, 0.85, -22);
+    mb.add(new THREE.BoxGeometry(5.2, 0.8, 3.0), 44, 1.5, -22);
+    XP.addBox(40, 48, -24.3, -19.7, 0, 2.1);
+    XP.label('Βωμός τῆς Ἀθηνᾶς', 44, 5.5, -22, 0.5);
+
+    /* ---- the Old Temple of Athena — left as burned in 480 BC ---- */
+    cb.add(new THREE.BoxGeometry(21, 0.55, 0.7), 26, 0.3, -17);
+    cb.add(new THREE.BoxGeometry(21, 0.55, 0.7), 26, 0.3, -7);
+    cb.add(new THREE.BoxGeometry(0.7, 0.55, 10.7), 15.5, 0.3, -12);
+    cb.add(new THREE.BoxGeometry(0.7, 0.55, 10.7), 36.5, 0.3, -12);
+    cb.add(new THREE.BoxGeometry(0.7, 0.45, 9.6), 23.5, 0.25, -12);
+    cb.add(new THREE.BoxGeometry(0.7, 0.45, 9.6), 30, 0.25, -12);
+    XP.label('Ἀρχαῖος Ναός · ἐρείπια 480 π.Χ.', 26, 4.2, -12, 0.5);
+
+    /* ---- Pandroseion court around the olive + the Arrephorion ---- */
+    mb.add(new THREE.BoxGeometry(12, 1.6, 0.5), 3, 0.8, -20.5);
+    mb.add(new THREE.BoxGeometry(0.5, 1.6, 10.5), -2.5, 0.8, -25.5);
+    XP.addBox(-3, 9, -20.8, -20.2, 0, 1.8);
+    XP.addBox(-2.8, -2.2, -30.8, -20.2, 0, 1.8);
+    XP.label('Πανδρόσειον', 1.5, 4.6, -24, 0.45);
+    mb.add(new THREE.BoxGeometry(4.2, 2.6, 4.2), -12, 1.32, -46);
+    mb.add(new THREE.BoxGeometry(4.8, 0.3, 4.8), -12, 2.77, -46);
+    XP.addBox(-14.3, -9.7, -48.2, -43.8, 0, 3);
+    XP.label('Ἀρρηφόριον', -12, 6, -46, 0.45);
 
     /* ---- Brauroneion & Chalkotheke along the south wall ---- */
     XP.columnType('doricS', { profile: 'doric', r: 0.42, h: 3.3, taper: 0.8, mat: M.flute, capMat: M.marble, capH: 0.3, seg: 10 });
