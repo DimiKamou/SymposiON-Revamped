@@ -188,3 +188,4 @@
   .eimi-flash-form-big { font-size:2.2rem; }
   .eimi-antik-src-form { font-size:2.2rem; }
 }
+@media(max-width:640px){.eimi-dkey{min-height:44px;box-sizing:border-box;justify-content:center;}.eimi-vkey{min-height:44px;min-width:40px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;}}

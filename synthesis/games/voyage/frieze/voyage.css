@@ -23,9 +23,9 @@ body{
   background-image:radial-gradient(120% 80% at 50% -8%, #241a12 0%, #14100b 46%, #0b0805 100%);
   color:var(--cream);font-family:var(--sans);-webkit-font-smoothing:antialiased;
 }
-#root{min-height:100vh;}
+#root{min-height:100vh;min-height:100dvh;}
 
-.fv-stage{position:relative;min-height:100vh;overflow:hidden;}
+.fv-stage{position:relative;min-height:100vh;min-height:100dvh;overflow:hidden;}
 .fv-vign{position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(130% 120% at 50% 40%, transparent 52%, rgba(0,0,0,.55) 100%);}
 .fv-wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 32px 30px;}

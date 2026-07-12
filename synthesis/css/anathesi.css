@@ -38,6 +38,10 @@
 .an-wiz__sep { width:18px; height:1px; background:var(--an-line); }
 .an-wiz .pv-modal__x { margin-left:auto; background:transparent; border:none; font-size:22px; line-height:1; color:var(--an-dim); cursor:pointer; }
 .an-wiz .pv-modal__x:hover { color:var(--an-ink); }
+@media (pointer: coarse) {
+  .an-wiz .pv-modal__x { position: relative; }
+  .an-wiz .pv-modal__x::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:44px; height:44px; }
+}
 
 .an-wiz__pane { display:flex; flex-direction:column; gap:12px; }
 .an-wiz__ttl { font-family:'Cormorant Garamond', Georgia, serif; font-weight:600; font-size:26px; line-height:1.05; }

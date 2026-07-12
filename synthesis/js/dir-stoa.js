@@ -57,6 +57,11 @@
       el('button', { class:'st-btn st-btn--ghost' }, L(STR.signin)),
       el('button', { class:'st-btn st-btn--solid' }, L(STR.signup)),
     ]));
+    // mobile: burger toggles the hidden .st-nav__mid into a drawer (mirrors dir-synthesis.js)
+    const burger = el('button', { class:'st-burger', 'aria-label':L({gr:'Μενού',en:'Menu'}), 'aria-expanded':'false',
+      onclick:(e)=>{ e.stopPropagation(); const open = nav.classList.toggle('is-open'); burger.setAttribute('aria-expanded', open?'true':'false'); } },
+      [ el('span',{class:'st-burger__b'}), el('span',{class:'st-burger__b'}), el('span',{class:'st-burger__b'}) ]);
+    nav.appendChild(burger);
     home.appendChild(nav);
 
     /* ── HERO ── */
