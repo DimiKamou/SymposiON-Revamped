@@ -296,7 +296,7 @@ Object.assign(SUBJECTS, {
               g('Ενότητα 23','Unit 23','Ένας υπέροχος άνθρωπος','scroll',{fn:'openLatinText23'}),
               g('Ενότητα 24','Unit 24','Το πάθημα ενός ψεύτη','scroll',{fn:'openLatinText24'}),
               g('Ενότητα 25','Unit 25','Πώς ένα σύκο στάθηκε αφορμή να καταστραφεί η Καρχηδόνα','scroll',{fn:'openLatinText25'}),
-              g('Ενότητα 26','Unit 26','Το πνεύμα ωριμάζει όπως οι καρποί','scroll',{fn:'openLatinText26'}),
+              gSoon('Ενότητα 26','Unit 26','σύντομα — νέα σάρωση','scroll'),
               g('Ενότητα 27','Unit 27','Το πνεύμα ωριμάζει όπως και οι καρποί','scroll',{fn:'openLatinText27'}),
               g('Ενότητα 29','Unit 29','Ο Οκταβιανός, ο παπουτσής και το κοράκι','scroll',{fn:'openLatinText29'}),
               g('Ενότητα 31','Unit 31','Η γενναιότητα δε βγαίνει πάντα σε καλό','scroll',{fn:'openLatinText31'}),
