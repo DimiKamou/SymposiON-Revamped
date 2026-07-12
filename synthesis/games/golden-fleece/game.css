@@ -25,7 +25,7 @@
 }
 @keyframes gf-sea { to { background-position:80px 0; } }
 
-.gf-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.gf-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
 .gf-screen.active { display:flex; animation:gf-fade .4s ease; }
 @keyframes gf-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
 

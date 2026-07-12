@@ -280,4 +280,5 @@
 .gpx-segbtn:hover{color:#e8dcc8;border-color:rgba(201,164,74,.45);}
 .gpx-segbtn.on{color:#15110b;font-weight:600;border-color:transparent;background:#c9a44a;}
 @media(prefers-reduced-motion:reduce){.gpx-segbtn{transition:none;}}
+@media(max-width:640px){.lpoly-dkey{min-height:44px;box-sizing:border-box;justify-content:center;}.lpoly-vkey{min-height:44px;min-width:44px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;}}
 </style>

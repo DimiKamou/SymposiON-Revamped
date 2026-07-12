@@ -32,6 +32,13 @@
 .st-nav__lnk::after{ content:''; position:absolute; left:0; bottom:-2px; width:0; height:1.5px; background:var(--terra); transition:width .22s; }
 .st-nav__lnk:hover{ color:var(--fg); } .st-nav__lnk:hover::after{ width:100%; }
 .st-nav__act { display:flex; align-items:center; gap:12px; }
+/* mobile burger (revealed only at <=940 — see media query below) */
+.st-burger { display:none; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:44px; height:44px; margin-left:auto; padding:0; border:1px solid var(--line-bold); border-radius:10px; background:var(--card); cursor:pointer; flex:none; }
+.st-burger:hover { border-color:var(--terra); }
+.st-burger__b { display:block; width:18px; height:2px; background:var(--fg); border-radius:2px; transition:transform .22s ease, opacity .18s ease; }
+.st-nav.is-open .st-burger__b:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+.st-nav.is-open .st-burger__b:nth-child(2){ opacity:0; }
+.st-nav.is-open .st-burger__b:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
 .st-live { display:inline-flex; align-items:center; gap:7px; background:none; border:1px solid var(--line-bold); color:var(--fg); font-family:var(--sans); font-size:12px; font-weight:600; letter-spacing:.04em; padding:7px 13px; border-radius:999px; cursor:pointer; }
 .st-live__dot { width:7px; height:7px; border-radius:50%; background:var(--terra); box-shadow:0 0 0 0 var(--terra-soft); animation:st-pulse 2s infinite; }
 @keyframes st-pulse{ 0%{box-shadow:0 0 0 0 var(--terra-soft);} 70%{box-shadow:0 0 0 7px transparent;} 100%{box-shadow:0 0 0 0 transparent;} }
@@ -186,7 +193,11 @@
   .st-hero { grid-template-columns:1fr; }
   .st-hero__r { order:-1; }
   .st-plate { width:min(100%, 320px); }
-  .st-nav__mid { display:none; }
+  .st-nav { position:relative; }
+  .st-burger { display:inline-flex; }
+  .st-nav__mid { display:none; position:absolute; top:calc(100% + 8px); left:var(--pad); right:var(--pad); flex-direction:column; gap:2px; margin:0; flex:none; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px; box-shadow:0 22px 56px var(--shadow); z-index:60; }
+  .st-nav.is-open .st-nav__mid { display:flex; }
+  .st-nav__lnk { padding:13px 14px; font-size:15px; }
   .st-index__row { grid-template-columns:repeat(3,1fr); }
   .st-toc:nth-child(3n){ border-right:0; }
   .st-spread { grid-template-columns:1fr; gap:18px; }

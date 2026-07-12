@@ -56,6 +56,11 @@
       el('button', { class:'ag-btn ag-btn--ghost' }, L(STR.signin)),
       el('button', { class:'ag-btn ag-btn--solid' }, L(STR.startFree)),
     ]));
+    // mobile: burger toggles the hidden .ag-nav__links into a drawer (mirrors dir-synthesis.js)
+    const burger = el('button', { class:'ag-burger', 'aria-label':L({gr:'Μενού',en:'Menu'}), 'aria-expanded':'false',
+      onclick:(e)=>{ e.stopPropagation(); const open = nav.classList.toggle('is-open'); burger.setAttribute('aria-expanded', open?'true':'false'); } },
+      [ el('span',{class:'ag-burger__b'}), el('span',{class:'ag-burger__b'}), el('span',{class:'ag-burger__b'}) ]);
+    inner.appendChild(burger);
     nav.appendChild(inner);
     home.appendChild(nav);
 

@@ -44,6 +44,7 @@
   display: none;
   flex-direction: column;
   min-height: calc(100vh - 52px);
+  min-height: calc(100dvh - 52px);
   padding: 2.5rem 2rem;
   box-sizing: border-box;
 }
