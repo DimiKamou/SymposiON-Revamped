@@ -1,0 +1,343 @@
+/* ════════════════════════════════════════════════════════════════════
+   study.css — «Διδαγμένο Κείμενο», Αρχαία Ελληνικά Γ' Λυκείου
+   Self-contained study module. Adapts the SymposiON design language
+   (--sym-* tokens with fallbacks) so it themes with the site when
+   embedded, but stands alone when opened directly.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --ok:#3aa76d; --ok-lt:#7fe0ab; --err:#d1553f; --err-lt:#f2a08d;
+  --radius:14px; --radius-sm:9px;
+  --serif:'Cinzel',Georgia,serif;                 /* display / headings   */
+  --greek:'GFS Didot','Cormorant Garamond',Georgia,serif; /* ancient text  */
+  --sans:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+  --mono:'SFMono-Regular',ui-monospace,'Cascadia Mono',Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  /* creme / neutral light palette. --gold* kept as names but hold neutral
+     stone / ink tones now (mid accent + deep ink). Override with --sym-* if embedded. */
+  --bg:var(--sym-bg,#f3efe6);          /* warm cream page          */
+  --panel:var(--sym-bg-card,#fbf9f3);  /* near-white cream surface  */
+  --panel2:var(--sym-bg-raise,#ece5d7);/* raised / track            */
+  --gold:var(--sym-gold,#928873);      /* neutral stone (mid accent)*/
+  --gold-lt:var(--sym-gold-lt,#3c372e);/* deep warm ink (headings)  */
+  --txt:var(--sym-fg,#332f28);
+  --muted:var(--sym-fg-muted,#877e6d);
+  --border:color-mix(in srgb,var(--gold) 40%,var(--panel));
+  --border-soft:color-mix(in srgb,var(--gold) 22%,var(--panel));
+  --fill:#463f34;                      /* deep neutral for filled buttons */
+  --fill-ink:#f6f2e8;
+  background:
+    radial-gradient(130% 90% at 50% -12%, color-mix(in srgb,var(--gold) 9%,var(--bg)), transparent 62%),
+    var(--bg);
+  color:var(--txt); font-family:var(--sans);
+  -webkit-font-smoothing:antialiased; min-height:100vh; line-height:1.58;
+}
+button{font-family:inherit; cursor:pointer; color:inherit}
+a{color:var(--gold-lt); text-decoration:none}
+::selection{background:color-mix(in srgb,var(--gold) 34%,transparent); color:var(--gold-lt)}
+:focus-visible{outline:2px solid var(--gold-lt); outline-offset:2px; border-radius:6px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:2.4px; text-transform:uppercase; color:var(--muted)}
+.grk{font-family:var(--greek)}
+
+/* ─── layout shell ─── */
+.app{display:grid; grid-template-columns:288px 1fr; min-height:100vh}
+@media(max-width:880px){ .app{grid-template-columns:1fr} }
+
+/* ─── sidebar ─── */
+.side{
+  border-right:1px solid var(--border-soft); background:color-mix(in srgb,var(--panel) 60%,var(--bg));
+  padding:22px 0 40px; position:sticky; top:0; align-self:start; height:100vh; overflow:auto;
+}
+@media(max-width:880px){ .side{position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-soft)} }
+.brand{padding:0 22px 18px}
+.brand h1{font-family:var(--serif); font-weight:600; font-size:20px; letter-spacing:.4px; margin:6px 0 2px; color:var(--gold-lt)}
+.brand p{margin:0; font-size:12.5px; color:var(--muted)}
+.side .search{margin:4px 18px 14px}
+.side .search input{
+  width:100%; padding:9px 12px; font-size:13px; color:var(--txt);
+  background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+}
+.arc{margin:14px 0 4px}
+.arc>h2{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:1.8px; text-transform:uppercase;
+  color:var(--gold); margin:0; padding:6px 22px; opacity:.85;
+}
+.unit-link{
+  display:flex; gap:11px; align-items:baseline; width:100%; text-align:left;
+  background:transparent; border:none; border-left:3px solid transparent;
+  padding:9px 22px 9px 19px; color:var(--muted); font-size:13.5px; transition:.16s;
+}
+.unit-link:hover{color:var(--txt); background:color-mix(in srgb,var(--gold) 5%,transparent)}
+.unit-link.active{
+  color:var(--gold-lt); background:color-mix(in srgb,var(--gold) 9%,transparent);
+  border-left-color:var(--gold);
+}
+.unit-link .n{font-family:var(--mono); font-size:11px; min-width:20px; color:var(--gold); opacity:.8}
+.unit-link .tt{line-height:1.35}
+.unit-link .au{display:block; font-size:11px; color:var(--muted); opacity:.8; margin-top:1px}
+.unit-link[hidden]{display:none}
+
+/* ─── main ─── */
+.main{max-width:1000px; width:100%; margin:0 auto; padding:30px 30px 90px}
+@media(max-width:560px){ .main{padding:20px 16px 70px} }
+.doc-head{margin-bottom:8px}
+.doc-head .cite{font-family:var(--mono); font-size:11.5px; letter-spacing:.6px; color:var(--gold); text-transform:uppercase}
+.doc-head h2{font-family:var(--serif); font-weight:600; font-size:clamp(24px,4vw,34px); line-height:1.15; margin:8px 0 2px; color:var(--gold-lt)}
+.doc-head .arc-tag{font-size:12.5px; color:var(--muted)}
+.theme{
+  margin:16px 0 4px; padding:15px 18px; border-radius:var(--radius);
+  background:color-mix(in srgb,var(--gold) 5%,var(--panel)); border:1px solid var(--border-soft);
+  color:var(--txt); font-size:14.5px;
+}
+.theme::before{content:'Θέμα ενότητας'; display:block; font-family:var(--mono); font-size:10px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold); margin-bottom:5px}
+
+/* ─── tabs ─── */
+.tabbar{display:flex; flex-wrap:wrap; gap:6px; margin:24px 0 22px; border-bottom:1px solid var(--border); padding-bottom:0}
+.tab{
+  appearance:none; border:1px solid transparent; border-bottom:none; background:transparent;
+  color:var(--muted); padding:12px 16px 11px; font-size:14px; font-weight:600;
+  border-radius:11px 11px 0 0; position:relative; top:1px; transition:color .18s, background .18s;
+  display:flex; align-items:center; gap:8px;
+}
+.tab:hover{color:var(--txt)}
+.tab[aria-selected="true"]{
+  color:var(--gold-lt); background:var(--panel); border-color:var(--border);
+  box-shadow:0 -2px 0 var(--gold) inset;
+}
+.panel[hidden]{display:none}
+
+/* ─── Κείμενο & Μετάφραση ─── */
+.txt-toolbar{
+  display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; margin-bottom:16px;
+  padding:12px 15px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);
+}
+.toggle{display:inline-flex; align-items:center; gap:9px; font-size:13px; color:var(--txt)}
+.switch{--w:42px; --h:23px; position:relative; width:var(--w); height:var(--h); flex:none}
+.switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer}
+.switch .track{
+  position:absolute; inset:0; border-radius:999px; background:var(--panel2);
+  border:1px solid var(--border); transition:.2s;
+}
+.switch .track::after{
+  content:''; position:absolute; top:2px; left:2px; width:calc(var(--h) - 6px); height:calc(var(--h) - 6px);
+  border-radius:50%; background:var(--muted); transition:.2s;
+}
+.switch input:checked + .track{background:color-mix(in srgb,var(--gold) 40%,var(--panel2)); border-color:var(--gold)}
+.switch input:checked + .track::after{transform:translateX(calc(var(--w) - var(--h))); background:var(--gold-lt)}
+.txt-toolbar .sep{width:1px; align-self:stretch; background:var(--border-soft)}
+.txt-toolbar .hint{font-size:12px; color:var(--muted)}
+
+.verse{display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid var(--border-soft); border-radius:var(--radius); overflow:hidden}
+.verse.mono{grid-template-columns:1fr}
+.seg{display:contents}
+.seg .gr, .seg .mod{
+  padding:13px 18px; border-bottom:1px solid var(--border-soft); transition:background .15s;
+}
+.seg:last-child .gr, .seg:last-child .mod{border-bottom:none}
+.seg .gr{
+  font-family:var(--greek); font-size:19px; line-height:1.7; color:var(--txt);
+  border-right:1px solid var(--border-soft); background:color-mix(in srgb,var(--gold) 3%,transparent);
+}
+.verse.mono .seg .gr{border-right:none}
+.verse.mono .seg .mod{display:none}
+/* phones: stack original above translation instead of two cramped ~150px columns */
+@media(max-width:560px){ .verse{grid-template-columns:1fr} .seg .gr{border-right:none} }
+.seg .mod{font-size:14.5px; color:color-mix(in srgb,var(--txt) 82%,var(--bg)); line-height:1.62}
+.seg:hover .gr{background:color-mix(in srgb,var(--gold) 7%,transparent)}
+.verse.hide-mod .seg .mod{
+  filter:blur(6px); opacity:.35; cursor:pointer; user-select:none;
+  background:repeating-linear-gradient(45deg, color-mix(in srgb,var(--gold) 6%,transparent) 0 8px, transparent 8px 16px);
+}
+.verse.hide-mod .seg .mod.revealed{filter:none; opacity:1; background:none; cursor:default}
+.trans-credit{margin:10px 2px 0; font-size:12px; color:var(--muted); text-align:right}
+
+/* ─── prose panels (Εισαγωγικά / Ερμηνευτική) ─── */
+.book-note{
+  border:1px solid var(--border-soft); border-left:3px solid var(--gold);
+  background:color-mix(in srgb,var(--gold) 4%,var(--panel)); border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 18px; margin:0 0 14px;
+}
+.book-note .src{display:block; font-family:var(--mono); font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--gold); margin-bottom:8px}
+.book-note p{margin:0 0 9px; font-size:14.5px}
+.book-note p:last-child{margin-bottom:0}
+.verbatim-flag{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--gold-lt);
+  border:1px solid var(--border); border-radius:999px; padding:3px 10px; margin-bottom:14px;
+}
+.sec-h{font-family:var(--serif); font-size:19px; color:var(--gold-lt); margin:26px 0 12px; font-weight:600}
+.sec-h:first-child{margin-top:4px}
+
+.lemma{margin:0 0 14px; padding:14px 16px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius)}
+.lemma .l{font-family:var(--greek); font-size:16px; color:var(--gold-lt); margin:0 0 6px; display:block}
+.lemma .note{font-size:14px; color:var(--txt)}
+.chips{display:flex; flex-direction:column; gap:8px; margin:0}
+.chip-note{padding:11px 14px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius-sm); font-size:13.8px}
+.chip-note b{color:var(--gold-lt)}
+.syllogism{list-style:none; margin:0; padding:0; counter-reset:s}
+.syllogism li{padding:10px 14px; margin-bottom:8px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius-sm); font-size:14px}
+.syllogism li .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:3px}
+
+/* ─── Ασκήσεις ─── */
+.ex{margin:0 0 20px; padding:16px 18px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius)}
+.ex .q{font-size:14.8px; margin:0 0 12px}
+.ex .q .qn{font-family:var(--mono); color:var(--gold); margin-right:8px}
+.ex .kind{font-family:var(--mono); font-size:10px; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:9px}
+
+/* interpretive reveal */
+.reveal-btn{
+  background:transparent; border:1px solid var(--border); color:var(--gold-lt);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600;
+}
+.reveal-btn:hover{background:color-mix(in srgb,var(--gold) 10%,transparent)}
+.model-ans{margin-top:12px; padding:13px 15px; border-radius:var(--radius-sm); background:color-mix(in srgb,var(--gold) 5%,var(--bg)); border:1px dashed var(--border); font-size:14px}
+.model-ans[hidden]{display:none}
+.model-ans .cap{font-family:var(--mono); font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:7px}
+
+/* input exercises */
+.fillrow{display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin:8px 0}
+.fillrow .prompt{font-size:14px}
+.fillrow .prompt .grk{color:var(--gold-lt)}
+.ex input[type=text]{
+  padding:8px 11px; font-size:14px; color:var(--txt); background:var(--bg);
+  border:1px solid var(--border); border-radius:var(--radius-sm); min-width:150px; font-family:var(--greek);
+}
+.ex input.right{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 12%,var(--bg))}
+.ex input.wrong{border-color:var(--err); background:color-mix(in srgb,var(--err) 12%,var(--bg))}
+.ex .accepted{font-size:12.5px; color:var(--ok-lt); margin-left:4px}
+.ex .accepted[hidden]{display:none}
+
+/* match exercise */
+.match{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+@media(max-width:560px){ .match{grid-template-columns:1fr} }
+.match .col{display:flex; flex-direction:column; gap:8px}
+.match .item{
+  padding:10px 13px; border:1px solid var(--border); border-radius:var(--radius-sm);
+  background:var(--bg); font-size:14px; text-align:left; transition:.15s;
+}
+.match .item .grk{font-size:16px; color:var(--gold-lt)}
+.match .item.sel{border-color:var(--gold); background:color-mix(in srgb,var(--gold) 12%,var(--bg))}
+.match .item.done{border-color:var(--ok); color:var(--muted); pointer-events:none; opacity:.7}
+.match .item.done::after{content:' ✓'; color:var(--ok-lt)}
+.match .item.miss{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* mc quiz */
+.opts{display:flex; flex-direction:column; gap:8px; margin:2px 0}
+.opt{
+  display:flex; gap:10px; align-items:flex-start; padding:11px 14px; text-align:left;
+  border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg); font-size:14px; transition:.14s;
+}
+.opt:hover{border-color:var(--gold)}
+.opt .mk{font-family:var(--mono); color:var(--gold); flex:none}
+.opt.correct{border-color:var(--ok); background:color-mix(in srgb,var(--ok) 13%,var(--bg))}
+.opt.incorrect{border-color:var(--err); background:color-mix(in srgb,var(--err) 13%,var(--bg))}
+.opt[disabled]{cursor:default}
+.explain{margin-top:9px; font-size:13.5px; color:var(--muted); padding-left:4px}
+.explain[hidden]{display:none}
+
+.check-btn{
+  margin-top:12px; background:var(--fill); color:var(--fill-ink); border:none; font-weight:700;
+  padding:9px 18px; border-radius:var(--radius-sm); font-size:13.5px; letter-spacing:.3px;
+}
+.check-btn:hover{background:color-mix(in srgb,var(--fill) 82%,#000)}
+.scoreline{margin-top:10px; font-size:13.5px; color:var(--gold-lt); font-weight:600}
+.scoreline[hidden]{display:none}
+
+/* footer nav */
+.pager{display:flex; justify-content:space-between; gap:12px; margin-top:34px; padding-top:20px; border-top:1px solid var(--border-soft)}
+.pager button{
+  background:var(--panel); border:1px solid var(--border); color:var(--txt);
+  padding:11px 16px; border-radius:var(--radius-sm); font-size:13.5px; max-width:48%;
+}
+.pager button:hover{border-color:var(--gold); color:var(--gold-lt)}
+.pager button[disabled]{opacity:.35; pointer-events:none}
+.pager .lbl{display:block; font-size:11px; color:var(--muted)}
+.empty{color:var(--muted); font-size:14px; padding:20px 0}
+
+/* ═══ colour differentiation ═══ */
+:root{
+  /* muted, desaturated accents for the cream theme (no amber/brown) */
+  --a-text:#5f7c90;    /* dusty slate  */
+  --a-intro:#8a7690;   /* soft plum    */
+  --a-interp:#7671a0;  /* muted violet */
+  --a-ex:#5f8a72;      /* sage green   */
+  --a-quiz:#a5726c;    /* muted clay-rose */
+  /* exercise-type accents */
+  --k-omorriza:#5f8a72;
+  --k-match:#5f7c90;
+  --k-locate:#7671a0;
+  --k-mc:#5c8d86;      /* teal   */
+  --k-open:#a5726c;    /* clay   */
+  --k-interp:#8a7690;  /* plum   */
+  --k-quiz:#a5726c;
+}
+/* per-tab active accent (underline + label) */
+.tab[data-accent="text"][aria-selected="true"]  {color:var(--a-text);   box-shadow:0 -2px 0 var(--a-text) inset}
+.tab[data-accent="intro"][aria-selected="true"] {color:var(--a-intro);  box-shadow:0 -2px 0 var(--a-intro) inset}
+.tab[data-accent="interp"][aria-selected="true"]{color:var(--a-interp); box-shadow:0 -2px 0 var(--a-interp) inset}
+.tab[data-accent="ex"][aria-selected="true"]    {color:var(--a-ex);     box-shadow:0 -2px 0 var(--a-ex) inset}
+.tab[data-accent="quiz"][aria-selected="true"]  {color:var(--a-quiz);   box-shadow:0 -2px 0 var(--a-quiz) inset}
+/* small colour dot on each tab */
+.tab::before{content:''; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.55; flex:none}
+.tab[data-accent="text"]::before{background:var(--a-text)}
+.tab[data-accent="intro"]::before{background:var(--a-intro)}
+.tab[data-accent="interp"]::before{background:var(--a-interp)}
+.tab[data-accent="ex"]::before{background:var(--a-ex)}
+.tab[data-accent="quiz"]::before{background:var(--a-quiz)}
+
+/* coloured section headings */
+.sec-h.accent-interp{color:var(--a-interp)}
+.sec-h.accent-ex{color:var(--a-ex)}
+.sec-h.accent-quiz{color:var(--a-quiz)}
+.sub-h{font-family:var(--mono); font-size:11px; color:var(--muted); margin:22px 0 10px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase}
+
+/* exercise cards get a coloured left edge + coloured kind chip */
+.ex{border-left:3px solid var(--border)}
+.ex--omorriza{border-left-color:var(--k-omorriza)} .ex--omorriza .kind{color:var(--k-omorriza)}
+.ex--match   {border-left-color:var(--k-match)}    .ex--match .kind{color:var(--k-match)}
+.ex--locate  {border-left-color:var(--k-locate)}   .ex--locate .kind{color:var(--k-locate)}
+.ex--mc      {border-left-color:var(--k-mc)}       .ex--mc .kind{color:var(--k-mc)}
+.ex--open    {border-left-color:var(--k-open)}     .ex--open .kind{color:var(--k-open)}
+.ex--interp  {border-left-color:var(--k-interp)}   .ex--interp .kind{color:var(--k-interp)}
+.ex--quiz    {border-left-color:var(--k-quiz)}
+.kind{font-family:var(--mono); font-size:10px; letter-spacing:1.4px; text-transform:uppercase; display:block; margin-bottom:9px; font-weight:600}
+
+/* refresh / generate bar */
+.gen-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:2px 0 16px}
+.gen-btn{
+  display:inline-flex; align-items:center; gap:8px; background:color-mix(in srgb,var(--gold) 14%,var(--panel));
+  border:1px solid var(--border); color:var(--gold-lt); padding:9px 15px; border-radius:var(--radius-sm);
+  font-size:13px; font-weight:600; transition:.15s;
+}
+.gen-btn:hover{background:color-mix(in srgb,var(--gold) 24%,var(--panel)); border-color:var(--gold)}
+.gen-btn .ico{font-size:15px; display:inline-block; transition:transform .4s}
+.gen-btn:hover .ico{transform:rotate(180deg)}
+.gen-btn.ghost{background:transparent; color:var(--muted)}
+.gen-btn.ghost:hover{color:var(--txt); background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.gen-hint{font-size:12px; color:var(--muted)}
+
+/* ═══ light-theme depth (soft paper shadows) ═══ */
+.theme, .book-note, .ex, .lemma, .chip-note, .verse, .txt-toolbar,
+.opt, .match .item, .gen-btn, .pager button, .side .search input, .ex input[type=text]{
+  box-shadow:0 1px 2px rgba(60,50,35,.05);
+}
+.ex, .book-note, .lemma, .verse{ box-shadow:0 1px 3px rgba(60,50,35,.06), 0 6px 16px rgba(60,50,35,.03); }
+.tabbar{border-bottom-color:var(--border)}
+.opt:hover, .match .item:hover{ box-shadow:0 2px 6px rgba(60,50,35,.10); }
+/* keep the ancient-text column subtly distinct on cream */
+.seg .gr{ background:color-mix(in srgb,var(--gold) 6%,var(--panel)); }
+
+/* ═══ εξεταστέα ύλη 2026 — filter & scope markers ═══ */
+.exam-filter{display:flex; align-items:center; gap:9px; margin:2px 18px 16px; padding:9px 12px; font-size:12.5px; color:var(--txt); background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius-sm); box-shadow:0 1px 2px rgba(60,50,35,.05)}
+.exam-filter b{color:var(--gold-lt)}
+.unit-link.nonexam{opacity:.8}
+.unit-link.nonexam .n{opacity:.5}
+.offscope{display:block; font-family:var(--mono); font-size:9px; letter-spacing:.8px; text-transform:uppercase; color:var(--a-quiz); margin-top:2px}
+.scope{display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.8px; text-transform:uppercase; padding:2px 8px; border-radius:999px; margin-left:6px; vertical-align:middle; white-space:nowrap}
+.scope.in{color:var(--a-ex); background:color-mix(in srgb,var(--a-ex) 14%,transparent); border:1px solid color-mix(in srgb,var(--a-ex) 38%,transparent)}
+.scope.out{color:var(--a-quiz); background:color-mix(in srgb,var(--a-quiz) 14%,transparent); border:1px solid color-mix(in srgb,var(--a-quiz) 38%,transparent)}
+.intro-note{font-size:12.5px; color:var(--muted); padding:11px 14px; margin-bottom:16px; border:1px dashed var(--border); border-radius:var(--radius-sm); background:color-mix(in srgb,var(--a-text) 6%,transparent)}
+.unit-link .n{white-space:nowrap}

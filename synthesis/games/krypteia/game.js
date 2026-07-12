@@ -1,5 +1,5 @@
 /* ══════════════════════ ΚΡΥΠΤΕΙΑ — Competitive Cipher Arena ══════════════════════
-   Crypto Hack reimagined: a timed contest among you + 5–9 bot agents.
+   A timed cipher contest among you + 5–9 bot agents.
    Answer → draw a cipher operation → steal / reduce / divide(dice) / multiply(dice)
    / bonus / curse / nothing. Crack the target's scytale by hand. Sometimes the
    cipher breaks clean and you choose your victim. Highest drachmas at the bell wins.
@@ -8,6 +8,23 @@
 const Krypteia = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   // Question source. The Games-Panel bridge (nav.js _gpInjectEngineData) fills
@@ -199,7 +216,7 @@ const Krypteia = (() => {
     document.querySelectorAll('#kr-wrap [data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(I18N[k]) el.textContent=I18N[k][L()]; });
     if (st && st.cur && document.getElementById('kr-screen-arena').classList.contains('active')) {
       document.getElementById('kr-qnum').textContent = (L()==='en'?'RIDDLE ':'ΓΡΙΦΟΣ ')+String(st.qNum).padStart(3,'0');
-      document.getElementById('kr-qtext').textContent = st.cur.q[L()];
+      document.getElementById('kr-qtext').textContent = QT(st.cur.q);
     }
     if (document.getElementById('kr-seal-cards')) renderSeals();
   }
@@ -292,7 +309,7 @@ const Krypteia = (() => {
     if (st.over) return;
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('kr-qnum').textContent=(L()==='en'?'RIDDLE ':'ΓΡΙΦΟΣ ')+String(st.qNum).padStart(3,'0');
-    document.getElementById('kr-qtext').textContent=st.cur.q[L()];
+    document.getElementById('kr-qtext').textContent=QT(st.cur.q);
     const fb=document.getElementById('kr-feedback'); fb.textContent=''; fb.className='kr-feedback';
     const wrap=document.getElementById('kr-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
@@ -311,6 +328,7 @@ const Krypteia = (() => {
       _fx('correct',{el:btn, pts});
       setTimeout(drawOperation, 900);
     } else {
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Κρυπτεία', gameId: 'krypteia' }); } catch(_){} }
       btn.classList.add('wrong');
       _fx('wrong',{el:btn});
       fb.textContent=T('ΛΑΘΟΣ — οι αντίπαλοι κερδίζουν έδαφος','WRONG — rivals gain ground');

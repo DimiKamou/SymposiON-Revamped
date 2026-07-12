@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Αδίδακτο Κείμενο</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+    --c-subj:#2F6F8E; --c-verb:#C5572F; --c-obj:#7C5AC2; --c-ptc:#5B7544;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    overflow-x:hidden;   /* clip the off-canvas drawer (right:0, translated off) so phones don't scroll sideways */
+    background-image:radial-gradient(120% 75% at 50% -15%,var(--gold-soft),transparent 55%);}
+
+  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:18px;padding:15px 34px;
+    background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .sig{width:28px;height:28px;color:var(--terra);}
+  .brand{font-family:var(--serif);font-size:18px;font-weight:600;}.brand b{color:var(--terra);}
+  .bar-sub{font-family:var(--disp);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-left:16px;border-left:1px solid var(--line);}
+  .spacer{flex:1;}
+  .picker{font-family:var(--sans);font-size:13px;color:var(--fg);background:var(--sink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;max-width:280px;}
+  .timer{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-size:14px;font-weight:600;
+    color:var(--fg);background:var(--sink);border:1px solid var(--line);border-radius:10px;padding:8px 13px;}
+  .timer svg{width:15px;height:15px;color:var(--terra);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 34px 70px;}
+
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px;flex-wrap:wrap;}
+  .head .ht .eyebrow{font-family:var(--disp);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);}
+  .head .ht h1{font-family:var(--serif);font-size:29px;font-weight:700;line-height:1;margin-top:6px;}
+  .head .ht .src{font-family:var(--greek);font-style:italic;font-size:15px;color:var(--muted);margin-top:7px;}
+  .head .meta{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+  .badge{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+    padding:7px 12px;border-radius:9px;background:var(--sink);border:1px solid var(--line);color:var(--muted);}
+  .badge.diff{color:var(--gold);background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 28%,transparent);}
+
+  .intro{font-size:14px;line-height:1.6;color:var(--fg-70);background:var(--card);border:1px solid var(--line-soft);border-radius:14px;padding:16px 20px;margin-bottom:20px;}
+
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+  .tbtn{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-size:12px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;
+    color:var(--fg-70);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer;transition:.15s;}
+  .tbtn:hover{border-color:var(--line-bold);}
+  .tbtn svg{width:15px;height:15px;}
+  .tbtn.help{margin-left:auto;color:var(--terra);border-color:var(--terra-soft);background:var(--terra-soft);}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 26px;}
+  .card-t{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;}
+
+  .passage{font-family:var(--greek);font-size:22px;line-height:2.15;color:var(--fg);}
+  .snum{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:6px;
+    background:var(--sink);border:1px solid var(--line-soft);font-family:var(--disp);font-size:10px;color:var(--muted);
+    margin-right:8px;vertical-align:2px;}
+  .sent{transition:background .2s;border-radius:6px;padding:1px 2px;}
+  .sent.active{background:var(--gold-soft);}
+  .w{cursor:pointer;border-radius:4px;padding:0 1px;transition:background .12s,color .12s;border-bottom:1.5px solid transparent;}
+  .w.has:hover{background:var(--sink);border-bottom-color:var(--line-bold);}
+  .w.sel{background:var(--terra-soft);border-bottom-color:var(--terra);}
+
+  .pop{position:absolute;z-index:40;width:250px;background:var(--card);border:1px solid var(--line-bold);border-radius:14px;
+    box-shadow:0 18px 44px -16px rgba(40,20,0,.4);padding:15px 16px;display:none;}
+  .pop.open{display:block;}
+  .pop .pw{font-family:var(--greek);font-size:21px;font-weight:700;color:var(--terra-dk);}
+  .pop .pgloss{font-size:13.5px;line-height:1.5;margin-top:8px;}
+  .pop .pnone{font-size:12.5px;color:var(--muted);margin-top:8px;font-style:italic;}
+
+  .ws-sent{padding:16px 0;border-bottom:1px solid var(--line-soft);}
+  .ws-sent:last-child{border-bottom:none;}
+  .ws-gr{font-family:var(--greek);font-size:17px;line-height:1.5;color:var(--fg);margin-bottom:11px;}
+  .ws-gr .n{font-family:var(--disp);font-size:11px;color:var(--terra);font-weight:600;margin-right:8px;}
+  .ws-ta{width:100%;min-height:54px;resize:vertical;font-family:var(--sans);font-size:13.5px;color:var(--fg);line-height:1.5;
+    background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:11px 13px;outline:none;transition:.15s;}
+  .ws-ta:focus{border-color:var(--terra);background:var(--card);}
+  .ws-ta::placeholder{color:var(--muted);}
+  .ws-actions{display:flex;align-items:center;gap:10px;margin-top:9px;}
+  .reveal-btn{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;color:var(--terra);
+    background:var(--terra-soft);border:none;border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s;}
+  .reveal-btn:hover{background:color-mix(in srgb,var(--terra) 22%,transparent);}
+  .model{display:none;margin-top:11px;background:var(--sage-soft);border:1px solid color-mix(in srgb,var(--sage) 30%,transparent);
+    border-radius:11px;padding:13px 15px;}
+  .model.show{display:block;}
+  .model .ml{font-family:var(--disp);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--sage);margin-bottom:5px;}
+  .model .mtxt{font-size:13.5px;line-height:1.55;color:var(--fg);}
+  .self{display:flex;gap:8px;margin-top:11px;}
+  .self button{flex:1;font-family:var(--disp);font-size:10px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;
+    background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 4px;cursor:pointer;color:var(--muted);transition:.14s;}
+  .self button[data-v="ok"]:hover,.self button[data-v="ok"].on{color:var(--sage);border-color:var(--sage);background:var(--sage-soft);}
+  .self button[data-v="mid"]:hover,.self button[data-v="mid"].on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft);}
+  .self button[data-v="no"]:hover,.self button[data-v="no"].on{color:var(--terra);border-color:var(--terra);background:var(--terra-soft);}
+
+  .comp{margin-top:24px;}
+  .cq{padding:18px 0;border-bottom:1px solid var(--line-soft);}
+  .cq:last-child{border-bottom:none;}
+  .cq .cqt{font-size:14.5px;font-weight:600;margin-bottom:11px;line-height:1.4;}
+  .cq .cqt .qn{font-family:var(--disp);color:var(--terra);font-weight:700;margin-right:8px;}
+  .cq .cqt .cqp{font-family:var(--disp);font-size:11px;color:var(--muted);font-weight:600;margin-left:8px;}
+  .cq .ca{width:100%;min-height:48px;resize:vertical;font-family:var(--sans);font-size:13.5px;color:var(--fg);line-height:1.5;
+    background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:11px 13px;outline:none;}
+  .cq .ca:focus{border-color:var(--terra);background:var(--card);}
+  .cq .ca.gr{font-family:var(--greek);font-size:15px;}
+
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;z-index:50;background:var(--card);
+    border-left:1px solid var(--line-bold);box-shadow:-20px 0 50px -20px rgba(40,20,0,.35);
+    transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;}
+  .drawer.open{transform:none;}
+  .drawer-h{display:flex;align-items:center;gap:11px;padding:20px 22px;border-bottom:1px solid var(--line-soft);}
+  .drawer-h .da{width:38px;height:38px;border-radius:11px;background:var(--terra-soft);color:var(--terra);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .drawer-h .da svg{width:22px;height:22px;}
+  .drawer-h .dt b{font-family:var(--serif);font-size:17px;font-weight:700;}
+  .drawer-h .dt span{display:block;font-family:var(--disp);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+  .drawer-h .dclose{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--sink);color:var(--muted);cursor:pointer;}
+  .drawer-body{flex:1;overflow-y:auto;padding:20px 22px;}
+  .glossary{display:flex;flex-direction:column;gap:0;}
+  .gloss-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+  .gloss-row .gw{font-family:var(--greek);font-size:15px;font-weight:700;color:var(--terra-dk);width:125px;flex-shrink:0;}
+  .gloss-row .gd{font-size:12.5px;color:var(--fg-70);line-height:1.4;}
+
+  .foot{text-align:center;margin-top:30px;font-family:var(--disp);font-size:10.5px;letter-spacing:.8px;color:var(--muted);line-height:1.9;}
+  .foot b{color:var(--terra);}
+  @media(max-width:920px){.cols{grid-template-columns:1fr;}.bar-sub{display:none;}}
+  /* phones: let the top bar wrap (brand + passage picker + timer) instead of
+     overflowing off the right edge, and tighten side padding. */
+  @media(max-width:560px){
+    .bar{flex-wrap:wrap;gap:10px 12px;padding:12px 16px;}
+    .picker{max-width:none;flex:1 1 100%;}
+    .wrap{padding:22px 16px 64px;}
+  }
+</style>
+</head>
+<body class="theme-alabaster">
+<script>
+  if(document.fonts&&document.fonts.load){const poly='ἀἁὰάᾶὲέὴήῆὶίῖὸόὺύῦὼώῶᾳῃῷ';
+    ['400','700'].forEach(w=>{document.fonts.load(w+" 1em 'Cardo'",poly).catch(()=>{});document.fonts.load('italic '+w+" 1em 'Cardo'",poly).catch(()=>{});});}
+</script>
+
+<header class="bar">
+  <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+    <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+  <span class="brand">Symposi<b>ON</b></span>
+  <span class="bar-sub">Αδίδακτο</span>
+  <span class="spacer"></span>
+  <select class="picker" id="picker" aria-label="Επιλογή κειμένου"></select>
+  <span class="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock">00:00</span></span>
+</header>
+
+<div class="wrap">
+  <div class="head">
+    <div class="ht">
+      <div class="eyebrow">Αδίδακτο κείμενο · Εξάσκηση</div>
+      <h1 id="hTitle">—</h1>
+      <div class="src" id="hSrc">—</div>
+    </div>
+    <div class="meta" id="hMeta"></div>
+  </div>
+
+  <div class="intro" id="intro" style="display:none"></div>
+
+  <div class="toolbar">
+    <button class="tbtn help" id="glossBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4zM4 9h16"/></svg>Λεξιλόγιο</button>
+    <span style="font-size:11.5px;color:var(--muted);font-style:italic;">Πάτησε μια λέξη για τη σημασία της (αν υπάρχει στο λεξιλόγιο) →</span>
+  </div>
+
+  <div class="cols">
+    <div class="card" id="passageCard">
+      <div class="card-t"><span>Το κείμενο</span></div>
+      <div class="passage" id="passage"></div>
+    </div>
+    <div class="card">
+      <div class="card-t"><span>Η μετάφρασή σου</span><span>περίοδος προς περίοδο</span></div>
+      <div id="workspace"></div>
+    </div>
+  </div>
+
+  <div class="card comp">
+    <div class="card-t"><span>Ερωτήσεις &amp; ασκήσεις</span><span id="compCount"></span></div>
+    <div id="comp"></div>
+  </div>
+
+  <div class="foot">SYMPOSION · ΑΔΙΔΑΚΤΟ — ΑΝΑΛΥΣΗ &amp; ΜΕΤΑΦΡΑΣΗ<br/>Οι πρότυπες απαντήσεις είναι <b>ενδεικτικές</b>. Στην προσομοίωση Πανελληνίων η μετάφρασή σου βαθμολογείται.</div>
+</div>
+
+<div class="pop" id="pop"></div>
+
+<div class="drawer" id="drawer">
+  <div class="drawer-h">
+    <div class="da"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h16v14H4zM4 9h16"/></svg></div>
+    <div class="dt"><b>Λεξιλόγιο</b><span>του κειμένου</span></div>
+    <button class="dclose" id="dclose">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<script src="data/corpus.js"></script>
+<script src="data/corpus-store.js"></script>
+<script>
+/* ── corpus-driven αδίδακτο workspace ── */
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^α-ωa-z]/g,'');
+const DIFFMAP={1:'Εύκολη',2:'Εύκολη',3:'Μεσαία',4:'Πανελλήνιες',5:'Πολύ δύσκολη'};
+const CORPUS=(window.AdidaktoCorpus?AdidaktoCorpus.load():(window.CORPUS_BASE||[]));
+
+const params=new URLSearchParams(location.search);
+let curId=params.get('id');
+function pick(){ return CORPUS.filter(e=>String(e.id)===String(curId))[0] || CORPUS[0]; }
+const sel=document.getElementById('picker');
+sel.innerHTML=CORPUS.map(e=>`<option value="${esc(e.id)}">${esc(e.author)} — ${esc(e.work)}</option>`).join('');
+const entry=pick();
+if(entry) sel.value=String(entry.id);
+sel.onchange=()=>{ location.search='?id='+encodeURIComponent(sel.value); };
+
+if(!entry){ document.querySelector('.wrap').innerHTML='<p style="padding:40px;color:var(--muted)">Δεν βρέθηκαν κείμενα στο ανθολόγιο.</p>'; }
+else render(entry);
+
+function render(t){
+  const sents=Array.isArray(t.sentences)&&t.sentences.length ? t.sentences : [{gr:t.text||'',model:t.translation||''}];
+  document.getElementById('hTitle').textContent=t.work||t.author||'Αδίδακτο';
+  document.getElementById('hSrc').textContent=(t.author?t.author+' · ':'')+((t.source&&t.source.ref)||(t.src&&t.src.ref)||'');
+  document.getElementById('hMeta').innerHTML=
+    `<span class="badge">${sents.length} περίοδοι · ${t.words||(t.text||'').split(/\s+/).filter(Boolean).length} λέξεις</span>`+
+    `<span class="badge diff">Δυσκολία · ${DIFFMAP[t.diff]||'—'}</span>`;
+  if(t.intro){const iel=document.getElementById('intro');iel.style.display='block';iel.textContent=t.intro;}
+
+  const GL={}; (t.glosses||[]).forEach(g=>{ const k=norm((g.w||'').split(/\s+/)[0]); if(k&&!GL[k]) GL[k]=g; });
+
+  document.getElementById('passage').innerHTML=sents.map((s,si)=>{
+    const words=(s.gr||'').split(/(\s+)/).map(tok=>{
+      if(/^\s+$/.test(tok)||!tok) return tok;
+      const k=norm(tok);
+      return `<span class="w has" data-k="${esc(k)}">${esc(tok)}</span>`;
+    }).join('');
+    return `<span class="sent" data-si="${si}"><span class="snum">${si+1}</span>${words} </span>`;
+  }).join('');
+
+  const pop=document.getElementById('pop');
+  document.getElementById('passage').addEventListener('click',e=>{
+    const w=e.target.closest('.w');
+    document.querySelectorAll('.w.sel').forEach(x=>x.classList.remove('sel'));
+    if(!w){pop.classList.remove('open');return;}
+    w.classList.add('sel');
+    const g=GL[w.dataset.k];
+    pop.innerHTML=`<div class="pw">${esc(w.textContent)}</div>`+(g?`<div class="pgloss">${esc(g.gloss)}</div>`:`<div class="pnone">— δεν υπάρχει λεξιλογική σημείωση· δες το πλήρες λεξιλόγιο →</div>`);
+    pop.classList.add('open');
+    const r=w.getBoundingClientRect();
+    let left=Math.max(12,Math.min(r.left+window.scrollX+r.width/2-125,window.innerWidth-262));
+    pop.style.left=left+'px'; pop.style.top=(r.bottom+window.scrollY+8)+'px';
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.w')&&!e.target.closest('.pop'))pop.classList.remove('open');});
+
+  document.getElementById('workspace').innerHTML=sents.map((s,si)=>`
+    <div class="ws-sent" data-si="${si}">
+      <div class="ws-gr"><span class="n">${si+1}</span>${esc(s.gr)}</div>
+      <textarea class="ws-ta" placeholder="Γράψε εδώ τη μετάφρασή σου…"></textarea>
+      <div class="ws-actions"><button class="reveal-btn" data-si="${si}">Δες πρότυπη μετάφραση</button></div>
+      <div class="model" id="model${si}">
+        <div class="ml">Πρότυπη μετάφραση</div><div class="mtxt">${esc(s.model)}</div>
+        <div class="self"><button data-v="ok">Το πέτυχα</button><button data-v="mid">Σχεδόν</button><button data-v="no">Λάθος</button></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('workspace').addEventListener('click',e=>{
+    const rb=e.target.closest('.reveal-btn');
+    if(rb){document.getElementById('model'+rb.dataset.si).classList.add('show');rb.style.display='none';
+      const sent=document.querySelector('.sent[data-si="'+rb.dataset.si+'"]');sent&&sent.classList.add('active');
+      setTimeout(()=>sent&&sent.classList.remove('active'),1400);return;}
+    const sb=e.target.closest('.self button');
+    if(sb){sb.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on'));sb.classList.add('on');}
+  });
+
+  const qs=t.questions||[];
+  document.getElementById('compCount').textContent=qs.length+' ερωτήσεις';
+  document.getElementById('comp').innerHTML=qs.map((q,i)=>{
+    const isTr=q.type==='translate';
+    return `<div class="cq" data-i="${i}">
+      <div class="cqt"><span class="qn">${esc(q.code||(i+1)+'.')}</span>${esc(q.q)}${q.points?`<span class="cqp">${q.points} μ.</span>`:''}</div>
+      <textarea class="ca ${isTr?'gr':''}" placeholder="Η απάντησή σου…"></textarea>
+      <div class="ws-actions"><button class="reveal-btn" data-i="${i}">Δες ενδεικτική απάντηση</button></div>
+      <div class="model" id="qa${i}"><div class="ml">Ενδεικτική απάντηση</div><div class="mtxt">${esc(q.answer)}</div>${q.rubric?`<div class="mtxt" style="margin-top:8px;color:var(--fg-70);font-size:12.5px"><b>Κριτήρια:</b> ${esc(q.rubric)}</div>`:''}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('comp').addEventListener('click',e=>{
+    const rb=e.target.closest('.reveal-btn'); if(!rb)return;
+    document.getElementById('qa'+rb.dataset.i).classList.add('show'); rb.style.display='none';
+  });
+
+  document.getElementById('drawerBody').innerHTML=`<div class="glossary">${(t.glosses||[]).map(g=>`<div class="gloss-row"><span class="gw">${esc(g.w)}</span><span class="gd">${esc(g.gloss)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:13px">—</div>'}</div>`;
+}
+
+const drawer=document.getElementById('drawer');
+document.getElementById('glossBtn').addEventListener('click',()=>drawer.classList.add('open'));
+document.getElementById('dclose').addEventListener('click',()=>drawer.classList.remove('open'));
+
+let secs=0;
+setInterval(()=>{secs++;const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');document.getElementById('clock').textContent=m+':'+s;},1000);
+</script>
+</body>
+</html>

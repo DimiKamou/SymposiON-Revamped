@@ -1,7 +1,7 @@
 // ============================================================
 //  SymposiON — Synthesis manifest fragment: engines-pack
 //  The remaining self-contained Game-Panel engines from the
-//  "Crypto Hack / Gold Quest" pack (HANDOFF-all-games.md rows 5–15
+//  "Gold Quest" pack (HANDOFF-all-games.md rows 5–15
 //  not already shipped by pvp-pack.js):
 //      moirai, ekklisia, oracle, parthenon, olympus,
 //      hippodrome, mnemosyne (memory), erinyes
@@ -13,7 +13,7 @@
 //     shell on demand (`_ensureOverlay` → <div id="xx-overlay"
 //     class="sym-overlay">). => manifest `overlay:null` (synLaunch must
 //     NOT gate on an overlay partial; the game injects its own, exactly
-//     like crypto-hack / krypteia).
+//     like krypteia).
 //   - Each reads its live question global window.<XX>_Q, falling back to
 //     the shared library window.SYM_QUESTIONS (seeded eagerly by
 //     js/syn-questions.js) — so every game launches with real content.

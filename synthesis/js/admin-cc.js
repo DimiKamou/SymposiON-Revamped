@@ -1151,7 +1151,26 @@ let _wild = false, _killed = false;
 
 window.ccToggleWild = function() {
   if (_actingAs !== 'super') { ccToast('Wildcard Access is Super-admin only', 'warn'); return; }
-  _wild = !_wild;
+  const arming = !_wild;
+  // Reuse the shared confirm scrim (ccConfirm → cc-confirm-scrim), same helper
+  // the kill switch family relies on. Wildcard unlocks EVERY module for EVERY
+  // user, so gate the write behind an explicit, site-wide confirmation.
+  ccConfirm({
+    danger: true,
+    title: arming ? 'Όπλιση Wildcard; / Arm Wildcard Access?'
+                  : 'Καθαρισμός Wildcard; / Clear Wildcard Access?',
+    intro: arming
+      ? 'Ξεκλειδώνει ΚΑΘΕ module για ΚΑΘΕ χρήστη σε όλο το site, αμέσως. / Unlocks EVERY module for EVERY user site-wide, immediately.'
+      : 'Επαναφέρει την κανονική πρόσβαση για όλους τους χρήστες σε όλο το site. / Restores normal access for all users site-wide.',
+    note: 'Written to config/app.wildcard_access — επηρεάζει ΟΛΟΥΣ τους χρήστες / affects ALL users site-wide',
+    confirmLabel: arming ? 'Ναι — όπλιση wildcard / Yes — arm wildcard'
+                         : 'Ναι — καθαρισμός / Yes — clear',
+    onConfirm: function() { _doToggleWild(arming); }
+  });
+};
+
+function _doToggleWild(state) {
+  _wild = state;
   const tg = $('cc-wildTg'); if (tg) tg.classList.toggle('on', _wild);
   // Write to Firestore
   firebase.firestore().collection('config').doc('app')
@@ -1159,7 +1178,7 @@ window.ccToggleWild = function() {
     .catch(e => console.warn('[cc] wildcard:', e));
   _paintEmg();
   ccToast(_wild ? '⚠ Wildcard armed — all modules unlocked' : 'Wildcard cleared');
-};
+}
 
 window.ccOpenKill  = function() {
   if (_actingAs !== 'super') { ccToast('Kill Switch is Super-admin only', 'warn'); return; }

@@ -1,0 +1,244 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · ΑΝΟΔΟΣ — "SYNTHESIS" skin
+   Recasts the candle-gold climb in the house "Synthesis" language:
+   the fusion of Akrópolis (monumental Oswald caps + architectural ticks
+   + meander rails), Agora (playful rounded pill chrome, soft cards) and
+   Stoa (editorial Alegreya reading text). Loaded ON TOP of anodos.css +
+   anodos-meta.css — NOT the bold engraved pass. Everything stays token-
+   driven so palettes re-tint cleanly; the immersive obsidian ground is
+   kept (Synthesis reserves dark for immersive game screens). The corner
+   ticks + HUD meander already live in anodos.css — we just let them
+   stand and re-tune type + chrome. Cosmetic only; gameplay JSX untouched.
+   Scoped under [data-skin="synth"] (set on <html>, never overwritten by
+   the app's data-* attribute wiring).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── 1 · TYPE SYSTEM — the heart of the Synthesis shift ─────────────
+   Oswald (condensed, monumental caps) for display · Montserrat for all
+   UI/labels/eyebrows · Alegreya serif for editorial reading text. Greek
+   polytonic falls through to Alegreya, which carries the diacritics. */
+[data-skin="synth"] {
+  --font-display: 'Oswald', 'Alegreya Sans', sans-serif;
+  --font-serif:   'Alegreya', 'Cormorant Garamond', serif;
+  --font-ui:      'Montserrat', 'Alegreya Sans', sans-serif;
+  --font-mono:    'Montserrat', 'Alegreya Sans', sans-serif;
+}
+
+/* Oswald carries no polytonic Greek, but Synthesis display is ALL-CAPS and
+   under lang="el" uppercasing strips the diacritics — so caps render clean.
+   Force the mixed-case Greek display titles to caps (carved-inscription look)
+   so no glyph ever falls back mid-word. Numerals / the Latin wordmark are
+   already safe and left alone. */
+[data-skin="synth"] :is(
+  .modal__title, .end__title, .hub__title, .hub__section-h b,
+  .actbanner__name
+) { text-transform: uppercase; }
+
+/* ─── 2 · DISPLAY TUNING ─────────────────────────────────────────────
+   Oswald is taller + far more condensed than Cinzel, and reads heavier
+   per weight — so it wants tighter tracking and a slightly leaner weight
+   to land monumental rather than airy. */
+[data-skin="synth"] .hud__word          { font-weight: 600; letter-spacing: .6px; }
+[data-skin="synth"] .modal__title       { font-weight: 600; letter-spacing: .4px; }
+[data-skin="synth"] .end__title         { font-weight: 700; letter-spacing: 1px; }
+[data-skin="synth"] .actbanner__name    { font-weight: 600; letter-spacing: 2px; }
+[data-skin="synth"] .actband__num       { font-weight: 700; }
+[data-skin="synth"] .actband__name      { font-weight: 500; letter-spacing: 5px; }
+[data-skin="synth"] .hub__title         { font-weight: 600; letter-spacing: .4px; }
+[data-skin="synth"] .hub__section-h b   { font-weight: 600; letter-spacing: .4px; }
+[data-skin="synth"] .hub__subhead b,
+[data-skin="synth"] .anabasis__title b  { font-weight: 600; letter-spacing: 1.6px; }
+[data-skin="synth"] .foe__glyph         { font-weight: 700; }
+[data-skin="synth"] .patron__glyph      { font-weight: 700; opacity: .9; }
+
+/* big stat/score numerals: Oswald sits a touch tighter on the baseline */
+[data-skin="synth"] :is(
+  .stat__val, .menos__num, .kleos__val, .hub__kleos b, .statcell b,
+  .end__stat b, .card__cnt, .anabasis__num
+) { letter-spacing: .2px; }
+
+/* ─── 3 · LABEL / EYEBROW WEIGHT ─────────────────────────────────────
+   The old mono eyebrows were ~500; Montserrat needs 600 to keep that
+   crisp, wide-tracked "selection-code" voice at small sizes. */
+[data-skin="synth"] :is(
+  .hud__run-eyebrow, .modal__eyebrow, .hub__eyebrow, .end__eyebrow,
+  .stat__label, .kleos__lbl, .hub__kleos span, .statcell span, .end__stat span,
+  .card__en, .patron__en, .qstage__en, .ach__group, .notice__kind,
+  .loadout__lbl, .lifelines__lbl, .syl__lbl, .actbanner__num, .floorband,
+  .node__label, .node__preview-tt span, .hub__tab-tx span, .hub__frieze span,
+  .quests__reroll, .hub__x, .card__lockchip, .ledtag, .runbadge
+) { font-weight: 600; }
+
+/* ─── 4 · EDITORIAL BODY (Stoa) ──────────────────────────────────────
+   Alegreya reads small; give the lore / riddle / lede surfaces a little
+   more size + line so they feel like set museum reading text. */
+[data-skin="synth"] .q              { font-size: 21px; line-height: 1.45; }
+[data-skin="synth"] .modal__sub     { font-size: 18px; }
+[data-skin="synth"] .modal__body    { font-size: 15.5px; line-height: 1.68; }
+[data-skin="synth"] .hub__lead      { font-size: 18.5px; line-height: 1.55; }
+[data-skin="synth"] .feedback,
+[data-skin="synth"] .foe__quote,
+[data-skin="synth"] .hintline       { font-size: 17px; }
+[data-skin="synth"] :is(.card__name, .quest__name, .choice__name, .patron__name) { font-weight: 600; }
+
+/* Alegreya's italic-400 has Greek-Extended gaps that render polytonic
+   decomposed; its italic-500 is complete. Force every italic "flavor"
+   serif surface to 500 so the diacritics stay attached. */
+[data-skin="synth"] :is(
+  .modal__sub, .feedback, .hub__lead, .foe__quote, .hintline, .end__sub,
+  .anabasis__locked, .anamod--none, .q__greek
+) { font-weight: 500; }
+
+/* ─── 5 · PLAYFUL CHROME (Agora) — soften the brutalist squaring ─────
+   The base squares every chrome surface when corners≠"soft". Synthesis
+   chrome is rounded: pill nav + chips, soft cards. Re-assert radii so the
+   look holds regardless of the Corners tweak. */
+
+/* pills — nav buttons, actions, chips, badges */
+[data-skin="synth"] :is(
+  .hud__btn, .hud__btn--temple, .btn, .hub__x, .hub__begin, .quests__reroll,
+  .card__btn, .quest__claim, .daily__btn, .lifeline, .ledrow__replay,
+  .kleos, .rchip, .battlebar__chip, .patron-ctx__chip, .runbadge, .ledtag,
+  .card__pill, .foe__intent, .surge, .node__preview-tag, .lifeline__cnt,
+  .syl__tool
+) { border-radius: 999px !important; }
+
+/* soft surfaces — modals, toasts, notices */
+[data-skin="synth"] :is(.modal, .toast, .notice) { border-radius: 18px !important; }
+[data-skin="synth"] .modal::before { border-radius: 18px 18px 0 0; }
+
+/* soft cards / option tiles / panels */
+[data-skin="synth"] :is(
+  .card, .quest, .qstage__card, .statcell, .statcard, .ach, .daily, .patron,
+  .opt, .choice, .tfbtn, .intro__card, .loadout, .anabasis, .end__unlock,
+  .mechbar, .launchnote, .ledrow, .node__preview, .relic__pop, .hub__kleos,
+  .sylcard, .syl__hint
+) { border-radius: 14px !important; }
+
+/* icon tiles + key chips */
+[data-skin="synth"] :is(
+  .card__ic, .quest__ic, .daily__ic, .loadout__slot, .anastep, .opt__key,
+  .node__preview-ic, .card__swatch, .end__unlock-swatch, .curse,
+  .hub__tab, .sylcard__check
+) { border-radius: 10px !important; }
+
+/* progress bars + fills stay gently rounded */
+[data-skin="synth"] :is(
+  .menos__track, .menos__fill, .xp__track, .xp__fill,
+  .quest__bar, .quest__fill, .ach__bar, .ach__fill
+) { border-radius: 6px !important; }
+
+/* ─── 6 · A LITTLE AGORA ENERGY ──────────────────────────────────────
+   Synthesis chrome lifts toward the cursor and the meander reads a hair
+   bolder as a brand rail. Restrained — gold is still seasoning. */
+[data-skin="synth"] .hud::after { opacity: .6; }
+[data-skin="synth"] .hud__btn,
+[data-skin="synth"] .card__btn,
+[data-skin="synth"] .btn { font-weight: 700; }
+
+/* pill nav tabs in the temple/atlas hub read as soft chips */
+[data-skin="synth"] .hub--temple .hub__tab,
+[data-skin="synth"] .hub--atlas .hub__tab { border-radius: 14px !important; }
+
+/* the brand wordmark "ON" pivot keeps its ember glow but loses the heavy
+   serif drama — Oswald handles the lift on its own */
+[data-skin="synth"] .hud__word span { text-shadow: 0 0 12px color-mix(in srgb, var(--sym-terra) 55%, transparent); }
+
+/* Montserrat is wider than the old mono; let tight HUD labels breathe */
+[data-skin="synth"] .stat__label { letter-spacing: 1.4px; }
+[data-skin="synth"] .kleos__lbl,
+[data-skin="synth"] .hub__kleos span { letter-spacing: 1.4px; }
+
+/* the sanctuary eyebrow runs long in Montserrat — keep it from wrapping
+   onto the monumental title beneath it */
+[data-skin="synth"] .hub__eyebrow { letter-spacing: 2px; white-space: nowrap; }
+[data-skin="synth"] .hud__run-eyebrow { white-space: nowrap; }
+[data-skin="synth"] .hub__kleos span,
+[data-skin="synth"] .kleos__lbl { white-space: nowrap; }
+
+/* ════════════════════════════════════════════════════════════════════
+   ΥΛΗ · SUBJECT / LEVEL-SELECT picker
+   These styles previously lived in the (now-unloaded) bold pass; they are
+   functional layout for the pre-climb syllabus modal, ported here and
+   left token-driven so they inherit the Synthesis type + soft corners.
+   ════════════════════════════════════════════════════════════════════ */
+[data-skin="synth"] .modal--syl { max-width: 680px; }
+[data-skin="synth"] .modal--syl .modal__pad { padding-top: 30px; }
+
+[data-skin="synth"] .syl__hint {
+  display: flex; gap: 11px; align-items: flex-start;
+  background: color-mix(in srgb, var(--sym-gold) 8%, var(--sym-bg-raise));
+  border: 1px solid var(--sym-hairline);
+  padding: 13px 15px; margin: 2px 0 18px;
+  font-size: 13.5px; line-height: 1.55; color: color-mix(in srgb, var(--sym-cream) 86%, transparent);
+}
+[data-skin="synth"] .syl__hint b { color: var(--sym-gold-lt); }
+[data-skin="synth"] .syl__hint-ic { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+
+[data-skin="synth"] .syl__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 10px; }
+[data-skin="synth"] .syl__toolbar--locked { margin-top: 20px; }
+[data-skin="synth"] .syl__lbl { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--sym-stone); font-weight: 600; }
+[data-skin="synth"] .syl__tools { display: flex; gap: 8px; }
+[data-skin="synth"] .syl__tool {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+  background: var(--sym-bg-raise); color: var(--sym-gold); cursor: pointer;
+  border: 1px solid var(--sym-hairline); padding: 6px 12px; transition: all .16s;
+}
+[data-skin="synth"] .syl__tool:hover { border-color: var(--sym-gold); background: color-mix(in srgb, var(--sym-gold) 12%, transparent); }
+
+[data-skin="synth"] .sylgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+[data-skin="synth"] .sylgrid--locked { opacity: .85; }
+
+[data-skin="synth"] .sylcard {
+  display: flex; align-items: center; gap: 11px; text-align: left; width: 100%;
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline);
+  padding: 12px 13px; cursor: pointer; transition: all .16s; color: var(--sym-cream);
+}
+[data-skin="synth"] .sylcard:hover:not(.sylcard--locked) { border-color: color-mix(in srgb, var(--sym-gold) 55%, transparent); transform: translateY(-2px); }
+[data-skin="synth"] .sylcard--on {
+  border-color: var(--sym-gold);
+  background: color-mix(in srgb, var(--sym-gold) 12%, var(--sym-bg-raise));
+  box-shadow: 0 0 0 1px var(--sym-gold), 0 0 18px color-mix(in srgb, var(--sym-gold) 26%, transparent);
+}
+[data-skin="synth"] .sylcard--locked { cursor: not-allowed; opacity: .5; border-style: dashed; }
+
+[data-skin="synth"] .sylcard__check {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 14px; font-weight: 700;
+  border: 1px solid var(--sym-hairline); background: var(--sym-bg-panel); color: var(--sym-gold-lt);
+}
+[data-skin="synth"] .sylcard--on .sylcard__check { background: var(--sym-gold-grad); color: #1A1304; border-color: transparent; }
+[data-skin="synth"] .sylcard__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+[data-skin="synth"] .sylcard__name { font-family: var(--font-serif); font-size: 16.5px; font-weight: 600; line-height: 1.15; }
+[data-skin="synth"] .sylcard__meta { display: flex; align-items: center; gap: 9px; }
+[data-skin="synth"] .sylcard__ch { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .6px; color: var(--sym-stone); text-transform: uppercase; font-weight: 600; }
+[data-skin="synth"] .sylcard__count { font-family: var(--font-display); font-size: 15px; font-weight: 600; color: var(--sym-gold-lt); flex-shrink: 0; }
+[data-skin="synth"] .sylcard__count small { font-family: var(--font-mono); font-size: 8px; color: var(--sym-stone); letter-spacing: 1px; }
+
+[data-skin="synth"] .sylpips { display: inline-flex; gap: 3px; align-items: center; }
+[data-skin="synth"] .sylpips i { width: 6px; height: 6px; border-radius: 50%; background: var(--sym-hairline); }
+[data-skin="synth"] .sylpips--d1 i.on { background: var(--sym-sage); }
+[data-skin="synth"] .sylpips--d2 i.on { background: var(--sym-gold); }
+[data-skin="synth"] .sylpips--d3 i.on { background: var(--sym-terra); }
+
+[data-skin="synth"] .syl__footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sym-hairline);
+}
+[data-skin="synth"] .syl__count { font-family: var(--font-mono); font-size: 12px; letter-spacing: .5px; color: var(--sym-stone); }
+[data-skin="synth"] .syl__count b { font-family: var(--font-display); font-size: 19px; color: var(--sym-cream); }
+[data-skin="synth"] .syl__count--ok b { color: var(--sym-gold-lt); }
+[data-skin="synth"] .syl__poolnote { color: var(--sym-stone); margin-left: 4px; }
+
+/* the picker tools + pips keep their own radii (pills handled above) */
+[data-skin="synth"] :is(.syl__tool) { border-radius: 999px !important; }
+[data-skin="synth"] :is(.sylgrid .sylcard, .syl__hint) { border-radius: 14px !important; }
+
+@media (max-width: 600px) {
+  [data-skin="synth"] .sylgrid { grid-template-columns: 1fr; }
+  [data-skin="synth"] .modal--syl { max-width: 94vw; }
+  [data-skin="synth"] .syl__footer { flex-direction: column; align-items: stretch; }
+  [data-skin="synth"] .syl__footer .btnrow { justify-content: stretch; }
+  [data-skin="synth"] .syl__footer .btnrow .btn { flex: 1; justify-content: center; }
+  [data-skin="synth"] .patrongrid { grid-template-columns: 1fr; }
+}

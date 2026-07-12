@@ -10,6 +10,21 @@ const Agora = (() => {
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the card
+  // never renders the literal "[object Object]".
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const _gpPool = () => {
     const g = window.AG_Q;
     return (Array.isArray(g) && g.length) ? g : (window.SYM_QUESTIONS || []);
@@ -262,7 +277,7 @@ const Agora = (() => {
     const keys=['Α','Β','Γ','Δ'];
     document.getElementById('ag-phase').innerHTML =
       `<div class="ag-won-tag">${T('ΚΕΡΔΙΣΕΣ ΤΟ ΛΟΤ — ΑΠΑΝΤΗΣΕ','YOU WON THE LOT — ANSWER')}</div>
-       <div class="ag-q-card"><div class="ag-q-text">${st.cur.q[L()]}</div></div>
+       <div class="ag-q-card"><div class="ag-q-text">${QT(st.cur.q)}</div></div>
        <div class="ag-answers">${st.cur.a.map((opt,i)=>`<button class="ag-ans" data-i="${i}"><span class="ag-ans-key">${keys[i]}</span><span>${opt}</span></button>`).join('')}</div>`;
     const btns=document.querySelectorAll('#ag-phase .ag-ans');
     btns.forEach((b,i)=>{ b.onclick=()=>answerLot(i, btns); });
@@ -280,6 +295,7 @@ const Agora = (() => {
       if (window.SymFX) SymFX.burst(window.innerWidth/2, window.innerHeight*0.4, {emoji:['🪙','✦'], count:16, power:11, up:0.5, life:1200});
     } else {
       btns[chosen].classList.add('wrong'); _fx('wrong',{el:btns[chosen]});
+      if (window.symLogMistake) { try { window.symLogMistake({ q: QT(st.cur.q), wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Αγορά', gameId: 'agora' }); } catch (_) {} }
       st.drach = Math.max(0, st.drach - st.bid); pulsePurse(false);
       msg=T(`ΛΑΘΟΣ — έχασες την προσφορά σου (${st.bid} δρ.)`,`WRONG — you forfeit your bid (${st.bid} dr.)`);
       fb.className='ag-feedback ag-fb-bad';

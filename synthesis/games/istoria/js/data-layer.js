@@ -113,34 +113,92 @@
   function getDir(fallback){ try{ return localStorage.getItem(DIR_KEY) || fallback || 'dir-atlas'; }catch(_){ return fallback||'dir-atlas'; } }
   function setDir(d){ try{ localStorage.setItem(DIR_KEY, d); }catch(_){} }
 
-  /* ── Firestore adapter (the swap point) ─────────────────────────────────
-     Off by default. To go multi-device: set ISTORIA.useRemote = true after a
-     firebase app is initialised. Stores the editable slice per course at
-     game_data/istoria:<course>. */
+  /* ── Firestore adapter (the swap point — now live) ──────────────────────
+     Persists the editable slice { data, methods } per course at
+     historyContent/<course> via the validated callable
+     adminSaveHistoryContent (Admin-SDK write; client rules deny direct
+     writes). Reads are world-readable so students on any device get the
+     admin's latest pack. The localStorage overlay stays as the immediate
+     local cache AND the offline fallback. useRemote auto-enables whenever
+     the Firebase SDK is present; when it isn't (e.g. the game's index.html
+     loads no Firebase), everything degrades to localStorage + seed. */
+  /* Resolve the Firebase SDK. This file runs both standalone and inside the
+     synthesis app as a SAME-ORIGIN iframe — the game's own index.html ships no
+     Firebase, but the parent shell does, so fall back to window.parent.firebase.
+     That lets the student-facing game page hydrate cloud content (and carries
+     the signed-in owner's auth for the admin save) without bundling the SDK. */
+  function _fb(){
+    try{ if (typeof firebase !== 'undefined' && firebase) return firebase; }catch(_){}
+    try{ if (window.parent && window.parent !== window && window.parent.firebase) return window.parent.firebase; }catch(_){ /* cross-origin */ }
+    return null;
+  }
+
   const remote = {
+    // load → return the stored editable slice ({data,methods}) or null.
     async load(course){
-      if (!window.firebase || !firebase.firestore) return null;
+      const fb = _fb();
+      if (!fb || !fb.firestore) return null;
       try{
-        const snap = await firebase.firestore().collection('game_data').doc('istoria:'+course).get();
-        return snap.exists ? (snap.data().content || null) : null;
+        const snap = await fb.firestore().doc('historyContent/'+course).get();
+        if (!snap.exists) return null;
+        const d = snap.data() || {};
+        return { data: d.data || {}, methods: d.methods || {} };
       }catch(_){ return null; }
     },
-    async save(course, editable){
-      if (!window.firebase || !firebase.firestore) return false;
-      try{
-        await firebase.firestore().collection('game_data').doc('istoria:'+course)
-          .set({ content:editable, updatedAt: Date.now() }, { merge:true });
-        return true;
-      }catch(_){ return false; }
+    // save → write via the validated callable. Returns the callable's promise.
+    save(course, editable){
+      const fb = _fb();
+      if (!fb || !fb.functions){
+        return Promise.reject(new Error('firebase-unavailable'));
+      }
+      return fb.functions()
+        .httpsCallable('adminSaveHistoryContent')({ course, content: editable })
+        .then(res => (res && res.data) || { ok:true });
     },
   };
+
+  /* ── async hydrate ──────────────────────────────────────────────────────
+     Pull the latest pack from Firestore into the localStorage overlay so the
+     SYNC getPack() callers immediately see the admin's saved content, then
+     fire the re-render hook (ISTORIA.onHydrate) if a page registered one.
+     Safe to call on any page: no-op when remote is off / unavailable, and it
+     never throws. Existing sync callers are untouched — they keep reading the
+     overlay, which hydrate simply refreshes from the cloud. */
+  function hydrate(course){
+    course = course || resolveCourse();
+    if (!ISTORIA.useRemote) return Promise.resolve(false);
+    return remote.load(course).then(slice=>{
+      if (slice && (slice.data || slice.methods)){
+        const base = _editable(course);
+        const merged = {
+          data:    slice.data    || base.data    || {},
+          methods: slice.methods || base.methods || {},
+        };
+        try{ localStorage.setItem(KEY(course), JSON.stringify(merged)); }catch(_){}
+        if (typeof ISTORIA.onHydrate === 'function'){
+          try{ ISTORIA.onHydrate(course); }catch(_){}
+        }
+        return true;
+      }
+      return false;
+    }).catch(()=>false);
+  }
 
   const ISTORIA = {
     COURSES, resolveCourse, courseInfo, listCourses,
     getPack, getUnits, getMeta, getMethods, getModeData, hasAnyData,
     getItems, setItems, exportJSON, importJSON, reset,
     getDir, setDir,
-    useRemote:false, remote,
+    // Multi-device: on whenever Firebase is reachable (own page or parent shell).
+    useRemote: (function(){ var fb = _fb(); return !!(fb && fb.firestore); })(),
+    remote, hydrate, onHydrate:null,
   };
   window.ISTORIA = ISTORIA;
+
+  /* Auto-hydrate on load for any page that ships Firebase (e.g. an embedded
+     shell). Pages without the SDK skip this and run from localStorage + seed.
+     Admin/game boots can also call ISTORIA.hydrate(course) explicitly. */
+  if (ISTORIA.useRemote){
+    try{ hydrate(resolveCourse()); }catch(_){}
+  }
 })();

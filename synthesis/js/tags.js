@@ -34,13 +34,38 @@
       const key = slug(e.en || e.gr);
       if (key && !map.has(key)) map.set(key, { key, gr: e.gr, en: e.en, illu: e.illu, meta: (e.meta && window.L(e.meta)) || '', dtags: new Set(), sample: null });
     });
-    _cat = [...map.values()].map(g => ({ key: g.key, gr: g.gr, en: g.en, illu: g.illu, meta: g.meta, dtags: [...g.dtags], sample: g.sample }));
+    const _nm = gameNames();
+    _cat = [...map.values()].map(g => {
+      const ov = _nm[g.key];   // admin display-name override (keyed by original english slug)
+      return { key: g.key, gr: (ov && ov.gr) || g.gr, en: (ov && ov.en) || g.en, illu: g.illu, meta: g.meta, dtags: [...g.dtags], sample: g.sample };
+    });
     _cat.sort((a, b) => String(window.L(a)).localeCompare(String(window.L(b)), 'el'));
     return _cat;
   }
 
   function overrides() { return (window.SymStore && SymStore.get('game_tags', {})) || {}; }
   function refresh() { _cat = null; return catalogue(); }
+
+  /* ── Display-name overrides (admin rename). Keyed by the ORIGINAL english
+     slug so launch wiring (synResolveLaunch / SYN_LAUNCH_MAP) and tag
+     associations never change — only the visible label moves. ── */
+  function gameNames() { return (window.SymStore && SymStore.get('game_names', {})) || {}; }
+  function setGameName(key, nameObj) {
+    const o = gameNames();
+    if (!nameObj || (!String(nameObj.gr || '').trim() && !String(nameObj.en || '').trim())) delete o[key];
+    else o[key] = { gr: String(nameObj.gr || '').trim(), en: String(nameObj.en || '').trim() };
+    if (window.SymStore) SymStore.set('game_names', o);
+    _cat = null;                 // bust the catalogue so the new name re-applies everywhere
+  }
+  // Pass a tile/engine object → returns its {gr,en} with any override merged in
+  // (safe for window.L()); pass a key string → returns the override obj or null.
+  function displayName(tileOrKey) {
+    const o = gameNames();
+    if (typeof tileOrKey === 'string') return o[tileOrKey] || null;
+    if (!tileOrKey) return tileOrKey;
+    const ov = o[slug(tileOrKey.en || tileOrKey.gr)];
+    return ov ? { gr: ov.gr || tileOrKey.gr, en: ov.en || tileOrKey.en } : tileOrKey;
+  }
   function gameTags(key) {
     const o = overrides();
     if (o[key]) return o[key].slice();
@@ -191,7 +216,24 @@
             onclick: () => { toggleGameTag(g.key, t.id); paintGames(); paintTags(); }
           }, window.L(t))));
         list.appendChild(window.el('div', { class: 'sc-tagrow' }, [
-          window.el('div', { class: 'sc-tagrow__g' }, [glyph(g.illu, 'sc-tagrow__ic'), window.el('span', { class: 'sc-tagrow__nm' }, window.L(g))]),
+          window.el('div', { class: 'sc-tagrow__g' }, [
+            glyph(g.illu, 'sc-tagrow__ic'),
+            window.el('span', { class: 'sc-tagrow__nm' }, window.L(g)),
+            window.el('button', {
+              class: 'sc-tagrow__rename', title: window.L({ gr: 'Μετονομασία', en: 'Rename' }),
+              style: 'margin-left:8px;border:none;background:none;cursor:pointer;opacity:.45;font-size:13px;line-height:1',
+              onmouseenter: function (e) { e.currentTarget.style.opacity = '1'; },
+              onmouseleave: function (e) { e.currentTarget.style.opacity = '.45'; },
+              onclick: function () {
+                const ngr = prompt(window.L({ gr: 'Νέο όνομα (Ελληνικά) — κενό = επαναφορά στο αρχικό:', en: 'New name (Greek) — empty = reset to original:' }), g.gr);
+                if (ngr === null) return;
+                const nen = prompt(window.L({ gr: 'Νέο όνομα (Αγγλικά):', en: 'New name (English):' }), g.en);
+                if (nen === null) return;
+                setGameName(g.key, { gr: ngr, en: nen });
+                refresh(); paintGames(); if (typeof paintTags === 'function') paintTags();
+              }, html: '&#9998;'
+            }),
+          ]),
           chips,
         ]));
       });
@@ -201,7 +243,7 @@
     paintGames();
   }
 
-  window.SymTags = { slug, tagsAll, tagById, catalogue, refresh, gameTags, setGameTags, toggleGameTag, gamesForTag, tagCount, addCustomTag, removeCustomTag, accentFor, renderAdmin, tagScreen };
+  window.SymTags = { slug, tagsAll, tagById, catalogue, refresh, gameTags, setGameTags, toggleGameTag, gamesForTag, tagCount, addCustomTag, removeCustomTag, accentFor, renderAdmin, tagScreen, gameNames, setGameName, displayName };
 
   // register the tag page on the screen router (screens.js / screens-2.js ran first)
   if (window.SYM_SCREENS) window.SYM_SCREENS.tag = tagScreen;

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Πληκτρολόγιο &amp; Προφορά</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+  .theme-alabaster{
+    --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810;
+    --sym-stone:#8C7F6B; --sym-terra:#C5572F; --sym-terra-dk:#9C3F1F; --sym-gold:#A2862F; --sym-sage:#5B7544;
+    --sym-bg:var(--sym-bg-dark); --sym-bg-card:var(--sym-bg-panel); --sym-fg:var(--sym-ink); --sym-fg-muted:var(--sym-stone);
+    color-scheme:light;
+  }
+  [class*="theme-"]{
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --bg:var(--sym-bg); --card:var(--sym-bg-card); --fg:var(--sym-fg); --muted:var(--sym-fg-muted);
+    --terra:var(--sym-terra); --terra-dk:var(--sym-terra-dk); --gold:var(--sym-gold); --sage:var(--sym-sage); --stone:var(--sym-stone);
+    --line:color-mix(in srgb,var(--sym-fg) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--sym-fg) 7%,transparent);
+    --line-bold:color-mix(in srgb,var(--sym-fg) 24%,transparent);
+    --sink:color-mix(in srgb,var(--sym-fg) 5%,var(--sym-bg));
+    --gold-soft:color-mix(in srgb,var(--sym-gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--sym-terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sym-sage) 15%,transparent);
+    --fg-70:color-mix(in srgb,var(--sym-fg) 70%,transparent);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(120% 75% at 50% -15%,var(--gold-soft),transparent 55%);}
+
+  .bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;padding:15px 34px;
+    background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);}
+  .sig{width:28px;height:28px;color:var(--terra);}
+  .brand{font-family:var(--serif);font-size:18px;font-weight:600;}.brand b{color:var(--terra);}
+  .bar-sub{font-family:var(--disp);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding-left:16px;border-left:1px solid var(--line);}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 34px 70px;}
+  .head{text-align:center;margin-bottom:24px;}
+  .head .eyebrow{font-family:var(--disp);font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--terra);}
+  .head h1{font-family:var(--serif);font-size:30px;font-weight:700;margin:7px 0 5px;}
+  .head p{font-size:13.5px;color:var(--muted);max-width:560px;margin:0 auto;line-height:1.5;}
+
+  .cols{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;}
+  .card-t{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;
+    display:flex;align-items:center;justify-content:space-between;}
+
+  /* composer */
+  .composer{background:var(--sink);border:1px solid var(--line);border-radius:13px;padding:16px 18px;min-height:64px;
+    font-family:var(--greek);font-size:34px;line-height:1.3;display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
+  .composer .caret{display:inline-block;width:2px;height:34px;background:var(--terra);animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .composer .ph{color:var(--muted);font-size:17px;font-family:var(--sans);}
+  .last-vowel{background:var(--gold-soft);border-radius:5px;padding:0 2px;}
+
+  /* diacritics bar */
+  .dia{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:16px 0;}
+  .dkey{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 4px;cursor:pointer;text-align:center;transition:.14s;}
+  .dkey:hover{border-color:var(--terra);background:var(--terra-soft);}
+  .dkey:active{transform:scale(.95);}
+  .dkey .dg{font-family:var(--greek);font-size:26px;line-height:1;color:var(--terra-dk);}
+  .dkey .dl{font-family:var(--disp);font-size:8.5px;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);margin-top:5px;}
+
+  /* letter keyboard */
+  .kbd{display:grid;grid-template-columns:repeat(8,1fr);gap:7px;}
+  .key{background:var(--sink);border:1px solid var(--line-soft);border-radius:10px;padding:12px 4px;cursor:pointer;text-align:center;
+    font-family:var(--greek);font-size:22px;transition:.12s;user-select:none;}
+  .key:hover{background:var(--card);border-color:var(--line-bold);}
+  .key:active{transform:scale(.94);background:var(--terra-soft);}
+  .kbd-actions{display:flex;gap:8px;margin-top:12px;}
+  .kbd-actions button{font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    border-radius:10px;padding:11px 14px;cursor:pointer;transition:.14s;border:1px solid var(--line);background:var(--sink);color:var(--fg-70);}
+  .kbd-actions button:hover{border-color:var(--line-bold);}
+  .kbd-actions .space{flex:1;}
+  .kbd-actions .commit{background:var(--terra);border-color:transparent;color:#fff;}
+  .kbd-actions .commit:hover{background:var(--terra-dk);}
+
+  .out-label{font-family:var(--disp);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;}
+  .out{width:100%;min-height:70px;resize:vertical;font-family:var(--greek);font-size:19px;line-height:1.6;color:var(--fg);
+    background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:12px 14px;outline:none;}
+  .out:focus{border-color:var(--terra);}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5;font-style:italic;}
+
+  /* audio panel */
+  .voice-note{font-size:11.5px;color:var(--muted);background:var(--sink);border:1px solid var(--line-soft);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.5;}
+  .speed{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .speed .sl{font-family:var(--disp);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+  .seg button{font-family:var(--disp);font-size:11px;letter-spacing:.4px;text-transform:uppercase;font-weight:600;background:var(--card);
+    border:none;border-right:1px solid var(--line-soft);padding:7px 13px;cursor:pointer;color:var(--muted);}
+  .seg button:last-child{border-right:none;}
+  .seg button.on{background:var(--terra-soft);color:var(--terra);}
+  .wlist{display:flex;flex-direction:column;gap:9px;}
+  .wrow{display:flex;align-items:center;gap:13px;background:var(--sink);border:1px solid var(--line-soft);border-radius:12px;padding:11px 14px;}
+  .play{width:38px;height:38px;border-radius:11px;flex-shrink:0;border:none;background:var(--terra-soft);color:var(--terra);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.14s;}
+  .play:hover{background:var(--terra);color:#fff;}
+  .play svg{width:17px;height:17px;}
+  .play.playing{background:var(--terra);color:#fff;}
+  .wrow .wg{font-family:var(--greek);font-size:21px;font-weight:700;}
+  .wrow .wt{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .wrow .wmeta{margin-left:auto;text-align:right;}
+  .wrow .wmeta .wen{font-size:12px;}
+  .wrow .wmeta .wp{font-family:var(--disp);font-size:10px;color:var(--muted);}
+
+  /* listen & type drill */
+  .drill{margin-top:18px;border:1px dashed var(--line-bold);border-radius:14px;padding:16px 18px;}
+  .drill-h{display:flex;align-items:center;gap:10px;margin-bottom:13px;}
+  .drill-h .di{width:34px;height:34px;border-radius:10px;background:var(--gold-soft);color:var(--gold);display:flex;align-items:center;justify-content:center;}
+  .drill-h .di svg{width:18px;height:18px;}
+  .drill-h b{font-family:var(--serif);font-size:15px;font-weight:700;}
+  .drill-h span{display:block;font-size:11px;color:var(--muted);}
+  .drill-row{display:flex;gap:9px;}
+  .drill-play{flex-shrink:0;width:46px;border-radius:11px;border:none;background:var(--terra);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .drill-play svg{width:19px;height:19px;}
+  .drill-in{flex:1;font-family:var(--greek);font-size:18px;color:var(--fg);background:var(--sink);border:1px solid var(--line);border-radius:11px;padding:10px 13px;outline:none;}
+  .drill-in:focus{border-color:var(--terra);}
+  .drill-check{flex-shrink:0;font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    background:var(--sage-soft);color:var(--sage);border:1px solid color-mix(in srgb,var(--sage) 30%,transparent);border-radius:11px;padding:0 16px;cursor:pointer;}
+  .drill-fb{margin-top:11px;font-size:12.5px;font-weight:600;display:none;}
+  .drill-fb.ok{display:block;color:var(--sage);}
+  .drill-fb.no{display:block;color:var(--terra);}
+  .drill-fb .gr{font-family:var(--greek);}
+
+  .foot{text-align:center;margin-top:30px;font-family:var(--disp);font-size:10.5px;letter-spacing:.8px;color:var(--muted);line-height:1.9;}
+  @media(max-width:880px){.cols{grid-template-columns:1fr;}.kbd{grid-template-columns:repeat(6,1fr);}.bar-sub{display:none;}}
+</style>
+</head>
+<body class="theme-alabaster">
+<script>
+  if(document.fonts&&document.fonts.load){const poly='ἀἁὰάᾶὲέὴήῆὶίῖὸόὺύῦὼώῶᾳῃῷ';
+    ['400','700'].forEach(w=>{document.fonts.load(w+" 1em 'Cardo'",poly).catch(()=>{});});}
+</script>
+
+<header class="bar">
+  <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
+    <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
+  <span class="brand">Symposi<b>ON</b></span>
+  <span class="bar-sub">Πληκτρολόγιο &amp; Προφορά</span>
+</header>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Εργαλείο γραφής &amp; ακρόασης</div>
+    <h1>Πολυτονικό &amp; Προφορά</h1>
+    <p>Γράψε αρχαία ελληνικά με πνεύματα, τόνους και υπογεγραμμένη — και άκουσε την προφορά. Συνδέεται με τα πεδία απάντησης στο αδίδακτο και στα διαγωνίσματα.</p>
+  </div>
+
+  <div class="cols">
+    <!-- KEYBOARD -->
+    <div class="card">
+      <div class="card-t"><span>Πολυτονικό πληκτρολόγιο</span><span>NFC · precomposed</span></div>
+      <div class="composer" id="composer"><span class="ph">Πάτησε ένα φωνήεν, μετά διακριτικά…</span></div>
+      <div class="dia" id="dia"></div>
+      <div class="kbd" id="kbd"></div>
+      <div class="kbd-actions">
+        <button id="back">⌫ Σβήσε</button>
+        <button class="space" id="space">διάστημα</button>
+        <button class="commit" id="commit">Πρόσθεσε →</button>
+      </div>
+      <div class="out-label">Η μετάφρασή σου</div>
+      <textarea class="out" id="out" placeholder="Οι λέξεις που φτιάχνεις μπαίνουν εδώ…"></textarea>
+      <div class="hint">Πώς δουλεύει: γράψε ένα φωνήεν, μετά πάτησε ψιλή/δασεία + τόνο + υπογεγραμμένη. Ο χαρακτήρας συντίθεται αυτόματα στον σωστό πολυτονικό τύπο (π.χ. <span style="font-family:var(--greek)">α → ᾄ</span>).</div>
+    </div>
+
+    <!-- AUDIO -->
+    <div class="card">
+      <div class="card-t"><span>Προφορά</span><span id="voiceState">Web Speech</span></div>
+      <div class="voice-note">Χρησιμοποιείται η νεοελληνική φωνή της συσκευής ως προσέγγιση (η ερασμιακή/ιστορική προφορά έρχεται με αφηγημένο ηχητικό υλικό).</div>
+      <div class="speed"><span class="sl">Ταχύτητα</span>
+        <div class="seg" id="speed"><button data-r="0.6">Αργά</button><button data-r="0.85" class="on">Κανονικά</button><button data-r="1">Γρήγορα</button></div>
+      </div>
+      <div class="wlist" id="wlist"></div>
+
+      <div class="drill">
+        <div class="drill-h"><div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10v4h4l5 4V6L7 10H3z"/><path d="M16 9a3 3 0 0 1 0 6"/></svg></div>
+          <div><b>Άκου &amp; γράψε</b><span>Άκουσε τη λέξη και γράψε την πολυτονικά</span></div></div>
+        <div class="drill-row">
+          <button class="drill-play" id="drillPlay"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+          <input class="drill-in" id="drillIn" placeholder="γράψε ό,τι ακούς…"/>
+          <button class="drill-check" id="drillCheck">Έλεγχος</button>
+        </div>
+        <div class="drill-fb" id="drillFb"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">SYMPOSION · ΠΟΛΥΤΟΝΙΚΗ ΓΡΑΦΗ &amp; ΑΚΡΟΑΣΗ<br/>Το πληκτρολόγιο εμφανίζεται σε κάθε πεδίο που ζητά αρχαία ελληνικά.</div>
+</div>
+
+<script>
+/* ── polytonic composition via combining marks + NFC ── */
+const COMB={smooth:'\u0313',rough:'\u0314',acute:'\u0301',grave:'\u0300',circ:'\u0342',iota:'\u0345',dia:'\u0308'};
+const DIA=[
+  {k:'smooth',g:'ἀ',l:'Ψιλή'},{k:'rough',g:'ἁ',l:'Δασεία'},{k:'acute',g:'ά',l:'Οξεία'},
+  {k:'grave',g:'ὰ',l:'Βαρεία'},{k:'circ',g:'ᾶ',l:'Περισπ.'},{k:'iota',g:'ᾳ',l:'Υπογεγρ.'},{k:'dia',g:'ϊ',l:'Διαλυτ.'}
+];
+const VOWELS='αεηιουω';
+const LETTERS='αβγδεζηθικλμνξοπρστυφχψω'.split('');
+let word=''; // current composed word (NFC)
+
+function render(){
+  const c=document.getElementById('composer');
+  if(!word){c.innerHTML='<span class="ph">Πάτησε ένα φωνήεν, μετά διακριτικά…</span>';return;}
+  // highlight last char
+  const arr=[...word];
+  const last=arr.pop();
+  c.innerHTML=arr.map(ch=>ch).join('')+`<span class="last-vowel">${last}</span><span class="caret"></span>`;
+}
+function decompose(ch){return ch.normalize('NFD');}
+function applyDia(markKey){
+  if(!word)return;
+  const arr=[...word];
+  let last=arr.pop();
+  // work on the base letter of last cluster
+  let d=last.normalize('NFD');
+  const base=d[0];
+  if(!VOWELS.includes(base.toLowerCase())&&markKey!=='dia'){return;} // accents only on vowels
+  const mark=COMB[markKey];
+  let marks=d.slice(1).split('');
+  // toggle
+  if(marks.includes(mark)) marks=marks.filter(m=>m!==mark);
+  else{
+    // breathings mutually exclusive; accents mutually exclusive
+    if(markKey==='smooth'||markKey==='rough') marks=marks.filter(m=>m!==COMB.smooth&&m!==COMB.rough);
+    if(['acute','grave','circ'].includes(markKey)) marks=marks.filter(m=>m!==COMB.acute&&m!==COMB.grave&&m!==COMB.circ);
+    marks.push(mark);
+  }
+  const composed=(base+marks.join('')).normalize('NFC');
+  word=arr.join('')+composed;
+  render();
+}
+function typeLetter(ch){word=(word+ch).normalize('NFC');render();}
+function backspace(){const arr=[...word];arr.pop();word=arr.join('');render();}
+
+document.getElementById('dia').innerHTML=DIA.map(d=>`<button class="dkey" data-k="${d.k}"><div class="dg">${d.g}</div><div class="dl">${d.l}</div></button>`).join('');
+document.getElementById('dia').addEventListener('click',e=>{const b=e.target.closest('.dkey');if(b)applyDia(b.dataset.k);});
+document.getElementById('kbd').innerHTML=LETTERS.map(l=>`<button class="key" data-l="${l}">${l}</button>`).join('')+`<button class="key" data-l="ς">ς</button>`;
+document.getElementById('kbd').addEventListener('click',e=>{const b=e.target.closest('.key');if(b)typeLetter(b.dataset.l);});
+document.getElementById('back').addEventListener('click',backspace);
+document.getElementById('space').addEventListener('click',()=>{const o=document.getElementById('out');o.value+=(word?word:'')+' ';word='';render();});
+document.getElementById('commit').addEventListener('click',()=>{const o=document.getElementById('out');if(word){o.value+=(o.value&&!o.value.endsWith(' ')?' ':'')+word+' ';word='';render();}});
+render();
+
+/* ── audio ── */
+let rate=0.85, voice=null;
+function pickVoice(){const vs=speechSynthesis.getVoices();voice=vs.find(v=>/el[-_]/i.test(v.lang))||vs.find(v=>/greek/i.test(v.name))||null;
+  document.getElementById('voiceState').textContent=voice?('Φωνή: '+(voice.name.length>16?'el-GR':voice.name)):'Web Speech (fallback)';}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function speak(txt,btn){
+  if(!('speechSynthesis' in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);u.lang='el-GR';u.rate=rate;if(voice)u.voice=voice;
+  if(btn){document.querySelectorAll('.play.playing').forEach(x=>x.classList.remove('playing'));btn.classList.add('playing');
+    u.onend=()=>btn.classList.remove('playing');}
+  speechSynthesis.speak(u);
+}
+document.getElementById('speed').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#speed button').forEach(x=>x.classList.remove('on'));b.classList.add('on');rate=+b.dataset.r;});
+
+const WORDS=[
+  {g:'ἀρετή',t:'aretḗ',en:'αρετή',pos:'ουσ.'},
+  {g:'ψυχή',t:'psychḗ',en:'ψυχή',pos:'ουσ.'},
+  {g:'λόγος',t:'lógos',en:'λόγος',pos:'ουσ.'},
+  {g:'ἄνθρωπος',t:'ánthrōpos',en:'άνθρωπος',pos:'ουσ.'},
+  {g:'σοφία',t:'sophía',en:'σοφία',pos:'ουσ.'},
+  {g:'εἰμί',t:'eimí',en:'είμαι',pos:'ρ.'},
+  {g:'γιγνώσκω',t:'gignṓskō',en:'γνωρίζω',pos:'ρ.'},
+];
+document.getElementById('wlist').innerHTML=WORDS.map(w=>`
+  <div class="wrow">
+    <button class="play" data-g="${w.g}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+    <div><div class="wg">${w.g}</div><div class="wt">${w.t}</div></div>
+    <div class="wmeta"><div class="wen">${w.en}</div><div class="wp">${w.pos}</div></div>
+  </div>`).join('');
+document.getElementById('wlist').addEventListener('click',e=>{const b=e.target.closest('.play');if(b)speak(b.dataset.g,b);});
+
+/* ── listen & type drill ── */
+const DRILL='ἄνθρωπος';
+document.getElementById('drillPlay').addEventListener('click',()=>speak(DRILL,null));
+document.getElementById('drillCheck').addEventListener('click',()=>{
+  const v=document.getElementById('drillIn').value.trim().normalize('NFC');
+  const fb=document.getElementById('drillFb');
+  const strip=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(v===DRILL){fb.className='drill-fb ok';fb.innerHTML='✓ Σωστά — και με τα διακριτικά!';}
+  else if(strip(v)===strip(DRILL)){fb.className='drill-fb no';fb.innerHTML='Σχεδόν! Σωστά γράμματα, λείπουν τόνοι/πνεύματα: <span class="gr">'+DRILL+'</span>';}
+  else{fb.className='drill-fb no';fb.innerHTML='Δοκίμασε ξανά. Ήταν: <span class="gr">'+DRILL+'</span>';}
+});
+</script>
+</body>
+</html>

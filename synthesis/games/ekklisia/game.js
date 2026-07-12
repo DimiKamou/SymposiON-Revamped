@@ -8,6 +8,23 @@
 const Ekklisia = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -130,7 +147,7 @@ const Ekklisia = (() => {
       const k=el.getAttribute('data-i18n'); if(I18N[k]) el.innerHTML=I18N[k][L()];
     });
     if (st && st.cur && document.getElementById('ek-screen-game').classList.contains('active')) {
-      document.getElementById('ek-qtext').textContent = st.cur.q[L()];
+      document.getElementById('ek-qtext').textContent = QT(st.cur.q);
       renderPhase(); renderBuzzers();
       if (st.phase==='answer') renderAnswers();
     }
@@ -172,7 +189,7 @@ const Ekklisia = (() => {
     if (st.round>=ROUNDS) return end();
     st.round++; st.phase='armed'; st.buzzed=-1; st.attempted=[]; st.answered=false;
     st.cur=getQ();
-    document.getElementById('ek-qtext').textContent = st.cur.q[L()];
+    document.getElementById('ek-qtext').textContent = QT(st.cur.q);
     document.getElementById('ek-answers').innerHTML='';
     const fb=document.getElementById('ek-feedback'); fb.textContent=''; fb.className='ek-feedback';
     renderPhase(); renderBuzzers();

@@ -61,7 +61,9 @@
   };
 
   const cache = new Map();
-  let ring, glyph, enabled = false, shape = 'circle', icon = 'none', season = null;
+  // Default cursor is the CLASSIC system pointer (shape:'none' + icon:'none').
+  // Users can still opt into the ring/glyph cursor from the theme·cursor panel.
+  let ring, glyph, enabled = false, shape = 'none', icon = 'none', season = null;
   let qRx, qRy, qGx, qGy;
 
   function loadGlyph(g) {
@@ -115,7 +117,17 @@
     if (open === _gameOpen) return;
     _gameOpen = open;
     document.body.classList.toggle('syn-game-open', open);
-    if (open) document.body.classList.remove('symc-show');
+    if (open) {
+      document.body.classList.remove('symc-show');
+      // Game overlays mount on <body>, outside the themed shell, so the site
+      // theme tokens (--sym-*) don't reach them. Stamp the active theme class
+      // on each open overlay so token-driven in-game UI (e.g. the alabaster
+      // level-select skin) resolves + adapts to the selected theme. Harmless to
+      // the legacy hardcoded-colour game screens (they don't read the tokens).
+      if (window.symApplyThemeClass) {
+        document.querySelectorAll('.game-overlay').forEach(function (o) { window.symApplyThemeClass(o); });
+      }
+    }
   }
   function initGameWatch() {
     if (window.__symGameWatch) return;

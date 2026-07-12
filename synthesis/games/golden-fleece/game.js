@@ -6,6 +6,23 @@
 const GoldenFleece = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   // Question source. The Games-Panel bridge fills window.GF_Q with MC items
@@ -144,7 +161,7 @@ const GoldenFleece = (() => {
     // live-translate the current question + standings if a voyage is in progress
     if (st && st.cur && document.getElementById('gf-screen-game').classList.contains('active')) {
       document.getElementById('gf-qnum').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum+' / '+TOTAL;
-      document.getElementById('gf-qtext').textContent = st.cur.q[L()];
+      document.getElementById('gf-qtext').textContent = QT(st.cur.q);
       renderBoard();
     }
   }
@@ -282,7 +299,7 @@ const GoldenFleece = (() => {
     if (st.qNum >= TOTAL) return end();
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('gf-qnum').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum+' / '+TOTAL;
-    document.getElementById('gf-qtext').textContent = st.cur.q[L()];
+    document.getElementById('gf-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('gf-feedback'); fb.textContent=''; fb.className='gf-feedback';
     const wrap=document.getElementById('gf-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
@@ -304,6 +321,7 @@ const GoldenFleece = (() => {
       setTimeout(showPick, 1000);
     } else {
       btn.classList.add('wrong');
+      if (window.symLogMistake) { try { window.symLogMistake({ q: QT(st.cur.q), wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Χρυσόμαλλον Δέρας', gameId: 'golden-fleece' }); } catch (_) {} }
       fb.textContent=T('ΛΑΘΟΣ — οι αντίπαλοι κερδίζουν έδαφος','WRONG — rivals gain ground'); fb.className='gf-feedback gf-fb-bad';
       renderBoard();
       setTimeout(()=>{ if(st.qNum>=TOTAL) end(); else nextQ(); }, 1700);

@@ -17,10 +17,18 @@
 /* ── NAV (playful pill) ── */
 /* Nav sits near the top now that the dev harness is hidden; taller + roomier so
    the brand, links, theme picker and action icons don't feel stacked. */
-.syn-nav { padding: 18px var(--pad) 0; position:sticky; top:14px; z-index:40; }
+.syn-nav { padding: 14px var(--pad) 10px; position:sticky; top:0; z-index:60; }
+/* Opaque backdrop strip so scrolled content never bleeds through the floating
+   pill or its surrounding gaps — the nav reads as a clean fixed header. At the
+   page top it matches the background (invisible); on scroll it masks content. */
+.syn-nav::before {
+  content:''; position:absolute; left:0; right:0; top:0; bottom:0;
+  background:linear-gradient(var(--bg) 62%, color-mix(in srgb, var(--bg) 55%, transparent) 86%, transparent);
+  z-index:-1; pointer-events:none;
+}
 .syn-nav__in {
   display:flex; align-items:center; gap:22px;
-  background:color-mix(in srgb, var(--card) 86%, transparent); backdrop-filter:blur(12px);
+  background:color-mix(in srgb, var(--card) 95%, transparent); backdrop-filter:blur(12px);
   border:1px solid var(--line); border-radius:999px; padding:13px 16px 13px 26px;
   box-shadow:0 10px 30px var(--shadow);
 }
@@ -59,12 +67,12 @@
 .syn-theme__btn:hover { border-color:var(--terra); }
 .syn-theme__sw { width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(0,0,0,.18); }
 .syn-theme__cv { font-size:10px; opacity:.6; }
-.syn-theme__menu { position:absolute; top:calc(100% + 10px); right:0; width:300px; max-height:70vh; overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 50px var(--shadow); padding:12px; display:none; z-index:60; }
+.syn-theme__menu { position:absolute; top:calc(100% + 10px); right:0; width:min(95vw, 1160px); max-height:min(85vh, 760px); overflow-y:auto; background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 18px 50px var(--shadow); padding:16px; display:none; z-index:60; }
 .syn-theme.open .syn-theme__menu { display:block; }
 .syn-theme__sec { font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--fg-50); margin:10px 2px 6px; }
 .syn-theme__sec:first-child { margin-top:2px; }
-.syn-theme__grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.syn-theme__opt { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:10px; border:1px solid transparent; background:var(--sink); cursor:pointer; color:var(--fg); text-align:left; font-family:inherit; }
+.syn-theme__grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(136px, 1fr)); gap:8px; }
+.syn-theme__opt { display:flex; align-items:center; gap:8px; padding:8px 9px; border-radius:10px; border:1px solid transparent; background:var(--sink); cursor:pointer; color:var(--fg); text-align:left; font-family:inherit; }
 .syn-theme__opt:hover { border-color:var(--line-bold); }
 .syn-theme__opt.on { border-color:var(--terra); background:var(--terra-soft); }
 .syn-theme__optsw { width:20px; height:20px; flex:none; border-radius:6px; box-shadow:inset 0 0 0 1px rgba(0,0,0,.2); }
@@ -72,7 +80,18 @@
 .syn-theme__lang { display:flex; gap:6px; }
 .syn-theme__lang button { flex:1; padding:7px 0; border-radius:9px; border:1px solid var(--line); background:var(--sink); color:var(--fg-70); font-weight:700; font-size:12px; cursor:pointer; letter-spacing:.06em; }
 .syn-theme__lang button.on { border-color:var(--terra); background:var(--terra-soft); color:var(--terra-dk); }
-@media (max-width: 880px){ .syn-theme__menu { right:auto; left:0; } }
+/* cursor picker (shape + icon) inside the theme menu */
+.syn-theme__cur { display:grid; grid-template-columns:repeat(auto-fill, minmax(52px, 1fr)); gap:6px; margin:0 0 2px; }
+.syn-theme__curopt { position:relative; display:grid; place-items:center; aspect-ratio:1; border:1px solid var(--line); border-radius:10px; background:var(--sink); color:var(--terra); cursor:pointer; padding:0; transition:border-color .15s, box-shadow .15s; }
+.syn-theme__curopt:hover { border-color:var(--line-bold); }
+.syn-theme__curopt.on { border-color:var(--terra); box-shadow:inset 0 0 0 1.5px var(--terra); }
+.syn-theme__curopt.locked { opacity:.55; }
+.syn-theme__curgl { width:22px; height:22px; display:grid; place-items:center; font-size:14px; line-height:1; color:var(--fg-50); }
+.syn-theme__curopt .syn-theme__curgl svg { width:100%; height:100%; display:block; }
+.syn-theme__curprice { position:absolute; bottom:1px; right:3px; font-size:8px; font-weight:700; color:var(--fg-50); }
+.syn-theme__curopt.shake { animation:synShake .42s; }
+@keyframes synShake { 10%,90%{transform:translateX(-1px)} 30%,70%{transform:translateX(2px)} 50%{transform:translateX(-2px)} }
+@media (max-width: 880px){ .syn-theme__menu { right:auto; left:0; width:min(94vw, 540px); } }
 .syn-live { display:inline-flex; align-items:center; gap:6px; background:var(--gold-soft); color:var(--gold); border:0; font-family:var(--sans); font-weight:700; font-size:13px; padding:9px 15px; border-radius:999px; cursor:pointer; }
 .syn-btn { font-family:var(--sans); font-weight:700; font-size:13.5px; padding:10px 18px; border-radius:999px; cursor:pointer; border:0; transition:.16s; }
 .syn-btn--ghost { background:transparent; color:var(--fg); }
@@ -138,8 +157,13 @@
   background:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='40'%20height='60'%20viewBox='0%200%2040%2060'%20fill='none'%20stroke='%23C9A44A'%20stroke-width='2'%3E%3Cpath%20d='M0%2050L0%2014L30%2014L30%2038L14%2038L14%2026L22%2026L22%2032'/%3E%3Cline%20x1='0'%20y1='54'%20x2='40'%20y2='54'%20stroke-width='1.4'/%3E%3Cline%20x1='0'%20y1='10'%20x2='40'%20y2='10'%20stroke-width='1.4'/%3E%3C/svg%3E") repeat-x left center/auto 100%; }
 .orn-subtle .syn-rail, .orn-subtle .syn-spec__t, .orn-subtle .syn-join__rail, .orn-subtle .syn-foot__rule { display:none; }
 /* equipped profile seal, perched standing on top of the spec card — changes with the user's avatar */
-.syn-spec__owl { position:absolute; top:0; left:50%; width:74px; height:74px; transform:translate(-50%,-80%); color:var(--terra); z-index:4; padding:0; border:0; background:none; cursor:pointer; filter:drop-shadow(0 7px 11px rgba(0,0,0,.4)); transition:transform .2s ease, color .2s ease; }
-.syn-spec__owl:hover { transform:translate(-50%,-86%) scale(1.06); color:var(--terra-bright, var(--terra)); }
+/* Acroterion seal — a quiet rooftop ornament that BLENDS into the backdrop
+   rather than shouting. Colour is a translucent tint of the theme foreground
+   (via color-mix), so it stays a low-contrast watermark in every theme (faint
+   dark on light themes, faint light on dark ones) and adapts automatically.
+   It warms to terra + lifts on hover so it's still clearly interactive. */
+.syn-spec__owl { position:absolute; top:0; left:50%; width:74px; height:74px; transform:translate(-50%,-80%); color:color-mix(in srgb, var(--fg) 24%, transparent); z-index:4; padding:0; border:0; background:none; cursor:pointer; filter:drop-shadow(0 2px 5px color-mix(in srgb, var(--fg) 12%, transparent)); transition:transform .2s ease, color .2s ease, filter .2s ease; }
+.syn-spec__owl:hover { transform:translate(-50%,-86%) scale(1.06); color:var(--terra); filter:drop-shadow(0 6px 12px rgba(0,0,0,.28)); }
 .syn-spec__owl svg { width:100%; height:100%; display:block; }
 
 /* ── CLASS CHIPS ── */
@@ -292,7 +316,10 @@
 .syn-mq:hover .syn-mq__track { animation-play-state:paused; }
 @keyframes mq-a { from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
 @keyframes mq-b { from{ transform:translateX(-50%); } to{ transform:translateX(0); } }
-@media (prefers-reduced-motion: reduce){ .syn-mq__track{ animation:none; } .syn-mq__row{ overflow-x:auto; } }
+/* Reduced-motion: the rolling band is core to the home's identity, so instead
+   of dead-stopping it (which also exposed manual scrollbars) we keep the loop
+   but SLOW it right down to a calm drift — motion is reduced, not removed. */
+@media (prefers-reduced-motion: reduce){ .syn-mq__track--a{ animation-duration:150s; } .syn-mq__track--b{ animation-duration:170s; } .syn-mq__row{ overflow:hidden; } }
 .syn-mq__card { display:flex; align-items:center; gap:13px; flex:0 0 auto; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:13px 18px 13px 13px; text-decoration:none; color:var(--fg); transition:transform .16s, box-shadow .16s, border-color .16s; }
 .syn-mq__card:hover { transform:translateY(-3px); border-color:var(--ca-mid); box-shadow:0 12px 28px var(--shadow); }
 .syn-mq__ic { display:grid; place-items:center; width:48px; height:48px; flex:none; border-radius:13px; background:var(--ca-tint); color:var(--ca-ink); }

@@ -102,6 +102,7 @@ function openNaumachia(cfg) {
 }
 
 function closeNaumachia() {
+  if (window.SymFlappy) SymFlappy.unmount();
   _nauCleanup();
   document.getElementById('naumachia-overlay')?.classList.remove('active');
 }
@@ -150,6 +151,8 @@ function _nauBuild() {
         <div class="nau-code-box" id="nau-code-box"></div>
       </div>
       <button class="nau-btn nau-btn-sm nau-btn-danger" onclick="_nauCancelMM()">✕ Ακύρωση</button>
+      <!-- "while you wait" mini-game (matchmaking) -->
+      <div class="nau-flappy-slot" id="nau-flappy"></div>
     </div>
   </div>
 
@@ -287,6 +290,13 @@ function _nauPhase(name) {
   NAU.phase = name;
   document.querySelectorAll('#nau-root .nau-phase').forEach(p => p.classList.remove('active'));
   document.getElementById('nau-ph-' + name)?.classList.add('active');
+
+  // "While you wait" Flappy mini-game: only during matchmaking; one shared
+  // instance, stopped on every other phase.
+  if (window.SymFlappy) {
+    if (name === 'mm') SymFlappy.mount(document.getElementById('nau-flappy'));
+    else SymFlappy.unmount();
+  }
 }
 
 // ── Menu ──────────────────────────────────────────────────────
@@ -304,6 +314,21 @@ function _nauMode(mode) {
 // ── Matchmaking (PvP / Firestore) ─────────────────────────────
 async function _nauMatchmake() {
   if (!NAU) return;
+
+  // Firestore rules require request.auth != null for naumachia_matches
+  // (read + create + update). A signed-out client would silently fail with a
+  // permission error, so prompt sign-in instead and bail back to the menu.
+  const _authed = (typeof currentUser !== 'undefined' && currentUser)
+    || (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser);
+  if (!_authed) {
+    const msgEl = document.getElementById('nau-mm-msg');
+    if (msgEl) msgEl.textContent = 'Απαιτείται σύνδεση για PvP.';
+    if (typeof openAuthModal === 'function') openAuthModal('login');
+    // Return to the menu so the spinner doesn't hang forever.
+    setTimeout(() => { if (NAU && NAU.phase === 'mm') _nauPhase('menu'); }, 1200);
+    return;
+  }
+
   const db   = firebase.firestore();
   const col  = db.collection('naumachia_matches');
   const myId = 'nau_' + Math.random().toString(36).slice(2, 10);
@@ -321,7 +346,7 @@ async function _nauMatchmake() {
       const doc = snap.docs[0];
       NAU.pvp.matchId = doc.id;
       NAU.pvp.myRole  = 'p2';
-      await doc.ref.update({ p2Id: myId, status: 'placement', p2Ready: false });
+      await doc.ref.update({ p2Id: myId, p2Uid: _authed.uid, status: 'placement', p2Ready: false });
       _nauPvPListen();
       _nauPhase('place');
     } else {
@@ -329,7 +354,9 @@ async function _nauMatchmake() {
       const ref = await col.add({
         status:    'waiting',
         p1Id:      myId,
+        p1Uid:     _authed.uid,
         p2Id:      null,
+        p2Uid:     null,
         p1Ready:   false,
         p2Ready:   false,
         turn:      'p1',
@@ -699,19 +726,22 @@ function _nauShowQuestion() {
     const btn = document.createElement('button');
     btn.className   = 'nau-q-opt';
     btn.textContent = opt;
-    btn.addEventListener('click', () => _nauAnswer(i, q.ans, optsEl));
+    btn.addEventListener('click', () => _nauAnswer(i, q.ans, optsEl, q));
     optsEl.appendChild(btn);
   });
   document.getElementById('nau-qov').classList.add('active');
 }
 
-function _nauAnswer(chosen, correct, optsEl) {
+function _nauAnswer(chosen, correct, optsEl, q) {
   optsEl.querySelectorAll('.nau-q-opt').forEach((btn, i) => {
     btn.disabled = true;
     if (i === correct) btn.classList.add('correct');
     if (i === chosen && chosen !== correct) btn.classList.add('wrong');
   });
   const won = chosen === correct;
+  if (!won && q && window.symLogMistake) {
+    try { window.symLogMistake({ q: q.q, wrong: (q.opts && q.opts[chosen]) || '', right: (q.opts && q.opts[correct]) || '', cat: 'Ναυμαχία', gameId: 'naumachia' }); } catch (_) {}
+  }
   setTimeout(() => {
     document.getElementById('nau-qov').classList.remove('active');
     const pf = NAU?.pendingFire;

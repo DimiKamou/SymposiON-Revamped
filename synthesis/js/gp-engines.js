@@ -42,6 +42,17 @@
       tier: 'free'
     },
     {
+      id: 'heptapylos',
+      label: 'Ἑπτάπυλος',
+      subtitle: 'Connect Four — Οι Επτά Πύλες των Θηβών',
+      icon: '🏰',
+      bg: 'linear-gradient(135deg,#0B0F12,#20303A)',
+      desc: 'Απάντησε σωστά και ρίξε χάλκινη σφραγίδα σε μια από τις επτά πύλες — παράταξε τέσσερις στη σειρά και ράγισε το τείχος.',
+      tags: ['Στρατηγική', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
       id: 'invaders',
       label: 'Space Invaders',
       subtitle: 'Γραμματική Invaders',
@@ -193,7 +204,7 @@
     {
       id: 'krypteia',
       label: 'Κρυπτεία',
-      subtitle: 'Crypto Hack — Σπαρτιατική Κρυπτογραφία',
+      subtitle: 'Σπαρτιατική Κρυπτογραφία',
       icon: '🗝️',
       bg: 'linear-gradient(135deg,#1A0E08,#3A1810)',
       desc: 'Λύσε τους γρίφους, σπάσε τις σκυτάλες των αντιπάλων και άρπαξε τον θησαυρό τους.',
@@ -374,7 +385,7 @@
       sublabel: 'Turn-based · Formation',
       icon: '🛡️',
       accent: '#4A6B28',
-      ids: ['phalanx', 'agora', 'parthenon', 'olympus', 'oracle']
+      ids: ['phalanx', 'heptapylos', 'agora', 'parthenon', 'olympus', 'oracle']
     },
     {
       id: 'puzzle',

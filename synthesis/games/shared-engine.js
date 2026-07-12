@@ -815,8 +815,11 @@ function gramBuildLevelGrid(prefix,levels,onSelect,opts){
   opts=opts||{};
   const c=document.getElementById(prefix+'-level-grid'); if(!c) return;
   // Per-class curriculum gate: keep only levels assigned to the browsed grade.
-  if(window.CurriculumGate && typeof currentGradeKey!=='undefined'){
-    const _allow=CurriculumGate.allowedLevels(prefix,currentGradeKey);
+  // Live STATE.classId is authoritative (it can change after the last render,
+  // so the mirrored window.currentGradeKey may be stale); fall back to it only.
+  var _gk = (window.STATE && window.STATE.classId) || window.currentGradeKey || '';
+  if(window.CurriculumGate && _gk){
+    const _allow=CurriculumGate.allowedLevels(prefix,_gk);
     if(_allow){ levels=levels.filter(l=>_allow.has(l.id));
       if(!levels.length){ c.innerHTML='<div class="gpx-locked-note">Δεν έχουν ανατεθεί επίπεδα για αυτή την τάξη.</div>'; return; } }
   }
@@ -866,8 +869,11 @@ function gramBuildSubPicker(prefix, levels, opts){
   const onToggle = typeof opts.onToggle === 'function' ? opts.onToggle : function(){};
   const grid = document.getElementById(opts.containerId || (prefix+'-level-grid')); if(!grid) return;
   // Per-class curriculum gate: keep only levels assigned to the browsed grade.
-  if(window.CurriculumGate && typeof currentGradeKey!=='undefined'){
-    const _allow=CurriculumGate.allowedLevels(prefix,currentGradeKey);
+  // Live STATE.classId is authoritative (it can change after the last render,
+  // so the mirrored window.currentGradeKey may be stale); fall back to it only.
+  var _gk = (window.STATE && window.STATE.classId) || window.currentGradeKey || '';
+  if(window.CurriculumGate && _gk){
+    const _allow=CurriculumGate.allowedLevels(prefix,_gk);
     if(_allow){ levels=levels.filter(l=>_allow.has(l.id));
       if(!levels.length){ grid.innerHTML='<div class="gpx-locked-note">Δεν έχουν ανατεθεί επίπεδα για αυτή την τάξη.</div>'; return; } }
   }

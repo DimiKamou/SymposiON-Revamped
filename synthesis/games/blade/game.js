@@ -212,6 +212,7 @@ class BladeGame {
       this.roundPool = [];
       this._schedNextRound(420);
     } else {
+      if (window.symLogMistake) { try { window.symLogMistake({ q: this.promptText, wrong: tok.text, right: (this.tokens.find(function(t){return t.correct;})||{}).text || '', cat: 'Ξίφος του Γραμματικού', gameId: 'blade' }); } catch (_) {} }
       this._burst(px, py, '#c0392b', '#e74c3c', 22);
       this._burst(px, py, '#7a1a12', '#922b21', 8);
       this.lives--; this.errors++;
@@ -751,6 +752,15 @@ function bladeStartMode(mode) {
 // nav.js hasn't pre-built window._gpBladePool.
 function _bladePoolFromCfg(cfg) {
   if (!cfg) return null;
+  if (Array.isArray(cfg.questions) && cfg.questions.length) {
+    return cfg.questions.map(function(it){
+      var opts = Array.isArray(it.a) ? it.a : (Array.isArray(it.opts) ? it.opts : []);
+      var ci   = (typeof it.c === 'number') ? it.c : (typeof it.ans === 'number' ? it.ans : 0);
+      var correct = opts[ci];
+      var prompt  = (it.q && it.q.gr) ? it.q.gr : String(it.q || '');
+      return { prompt: prompt, correct: correct, distract: opts.filter(function(_,i){ return i !== ci; }) };
+    }).filter(function(r){ return r.prompt && r.correct; });
+  }
   if (Array.isArray(window._gpBladePool) && window._gpBladePool.length) return window._gpBladePool;
   const G = cfg.G;
   if (!Array.isArray(G) || !G.length) return null;

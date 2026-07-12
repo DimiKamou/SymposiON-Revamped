@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Φωνητικό Στούντιο</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Raleway:wght@400;500;600;700&family=Cardo:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg:#15110E; --bg-deep:#100C0A; --rail:#1B1611; --surface:#221C16; --surface-2:#2A231B;
+    --border:rgba(200,160,100,0.18); --border-soft:rgba(200,160,100,0.10);
+    --terra:#C8512E; --terra-soft:rgba(200,81,46,0.14); --shale:#8C7D70;
+    --bronze:#D4AE58; --bronze-soft:#B8954A; --glow:rgba(212,174,88,0.26);
+    --text:#EDE5DA; --olive:#9AA05E; --aegean:#6BA0A3; --rose:#C9728A;
+    --mono:'JetBrains Mono',ui-monospace,monospace; --greek:'Cardo',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg-deep);color:var(--text);font-family:'Raleway',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(90% 70% at 18% -10%,rgba(200,81,46,.07),transparent 55%),radial-gradient(80% 60% at 95% 110%,rgba(212,174,88,.06),transparent 50%);}
+  .atlas{position:fixed;inset:0;display:grid;grid-template-rows:auto auto 1fr;}
+
+  /* top */
+  .top{display:flex;align-items:center;gap:20px;padding:17px 28px;border-bottom:1px solid var(--border-soft);
+    background:linear-gradient(180deg,rgba(27,22,17,.9),rgba(21,17,14,.6));position:relative;}
+  .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--glow),transparent);}
+  .brand{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .brand .sig{width:32px;height:32px;color:var(--bronze);}
+  .brand .nm{font-family:'Cinzel',serif;font-size:16px;letter-spacing:1px;}.brand .nm b{color:var(--bronze);font-weight:600;}
+  .brand .sub{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:3px;color:var(--shale);margin-top:4px;}
+  .top-title{flex:1;}
+  .top-title h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;line-height:1;}
+  .top-title p{font-size:11px;color:var(--shale);margin-top:4px;}
+  .engine{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;}
+  .engine .dot{width:8px;height:8px;border-radius:50%;background:var(--olive);box-shadow:0 0 8px var(--olive);}
+  .engine .dot.off{background:var(--shale);box-shadow:none;}
+  .engine .et{font-family:var(--mono);font-size:10px;letter-spacing:.4px;color:var(--shale);line-height:1.3;}
+  .engine .et b{color:var(--text);display:block;}
+
+  /* stats + filters row */
+  .row2{display:flex;align-items:center;gap:24px;padding:14px 28px;border-bottom:1px solid var(--border-soft);background:var(--rail);}
+  .stats{display:flex;gap:22px;}
+  .stat .v{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;line-height:1;}
+  .stat .v small{font-size:13px;color:var(--shale);}
+  .stat .l{font-family:var(--mono);font-size:8.5px;letter-spacing:1px;text-transform:uppercase;color:var(--shale);margin-top:5px;}
+  .stat.ok .v{color:var(--olive);} .stat.rec .v{color:var(--terra);} .stat.pre .v{color:var(--bronze);}
+  .row2-sp{flex:1;}
+  .filters{display:flex;gap:7px;}
+  .fchip{font-family:var(--mono);font-size:10px;letter-spacing:.4px;text-transform:uppercase;background:var(--surface);border:1px solid var(--border-soft);
+    border-radius:8px;padding:8px 12px;cursor:pointer;color:var(--shale);transition:.13s;}
+  .fchip:hover{border-color:var(--border);} .fchip.on{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.08);}
+
+  .canvas{overflow-y:auto;padding:20px 28px 50px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .canvas::-webkit-scrollbar{width:10px;}.canvas::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;border:3px solid transparent;background-clip:content-box;}
+
+  .grp-h{display:flex;align-items:center;gap:12px;margin:8px 0 14px;}
+  .grp-h .gt{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;color:var(--bronze);}
+  .grp-h .gc{font-family:var(--mono);font-size:10px;color:var(--shale);}
+  .grp-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+  .items{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
+  .item{background:linear-gradient(180deg,var(--surface),rgba(34,28,22,.6));border:1px solid var(--border-soft);border-radius:14px;
+    padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:.15s;}
+  .item:hover{border-color:var(--border);}
+  .item-main{min-width:0;}
+  .item-top{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap;}
+  .item-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;}
+  .item-by{font-style:italic;font-size:12px;color:var(--shale);}
+  .badge{font-family:var(--mono);font-size:8.5px;letter-spacing:.4px;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid var(--border-soft);color:var(--shale);}
+  .badge.none{color:var(--shale);}
+  .badge.pre{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.08);}
+  .badge.rec{color:var(--terra);border-color:var(--terra-soft);background:var(--terra-soft);}
+  .badge.up{color:var(--aegean);border-color:rgba(107,160,163,.3);background:rgba(107,160,163,.08);}
+  .item-text{font-family:var(--greek);font-size:15px;line-height:1.6;color:var(--text);opacity:.85;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .item-meta{font-family:var(--mono);font-size:9.5px;color:var(--shale);margin-top:7px;}
+  .item-meta b{color:var(--bronze-soft);}
+
+  /* audio player inline */
+  .player{display:flex;align-items:center;gap:10px;margin-top:11px;background:var(--bg-deep);border:1px solid var(--border-soft);border-radius:10px;padding:8px 11px;max-width:340px;}
+  .player.empty{display:none;}
+  .pp{width:30px;height:30px;border-radius:8px;border:none;background:var(--bronze);color:#1A140C;cursor:pointer;display:grid;place-items:center;flex-shrink:0;transition:.14s;}
+  .pp:hover{filter:brightness(1.08);}
+  .pp svg{width:15px;height:15px;}
+  .ptrack{flex:1;height:5px;border-radius:99px;background:var(--surface-2);overflow:hidden;cursor:pointer;}
+  .ptrack i{display:block;height:100%;width:0;background:var(--bronze);border-radius:99px;}
+  .pdur{font-family:var(--mono);font-size:10px;color:var(--shale);flex-shrink:0;min-width:36px;text-align:right;}
+
+  .item-actions{display:flex;flex-direction:column;gap:7px;align-items:stretch;min-width:128px;}
+  .act{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.3px;text-transform:uppercase;font-weight:500;
+    background:var(--surface-2);border:1px solid var(--border-soft);border-radius:9px;padding:9px 11px;cursor:pointer;color:var(--text);transition:.14s;justify-content:flex-start;}
+  .act:hover{border-color:var(--border);}
+  .act svg{width:13px;height:13px;flex-shrink:0;}
+  .act.prim{background:var(--bronze);color:#1A140C;border-color:transparent;}
+  .act.prim:hover{filter:brightness(1.08);}
+  .act.rec{color:var(--terra);} .act.rec:hover{border-color:var(--terra);}
+  .act.busy{opacity:.6;pointer-events:none;}
+  .act.del{color:var(--shale);justify-content:center;padding:7px;} .act.del:hover{color:var(--terra);border-color:var(--terra-soft);}
+
+  /* record modal */
+  .modal-bg{position:fixed;inset:0;z-index:60;background:rgba(8,6,4,.72);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;max-width:520px;width:100%;padding:28px 30px;position:relative;}
+  .mclose{position:absolute;right:16px;top:16px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-deep);color:var(--shale);cursor:pointer;}
+  .modal .meyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);}
+  .modal h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin:5px 0 3px;}
+  .modal .mby{font-style:italic;font-size:13px;color:var(--shale);margin-bottom:18px;}
+  .read-text{font-family:var(--greek);font-size:19px;line-height:1.8;color:var(--text);background:var(--bg-deep);border:1px solid var(--border-soft);
+    border-radius:12px;padding:18px 20px;margin-bottom:20px;max-height:160px;overflow-y:auto;}
+  .rec-stage{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .meter{display:flex;align-items:flex-end;gap:3px;height:48px;}
+  .meter i{width:4px;background:var(--terra);border-radius:99px;height:6px;transition:height .08s;}
+  .rec-time{font-family:var(--mono);font-size:30px;font-weight:500;letter-spacing:1px;color:var(--text);}
+  .rec-time.live{color:var(--terra);}
+  .rec-ctrls{display:flex;gap:12px;align-items:center;}
+  .rbtn{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;
+    border-radius:12px;padding:14px 22px;cursor:pointer;transition:.15s;border:1px solid var(--border);background:var(--surface-2);color:var(--text);}
+  .rbtn:hover{border-color:var(--border);}
+  .rbtn.go{background:var(--terra);border-color:transparent;color:#fff;}
+  .rbtn.go:hover{filter:brightness(1.08);}
+  .rbtn svg{width:16px;height:16px;}
+  .rbtn .rdot{width:11px;height:11px;border-radius:50%;background:#fff;}
+  .rbtn.stop .rdot{border-radius:2px;}
+  .rec-hint{font-family:var(--mono);font-size:10px;color:var(--shale);text-align:center;line-height:1.6;}
+  .rec-review{display:none;flex-direction:column;gap:14px;width:100%;}
+  .rec-review.show{display:flex;}
+  .rec-review audio{width:100%;}
+  .rev-btns{display:flex;gap:10px;}
+  .rev-btns button{flex:1;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;border-radius:11px;padding:13px;cursor:pointer;transition:.14s;}
+  .rev-redo{background:var(--surface-2);border:1px solid var(--border);color:var(--shale);}
+  .rev-save{background:var(--olive);border:none;color:#11140a;}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);z-index:80;background:var(--surface-2);border:1px solid var(--border);
+    color:var(--text);border-radius:11px;padding:12px 18px;font-size:13px;box-shadow:0 16px 38px -16px rgba(0,0,0,.7);opacity:0;transition:.2s;pointer-events:none;max-width:380px;}
+  .toast.show{opacity:1;transform:translateX(-50%);}
+  .toast b{color:var(--bronze);}
+
+  @media(max-width:760px){.item{grid-template-columns:1fr;}.row2{flex-wrap:wrap;gap:14px;}.stats{order:2;}}
+</style>
+</head>
+<body>
+<div class="atlas">
+  <div class="top">
+    <div class="brand">
+      <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="square">
+        <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/>
+        <g stroke="#D97B5C" stroke-width="2.8"><circle cx="64" cy="50" r="12" stroke-dasharray="62 12" stroke-dashoffset="-7" transform="rotate(-90 64 50)"/><line x1="64" y1="39" x2="64" y2="49"/></g></svg>
+      <div><div class="nm">Symposi<b>ON</b></div><span class="sub">TARTARUS · ADMIN</span></div>
+    </div>
+    <div class="top-title"><h1>Φωνητικό Στούντιο</h1><p>Σταθερά κείμενα — έπη, αδίδακτα, μαθήματα — με μόνιμη αφήγηση: pre-render, ηχογράφηση ή upload.</p></div>
+    <div class="engine" id="engine">
+      <span class="dot off" id="engDot"></span>
+      <span class="et" id="engTxt"><b>Neural TTS</b>έλεγχος…</span>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="stats">
+      <div class="stat"><div class="v" id="stTotal">0</div><div class="l">Κείμενα</div></div>
+      <div class="stat ok"><div class="v" id="stAudio">0</div><div class="l">Με ήχο</div></div>
+      <div class="stat pre"><div class="v" id="stPre">0</div><div class="l">Pre-render</div></div>
+      <div class="stat rec"><div class="v" id="stRec">0</div><div class="l">Ηχογραφημένα</div></div>
+    </div>
+    <div class="row2-sp"></div>
+    <div class="filters" id="filters">
+      <span class="fchip on" data-f="all">Όλα</span>
+      <span class="fchip" data-f="Έπη">Έπη</span>
+      <span class="fchip" data-f="Αδίδακτα">Αδίδακτα</span>
+      <span class="fchip" data-f="Μαθήματα">Μαθήματα</span>
+      <span class="fchip" data-f="missing">Χωρίς ήχο</span>
+    </div>
+  </div>
+
+  <main class="canvas" id="canvas"></main>
+</div>
+
+<!-- record modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="mclose" id="mclose">✕</button>
+    <div class="meyebrow">Ηχογράφηση αφήγησης</div>
+    <h3 id="recTitle">—</h3>
+    <div class="mby" id="recBy">—</div>
+    <div class="read-text" id="recReadText"></div>
+    <div class="rec-stage">
+      <div class="meter" id="meter"></div>
+      <div class="rec-time" id="recTime">00:00</div>
+      <div class="rec-ctrls" id="recCtrls">
+        <button class="rbtn go" id="recBtn"><span class="rdot"></span><span id="recBtnLbl">Ξεκίνα ηχογράφηση</span></button>
+      </div>
+      <div class="rec-hint" id="recHint">Διάβασε καθαρά το κείμενο · θα μπορείς να το ακούσεις πριν αποθηκεύσεις.</div>
+      <div class="rec-review" id="recReview">
+        <audio id="recAudio" controls></audio>
+        <div class="rev-btns">
+          <button class="rev-redo" id="redoBtn">↻ Ξανά</button>
+          <button class="rev-save" id="saveBtn">✓ Αποθήκευση αφήγησης</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   Narration Studio — manage permanent audio for fixed canonical texts.
+   Writes a manifest to localStorage('symposion.narration.v1') that the
+   Iris read-aloud can consult FIRST (exact text match) before the live
+   neural TTS — so epics / set αδίδακτα play perfect, offline, $0/runtime.
+   Three sources per item: pre-render (calls /api/tts), record (mic),
+   upload (mp3). Audio is stored as a data URL in the manifest.
+   ════════════════════════════════════════════════════════════════ */
+const LS='symposion.narration.v1';
+const TTS_ENDPOINT='/api/tts';
+const SEED=[
+  {id:'il1',cat:'Έπη',author:'Ὅμηρος, Ἰλιάς Α 1–5',title:'Μῆνιν ἄειδε',
+   text:'μῆνιν ἄειδε, θεά, Πηληϊάδεω Ἀχιλῆος οὐλομένην, ἣ μυρί᾽ Ἀχαιοῖς ἄλγε᾽ ἔθηκε, πολλὰς δ᾽ ἰφθίμους ψυχὰς Ἄϊδι προΐαψεν ἡρώων.'},
+  {id:'od1',cat:'Έπη',author:'Ὅμηρος, Ὀδύσσεια Α 1–3',title:'Ἄνδρα μοι ἔννεπε',
+   text:'ἄνδρα μοι ἔννεπε, Μοῦσα, πολύτροπον, ὃς μάλα πολλὰ πλάγχθη, ἐπεὶ Τροίης ἱερὸν πτολίεθρον ἔπερσεν.'},
+  {id:'ad1',cat:'Αδίδακτα',author:'Λυσίας, Ὑπὲρ Μαντιθέου',title:'Αδίδακτο · Λυσίας',
+   text:'ἐγὼ γὰρ οὕτω σφόδρα ἐμαυτῷ πιστεύω, ὥστ’ ἐλπίζω καὶ εἴ τις πρός με τυγχάνει ἀηδῶς διακείμενος, ἐπειδὰν ἐμοῦ λέγοντος ἀκούσῃ, μεταγνώσεσθαι.'},
+  {id:'ad2',cat:'Αδίδακτα',author:'Ξενοφῶν, Ἑλληνικά',title:'Αδίδακτο · Ξενοφῶν',
+   text:'οἱ δὲ Ἀθηναῖοι ἐκ τῆς Σάμου ὁρμώμενοι τὴν βασιλέως χώραν ἐκακούργουν καὶ ἐπὶ τὴν Χίον καὶ τὴν Ἔφεσον ἐπέπλεον.'},
+  {id:'ls1',cat:'Μαθήματα',author:'Ιστορία · Γ΄ Γυμνασίου',title:'Η Αθήνα του Περικλή',
+   text:'Τον 5ο αιώνα π.Χ., μετά τους Περσικούς Πολέμους, η Αθήνα γνώρισε τη μεγαλύτερη ακμή της υπό την ηγεσία του Περικλή.'},
+  {id:'ls2',cat:'Μαθήματα',author:'Φιλοσοφία · ορισμός',title:'Ορισμός: ἀρετή',
+   text:'ἀρετή· ἡ ἠθικὴ τελειότης καὶ ἡ ἱκανότης τοῦ ἀνθρώπου νὰ πράττῃ τὸ ἄριστον κατὰ λόγον.'},
+];
+function load(){let saved=[];try{const v=JSON.parse(localStorage.getItem(LS));if(v&&v.items)saved=v.items;}catch(e){}
+  if(!saved.length)saved=SEED.map(s=>({...s,audio:null}));
+  return mergeCorpus(saved);}
+/* Pull αδίδακτα added in "Admin · Unseen Corpus" so they appear here ready to narrate.
+   Audio saved against a corpus id persists across merges. */
+function mergeCorpus(items){
+  let corpus=[];try{const v=JSON.parse(localStorage.getItem('sym_corpus_v1'));if(Array.isArray(v))corpus=v;}catch(e){}
+  const have=new Set(items.map(i=>i.id));
+  corpus.forEach(c=>{
+    const id='corpus-'+c.id;
+    if(have.has(id))return;
+    items.push({id,cat:'Αδίδακτα',author:(c.author||'')+(c.work?', '+c.work:''),title:c.work||c.author||'Αδίδακτο',text:c.text,audio:null,fromCorpus:true});
+  });
+  return items;
+}
+function persist(items){try{localStorage.setItem(LS,JSON.stringify({items,updated:Date.now()}));}catch(e){toast('⚠ Ο χώρος αποθήκευσης γέμισε — ο ήχος είναι μεγάλος.');}}
+let ITEMS=load();persist(ITEMS);
+let filter='all';
+
+function speakable(text){return text.normalize('NFD').replace(/[\u0313\u0314\u0343\u0345]/g,'').replace(/[\u0300\u0342]/g,'\u0301').normalize('NFC');}
+function fmtDur(s){if(!s||!isFinite(s))return '—';const m=Math.floor(s/60),x=Math.round(s%60);return m+':'+String(x).padStart(2,'0');}
+
+/* ── engine health check ── */
+async function checkEngine(){
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),3500);
+    const r=await fetch(TTS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+      body:JSON.stringify({text:'δοκιμή',lang:'el-GR'})});
+    clearTimeout(to);
+    if(r.ok){engOn(true);return true;}
+  }catch(e){}
+  engOn(false);return false;
+}
+function engOn(ok){
+  document.getElementById('engDot').classList.toggle('off',!ok);
+  document.getElementById('engTxt').innerHTML=ok?'<b>Neural TTS · συνδεδεμένο</b>έτοιμο για pre-render':'<b>Neural TTS · εκτός</b>ανέβασε ή ηχογράφησε';
+}
+
+/* ── render ── */
+function stats(){
+  const withA=ITEMS.filter(i=>i.audio).length;
+  document.getElementById('stTotal').textContent=ITEMS.length;
+  document.getElementById('stAudio').textContent=withA;
+  document.getElementById('stPre').textContent=ITEMS.filter(i=>i.audio&&i.audio.type==='prerender').length;
+  document.getElementById('stRec').textContent=ITEMS.filter(i=>i.audio&&i.audio.type==='record').length;
+}
+const BADGE={prerender:['pre','Pre-render'],record:['rec','Ηχογραφημένο'],upload:['up','Upload']};
+function render(){
+  stats();
+  let list=ITEMS.slice();
+  if(filter==='missing')list=list.filter(i=>!i.audio);
+  else if(filter!=='all')list=list.filter(i=>i.cat===filter);
+  const cats=[...new Set(list.map(i=>i.cat))];
+  const c=document.getElementById('canvas');
+  if(!list.length){c.innerHTML='<div style="text-align:center;padding:60px;color:var(--shale);font-family:Cormorant Garamond,serif;font-size:20px;">Κανένα κείμενο εδώ.</div>';return;}
+  c.innerHTML=cats.map(cat=>{
+    const rows=list.filter(i=>i.cat===cat);
+    return `<div class="grp-h"><span class="gt">${cat}</span><span class="gc">${rows.length}</span><span class="rule"></span></div>
+      <div class="items">${rows.map(itemHTML).join('')}</div>`;
+  }).join('');
+}
+function itemHTML(i){
+  const a=i.audio;
+  const badge=a?`<span class="badge ${BADGE[a.type][0]}">${BADGE[a.type][1]}</span>`:'<span class="badge none">Χωρίς ήχο</span>';
+  const meta=a?`Φωνή: <b>${a.voice||(a.type==='record'?'δική σου':'—')}</b> · ${fmtDur(a.dur)} · ${new Date(a.at).toLocaleDateString('el-GR')}`:'Δεν έχει αφήγηση ακόμη';
+  return `<div class="item" data-id="${i.id}">
+    <div class="item-main">
+      <div class="item-top"><span class="item-title">${i.title}</span>${badge}${i.fromCorpus?'<span class="badge" style="color:var(--aegean);border-color:rgba(107,160,163,.3)">από Ανθολόγιο</span>':''}</div>
+      <div class="item-by" style="margin:-4px 0 7px">${i.author}</div>
+      <div class="item-text">${i.text}</div>
+      <div class="item-meta">${meta}</div>
+      <div class="player ${a?'':'empty'}" data-player>
+        <button class="pp" data-play aria-label="Αναπαραγωγή"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+        <div class="ptrack" data-track><i></i></div>
+        <span class="pdur" data-time>0:00</span>
+      </div>
+    </div>
+    <div class="item-actions">
+      <button class="act prim" data-act="prerender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m13.5-6.5l-2 2m-7 7l-2 2m11 0l-2-2m-7-7l-2-2"/></svg>Pre-render</button>
+      <button class="act rec" data-act="record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>Ηχογράφηση</button>
+      <button class="act" data-act="upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Upload mp3</button>
+      ${a?'<button class="act del" data-act="del">✕ Αφαίρεση ήχου</button>':''}
+    </div>
+  </div>`;
+}
+
+/* ── inline player ── */
+let playing=null;
+document.getElementById('canvas').addEventListener('click',e=>{
+  const playBtn=e.target.closest('[data-play]');
+  if(playBtn){togglePlay(playBtn.closest('.item'));return;}
+  const track=e.target.closest('[data-track]');
+  if(track){const item=track.closest('.item');if(playing&&playing.item===item){const r=track.getBoundingClientRect();playing.audio.currentTime=((e.clientX-r.left)/r.width)*playing.audio.duration;}return;}
+  const act=e.target.closest('[data-act]');
+  if(act){const id=act.closest('.item').dataset.id;handleAct(act.dataset.act,id,act);}
+});
+function togglePlay(item){
+  const id=item.dataset.id;const it=ITEMS.find(x=>x.id===id);if(!it||!it.audio)return;
+  if(playing&&playing.item===item){if(playing.audio.paused)playing.audio.play();else playing.audio.pause();return;}
+  if(playing){playing.audio.pause();setPP(playing.item,false);}
+  const audio=new Audio(it.audio.src);
+  playing={item,audio};setPP(item,true);
+  const bar=item.querySelector('[data-track] i'),tm=item.querySelector('[data-time]');
+  audio.ontimeupdate=()=>{bar.style.width=(audio.currentTime/audio.duration*100||0)+'%';tm.textContent=fmtDur(audio.currentTime);};
+  audio.onended=()=>{setPP(item,false);bar.style.width='0%';tm.textContent=fmtDur(it.audio.dur);};
+  audio.onpause=()=>setPP(item,false);audio.onplay=()=>setPP(item,true);
+  audio.play().catch(()=>toast('Δεν έπαιξε ο ήχος.'));
+}
+function setPP(item,on){const b=item.querySelector('[data-play]');if(b)b.innerHTML=on?'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>':'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';}
+
+/* ── actions ── */
+function handleAct(act,id,btn){
+  const it=ITEMS.find(x=>x.id===id);if(!it)return;
+  if(act==='prerender')preRender(it,btn);
+  else if(act==='record')openRecord(it);
+  else if(act==='upload')uploadFor(it);
+  else if(act==='del'){it.audio=null;persist(ITEMS);render();toast('Ο ήχος αφαιρέθηκε.');}
+}
+
+/* pre-render via Firebase function */
+async function preRender(it,btn){
+  btn.classList.add('busy');btn.querySelector('svg').style.animation='spin 1s linear infinite';
+  const greek=/[\u0370-\u03FF\u1F00-\u1FFF]/.test(it.text);
+  try{
+    const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),12000);
+    const r=await fetch(TTS_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+      body:JSON.stringify({text:greek?speakable(it.text):it.text,lang:greek?'el-GR':'en-US',voice:greek?'el-GR-Wavenet-A':'en-US-Neural2-C',rate:greek?0.92:0.97})});
+    clearTimeout(to);
+    if(!r.ok)throw new Error(r.status);
+    const data=await r.json();
+    const src=data.audioContent?('data:audio/mp3;base64,'+data.audioContent):data.url;
+    if(!src)throw new Error('no audio');
+    const dur=await probe(src);
+    it.audio={type:'prerender',src,voice:greek?'el-GR-Wavenet-A':'en-US-Neural2-C',dur,at:Date.now()};
+    persist(ITEMS);render();toast('✓ <b>Pre-render</b> ολοκληρώθηκε · '+it.title);engOn(true);
+  }catch(e){
+    engOn(false);
+    toast('⚠ Το Neural TTS δεν είναι διαθέσιμο εδώ. Deploy τη συνάρτηση ή ηχογράφησε/ανέβασε.');
+    btn.classList.remove('busy');btn.querySelector('svg').style.animation='';
+  }
+}
+function probe(src){return new Promise(res=>{const a=new Audio();a.onloadedmetadata=()=>res(a.duration);a.onerror=()=>res(0);a.src=src;});}
+
+/* upload */
+function uploadFor(it){
+  const inp=document.createElement('input');inp.type='file';inp.accept='audio/*';
+  inp.onchange=()=>{const f=inp.files[0];if(!f)return;const rd=new FileReader();
+    rd.onload=async()=>{const src=rd.result;const dur=await probe(src);
+      it.audio={type:'upload',src,voice:f.name,dur,at:Date.now()};persist(ITEMS);render();toast('✓ Ανέβηκε · '+f.name);};
+    rd.readAsDataURL(f);};
+  inp.click();
+}
+
+/* ════ RECORDING ════ */
+let mediaRec=null,chunks=[],recTimer=null,recSecs=0,recItem=null,recBlob=null,audioCtx=null,analyser=null,rafId=null;
+function openRecord(it){
+  recItem=it;recBlob=null;recSecs=0;
+  document.getElementById('recTitle').textContent=it.title;
+  document.getElementById('recBy').textContent=it.author;
+  document.getElementById('recReadText').textContent=it.text;
+  document.getElementById('recTime').textContent='00:00';
+  document.getElementById('recTime').classList.remove('live');
+  document.getElementById('recReview').classList.remove('show');
+  document.getElementById('recCtrls').style.display='flex';
+  document.getElementById('recBtnLbl').textContent='Ξεκίνα ηχογράφηση';
+  document.getElementById('recBtn').classList.remove('stop');
+  buildMeter(0);
+  document.getElementById('modalBg').classList.add('open');
+}
+function buildMeter(level){const m=document.getElementById('meter');if(!m.children.length)m.innerHTML=Array.from({length:24}).map(()=>'<i></i>').join('');
+  [...m.children].forEach((b,k)=>{const base=6+Math.abs(Math.sin(k*0.6))*4;b.style.height=(level?base+level*Math.random()*42:base)+'px';b.style.opacity=level?1:.4;});}
+async function startRec(){
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast('Η ηχογράφηση δεν υποστηρίζεται εδώ.');return;}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  catch(e){toast('Δώσε άδεια στο μικρόφωνο για ηχογράφηση.');return;}
+  chunks=[];mediaRec=new MediaRecorder(stream);
+  mediaRec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  mediaRec.onstop=()=>{recBlob=new Blob(chunks,{type:mediaRec.mimeType||'audio/webm'});
+    const url=URL.createObjectURL(recBlob);document.getElementById('recAudio').src=url;
+    document.getElementById('recReview').classList.add('show');document.getElementById('recCtrls').style.display='none';
+    stream.getTracks().forEach(t=>t.stop());cancelAnimationFrame(rafId);if(audioCtx)audioCtx.close();};
+  // meter
+  try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();const sr=audioCtx.createMediaStreamSource(stream);
+    analyser=audioCtx.createAnalyser();analyser.fftSize=64;sr.connect(analyser);const dataArr=new Uint8Array(analyser.frequencyBinCount);
+    const tick=()=>{analyser.getByteFrequencyData(dataArr);const lvl=dataArr.reduce((a,b)=>a+b,0)/dataArr.length/255;buildMeter(lvl);rafId=requestAnimationFrame(tick);};tick();
+  }catch(e){}
+  mediaRec.start();
+  recSecs=0;document.getElementById('recTime').classList.add('live');
+  recTimer=setInterval(()=>{recSecs++;document.getElementById('recTime').textContent=fmtDur(recSecs).padStart(5,'0');},1000);
+  document.getElementById('recBtnLbl').textContent='Σταμάτα';
+  document.getElementById('recBtn').classList.add('stop');
+}
+function stopRec(){if(mediaRec&&mediaRec.state!=='inactive')mediaRec.stop();clearInterval(recTimer);
+  document.getElementById('recTime').classList.remove('live');buildMeter(0);}
+document.getElementById('recBtn').addEventListener('click',()=>{
+  if(mediaRec&&mediaRec.state==='recording')stopRec();else startRec();});
+document.getElementById('redoBtn').addEventListener('click',()=>openRecord(recItem));
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  if(!recBlob)return;const rd=new FileReader();
+  rd.onload=async()=>{const src=rd.result;const dur=await probe(src);
+    recItem.audio={type:'record',src,voice:'δική σου φωνή',dur:dur||recSecs,at:Date.now()};
+    persist(ITEMS);render();closeModal();toast('✓ Η αφήγηση αποθηκεύτηκε · '+recItem.title);};
+  rd.readAsDataURL(recBlob);});
+function closeModal(){document.getElementById('modalBg').classList.remove('open');if(mediaRec&&mediaRec.state==='recording')stopRec();}
+document.getElementById('mclose').addEventListener('click',closeModal);
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal();});
+
+/* filters */
+document.getElementById('filters').addEventListener('click',e=>{const c=e.target.closest('.fchip');if(!c)return;
+  document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('on'));c.classList.add('on');filter=c.dataset.f;render();});
+
+/* toast */
+let tT=null;function toast(m){const el=document.getElementById('toast');el.innerHTML=m;el.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('show'),3200);}
+
+const style=document.createElement('style');style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';document.head.appendChild(style);
+
+render();checkEngine();
+</script>
+</body>
+</html>

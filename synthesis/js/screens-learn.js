@@ -45,6 +45,9 @@
      teacher-edit chrome degrade gracefully when their globals are absent. */
   const THEORY_TRACKS = {
     'gram-archaia': [
+      { id: 'grammar-theoria', gr: 'Γραμματική', en: 'Grammar', illu: 'scroll',
+        meta: { gr: '44 μαθήματα · Θεωρία · Άσκηση · Εξέταση', en: '44 lessons · Theory · Practice · Exam' },
+        module: 'grammar-theoria', data: 'games/grammar-theoria/grammar-theoria.js' },
       { id: 'eimi',       gr: 'Ρήμα: εἰμί',          en: 'Verb: eimí',           illu: 'scroll',
         meta: { gr: 'Θεωρία · Πίνακας · Κάρτες', en: 'Theory · Table · Cards' },
         data: 'games/eimi/data.js' },
@@ -68,10 +71,60 @@
     ],
   };
 
+  /* ── Συντακτικό (kind:'syntax') — a self-contained, client-side course.
+     Its 36 lessons register into window.SYNTAX at load; we surface them as
+     theory cards in the Αρχαία grammar track's Θεωρία block (auto-scaling —
+     any lesson added to the registry appears here with no wiring). They
+     carry no lazy `data` (eager-loaded via index.html) and open through the
+     shared openTheoryLesson(), which dispatches kind:'syntax' → the engine. */
+  function syntaxTheoryLessons() {
+    if (!(window.SYNTAX && typeof window.SYNTAX.all === 'function')) return [];
+    return window.SYNTAX.all().filter(Boolean).map(function (Lx) {
+      var title = ((Lx.title || '') + (Lx.titleEm || '')).trim() || Lx.id;
+      var m = Lx.subtitle || Lx.section || 'Συντακτικό';
+      return { id: Lx.id, gr: title, en: title, illu: 'labyrinth',
+               meta: { gr: m, en: m } };
+    });
+  }
+  /* ── Έκθεση & Λογοτεχνία (kind:'neg') — same pattern as Συντακτικό: its
+     49 lessons register into window.NEG at load; surface them as theory
+     cards in the Έκθεση (gram-neo) track. Auto-scaling — any lesson added
+     to the registry appears here with no extra wiring. They open through
+     the shared openTheoryLesson(), which dispatches kind:'neg' → the engine. */
+  function negTheoryLessons() {
+    if (!(window.NEG && typeof window.NEG.all === 'function')) return [];
+    return window.NEG.all().filter(Boolean).map(function (Lx) {
+      var title = ((Lx.title || '') + (Lx.titleEm || '')).trim() || Lx.id;
+      var m = Lx.subtitle || Lx.section || 'Έκθεση';
+      return { id: Lx.id, gr: title, en: title, illu: 'book',
+               meta: { gr: m, en: m } };
+    });
+  }
+  // theory list for a track = ported grammar-table lessons + the live
+  // Συντακτικό (Αρχαία) / Έκθεση (Νέα Ελληνικά) registries.
+  function theoryListFor(trackId) {
+    var base = THEORY_TRACKS[trackId] || [];
+    if (trackId === 'gram-archaia') return base.concat(syntaxTheoryLessons());
+    if (trackId === 'gram-neo')     return base.concat(negTheoryLessons());
+    return base;
+  }
+
   // Ensure the theory subsystem CSS is present, lazy-load the dataset's
   // data-only script (defines the global the adapter reads), then open the
   // three-mode lesson. Falls back to a friendly notice if anything is off.
   function openTheory(lesson) {
+    // Self-contained grammar module (Αρχαία Γραμματική): lazy-load its single
+    // script, then open its shadow-DOM overlay. Isolated from the theory engine.
+    if (lesson.module === 'grammar-theoria') {
+      const runGram = function () {
+        if (typeof window.openGrammarTheoria === 'function') window.openGrammarTheoria();
+        else _theoryUnavailable(lesson);
+      };
+      if (lesson.data && typeof window.lazyLoad === 'function') {
+        window.lazyLoad([lesson.data]).then(runGram).catch(runGram);
+      } else { runGram(); }
+      return;
+    }
     const ds = lesson.id;
     if (window.synEnsureCss) {
       try { window.synEnsureCss(['css/theory-lessons.css']); } catch (_) {}
@@ -94,13 +147,33 @@
     else if (typeof window.showToast === 'function') showToast(note, note);
   }
 
+  // Resolve a dataset's required tier (for the visible subscription lock).
+  function _datasetTier(id) {
+    try {
+      const ds = (window.GP_CONTENT && window.GP_CONTENT.find && window.GP_CONTENT.find(id)) ||
+                 (typeof GP_DATASETS !== 'undefined' && GP_DATASETS.find(d => d.id === id)) || null;
+      return ds ? ds.tier : null;
+    } catch (_) { return null; }
+  }
+  // Locked = content has a paid tier the current user can't yet meet.
+  function _tierLocked(tier) {
+    return !!(tier && tier !== 'free' &&
+      typeof _gpCanAccessTier === 'function' && !_gpCanAccessTier(tier));
+  }
+
   function theoryCard(lesson) {
+    const tier   = _datasetTier(lesson.id);
+    const locked = _tierLocked(tier);
+    const tierLbl = (window.SymTiers && SymTiers.label) ? L(SymTiers.label(tier))
+                  : (tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Pro');
     const card = el('a', {
-      class: 'sc-gcard sc-gcard--theory', href: 'javascript:void 0', style: 'position:relative',
-      onclick: () => openTheory(lesson),
+      class: 'sc-gcard sc-gcard--theory' + (locked ? ' sc-gcard--locked' : ''),
+      href: 'javascript:void 0', style: 'position:relative',
+      onclick: () => openTheory(lesson),   // launch path shows the upgrade toast + redirect
     }, [
       el('div', { class: 'sc-gcard__ban' }, [
         el('span', { class: 'sc-theory-tag' }, L({ gr: 'Θεωρία', en: 'Theory' })),
+        locked ? el('span', { class: 'sc-tag sc-tag--lock', title: L({ gr: 'Απαιτείται συνδρομή', en: 'Subscription required' }) }, '🔒 ' + tierLbl) : null,
         glyph(lesson.illu, 'sc-gcard__illu'),
       ]),
       el('div', { class: 'sc-gcard__b' }, [
@@ -108,8 +181,10 @@
         el('p', { class: 'sc-gcard__m' }, L(lesson.meta)),
         el('div', { class: 'sc-gcard__f' }, [
           el('span', { class: 'sc-gcard__tags' }, [
-            el('span', { class: 'sc-pill has-accent' }, L({ gr: 'Μάθημα', en: 'Lesson' })) ]),
-          el('span', { class: 'sc-gcard__play', html: '&#9656;' }),
+            locked
+              ? el('span', { class: 'sc-pill sc-pill--lock' }, '🔒 ' + tierLbl)
+              : el('span', { class: 'sc-pill has-accent' }, L({ gr: 'Μάθημα', en: 'Lesson' })) ]),
+          el('span', { class: 'sc-gcard__play' + (locked ? ' sc-gcard__play--locked' : ''), html: locked ? '&#128274;' : '&#9656;' }),
         ]),
       ]),
     ]);
@@ -124,7 +199,7 @@
     }
     const onclick = () => {
       const fn = window.synResolveLaunch && window.synResolveLaunch(gm);
-      if (fn && window.synLaunch) { window.synLaunch(fn); return; }
+      if (fn && window.synLaunch) { window.synLaunch(fn, ...((gm.launch && gm.launch.args) || [])); return; }
       // no real opener wired → reuse the existing mode/level flow
       const subj = _subjectOf(gm, cls);
       go('mode', { subject: subj, game: gm, cls });
@@ -170,6 +245,11 @@
     }
 
     subjects.forEach((s, i) => {
+      // admin-assigned template tiles for this class+subject — merged at render
+      // time so they appear exactly like the hardcoded voyage tiles (no data.js
+      // edits, idempotent per render). See js/syn-assignments.js.
+      const _extra = (window.synAssignedTiles && window.synAssignedTiles(node.id, s.id)) || [];
+      const _games = (s.games || []).concat(_extra);
       const block = el('section', { class: 'syn-subj has-accent', style: `--ca:${accent}` });
       block.appendChild(el('div', { class: 'syn-subj__hd' }, [
         el('span', { class: 'syn-subj__no' }, String(i + 1).padStart(2, '0')),
@@ -180,10 +260,10 @@
         ]),
         el('a', { class: 'syn-subj__all', href: 'javascript:void 0',
           onclick: () => go('subject', { subject: s, cls: node }) }, [
-          L({ gr: 'Όλα', en: 'All' }), el('span', { class: 'syn-subj__cnt' }, (s.games || []).length) ]),
+          L({ gr: 'Όλα', en: 'All' }), el('span', { class: 'syn-subj__cnt' }, _games.length) ]),
       ]));
       block.appendChild(el('div', { class: 'syn-subj__grid' },
-        (s.games || []).map(gm => gameTile(gm, node, accent))));
+        _games.map(gm => gameTile(gm, node, accent))));
       body.appendChild(block);
     });
   }
@@ -259,7 +339,7 @@
     tracks.forEach(tr => {
       const subs = (ctx.subjects[tr.id] || []);
       const nGames = subs.reduce((n, s) => n + ((s.games && s.games.length) || 0), 0);
-      const nTheory = (THEORY_TRACKS[tr.id] || []).length;
+      const nTheory = theoryListFor(tr.id).length;
       grid.appendChild(el('button', {
         class: 'sc-mode has-accent', style: `--ca:${tr.accent}`,
         onclick: () => go('gramtrack', { trackId: tr.id }),
@@ -288,7 +368,7 @@
       title: L(tr), sub: L(tr.blurb),
     });
     const wrap = el('div', { class: 'syn-subjects' });
-    renderSubjectBlocks(wrap, tr, THEORY_TRACKS[trackId] || []);
+    renderSubjectBlocks(wrap, tr, theoryListFor(trackId));
     body.appendChild(wrap);
     if (window.injectIllus) injectIllus(wrap);
   };

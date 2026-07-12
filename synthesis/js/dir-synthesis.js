@@ -16,6 +16,13 @@
   }
   window.synMagnetize = magnetize;
 
+  // a11y: honour the OS "reduce motion" setting. When true we skip magnet hover,
+  // auto-advancing carousels/tickers and GSAP reveals (rendering final state).
+  function reduceMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  window.synReduceMotion = reduceMotion;
+
   /* ── "Coming soon" treatment (shared) ──
      Tiles flagged `soon:true` in data.js have NO backing game yet. Instead of
      pretending they are playable, we badge them "ΣΥΝΤΟΜΑ / Coming soon" and, on
@@ -52,7 +59,8 @@
       soon ? soonBadge() : null,
       el('span', { class:'syn-tile__ban' }, [ el('span', { class:'syn-tile__illu', 'data-illu':gm.illu }) ]),
       el('span', { class:'syn-tile__body' }, [
-        el('span', { class:'syn-tile__nm' }, L(gm)),
+        // admin Game-Tags rename: show the overridden display name (launch key unchanged)
+        el('span', { class:'syn-tile__nm' }, L((window.SymTags && SymTags.displayName) ? SymTags.displayName(gm) : gm)),
         el('span', { class:'syn-tile__mt' }, gm.meta),
       ]),
       el('span', { class:'syn-tile__play', html: soon ? '&#9679;' : '&#9654;' }),
@@ -65,7 +73,7 @@
     if (variant === 'monogram') {
       const wrap = el('div', { class:'syn-mono' });
       wrap.appendChild(brandMark('syn-mono__mark'));
-      wrap.appendChild(el('div', { class:'syn-mono__wm', html:'Symposi<span>ON</span>' }));
+      wrap.appendChild(el('h1', { class:'syn-mono__wm', style:'margin:0', html:'Symposi<span>ON</span>' }));
       wrap.appendChild(el('div', { class:'syn-mono__sub' }, window.SYM_LANG==='en'?'Play the ancient world':'Παίξε τον αρχαίο κόσμο'));
       return wrap;
     }
@@ -86,7 +94,7 @@
     ]);
     const cta = el('button', { class:'syn-show__try', onclick:()=>symGo('gamepanel') }, [ L({gr:'Δοκίμασέ το',en:'Try now'}), el('span',{class:'syn-show__arr',html:'&rarr;'}) ]);
     const dots = el('div', { class:'syn-show__dots' },
-      ITEMS.map((_,i)=> el('button', { class:'syn-show__dot'+(i===0?' on':''), onclick:()=>{ setShow(i, true); } })));
+      ITEMS.map((_,i)=> el('button', { class:'syn-show__dot'+(i===0?' on':''), 'aria-label':L({gr:'Διαφάνεια ',en:'Slide '}) + (i+1), onclick:()=>{ setShow(i, true); } })));
     show.appendChild(art); show.appendChild(body); show.appendChild(cta); show.appendChild(dots);
     // admin-only: jump straight to the Hero Carousel editor (Admin → Hero)
     if (window.STATE && window.STATE.role === 'admin') {
@@ -103,12 +111,13 @@
       kind.className = 'syn-show__kind syn-show__kind--'+it.kind;
       body.querySelector('.syn-show__nm').textContent = L(it.t);
       body.querySelector('.syn-show__desc').textContent = L(it.d);
-      if(window.gsap) gsap.fromTo(body,{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
-      if(manual){ clearInterval(window.__symShow); window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000); }
+      if(window.gsap && !reduceMotion()) gsap.fromTo(body,{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
+      if(manual && !reduceMotion()){ clearInterval(window.__symShow); window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000); }
     }
     setShow(0);
     clearInterval(window.__symShow);
-    window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000);
+    // reduced-motion: render the first slide statically, no auto-advance (dots still work).
+    if(!reduceMotion()) window.__symShow = setInterval(()=>{ if(document.body.contains(show)) setShow(idx+1); else clearInterval(window.__symShow); }, 6000);
     return show;
   }
   window.synHeroVisual = heroVisual;
@@ -145,27 +154,48 @@
         el('span',{class:'syn-tick__lbl'}, L(it.fact.tag || {gr:'Ήξερες;',en:'Did you know'})),
         el('span',{class:'syn-tick__tx'}, L(it.fact)) ]);
       host.innerHTML=''; host.appendChild(node);
-      if(window.gsap) gsap.from(node,{y:8,autoAlpha:0,duration:.4,ease:'power2.out'});
+      if(window.gsap && !reduceMotion()) gsap.from(node,{y:8,autoAlpha:0,duration:.4,ease:'power2.out'});
       i++;
     }
     paint();
-    window.__symTicker = setInterval(paint, 5200);
+    // reduced-motion: show one fact statically, no auto-rotation.
+    if(!reduceMotion()) window.__symTicker = setInterval(paint, 5200);
   }
 
   function openAcroteria(ctx) {
-    const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) ov.remove(); } });
-    const box = el('div', { class:'acro-box' });
-    const kleos = SymStore.get('kleos', 0);
+    const _prevFocus = document.activeElement;
+    // a11y: dialog semantics + Esc + focus trap + focus restore. closeOv() is the
+    // single close path — every dismissal (✕, backdrop, Esc, Emporion) routes here
+    // so the keydown handler is removed and focus returns to where it was.
+    function closeOv(){
+      document.removeEventListener('keydown', onKey);
+      ov.remove();
+      if (_prevFocus && _prevFocus.focus) { try { _prevFocus.focus(); } catch(_){} }
+    }
+    function onKey(e){
+      if (e.key === 'Escape' || e.key === 'Esc') { e.preventDefault(); closeOv(); return; }
+      if (e.key === 'Tab') {
+        const f = box.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.prototype.filter.call(f, n => !n.disabled && n.offsetParent !== null);
+        if (!list.length) return;
+        const first = list[0], last = list[list.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    const ov = el('div', { class:'acro-ov', onclick:(e)=>{ if(e.target===ov) closeOv(); } });
+    const box = el('div', { class:'acro-box', role:'dialog', 'aria-modal':'true', 'aria-label':L({gr:'Ακρωτήρια',en:'Acroteria'}) });
+    const kleosLabel = (window.symKleosLabel) ? window.symKleosLabel() : SymStore.get('kleos', 0).toLocaleString('en-US');
     box.appendChild(el('div', { class:'acro-box__bar' }, [
-      el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}) ]),
-      el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleos.toLocaleString('en-US')), 'Kleos' ]),
-      el('button', { class:'acro-box__x', onclick:()=>ov.remove(), html:'&times;' }),
+      el('div', { class:'acro-box__ttl' }, [ el('span',{class:'acro-box__ic','data-illu':'crown-laurel'}), L({gr:'Ακρωτήρια',en:'Acroteria'}), el('span',{ class:'acro-box__count', style:'opacity:.62;font-weight:600;margin-left:8px;font-size:.82em' }, '· '+((window.SYM&&window.SYM.ACROTERIA)?window.SYM.ACROTERIA.length:0)) ]),
+      el('div', { class:'acro-box__kleos' }, [ el('span',{class:'acro-box__kic','data-illu':'wreath-laurel'}), el('b',{id:'acroKleos'}, kleosLabel), 'Kleos' ]),
+      el('button', { class:'acro-box__x', type:'button', 'aria-label':L({gr:'Κλείσιμο',en:'Close'}), onclick:()=>closeOv(), html:'&times;' }),
     ]));
     const detail = el('div', { class:'acro-detail' });
     function showDetail(a){
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(x=>x.owned).map(x=>x.id));
       const equipped = SymStore.get('acro_equipped', 'parthenon');
-      const isOwned = owned.indexOf(a.id)>=0, isEq = equipped===a.id;
+      const isOwned = (window.symAllUnlocked&&window.symAllUnlocked()) || owned.indexOf(a.id)>=0, isEq = equipped===a.id;
       detail.innerHTML='';
       detail.appendChild(el('span',{class:'acro-detail__art'+(isOwned?'':' locked')},[ el('span',{class:'acro-detail__illu','data-illu':a.illu}) ]));
       detail.appendChild(el('div',{class:'acro-detail__b'},[
@@ -182,9 +212,8 @@
     }
     function buy(a){
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(x=>x.owned).map(x=>x.id));
-      const k = SymStore.get('kleos', 0);
-      if(k>=a.cost){ SymStore.set('kleos', k-a.cost); const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned', o); SymStore.set('acro_equipped', a.id);
-        const kEl=document.getElementById('acroKleos'); if(kEl) kEl.textContent=(k-a.cost).toLocaleString('en-US');
+      if(window.symSpendKleos ? symSpendKleos(a.cost) : ((k)=>{ if(k>=a.cost){ SymStore.set('kleos', k-a.cost); return true; } return false; })(SymStore.get('kleos',0))){ const o=owned.slice(); o.push(a.id); SymStore.set('acro_owned', o); SymStore.set('acro_equipped', a.id);
+        const kEl=document.getElementById('acroKleos'); if(kEl) kEl.textContent=(window.symKleosLabel?symKleosLabel():SymStore.get('kleos',0).toLocaleString('en-US'));
         if(window.gsap){ for(let i=0;i<14;i++){const sp=document.createElement('span');const r=detail.getBoundingClientRect();sp.style.cssText=`position:fixed;left:${r.left+50}px;top:${r.top+40}px;width:6px;height:6px;border-radius:50%;background:var(--gold,#E0B24C);z-index:9999;pointer-events:none`;document.body.appendChild(sp);const ang=Math.random()*6.28,d=24+Math.random()*46;gsap.to(sp,{x:Math.cos(ang)*d,y:Math.sin(ang)*d,opacity:0,duration:.7,onComplete:()=>sp.remove()});} }
         paintGrid(); showDetail(a); symRender(); }
       else { detail.classList.add('shake'); setTimeout(()=>detail.classList.remove('shake'),400); }
@@ -196,7 +225,7 @@
       const owned = SymStore.get('acro_owned', window.SYM.ACROTERIA.filter(a=>a.owned).map(a=>a.id));
       const equipped = SymStore.get('acro_equipped', 'parthenon');
       window.SYM.ACROTERIA.forEach(a=>{
-        const isOwned = owned.indexOf(a.id)>=0, isEq = equipped===a.id;
+        const isOwned = (window.symAllUnlocked&&window.symAllUnlocked()) || owned.indexOf(a.id)>=0, isEq = equipped===a.id;
         const card = el('div', { class:'acro-card'+(isOwned?'':' locked')+(isEq?' eq':'')+(a.id===selectedId?' sel':'')+(a.premium?' acro-card--premium':''), onclick:()=>{ selectedId=a.id; paintGrid(); showDetail(a); } }, [
           el('span', { class:'acro-card__art' }, [ el('span',{class:'acro-card__illu','data-illu':a.illu}), a.premium?el('span',{class:'acro-card__prem'},'★'):null ]),
           el('span', { class:'acro-card__nm' }, L(a)),
@@ -204,7 +233,7 @@
         ]);
         if(!isOwned){
           // unlock straight from the grid if you can afford it
-          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=SymStore.get('kleos',0); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
+          card.appendChild(el('button',{ class:'acro-card__btn acro-card__btn--buy', onclick:(e)=>{ e.stopPropagation(); selectedId=a.id; const k=(window.symKleos?symKleos():SymStore.get('kleos',0)); if(k>=a.cost){ buy(a); } else { showDetail(a); card.classList.add('shake'); setTimeout(()=>card.classList.remove('shake'),400); } } }, L({gr:'Ξεκλείδωμα',en:'Unlock'})));
         }
         grid.appendChild(card);
       });
@@ -216,13 +245,17 @@
     box.appendChild(grid);
     box.appendChild(el('div', { class:'acro-box__foot' }, [
       el('span', {}, L({gr:'Κέρδισε Kleos παίζοντας.',en:'Earn Kleos by playing.'})),
-      el('button', { class:'acro-box__temple', onclick:()=>{ ov.remove(); symGo('temple'); } }, [ L({gr:'Ἐμπόριον',en:'Emporion'}), el('span',{html:' &rarr;'}) ]),
+      el('button', { class:'acro-box__temple', onclick:()=>{ closeOv(); symGo('temple'); } }, [ L({gr:'Ἐμπόριον',en:'Emporion'}), el('span',{html:' &rarr;'}) ]),
     ]));
     ov.appendChild(box);
     document.querySelector('.stage').appendChild(ov);
     if(window.injectIllus) injectIllus(ov);
     requestAnimationFrame(()=>ov.classList.add('in'));
     if(window.gsap) gsap.from(box,{y:24,scale:.97,autoAlpha:0,duration:.4,ease:'back.out(1.5)'});
+    // a11y: trap keys while the dialog is open, and move focus into it (the ✕).
+    document.addEventListener('keydown', onKey);
+    const _x = box.querySelector('.acro-box__x');
+    if (_x) _x.focus();
   }
   window.synOpenAcroteria = openAcroteria;
 
@@ -235,6 +268,7 @@
     { id:'mode',      gr:'Επιλογή Λειτουργίας',en:'Mode select',  ico:'◎' },
     { id:'level',     gr:'Επιλογή Επιπέδου',   en:'Levels',       ico:'≣' },
     { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel',   ico:'▦' },
+    { id:'tutor',     gr:'AI Βοηθός',          en:'AI Tutor',     ico:'✸' },
     { id:'live',      gr:'Live Arena',         en:'Live Arena',   ico:'⚡' },
     { id:'profile',   gr:'Προφίλ Ήρωα',        en:'Hero Profile', ico:'◆' },
     { id:'levelup',   gr:'Level Up',           en:'Level Up',     ico:'✦' },
@@ -278,6 +312,50 @@
           el('span', { class:'syn-theme__optnm' }, t.nm) ])));
       menu.appendChild(grid);
     });
+
+    // cursor picker — shape + inner icon. Ported into the visible menu because
+    // the original picker lived in the now-hidden dev harness, leaving users with
+    // the custom ring-cursor ON and no way to change or disable it. "None" shape +
+    // "None" icon restores the normal system cursor. Premium shapes/icons cost
+    // Kleos (same economy as the harness).
+    if (window.SymCursor) {
+      const SS = window.SymStore;
+      const CUR_PREMIUM = ['monsterball','invader','ghost','mushroom','pixelheart','joystick','skull','katana'];
+      const curPrice = (kind,id)=> id==='none'?0 : (kind==='shape'&&id==='circle')?0 : (kind==='icon'&&CUR_PREMIUM.indexOf(id)>=0)?1800:600;
+      const curOwned = (kind,id)=>{ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; if(curPrice(kind,id)===0) return true; const def=kind==='shape'?['none','circle']:['none']; return ((SS&&SS.get('own_cursor_'+kind,def))||[]).indexOf(id)>=0; };
+      const curNow = (kind)=> kind==='shape' ? (SymCursor.shape||'none') : (SymCursor.icon||'none');
+      function curRow(kind, label, opts){
+        menu.appendChild(el('div', { class:'syn-theme__sec' }, L(label)));
+        const row = el('div', { class:'syn-theme__cur' });
+        opts.forEach(([id,nm])=>{
+          const gl = el('span', { class:'syn-theme__curgl' });
+          if(id==='none') gl.textContent='∅';
+          else if(kind==='shape') gl.innerHTML = SymCursor.shapeSVG(id)||'';
+          else gl.innerHTML = SymCursor.iconSVG(id)||'';
+          const price = curPrice(kind,id), owned = curOwned(kind,id);
+          const apply = (b)=>{ if(kind==='shape'){ if(window.STATE) STATE.cursorShape=id; SS&&SS.set('cursor_shape',id); SymCursor.setShape(id); }
+                               else { if(window.STATE) STATE.cursorIcon=id; SS&&SS.set('cursor_icon',id); SymCursor.setIcon(id); }
+                               row.querySelectorAll('.syn-theme__curopt').forEach(x=>x.classList.remove('on')); b.classList.add('on'); };
+          const b = el('button', { class:'syn-theme__curopt'+(curNow(kind)===id?' on':'')+(owned?'':' locked'),
+            title: nm + (owned?'':' · ⌾'+price.toLocaleString('en-US')), 'aria-label': nm,
+            onclick:(e)=>{ e.stopPropagation();
+              if(owned){ apply(e.currentTarget); return; }
+              const afford = window.symSpendKleos ? window.symSpendKleos(price)
+                : (SS && SS.get('kleos',0) >= price ? (SS.set('kleos', SS.get('kleos',0)-price), true) : false);
+              if(afford){ const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SS.get(key,def).slice(); ow.push(id); SS.set(key,ow); e.currentTarget.classList.remove('locked'); const pr=e.currentTarget.querySelector('.syn-theme__curprice'); if(pr) pr.remove(); apply(e.currentTarget); }
+              else { e.currentTarget.classList.add('shake'); setTimeout(()=>e.currentTarget.classList.remove('shake'),420); } } },
+            [ gl ]);
+          if(!owned) b.appendChild(el('span', { class:'syn-theme__curprice' }, '⌾'+price.toLocaleString('en-US')));
+          row.appendChild(b);
+        });
+        menu.appendChild(row);
+      }
+      curRow('shape', {gr:'Δείκτης · Σχῆμα', en:'Cursor · Shape'},
+        [['none','Κανένα · None'],['circle','Κύκλος'],['diamond','Ρόμβος'],['square','Τετράγωνο'],['hexagon','Εξάγωνο'],['triangle','Τρίγωνο'],['reticle','Στόχαστρο']]);
+      curRow('icon', {gr:'Δείκτης · Εικονίδιο', en:'Cursor · Icon'},
+        [['none','Κανένα · None'],['star','Αστέρι'],['eye','Μάτι'],['dot','Κουκκίδα'],['arrow','Βέλος'],['meander','Μαίανδρος'],['bolt','Κεραυνός'],['monsterball','Σφαίρα'],['invader','Invader'],['ghost','Φάντασμα'],['mushroom','Μανιτάρι'],['pixelheart','Καρδιά'],['joystick','Joystick'],['skull','Κρανίο'],['katana','Κατάνα']]);
+    }
+
     // language toggle
     menu.appendChild(el('div', { class:'syn-theme__sec' }, L({gr:'Γλώσσα',en:'Language'})));
     const lang = el('div', { class:'syn-theme__lang' });
@@ -311,6 +389,7 @@
         { id:'lyk', gr:'Λύκειο', en:'Lykeio', ico:'Ⅳ' },
         { id:'gramhub', gr:'Θεωρία & Γραμματική', en:'Theory & Grammar', ico:'✎' },
         { id:'gamepanel', gr:'Πίνακας Παιχνιδιών', en:'Game Panel', ico:'▦' },
+        { id:'tutor', gr:'AI Βοηθός', en:'AI Tutor', ico:'✸' },
       ]},
       { lbl:{gr:'Παιχνίδι',en:'Play'}, items:[
         { id:'live', gr:'Live Arena', en:'Live Arena', ico:'⚡' },
@@ -337,10 +416,13 @@
       class:'syn-screens__item'+((s.id&&s.id===screen)?' active':''),
       onclick:()=>{ menu.classList.remove('open'); if(s.cls){ window.STATE.classId=s.cls; symGo('home'); } else { symGo(s.id); } }
     }, [ el('span',{class:'syn-screens__ico'}, s.ico), L(s) ]);
+    // «Διαχείριση»/Admin is admin-only — hide it from non-admins (the admin
+    // screen itself also gates on isAdmin; this keeps it out of the nav too).
+    var _isAdm = (typeof isAdmin !== 'undefined' && isAdmin) || (window.STATE && window.STATE.role === 'admin');
     NAV_GROUPS.forEach(g => {
       const col = el('div', { class:'syn-screens__col' });
       col.appendChild(el('div', { class:'syn-screens__lbl' }, L(g.lbl)));
-      g.items.forEach(s => col.appendChild(navItem(s)));
+      g.items.forEach(s => { if (s.id === 'admin' && !_isAdm) return; col.appendChild(navItem(s)); });
       menu.appendChild(col);
     });
     // tag pages — the "extra pages" we added (each its own destination)
@@ -549,6 +631,8 @@
 
   function synHome(home, ctx) {
     const STR = ctx.STR;
+    // a11y: honour OS reduced-motion — computed once for this render.
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /* HERO */
     const hero = el('header', { class:'syn-hero' });
@@ -637,7 +721,7 @@
         cta:{gr:'Δες τους οδηγούς',en:'See the guides'}, go:()=>{ if(window.SymInfoPanel) SymInfoPanel.guides(); } },
     ];
     const pKick = el('span', { class:'syn-promo__kick' });
-    const pTtl  = el('h3', { class:'syn-promo__ttl' });
+    const pTtl  = el('h2', { class:'syn-promo__ttl' });
     const pDesc = el('p', { class:'syn-promo__desc' });
     const pCta  = el('button', { class:'syn-promo__cta' }, [ el('span',{class:'syn-promo__ctal'}), el('span',{class:'syn-promo__ca',html:'&rarr;'}) ]);
     const pDots = el('div', { class:'syn-promo__dots' },
@@ -661,12 +745,13 @@
       pCta.onclick = it.go;
       pDots.querySelectorAll('.syn-promo__dot').forEach((d,i)=>d.classList.toggle('on', i===pIdx));
       if(window.injectIllus) injectIllus(pArt);
-      if(window.gsap) gsap.fromTo(promoCard.querySelector('.syn-promo__txt'),{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
-      if(manual){ clearInterval(window.__symPromo); window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500); }
+      if(window.gsap && !reduce) gsap.fromTo(promoCard.querySelector('.syn-promo__txt'),{y:8,autoAlpha:.4},{y:0,autoAlpha:1,duration:.5,ease:'power2.out'});
+      if(manual && !reduce){ clearInterval(window.__symPromo); window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500); }
     }
     setPromo(0);
     clearInterval(window.__symPromo);
-    window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500);
+    // reduced-motion: first promo card static, no auto-advance (dots still work).
+    if(!reduce) window.__symPromo = setInterval(()=>{ if(document.body.contains(promoCard)) setPromo(pIdx+1); else clearInterval(window.__symPromo); }, 6500);
     chips.appendChild(el('div', { class:'syn-classes__split' }, [
       el('div', { class:'syn-classes__col' }, [ groupsWrap ]),
       el('div', { class:'syn-classes__showw' }, [ heroVisual('showcase'), promoCard ]),
@@ -682,7 +767,7 @@
         block.appendChild(el('div', { class:'syn-subj__hd' }, [
           el('span', { class:'syn-subj__no' }, String(i+1).padStart(2,'0')),
           el('span', { class:'syn-subj__badge' }, [ el('span', { class:'syn-subj__illu', 'data-illu':s.illu }) ]),
-          el('div', { class:'syn-subj__tx' }, [ el('h3', { class:'syn-subj__ttl' }, L(s)), el('p', { class:'syn-subj__sum' }, L(s.summary)) ]),
+          el('div', { class:'syn-subj__tx' }, [ el('h2', { class:'syn-subj__ttl' }, L(s)), el('p', { class:'syn-subj__sum' }, L(s.summary)) ]),
           el('a', { class:'syn-subj__all', href:'javascript:void 0', onclick:()=>symGo('subject', {subject:s, cls:ac}) }, [ L(STR.allGames), el('span', { class:'syn-subj__cnt' }, s.games.length) ]),
         ]));
         block.appendChild(el('div', { class:'syn-subj__grid' }, s.games.map(gm => tile(gm, ac.accent, ()=>symGo('mode', {subject:s, game:gm, cls:ac})))));
@@ -696,8 +781,8 @@
       STATE.classId = id; ctx.classId = id; ctx.activeClass = ac;
       buildSubjects(ac);
       chips.querySelectorAll('.syn-chip[data-cls]').forEach(b => b.classList.toggle('active', b.getAttribute('data-cls')===id));
-      if (window.gsap) gsap.fromTo(wrap.children, { y:14, autoAlpha:0 }, { y:0, autoAlpha:1, duration:.45, stagger:.06, ease:'power2.out', clearProps:'opacity,visibility,transform' });
-      if (userInitiated) startClassRotation(); // user took the wheel → restart the timer
+      if (window.gsap && !reduce) gsap.fromTo(wrap.children, { y:14, autoAlpha:0 }, { y:0, autoAlpha:1, duration:.45, stagger:.06, ease:'power2.out', clearProps:'opacity,visibility,transform' });
+      if (userInitiated && !reduce) startClassRotation(); // user took the wheel → restart the timer
     }
     // auto-rotate through the grade tracks so the subject panels cycle on their own
     function startClassRotation(){
@@ -713,7 +798,8 @@
     }
     buildSubjects(ctx.activeClass);
     home.appendChild(wrap);
-    startClassRotation();
+    // reduced-motion: leave the active class static, no auto-rotation through tracks.
+    if(!reduce) startClassRotation();
 
     /* SUBJECT MARQUEE (rolling band — carousel.js) */
     const mq = el('section', { class:'syn-mq' });
@@ -754,6 +840,33 @@
     ])));
     eng.appendChild(scroller);
     home.appendChild(eng);
+    // Gentle auto-advance so the engines band "transitions" on its own (like the
+    // subject marquee, which is pure CSS). Ping-pongs across the overflow; pauses
+    // on hover / touch / manual scroll and resumes after a short idle; slower
+    // under reduced-motion; self-stops once the node leaves the DOM.
+    (function(sc){
+      if(!sc) return;
+      sc.style.scrollSnapType = 'none';            // let it glide instead of snapping
+      // accumulate in a float — sub-pixel scrollLeft increments otherwise round to
+      // 0 and never move (so the slow reduced-motion speed still drifts visibly).
+      var speed = reduceMotion() ? 0.28 : 0.55, dir = 1, paused = false, idle = 0, raf = 0, pos = 0;
+      function hold(ms){ paused = true; clearTimeout(idle); idle = setTimeout(function(){ paused = false; }, ms); }
+      function loop(){
+        if(!document.body.contains(sc)){ cancelAnimationFrame(raf); return; }
+        var max = sc.scrollWidth - sc.clientWidth;
+        if(paused){ pos = sc.scrollLeft; }         // resync so it resumes where the user left off
+        else if(max > 4){
+          pos += speed * dir;
+          if(pos >= max){ pos = max; dir = -1; } else if(pos <= 0){ pos = 0; dir = 1; }
+          sc.scrollLeft = pos;
+        }
+        raf = requestAnimationFrame(loop);
+      }
+      sc.addEventListener('pointerenter', function(){ paused = true; clearTimeout(idle); }, { passive:true });
+      sc.addEventListener('pointerleave', function(){ hold(900); }, { passive:true });
+      ['wheel','touchstart','pointerdown'].forEach(function(ev){ sc.addEventListener(ev, function(){ hold(1600); }, { passive:true }); });
+      raf = requestAnimationFrame(loop);
+    })(scroller);
 
     /* JOIN */
     home.appendChild(el('section', { class:'syn-join' }, [
@@ -766,7 +879,7 @@
           el('p', { class:'syn-join__sub' }, L(STR.joinSub)),
         ]),
         el('div', { class:'syn-join__form' }, [
-          el('input', { class:'syn-join__pin', type:'text', maxlength:'6', placeholder:'A7K92M' }),
+          el('input', { class:'syn-join__pin', type:'text', maxlength:'6', placeholder:'A7K92M', 'aria-label':L({gr:'Κωδικός παιχνιδιού',en:'Game PIN'}) }),
           el('button', { class:'syn-cta syn-cta--solid', onclick:()=>symGo('live') }, [ L(STR.joinBtn), el('span',{html:'&rarr;'}) ]),
         ]),
       ]),
@@ -775,9 +888,20 @@
     synFooter(home, ctx);
 
     /* GSAP reveal */
-    home.querySelectorAll('.syn-cta--solid').forEach(b => magnetize(b, 0.3));
+    // a11y reduced-motion: no magnet hover, and render every element at its final
+    // resting state (gsap.set, not .from) — fully visible, no entrance/scroll motion.
+    if (!reduce) home.querySelectorAll('.syn-cta--solid').forEach(b => magnetize(b, 0.3));
     if (window.gsap && ctx.fresh) {
       if (window.ScrollTrigger) ScrollTrigger.getAll().forEach(s => s.kill());
+      if (reduce) {
+        // final resting values — no entrance/scroll motion. The .from() reveals never
+        // run, so elements simply stay at their natural (visible) CSS state.
+        gsap.set(['.syn-nav__in', '.syn-hero__ix', '.syn-hero__l > :nth-child(2)', '.syn-hero__lede',
+                  '.syn-hero__cta .syn-cta', '.syn-chiplet', '.syn-spec', '.syn-spec__t',
+                  '.syn-spec__ticker', '.syn-rail', '.syn-classes__row .syn-chip',
+                  '.syn-subj', '.syn-engines', '.syn-join', '.syn-foot'],
+                 { x: 0, y: 0, scale: 1, scaleY: 1, autoAlpha: 1 });
+      } else {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
       tl.from('.syn-nav__in', { y: -22, autoAlpha: 0, duration: 0.6 })
         .from('.syn-hero__ix', { y: 16, autoAlpha: 0, duration: 0.5 }, '-=0.2')
@@ -797,6 +921,7 @@
       // hidden in the scaled stage). Animate y only — opacity stays 1 throughout.
       gsap.from('.syn-foot', { y: 24, duration: 0.6, ease: 'power3.out', clearProps: 'transform',
         scrollTrigger: window.ScrollTrigger ? { trigger: '.syn-foot', start: 'top 96%', once: true } : undefined });
+      }
     }
   }
 

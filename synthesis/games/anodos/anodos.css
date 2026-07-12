@@ -1,0 +1,819 @@
+/* ════════════════════════════════════════════════════════════════════
+   SymposiON · ΑΝΟΔΟΣ (The Ascent) — a Slay-the-Spire-style climb
+   Built on the real Obsidian theme tokens from paideia/css.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Obsidian surfaces ─────────────────────────────────────────── */
+  --sym-bg-dark:   #0A0907;
+  --sym-bg-panel:  #15120D;
+  --sym-bg-raise:  #211C13;
+
+  /* ─── Ink ───────────────────────────────────────────────────────── */
+  --sym-cream:     #F1E9D6;
+  --sym-stone:     #897A5A;
+
+  /* ─── Candle-gold — the house primary accent ────────────────────── */
+  --sym-gold:      #D2A24A;
+  --sym-gold-dk:   #9E7322;
+  --sym-gold-lt:   #F2CD78;
+  --sym-gold-deep: #6E4E18;
+
+  /* ─── Ember terra — the "ON" pivot (secondary) ─────────────────── */
+  --sym-terra:     #E07A3C;
+  --sym-terra-dk:  #B05A22;
+
+  --sym-sage:      #7E9560;
+  --sym-aegean:    #5E8B96;
+
+  /* ─── Token contract — lets the live SymposiON theme engine drive
+         this screen exactly like Temple of the Muses ───────────────── */
+  --sym-bg:        var(--sym-bg-dark);
+  --sym-bg-card:   var(--sym-bg-panel);
+  --sym-fg:        var(--sym-cream);
+  --sym-fg-muted:  var(--sym-stone);
+  --sym-accent:    var(--sym-gold);
+  --sym-accent2:   var(--sym-terra);
+
+  --sym-gold-grad: linear-gradient(135deg, var(--sym-gold-lt) 0%, var(--sym-gold) 45%, var(--sym-gold-dk) 100%);
+  --sym-hairline:  color-mix(in srgb, var(--sym-gold) 16%, transparent);
+  --sym-hairline-soft: color-mix(in srgb, var(--sym-gold) 8%, transparent);
+  --sym-glow-gold: 0 0 24px color-mix(in srgb, var(--sym-gold) 30%, transparent);
+
+  --font-display: 'Cinzel', serif;
+  --font-serif:   'Cormorant Garamond', serif;
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* node accent set by JS via --node-accent */
+}
+
+/* ─── AEGEAN tweak alt ──────────────────────────────────────────────── */
+[data-theme="aegean"] {
+  --sym-bg-dark:  #0B1018;  --sym-bg-panel: #142030;  --sym-bg-raise: #1B2A3D;
+  --sym-cream:    #E8E1D0;  --sym-stone:    #7C8896;
+  --sym-gold:     #D2B36A;  --sym-gold-dk:  #A8894A;  --sym-gold-lt: #E6CB8A;  --sym-gold-deep:#6E5C32;
+  --sym-terra:    #E0894C;  --sym-terra-dk: #B86A35;  --sym-aegean: #5E8B96;
+}
+/* ─── AMPHORA tweak alt ─────────────────────────────────────────────── */
+[data-theme="amphora"] {
+  --sym-bg-dark:  #15100A;  --sym-bg-panel: #201810;  --sym-bg-raise: #2A2014;
+  --sym-cream:    #E8D9BA;  --sym-stone:    #8A7958;
+  --sym-gold:     #D49A2A;  --sym-gold-dk:  #A8741C;  --sym-gold-lt: #EBB94C;  --sym-gold-deep:#6E5018;
+  --sym-terra:    #D14A1F;  --sym-terra-dk: #A8341A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-ui);
+  background: var(--sym-bg-dark);
+  color: var(--sym-cream);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* gold-dust vignette over the void */
+.stage {
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 55% at 50% -8%, color-mix(in srgb, var(--sym-gold) 10%, transparent), transparent 60%),
+    radial-gradient(ellipse 65% 50% at 100% 108%, color-mix(in srgb, var(--sym-terra) 7%, transparent), transparent 55%),
+    var(--sym-bg-dark);
+  display: flex; flex-direction: column;
+}
+
+/* faint mountain / acropolis watermark behind the climb */
+.stage__watermark {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: min(1100px, 130vw); height: 70%;
+  color: var(--sym-gold); opacity: .045; pointer-events: none; z-index: 0;
+}
+
+/* ═══════════════════ HUD ═══════════════════════════════════════════ */
+.hud {
+  position: relative; z-index: 30;
+  display: flex; align-items: center; gap: 22px;
+  padding: 14px clamp(16px, 3vw, 34px);
+  border-bottom: 1px solid var(--sym-hairline);
+  background: color-mix(in srgb, var(--sym-bg-dark) 86%, transparent);
+  backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+}
+
+.hud__brand { display: flex; align-items: center; gap: 11px; flex-shrink: 0; }
+.hud__mark { width: 30px; height: 30px; color: var(--sym-cream); }
+.hud__mark .pivot { stroke: var(--sym-terra); }
+.hud__word {
+  font-family: var(--font-display); font-weight: 600; font-size: 18px;
+  letter-spacing: 1px; line-height: 1;
+}
+.hud__word span { color: var(--sym-terra); text-shadow: 0 0 14px rgba(217,107,48,.5); }
+.hud__sep { width: 1px; height: 30px; background: var(--sym-hairline); flex-shrink: 0; }
+
+.hud__run { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hud__run-eyebrow {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 2.4px;
+  text-transform: uppercase; color: var(--sym-gold);
+}
+.hud__run-title { font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: var(--sym-cream); white-space: nowrap; }
+
+.hud__stats { display: flex; align-items: center; gap: 18px; margin-left: auto; flex-wrap: wrap; }
+
+.stat { display: flex; align-items: center; gap: 9px; }
+.stat__icon { width: 20px; height: 20px; flex-shrink: 0; }
+.stat__col { display: flex; flex-direction: column; gap: 3px; }
+.stat__label { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--sym-stone); }
+.stat__val { font-family: var(--font-display); font-size: 14px; font-weight: 600; line-height: 1; color: var(--sym-cream); }
+
+/* μένος bar */
+.menos { width: 132px; }
+.menos__track { height: 8px; border-radius: 6px; background: color-mix(in srgb, var(--sym-terra) 14%, var(--sym-bg-raise)); overflow: hidden; border: 1px solid var(--sym-hairline-soft); }
+.menos__fill {
+  height: 100%; border-radius: 6px;
+  background: linear-gradient(90deg, var(--sym-terra-dk), var(--sym-terra) 70%, var(--sym-gold-lt));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sym-terra) 55%, transparent);
+  transition: width .5s cubic-bezier(.16,1,.3,1);
+}
+.menos__num { font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+
+.drachma { color: var(--sym-gold-lt); }
+.xpwrap { width: 120px; }
+.xp__track { height: 5px; border-radius: 4px; background: var(--sym-bg-raise); overflow: hidden; border: 1px solid var(--sym-hairline-soft); }
+.xp__fill { height: 100%; background: var(--sym-gold-grad); transition: width .6s ease; }
+
+/* relic tray */
+.relics { display: flex; align-items: center; gap: 7px; }
+.relic {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 17px; cursor: help;
+  background: radial-gradient(circle at 35% 30%, var(--sym-bg-raise), var(--sym-bg-panel));
+  border: 1px solid color-mix(in srgb, var(--sym-gold) 38%, transparent);
+  box-shadow: inset 0 0 8px rgba(0,0,0,.5), var(--sym-glow-gold);
+  transition: transform .2s; position: relative;
+}
+.relic:hover { transform: translateY(-3px) scale(1.08); }
+.relic--empty { border-style: dashed; border-color: var(--sym-hairline); box-shadow: none; opacity: .5; font-size: 13px; color: var(--sym-stone); cursor: default; }
+.relic__pop {
+  position: absolute; top: calc(100% + 10px); right: -6px; width: 210px; z-index: 60;
+  background: var(--sym-bg-panel); border: 1px solid var(--sym-hairline);
+  border-radius: 10px; padding: 11px 13px; box-shadow: 0 18px 40px rgba(0,0,0,.6);
+  opacity: 0; transform: translateY(-6px); pointer-events: none; transition: opacity .18s, transform .18s; text-align: left;
+}
+.relic:hover .relic__pop { opacity: 1; transform: translateY(0); }
+.relic__pop b { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--sym-gold-lt); display: block; margin-bottom: 3px; }
+.relic__pop span { font-size: 12px; line-height: 1.5; color: var(--sym-stone); }
+
+.hud__btn {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase;
+  color: var(--sym-gold); background: transparent;
+  border: 1px solid color-mix(in srgb, var(--sym-gold) 38%, transparent);
+  padding: 9px 14px; border-radius: 7px; cursor: pointer; transition: all .2s; white-space: nowrap;
+}
+.hud__btn:hover { background: color-mix(in srgb, var(--sym-gold) 12%, transparent); border-color: var(--sym-gold); }
+
+/* ═══════════════════ MAP ════════════════════════════════════════════ */
+.mapwrap { position: relative; z-index: 10; flex: 1; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; }
+.mapwrap::-webkit-scrollbar { width: 9px; }
+.mapwrap::-webkit-scrollbar-thumb { background: var(--sym-gold-deep); border-radius: 6px; }
+.mapwrap::-webkit-scrollbar-track { background: transparent; }
+
+.map {
+  position: relative; margin: 0 auto;
+  width: min(640px, 94vw);
+}
+.map__edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible; }
+.edge { fill: none; stroke: var(--sym-hairline); stroke-width: 2; }
+.edge--traversed { stroke: var(--sym-gold); stroke-width: 2.4; opacity: .9; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--sym-gold) 60%, transparent)); }
+.edge--open { stroke: var(--sym-gold-lt); stroke-width: 2.2; stroke-dasharray: 5 7; opacity: .85; animation: flow 1.1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+
+/* floor band label */
+.floorband {
+  position: absolute; left: -2px; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--sym-stone); opacity: .55; z-index: 2; pointer-events: none;
+}
+
+.node {
+  position: absolute; transform: translate(-50%, -50%); z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: none; padding: 0; cursor: default;
+  --node-accent: var(--sym-gold);
+}
+.node__disc {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 25px; position: relative;
+  background: radial-gradient(circle at 38% 30%, var(--sym-bg-raise), var(--sym-bg-panel) 75%);
+  border: 2px solid color-mix(in srgb, var(--node-accent) 55%, var(--sym-gold-deep));
+  transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s, border-color .25s, filter .3s;
+}
+.node__disc::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--node-accent) 30%, transparent); opacity: 0; transition: opacity .3s;
+}
+.node__label {
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--sym-stone); opacity: 0; transition: opacity .25s; white-space: nowrap;
+}
+
+/* states */
+.node--locked .node__disc { filter: grayscale(.7) brightness(.5); opacity: .42; border-color: var(--sym-hairline); }
+.node--available { cursor: pointer; }
+.node--available .node__disc {
+  border-color: var(--node-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--node-accent) 50%, transparent), 0 6px 18px rgba(0,0,0,.5);
+  animation: beckon 1.8s ease-in-out infinite;
+}
+.node--available .node__label { opacity: 1; color: color-mix(in srgb, var(--node-accent) 80%, var(--sym-cream)); }
+.node--available .node__disc::after { opacity: .5; }
+.node--available:hover .node__disc { transform: scale(1.14); filter: brightness(1.12); }
+.node--available:hover .node__disc::after { opacity: 1; }
+@keyframes beckon {
+  0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--node-accent) 45%, transparent), 0 6px 18px rgba(0,0,0,.5); }
+  50%     { box-shadow: 0 0 0 7px color-mix(in srgb, var(--node-accent) 0%, transparent), 0 0 22px color-mix(in srgb, var(--node-accent) 45%, transparent); }
+}
+.node--visited .node__disc { border-color: var(--sym-gold); filter: brightness(.85); }
+.node--visited .node__disc::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: color-mix(in srgb, var(--sym-gold) 14%, transparent);
+}
+.node--current .node__disc {
+  border-color: var(--sym-terra);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sym-terra) 35%, transparent), 0 0 26px color-mix(in srgb, var(--sym-terra) 55%, transparent);
+  animation: none;
+}
+.node--current .node__label { opacity: 1; color: var(--sym-terra); }
+
+/* boss node bigger */
+.node--boss .node__disc { width: 82px; height: 82px; font-size: 38px; border-width: 2.5px; }
+.node--boss .node__label { opacity: 1; font-size: 10px; color: var(--sym-terra); letter-spacing: 2px; }
+
+/* base "you are here at the gate" marker */
+.gate {
+  position: absolute; left: 50%; transform: translate(-50%, 50%);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--sym-gold); z-index: 3; text-align: center;
+}
+.gate__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sym-terra); margin: 0 auto 7px; box-shadow: 0 0 14px var(--sym-terra); }
+
+/* ═══════════════════ MODAL ══════════════════════════════════════════ */
+.scrim {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in srgb, var(--sym-bg-dark) 72%, rgba(0,0,0,.6));
+  backdrop-filter: blur(6px);
+  display: grid; place-items: center; padding: 22px;
+}
+@keyframes fadein { from { opacity: 0; } }
+.modal {
+  width: min(520px, 100%); max-height: 88vh; overflow-y: auto;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, color-mix(in srgb, var(--node-accent, var(--sym-gold)) 12%, transparent), transparent 70%),
+    var(--sym-bg-panel);
+  border: 1px solid color-mix(in srgb, var(--node-accent, var(--sym-gold)) 35%, transparent);
+  border-radius: 16px; position: relative;
+  box-shadow: 0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 color-mix(in srgb, var(--sym-gold) 25%, transparent);
+  animation: rise .35s cubic-bezier(.16,1,.3,1);
+}
+.modal::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: var(--sym-gold-grad); border-radius: 16px 16px 0 0; }
+@keyframes rise { from { transform: translateY(20px) scale(.97); } }
+.modal__pad { padding: clamp(24px, 4vw, 38px); }
+.modal__crest { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; margin: 0 auto 14px;
+  background: radial-gradient(circle at 38% 30%, var(--sym-bg-raise), var(--sym-bg-panel));
+  border: 2px solid var(--node-accent, var(--sym-gold)); box-shadow: 0 0 24px color-mix(in srgb, var(--node-accent, var(--sym-gold)) 40%, transparent); }
+.modal__eyebrow { text-align: center; font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--node-accent, var(--sym-gold)); margin-bottom: 8px; }
+.modal__title { text-align: center; font-family: var(--font-display); font-size: clamp(24px, 4vw, 31px); font-weight: 600; color: var(--sym-cream); line-height: 1.12; margin-bottom: 6px; }
+.modal__sub { text-align: center; font-family: var(--font-serif); font-size: 17px; font-style: italic; color: var(--sym-stone); margin-bottom: 18px; }
+.modal__body { font-size: 15px; line-height: 1.62; color: color-mix(in srgb, var(--sym-cream) 88%, transparent); }
+.modal__rule { height: 1px; border: none; background: var(--sym-hairline); margin: 18px 0; }
+
+/* quiz */
+.q { font-family: var(--font-serif); font-size: 20px; line-height: 1.4; color: var(--sym-cream); margin-bottom: 16px; text-align: center; }
+.q__greek { font-family: var(--font-serif); }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  text-align: left; font-family: var(--font-ui); font-size: 15px; color: var(--sym-cream);
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline);
+  padding: 14px 16px; border-radius: 10px; cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; gap: 12px;
+}
+.opt:hover:not(:disabled) { border-color: var(--sym-gold); background: color-mix(in srgb, var(--sym-gold) 9%, var(--sym-bg-raise)); transform: translateX(3px); }
+.opt__key { font-family: var(--font-mono); font-size: 12px; color: var(--sym-gold); border: 1px solid var(--sym-hairline); border-radius: 6px; width: 24px; height: 24px; display: grid; place-items: center; flex-shrink: 0; }
+.opt--right { border-color: var(--sym-sage); background: color-mix(in srgb, var(--sym-sage) 18%, var(--sym-bg-raise)); }
+.opt--right .opt__key { color: var(--sym-sage); border-color: var(--sym-sage); }
+.opt--wrong { border-color: var(--sym-terra); background: color-mix(in srgb, var(--sym-terra) 16%, var(--sym-bg-raise)); }
+.opt--wrong .opt__key { color: var(--sym-terra); border-color: var(--sym-terra); }
+.opt:disabled { cursor: default; }
+
+.qprog { display: flex; justify-content: center; gap: 7px; margin-bottom: 16px; }
+.qpip { width: 8px; height: 8px; border-radius: 50%; background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); }
+.qpip--done { background: var(--sym-sage); border-color: var(--sym-sage); }
+.qpip--miss { background: var(--sym-terra); border-color: var(--sym-terra); }
+.qpip--active { border-color: var(--sym-gold); box-shadow: 0 0 8px var(--sym-gold); }
+
+/* choice cards (mystery / rest / shop) */
+.choices { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.choice {
+  text-align: left; background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline);
+  border-radius: 12px; padding: 16px 18px; cursor: pointer; transition: all .2s; width: 100%;
+  display: flex; align-items: center; gap: 14px;
+}
+.choice:hover:not(:disabled) { border-color: var(--node-accent, var(--sym-gold)); transform: translateY(-2px); box-shadow: var(--sym-glow-gold); }
+.choice:disabled { opacity: .4; cursor: not-allowed; }
+.choice__icon { font-size: 26px; flex-shrink: 0; width: 40px; text-align: center; }
+.choice__txt { flex: 1; }
+.choice__name { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--sym-cream); margin-bottom: 2px; }
+.choice__desc { font-size: 13px; color: var(--sym-stone); line-height: 1.45; }
+.choice__cost { font-family: var(--font-mono); font-size: 13px; color: var(--sym-gold-lt); flex-shrink: 0; }
+
+/* feedback line */
+.feedback { text-align: center; font-family: var(--font-serif); font-size: 17px; font-style: italic; margin: 16px 0 4px; min-height: 24px; }
+.feedback--good { color: var(--sym-sage); }
+.feedback--bad { color: var(--sym-terra); }
+
+/* buttons */
+.btnrow { display: flex; gap: 12px; margin-top: 22px; justify-content: center; flex-wrap: wrap; }
+.btn {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  padding: 14px 24px; border-radius: 9px; cursor: pointer; border: none; transition: all .22s;
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.btn--gold { background: var(--sym-gold-grad); color: #1A1304; }
+.btn--gold:hover { transform: translateY(-2px); box-shadow: var(--sym-glow-gold); filter: brightness(1.07); }
+.btn--ghost { background: transparent; color: var(--sym-gold); border: 1px solid color-mix(in srgb, var(--sym-gold) 40%, transparent); }
+.btn--ghost:hover { background: color-mix(in srgb, var(--sym-gold) 12%, transparent); border-color: var(--sym-gold); }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+
+.launchnote {
+  font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--sym-stone);
+  text-align: center; margin-top: 14px; padding: 10px 14px; border: 1px dashed var(--sym-hairline); border-radius: 8px;
+}
+.launchnote code { color: var(--sym-gold-lt); }
+
+/* reward chips */
+.rewards { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 2px; }
+.rchip { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: 13px;
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); border-radius: 30px; padding: 8px 15px; color: var(--sym-cream); }
+.rchip svg { width: 16px; height: 16px; }
+
+/* relic reveal */
+.relicbig {
+  width: 92px; height: 92px; border-radius: 50%; margin: 6px auto 14px; display: grid; place-items: center; font-size: 46px;
+  background: radial-gradient(circle at 38% 30%, var(--sym-bg-raise), var(--sym-bg-panel));
+  border: 2px solid var(--sym-gold); box-shadow: 0 0 40px color-mix(in srgb, var(--sym-gold) 50%, transparent);
+  animation: relicpop .5s cubic-bezier(.16,1,.3,1);
+}
+@keyframes relicpop { from { transform: scale(.4) rotate(-20deg); } }
+
+/* ═══════════════════ END SCREENS ═══════════════════════════════════ */
+.end {
+  position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; text-align: center;
+  background: radial-gradient(ellipse 70% 60% at 50% 30%, color-mix(in srgb, var(--accent-end) 16%, transparent), transparent 70%), color-mix(in srgb, var(--sym-bg-dark) 92%, #000);
+  backdrop-filter: blur(4px);
+}
+.end__inner { max-width: 540px; }
+.end__crest { font-size: 80px; margin-bottom: 12px; filter: drop-shadow(0 0 30px var(--accent-end)); animation: rise .6s cubic-bezier(.16,1,.3,1); }
+.end__eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: var(--accent-end); margin-bottom: 12px; }
+.end__title { font-family: var(--font-display); font-size: clamp(40px, 8vw, 68px); font-weight: 700; line-height: 1; margin-bottom: 16px; }
+.end__title span { color: var(--accent-end); }
+.end__sub { font-family: var(--font-serif); font-size: 21px; font-style: italic; color: var(--sym-stone); line-height: 1.5; margin-bottom: 28px; }
+.end__unlock {
+  display: inline-flex; align-items: center; gap: 14px; padding: 16px 24px; border-radius: 12px; margin-bottom: 28px;
+  background: var(--sym-bg-panel); border: 1px solid var(--sym-hairline); box-shadow: var(--sym-glow-gold);
+}
+.end__unlock-swatch { width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0; }
+.end__unlock-txt { text-align: left; }
+.end__unlock-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--sym-gold); }
+.end__unlock-name { font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--sym-cream); }
+.end__summary { display: flex; justify-content: center; gap: 26px; margin-bottom: 28px; flex-wrap: wrap; }
+.end__stat { display: flex; flex-direction: column; gap: 3px; }
+.end__stat b { font-family: var(--font-display); font-size: 26px; color: var(--sym-cream); }
+.end__stat span { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--sym-stone); }
+
+/* intro overlay */
+.intro__panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0 4px; text-align: left; }
+.intro__card { background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); border-radius: 10px; padding: 14px; }
+.intro__card-ic { font-size: 22px; margin-bottom: 7px; }
+.intro__card-h { font-family: var(--font-serif); font-size: 16px; font-weight: 600; color: var(--sym-gold-lt); margin-bottom: 3px; }
+.intro__card-p { font-size: 12.5px; line-height: 1.5; color: var(--sym-stone); }
+
+@media (max-width: 600px) {
+  .hud { gap: 12px; padding: 10px 14px; }
+  .hud__run, .hud__sep { display: none; }
+  .hud__stats { gap: 12px; width: 100%; justify-content: space-between; }
+  .menos { width: 92px; }
+  .xpwrap { display: none; }
+  .node__disc { width: 50px; height: 50px; font-size: 22px; }
+  .node--boss .node__disc { width: 70px; height: 70px; font-size: 32px; }
+}
+
+/* ─── Restrained tone — quiet the game juice, keep the navigation ──── */
+[data-tone="restrained"] .stage { background-image: radial-gradient(ellipse 80% 55% at 50% -8%, color-mix(in srgb, var(--sym-gold) 5%, transparent), transparent 60%), var(--sym-bg-dark); }
+[data-tone="restrained"] .node--available .node__disc { animation: none; box-shadow: 0 5px 16px rgba(0,0,0,.5); border-color: color-mix(in srgb, var(--node-accent) 70%, transparent); }
+[data-tone="restrained"] .node--available .node__disc::after { display: none; }
+[data-tone="restrained"] .edge--open { animation: none; stroke-dasharray: none; }
+[data-tone="restrained"] .menos__fill { box-shadow: none; }
+[data-tone="restrained"] .node--current .node__disc { box-shadow: 0 0 0 2px color-mix(in srgb, var(--sym-terra) 30%, transparent); }
+[data-tone="restrained"] .relic { box-shadow: inset 0 0 8px rgba(0,0,0,.5); }
+[data-tone="restrained"] .stage__watermark { opacity: .03; }
+
+/* ═══════════════════ ACTS · backdrops + region bands + banner ═══════ */
+.stage__acttint {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 0%, color-mix(in srgb, var(--act-tint, var(--sym-gold)) 13%, transparent), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 50% 100%, color-mix(in srgb, var(--act-tint, var(--sym-gold)) 9%, transparent), transparent 58%);
+  transition: background 1.2s ease;
+}
+[data-tone="restrained"] .stage__acttint { opacity: .5; }
+
+.actband {
+  position: absolute; left: 50%; transform: translate(-50%, -50%); z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  pointer-events: none; opacity: .12; transition: opacity .5s;
+}
+.actband--here { opacity: .26; }
+.actband__num { font-family: var(--font-display); font-size: 120px; font-weight: 700; line-height: .8; color: color-mix(in srgb, var(--act-tint, var(--sym-gold)) 80%, var(--sym-cream)); }
+.actband__name { font-family: var(--font-display); font-size: 22px; letter-spacing: 8px; text-transform: uppercase; color: var(--sym-cream); }
+
+.actbanner {
+  position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; pointer-events: none;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, color-mix(in srgb, var(--act-tint) 22%, transparent), transparent 70%), rgba(8,6,4,.55);
+  animation: actbannerbg 2.6s ease forwards;
+}
+@keyframes actbannerbg { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.actbanner__inner { text-align: center; animation: actbannerin 2.6s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes actbannerin {
+  0% { opacity: 0; transform: translateY(24px) scale(.96); letter-spacing: 0; }
+  16% { opacity: 1; transform: translateY(0) scale(1); }
+  82% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); }
+}
+.actbanner__num { font-family: var(--font-mono); font-size: 13px; letter-spacing: 5px; text-transform: uppercase; color: color-mix(in srgb, var(--act-tint) 70%, var(--sym-gold-lt)); margin-bottom: 10px; }
+.actbanner__name { font-family: var(--font-display); font-size: clamp(48px, 9vw, 92px); font-weight: 700; line-height: 1; color: var(--sym-cream); text-shadow: 0 0 40px color-mix(in srgb, var(--act-tint) 60%, transparent); }
+.actbanner__sub { font-family: var(--font-serif); font-size: 22px; font-style: italic; color: var(--sym-stone); margin-top: 8px; }
+.actbanner__blurb { font-family: var(--font-serif); font-size: 16px; color: color-mix(in srgb, var(--sym-cream) 80%, transparent); max-width: 440px; margin: 14px auto 0; line-height: 1.5; }
+
+/* node format badge */
+.node__fmt {
+  position: absolute; bottom: -3px; right: -3px; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px;
+  background: var(--sym-bg-dark); border: 1px solid color-mix(in srgb, var(--node-accent) 55%, transparent);
+}
+
+/* ═══════════════════ FOE banner (duel) ═════════════════════════════ */
+.modal__pad--battle { padding-top: 22px; }
+.foe { display: flex; flex-direction: column; align-items: center; gap: 9px; margin-bottom: 6px; --foe: var(--sym-gold); }
+.foe__intent {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 30px;
+  background: color-mix(in srgb, var(--sym-terra) 14%, var(--sym-bg-raise));
+  border: 1px solid color-mix(in srgb, var(--sym-terra) 40%, transparent);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .5px; color: var(--sym-terra);
+}
+.foe__intent--ghost { opacity: 0; }
+.foe__intent-ic { font-size: 13px; }
+.foe__medallion {
+  width: 84px; height: 84px; border-radius: 50%; position: relative; display: grid; place-items: center;
+  background: radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--foe) 22%, var(--sym-bg-raise)), var(--sym-bg-panel) 78%);
+  border: 2.5px solid var(--foe);
+  box-shadow: inset 0 0 18px rgba(0,0,0,.6), 0 0 26px color-mix(in srgb, var(--foe) 38%, transparent);
+}
+.foe__glyph { font-family: var(--font-display); font-size: 40px; font-weight: 700; color: color-mix(in srgb, var(--foe) 55%, var(--sym-cream)); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.foe__sigil { position: absolute; top: -8px; right: -6px; font-size: 22px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--foe) 60%, transparent)); }
+.foe__medallion.hit { animation: foehit .42s cubic-bezier(.36,.07,.19,.97); }
+@keyframes foehit {
+  10%,90% { transform: translateX(-2px) rotate(-2deg); }
+  20%,80% { transform: translateX(4px) rotate(3deg); }
+  30%,50%,70% { transform: translateX(-7px) rotate(-4deg); }
+  40%,60% { transform: translateX(7px) rotate(4deg); }
+}
+.foe__name { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--sym-cream); }
+.foe__hp { display: flex; gap: 5px; }
+.hp-pip { width: 13px; height: 13px; border-radius: 3px; transform: rotate(45deg); background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); transition: all .3s; }
+.hp-pip--full { background: linear-gradient(135deg, var(--foe), color-mix(in srgb, var(--foe) 60%, #000)); border-color: var(--foe); box-shadow: 0 0 8px color-mix(in srgb, var(--foe) 50%, transparent); }
+.foe__quote { text-align: center; font-family: var(--font-serif); font-size: 16px; font-style: italic; color: color-mix(in srgb, var(--sym-terra) 70%, var(--sym-cream)); margin: 0 0 4px; }
+
+/* battle status bar */
+.battlebar { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 12px; flex-wrap: wrap; }
+.battlebar__chip { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; padding: 6px 13px; border-radius: 20px; background: color-mix(in srgb, var(--sym-gold) 12%, var(--sym-bg-raise)); border: 1px solid var(--sym-hairline); color: var(--sym-gold-lt); }
+.battlebar__chip--ghost { background: var(--sym-bg-raise); color: var(--sym-stone); }
+.timering { flex-shrink: 0; }
+.timering--danger text { animation: tickpulse .5s ease infinite; }
+@keyframes tickpulse { 50% { opacity: .5; } }
+
+/* true/false buttons */
+.tf { text-align: center; }
+.tfrow { display: flex; gap: 12px; }
+.tfbtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-family: var(--font-serif); font-size: 18px; font-weight: 600; color: var(--sym-cream);
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); padding: 16px; border-radius: 11px; cursor: pointer; transition: all .16s;
+}
+.tfbtn:hover:not(:disabled) { border-color: var(--sym-gold); transform: translateY(-2px); }
+.tfbtn:disabled { cursor: default; }
+.tfbtn__ic { font-family: var(--font-ui); font-size: 16px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; border: 1px solid currentColor; opacity: .7; }
+
+.hintline { text-align: center; font-family: var(--font-serif); font-size: 16px; font-style: italic; color: var(--sym-aegean); margin: 6px 0 2px; }
+
+/* real-game integration stub */
+.stubrow { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--sym-hairline-soft); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.stubrow code { font-family: var(--font-mono); font-size: 11px; color: var(--sym-stone); }
+.stublink { font-family: var(--font-mono); font-size: 11px; letter-spacing: .5px; color: var(--sym-gold); background: none; border: none; cursor: pointer; opacity: .8; transition: opacity .2s; }
+.stublink:hover { opacity: 1; text-decoration: underline; }
+
+/* reward count-up pop */
+.rchip--pop { animation: rchippop .5s cubic-bezier(.16,1,.3,1); }
+@keyframes rchippop { from { transform: scale(.6); opacity: 0; } }
+
+/* ═══════════════════ JUICE ═════════════════════════════════════════ */
+.fx-shake { animation: shake .46s cubic-bezier(.36,.07,.19,.97); }
+@keyframes shake {
+  10%,90% { transform: translate(-1px,0); } 20%,80% { transform: translate(2px,0); }
+  30%,50%,70% { transform: translate(-5px,1px); } 40%,60% { transform: translate(5px,-1px); }
+}
+.fx-flash { position: fixed; inset: 0; z-index: 200; pointer-events: none; background: radial-gradient(ellipse 90% 70% at 50% 50%, transparent 40%, var(--flash, rgba(217,107,48,.5))); opacity: 0; }
+.fx-flash.on { animation: flashfade .42s ease; }
+@keyframes flashfade { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+.fx-float {
+  position: fixed; z-index: 210; pointer-events: none; transform: translate(-50%, 0);
+  font-family: var(--font-display); font-size: 26px; font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0,0,0,.7); animation: floatup 1.05s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.7); } 18% { opacity: 1; transform: translate(-50%, -6px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -52px) scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-shake, .foe__medallion.hit, .actbanner, .actbanner__inner { animation: none; }
+}
+
+/* ═══════════════════ RITUAL BACKDROP ═══════════════════════════════ */
+.ritual { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.ritual__circle {
+  position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+  width: min(135vh, 130vw); height: min(135vh, 130vw);
+  color: var(--act-tint, var(--sym-gold));
+  opacity: .14; animation: ritualspin 140s linear infinite;
+}
+[data-tone="restrained"] .ritual__circle { opacity: .07; }
+@keyframes ritualspin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.ritual__ring { fill: none; stroke: currentColor; stroke-width: 1; }
+.ritual__ring--outer { stroke-width: 2; }
+.ritual__ring--dash { stroke-dasharray: 3 9; }
+.ritual__tri { fill: none; stroke: currentColor; stroke-width: 1; opacity: .8; }
+.ritual__tri--soft { opacity: .4; }
+.ritual__eye { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.ritual__pupil { fill: currentColor; }
+.ritual__rim { font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px; fill: currentColor; }
+
+/* drifting fog */
+.ritual__fog { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; mix-blend-mode: screen; }
+.ritual__fog--a { width: 70vw; height: 50vh; left: -10vw; top: 10vh; background: radial-gradient(circle, color-mix(in srgb, var(--act-tint, var(--sym-gold)) 22%, transparent), transparent 70%); animation: fogdrift1 38s ease-in-out infinite; }
+.ritual__fog--b { width: 60vw; height: 45vh; right: -8vw; bottom: 6vh; background: radial-gradient(circle, color-mix(in srgb, var(--act-tint, var(--sym-terra)) 18%, transparent), transparent 70%); animation: fogdrift2 46s ease-in-out infinite; }
+@keyframes fogdrift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(8vw,4vh) scale(1.15); } }
+@keyframes fogdrift2 { 0%,100% { transform: translate(0,0) scale(1.1); } 50% { transform: translate(-7vw,-5vh) scale(1); } }
+
+/* rising embers */
+.ritual__embers { position: absolute; inset: 0; }
+.ember {
+  position: absolute; bottom: -10px; border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--act-tint, var(--sym-gold-lt)) 90%, #fff), color-mix(in srgb, var(--act-tint, var(--sym-gold)) 40%, transparent));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--act-tint, var(--sym-gold)) 70%, transparent);
+  opacity: 0; animation-name: emberrise; animation-timing-function: ease-in; animation-iteration-count: infinite;
+}
+@keyframes emberrise {
+  0% { transform: translate(0, 0) scale(.6); opacity: 0; }
+  12% { opacity: .9; }
+  70% { opacity: .7; }
+  100% { transform: translate(var(--drift, 10px), -98vh) scale(1); opacity: 0; }
+}
+
+/* per-act mood overlays (vignette + tint) layered atop acttint */
+.stage--act2 .ritual__circle { filter: saturate(.7) hue-rotate(-6deg); }
+.stage--act3 { }
+.stage--act3 .stage__acttint {
+  background:
+    radial-gradient(ellipse 95% 55% at 50% 0%, color-mix(in srgb, #9C3D9E 20%, transparent), transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 110%, color-mix(in srgb, #B0202A 16%, transparent), transparent 55%),
+    radial-gradient(circle at 50% 38%, transparent 30%, rgba(0,0,0,.5) 100%);
+}
+.stage--act3 .ritual__circle { opacity: .2; }
+.stage--act3 .ember { animation-duration: 6s; }
+
+/* curse vignette — creeping shadow when miasma is on you */
+.stage--cursed::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  box-shadow: inset 0 0 120px 30px rgba(40,0,30,.55), inset 0 0 60px rgba(120,20,60,.3);
+  animation: cursepulse 4s ease-in-out infinite;
+}
+@keyframes cursepulse { 0%,100% { opacity: .55; } 50% { opacity: .95; } }
+
+/* curse infliction flash */
+.fx-curse::before {
+  content: ""; position: fixed; inset: 0; z-index: 205; pointer-events: none;
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(90,10,70,.7));
+  animation: curseflash .9s ease;
+}
+@keyframes curseflash { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ═══════════════════ CURSE TRAY (HUD) ══════════════════════════════ */
+.curses { display: flex; align-items: center; gap: 7px; padding-left: 12px; margin-left: 4px; border-left: 1px solid color-mix(in srgb, #B0202A 40%, transparent); }
+.curse {
+  position: relative; width: 34px; height: 34px; border-radius: 8px;
+  display: grid; place-items: center; font-size: 16px; cursor: help;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, #6A1040 40%, var(--sym-bg-raise)), var(--sym-bg-panel));
+  border: 1px solid color-mix(in srgb, #C0306A 55%, transparent);
+  box-shadow: inset 0 0 8px rgba(0,0,0,.5), 0 0 12px color-mix(in srgb, #B0202A 35%, transparent);
+  animation: cursethrob 2.4s ease-in-out infinite;
+}
+@keyframes cursethrob { 50% { box-shadow: inset 0 0 8px rgba(0,0,0,.5), 0 0 18px color-mix(in srgb, #C0306A 55%, transparent); } }
+.curse__turns {
+  position: absolute; bottom: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 3px;
+  border-radius: 8px; background: #B0202A; color: #fff; font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  display: grid; place-items: center; border: 1px solid var(--sym-bg-dark);
+}
+.relic__pop--curse { border-color: color-mix(in srgb, #C0306A 45%, transparent); }
+.relic__pop--curse b { color: #e07ba6; }
+.relic__pop--curse em { display: block; margin-top: 6px; font-family: var(--font-mono); font-size: 10px; font-style: normal; color: var(--sym-stone); letter-spacing: .5px; }
+
+/* ═══════════════════ TOAST ═════════════════════════════════════════ */
+.toast {
+  position: fixed; left: 50%; top: 78px; transform: translateX(-50%); z-index: 115;
+  display: flex; align-items: center; gap: 13px; padding: 13px 20px; border-radius: 12px; cursor: pointer;
+  background: color-mix(in srgb, var(--sym-bg-panel) 96%, #000); border: 1px solid var(--sym-hairline);
+  box-shadow: 0 16px 44px rgba(0,0,0,.6); max-width: min(440px, 90vw);
+  animation: toastin .4s cubic-bezier(.16,1,.3,1);
+}
+.toast--bad { border-color: color-mix(in srgb, #C0306A 55%, transparent); box-shadow: 0 16px 44px rgba(0,0,0,.6), 0 0 26px color-mix(in srgb, #B0202A 30%, transparent); }
+@keyframes toastin { from { opacity: 0; transform: translate(-50%, -14px); } }
+.toast__icon { font-size: 26px; flex-shrink: 0; filter: drop-shadow(0 0 8px color-mix(in srgb, #C0306A 60%, transparent)); }
+.toast__txt { display: flex; flex-direction: column; gap: 2px; }
+.toast__txt b { font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: var(--sym-cream); }
+.toast__txt span { font-size: 13px; color: var(--sym-stone); line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ritual__circle, .ritual__fog, .ember, .stage--cursed::after, .fx-curse::before, .curse { animation: none; }
+  .ember { display: none; }
+}
+
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .node--available .node__disc, .edge--open { animation: none; }
+}
+
+/* ═══════════════════ NODE PREVIEW (hover) ══════════════════════════ */
+.node:hover { z-index: 50; }
+.node__preview {
+  position: absolute; top: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%) translateY(-5px); width: 224px; z-index: 60;
+  pointer-events: none; text-align: left;
+  background: color-mix(in srgb, var(--sym-bg-panel) 97%, #000);
+  border: 1px solid color-mix(in srgb, var(--node-accent) 42%, var(--sym-hairline));
+  border-radius: 12px; padding: 11px 13px;
+  box-shadow: 0 20px 48px rgba(0,0,0,.65), inset 0 1px 0 color-mix(in srgb, var(--node-accent) 22%, transparent);
+  opacity: 0; transition: opacity .16s ease, transform .16s ease;
+}
+.node:hover .node__preview { opacity: 1; transform: translateX(-50%) translateY(0); }
+.node--boss .node__preview { width: 250px; }
+.node__preview-h { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.node__preview-ic { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; font-size: 16px; border-radius: 7px;
+  background: var(--sym-bg-raise); border: 1px solid color-mix(in srgb, var(--node-accent) 45%, transparent); }
+.node__preview-tt { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.node__preview-tt b { font-family: var(--font-serif); font-size: 15px; font-weight: 600; color: var(--sym-cream); }
+.node__preview-tt span { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sym-stone); margin-top: 2px; }
+.node__preview-tag { margin-left: auto; font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--sym-gold-lt); padding: 2px 7px; border-radius: 12px; border: 1px solid var(--sym-hairline); }
+.node__preview-row { display: flex; align-items: baseline; gap: 6px; font-size: 11.5px; line-height: 1.4; color: color-mix(in srgb, var(--sym-cream) 82%, transparent); margin-bottom: 4px; }
+.node__preview-row b { color: var(--sym-cream); }
+.node__preview-foe { font-family: var(--font-serif); font-size: 14px; color: var(--sym-cream); }
+.node__preview-foe em { margin-left: auto; font-family: var(--font-mono); font-size: 9px; font-style: normal; letter-spacing: .5px; color: var(--sym-stone); }
+.node__preview-intent { color: color-mix(in srgb, var(--sym-terra) 80%, var(--sym-cream)); }
+.node__preview-mech { color: var(--sym-terra); font-family: var(--font-serif); font-size: 13px; }
+.node__preview-d { font-size: 11px; line-height: 1.45; color: var(--sym-stone); margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--sym-hairline-soft); }
+
+/* ═══════════════════ STREAK SURGE METER ════════════════════════════ */
+.surge { display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 20px;
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); }
+.surge__pip { width: 9px; height: 9px; border-radius: 50%; transition: all .2s;
+  background: color-mix(in srgb, var(--sym-gold) 16%, var(--sym-bg-dark)); border: 1px solid var(--sym-hairline); }
+.surge__pip--on { background: var(--sym-gold-grad); border-color: var(--sym-gold); box-shadow: 0 0 8px color-mix(in srgb, var(--sym-gold) 60%, transparent); }
+.surge--burst .surge__pip { background: var(--sym-gold-lt); border-color: var(--sym-gold-lt); box-shadow: 0 0 13px var(--sym-gold-lt); animation: surgeburst .65s ease; }
+@keyframes surgeburst { 0% { transform: scale(1.6); } 60% { transform: scale(.85); } 100% { transform: scale(1); } }
+
+/* ═══════════════════ BOSS MECHANIC TELEGRAPH ═══════════════════════ */
+.mechbar { display: flex; align-items: center; gap: 11px; margin: 2px 0 12px; padding: 9px 13px; border-radius: 11px;
+  background: color-mix(in srgb, var(--sym-terra) 10%, var(--sym-bg-raise)); border: 1px solid color-mix(in srgb, var(--sym-terra) 34%, transparent); }
+.mechbar__ic { font-size: 19px; flex-shrink: 0; }
+.mechbar__tx { font-size: 11.5px; line-height: 1.4; color: var(--sym-stone); flex: 1; }
+.mechbar__tx b { font-family: var(--font-serif); font-size: 14px; color: var(--sym-terra); }
+.mechbar__state { width: 30px; flex-shrink: 0; text-align: center; font-size: 19px; opacity: .55; transition: all .25s; }
+.mechbar__state--on { opacity: 1; transform: scale(1.18); filter: drop-shadow(0 0 7px color-mix(in srgb, var(--sym-terra) 60%, transparent)); }
+.mechbar__gauge { display: flex; gap: 5px; flex-shrink: 0; }
+.mechbar__gauge i { width: 11px; height: 11px; border-radius: 3px; transform: rotate(45deg); background: var(--sym-bg-dark); border: 1px solid color-mix(in srgb, var(--sym-terra) 42%, transparent); transition: all .25s; }
+.mechbar__gauge i.on { background: var(--sym-terra); box-shadow: 0 0 7px var(--sym-terra); }
+
+/* shielded foe aegis ring */
+.foe { position: relative; }
+.foe__aegis { position: absolute; top: 36px; left: 50%; width: 106px; height: 106px; transform: translateX(-50%);
+  border-radius: 50%; pointer-events: none; z-index: 0;
+  border: 2px solid color-mix(in srgb, var(--sym-aegean) 60%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--sym-aegean) 45%, transparent), inset 0 0 18px color-mix(in srgb, var(--sym-aegean) 25%, transparent);
+  animation: aegispulse 2.1s ease-in-out infinite; }
+@keyframes aegispulse { 0%,100% { opacity: .5; transform: translateX(-50%) scale(1); } 50% { opacity: .92; transform: translateX(-50%) scale(1.05); } }
+
+/* ═══════════════════ PATRON SELECT ═════════════════════════════════ */
+.scrim--top { z-index: 160; }
+.patron-ctx { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: -4px 0 16px; }
+.patron-ctx__chip { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; padding: 6px 12px; border-radius: 20px;
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); color: var(--sym-gold-lt); }
+.patron-ctx__chip--ana { color: var(--sym-terra); border-color: color-mix(in srgb, var(--sym-terra) 40%, transparent); }
+.patrongrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 10px; margin: 4px 0; }
+.patron { position: relative; overflow: hidden; text-align: left; cursor: pointer; transition: all .18s; --pat: var(--sym-gold);
+  background: var(--sym-bg-raise); border: 1px solid var(--sym-hairline); border-radius: 12px; padding: 14px 14px 13px;
+  display: flex; flex-direction: column; gap: 2px; }
+.patron:hover { border-color: color-mix(in srgb, var(--pat) 60%, transparent); transform: translateY(-2px); }
+.patron--on { border-color: var(--pat); background: color-mix(in srgb, var(--pat) 11%, var(--sym-bg-raise));
+  box-shadow: 0 0 0 1px var(--pat), 0 0 22px color-mix(in srgb, var(--pat) 32%, transparent); }
+.patron__glyph { position: absolute; right: 6px; bottom: -14px; font-family: var(--font-display); font-size: 66px; font-weight: 700;
+  color: color-mix(in srgb, var(--pat) 24%, transparent); line-height: 1; pointer-events: none; }
+.patron__ic { font-size: 23px; line-height: 1; }
+.patron__name { font-family: var(--font-serif); font-size: 19px; font-weight: 600; color: var(--sym-cream); margin-top: 4px; }
+.patron__en { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--pat); }
+.patron__desc { font-size: 12px; line-height: 1.46; color: var(--sym-stone); margin-top: 6px; position: relative; z-index: 1; }
+
+/* ═══════════════════ HUD run badges ════════════════════════════════ */
+.hud__runbadges { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.runbadge { --pat: var(--sym-gold); font-family: var(--font-mono); font-size: 8.5px; letter-spacing: .8px; padding: 3px 8px; border-radius: 20px;
+  background: color-mix(in srgb, var(--pat) 14%, var(--sym-bg-raise)); border: 1px solid color-mix(in srgb, var(--pat) 42%, transparent); color: var(--sym-cream); }
+.runbadge--ana { --pat: var(--sym-terra); color: var(--sym-terra); }
+.runbadge--daily { --pat: var(--sym-aegean); color: var(--sym-aegean); }
+
+@media (prefers-reduced-motion: reduce) {
+  .foe__aegis, .surge--burst .surge__pip { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── HOUSE-STYLE ALIGNMENT (Temple of the Muses vocabulary) ──────────
+   Candle-lit obsidian · SHARP square corners · hairline-gold rules ·
+   square reward tiles. The ritual circle, climb nodes and foe
+   medallions stay round (map / ritual canon). Cosmetic only — no
+   gameplay logic is touched. Set data-corners="soft" to restore radii.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* the house corner ceiling is 0 — square every reward-screen surface */
+:root:not([data-corners="soft"]) :is(
+  .hud__btn, .kleos, .menos__track, .xp__track,
+  .btn, .opt, .choice, .tfbtn, .modal, .toast, .launchnote,
+  .relic, .relic--empty, .curse, .relic__pop, .node__preview, .node__preview-ic,
+  .runbadge, .rchip, .battlebar__chip, .patron-ctx__chip, .node__preview-tag,
+  .foe__intent, .card__pill, .patron, .intro__card, .end__unlock, .end__unlock-swatch,
+  .mechbar, .surge,
+  .card, .card__ic, .card__btn, .card__swatch, .card__lockchip,
+  .quest, .quest__ic, .quest__bar, .loadout, .loadout__slot,
+  .hub__kleos, .hub__x, .hub__begin, .hub__tab, .medal, .trophy, .statcard
+) { border-radius: 0; }
+
+/* reward tiles get the hairline-gold ostraka edge (cf. Temple .boon-ic) */
+.relic, .curse { border-color: color-mix(in srgb, var(--sym-gold) 30%, transparent); }
+
+/* keep the chrome candle-lit, not glassy */
+.hud__btn:hover { background: color-mix(in srgb, var(--sym-gold) 12%, transparent); border-color: var(--sym-gold); }
+
+/* a thin running Greek-key meander — gold seasoning under the HUD */
+.hud::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px;
+  z-index: 31; pointer-events: none; opacity: .55;
+  background: color-mix(in srgb, var(--sym-gold) 70%, transparent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2014'%3E%3Cpath%20d='M0%2011H20M3%2011V3H15V9H9V6'%20fill='none'%20stroke='%23fff'%20stroke-width='1.5'/%3E%3C/svg%3E") repeat-x left center / 22px 10px;
+          mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2020%2014'%3E%3Cpath%20d='M0%2011H20M3%2011V3H15V9H9V6'%20fill='none'%20stroke='%23fff'%20stroke-width='1.5'/%3E%3C/svg%3E") repeat-x left center / 22px 10px;
+}
+[data-tone="restrained"] .hud::after { opacity: .22; }
+
+/* rotated-diamond divider, echoing the Temple .t-rule */
+.modal__rule {
+  height: 1px; border: none; position: relative; overflow: visible;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sym-gold) 34%, transparent) 22%, color-mix(in srgb, var(--sym-gold) 34%, transparent) 78%, transparent);
+}
+.modal__rule::before {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 5px; height: 5px; transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--sym-gold); opacity: .85;
+}
+
+/* climb legibility: lift the dimmed path a touch out of the fog */
+.node--locked .node__disc { filter: grayscale(.55) brightness(.62); opacity: .5; }
+.floorband { opacity: .68; }
+
+/* engraved gold corner ticks framing the view (brief: corner ticks) */
+.stage::before {
+  content: ""; position: fixed; inset: 13px; z-index: 40; pointer-events: none; opacity: .5;
+  background:
+    linear-gradient(var(--sym-gold), var(--sym-gold)) left top / 20px 1.5px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) left top / 1.5px 20px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) right top / 20px 1.5px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) right top / 1.5px 20px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) left bottom / 20px 1.5px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) left bottom / 1.5px 20px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) right bottom / 20px 1.5px no-repeat,
+    linear-gradient(var(--sym-gold), var(--sym-gold)) right bottom / 1.5px 20px no-repeat;
+}
+[data-tone="restrained"] .stage::before { opacity: .3; }

@@ -8,6 +8,23 @@
 const Mnemosyne = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -122,7 +139,7 @@ const Mnemosyne = (() => {
       const k=el.getAttribute('data-i18n'); if(I18N[k]) el.innerHTML=I18N[k][L()];
     });
     if (st && st.cur && document.getElementById('mn-screen-game').classList.contains('active')) {
-      document.getElementById('mn-qtext').textContent = st.cur.q[L()];
+      document.getElementById('mn-qtext').textContent = QT(st.cur.q);
       renderTop(); renderBoard();
     }
   }
@@ -177,7 +194,7 @@ const Mnemosyne = (() => {
     if (st.done) return;
     if (st.qNum>=MAXQ || st.pairs>=PAIRS) return end();
     st.answered=false; st.cur=getQ(); st.qNum++;
-    document.getElementById('mn-qtext').textContent = st.cur.q[L()];
+    document.getElementById('mn-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('mn-feedback'); fb.textContent=''; fb.className='mn-feedback';
     const wrap=document.getElementById('mn-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
@@ -207,6 +224,7 @@ const Mnemosyne = (() => {
       renderBoard();
     } else {
       btn.classList.add('wrong'); _fx('wrong',{el:btn});
+      if (window.symLogMistake) { try { window.symLogMistake({ q: st.cur.q, wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Μνημοσύνη', gameId: 'mnemosyne' }); } catch(_){} }
       advanceRivals(true);
       fb.textContent=T('ΛΑΘΟΣ — οι Μούσες θυμούνται για σένα','WRONG — the Muses recall for others'); fb.className='mn-feedback mn-fb-bad';
       renderBoard();

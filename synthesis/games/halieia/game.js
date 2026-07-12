@@ -10,6 +10,23 @@
 const Halieia = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   // Question source. The Games-Panel bridge fills window.AL_Q with MC items
@@ -180,7 +197,7 @@ const Halieia = (() => {
     });
     if (st && st.cur && document.getElementById('al-screen-game').classList.contains('active')) {
       document.getElementById('al-qnum').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum+' / '+TOTAL;
-      document.getElementById('al-qtext').textContent = st.cur.q[L()];
+      document.getElementById('al-qtext').textContent = QT(st.cur.q);
       renderBoard();
     }
     if (document.getElementById('al-screen-cast').classList.contains('active')) labelZones();
@@ -320,7 +337,7 @@ const Halieia = (() => {
     if (st.qNum >= TOTAL) return end();
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('al-qnum').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum+' / '+TOTAL;
-    document.getElementById('al-qtext').textContent = st.cur.q[L()];
+    document.getElementById('al-qtext').textContent = QT(st.cur.q);
     const fb=document.getElementById('al-feedback'); fb.textContent=''; fb.className='al-feedback';
     const wrap=document.getElementById('al-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
@@ -342,7 +359,9 @@ const Halieia = (() => {
       setTimeout(toCast, 650);
     } else {
       btn.classList.add('wrong');
-      st.streak=0; updateHud();
+      st.streak=0;
+      if (window.symLogMistake) { try { window.symLogMistake({ q: QT(st.cur.q), wrong: (st.cur.a && st.cur.a[chosen]) || '', right: (st.cur.a && st.cur.a[st.cur.c]) || '', cat: 'Αλιεία', gameId: 'halieia' }); } catch (_) {} }
+      updateHud();
       fb.textContent=T('ΛΑΘΟΣ — δεν ρίχνεις δίχτυ','WRONG — no cast for you'); fb.className='al-feedback al-fb-bad';
       renderBoard();
       setTimeout(()=>{ if(st.qNum>=TOTAL) end(); else nextQ(); }, 1700);

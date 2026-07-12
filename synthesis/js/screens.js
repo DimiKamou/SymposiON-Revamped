@@ -10,6 +10,17 @@
   const SY = window.SYM;
   const ST = () => window.STATE;
   const isAdmin = () => !!(window.STATE && window.STATE.adminEdit);
+  // Resolve a game's admin-overridden display name (Game-Tags rename); falls
+  // back to the game's own {gr,en} when there is no override.
+  const gName = (g) => (window.SymTags && SymTags.displayName) ? SymTags.displayName(g) : g;
+
+  // ── Level-list collapse memory for the Game-Panel universal picker
+  //    (engineSetup) — mirrors curriculum-picker.js's _lvHidden/_lvFoldG so the
+  //    same hide/unhide fold behaves identically here as on Live & PvP. Keyed
+  //    by dataset id; module-scoped so it survives the picker's paintList()
+  //    re-renders (and re-opening the picker).
+  const _lvHidden = {};   // dsId → true: the whole level list is collapsed to its header
+  const _lvFoldG  = {};   // 'dsId::group' → true: that one category's rows are collapsed
 
   /* ── shared bits ───────────────────────────────────────────────── */
   function glyph(name, cls){ return el('span', { class:(cls||'sc-gl'), 'data-illu':name }); }
@@ -31,6 +42,137 @@
     window.open(base + 'games/pvp-arena/index.html', '_blank', 'noopener');
   }
   window.launchPvPArena = launchPvPArena;
+
+  // ── PvP content chooser ──
+  // Before opening the standalone Arena, let the host pick which material(s)
+  // the duel questions are drawn from (instead of dumping the whole bank). The
+  // picked mix is stored as SYM_QUESTIONS_SELECTION; the Arena prelude prefers
+  // it over the full SYM_QUESTIONS. "All content" clears the key for full-bank.
+  function _pvpMatLabel(m){ return (m && m.label && typeof m.label === 'object') ? L(m.label) : ((m && (m.label || m.id)) || ''); }
+  function _pvpCombineAndGo(sel, btn, close){
+    var ids = Object.keys(sel).filter(function(k){ return sel[k]; });
+    if (!ids.length) return;
+    if (btn) { btn.disabled = true; }
+    var provs = window.GP_LEVEL_PROVIDERS || {};
+    var jobs = ids.map(function(id){
+      var lv = (provs[id] && provs[id].levels) || [];
+      var levelIds = lv.map(function(x){ return x.id; });
+      return (window.SymMix && SymMix.bank) ? SymMix.bank(id, levelIds) : Promise.resolve([]);
+    });
+    Promise.all(jobs).then(function(arrs){
+      var combined = [];
+      arrs.forEach(function(a){ if (Array.isArray(a)) combined = combined.concat(a); });
+      combined = combined.filter(function(q){ return q && q.a && q.a.length >= 2; });
+      try {
+        if (combined.length) localStorage.setItem('SYM_QUESTIONS_SELECTION', JSON.stringify(combined));
+        else localStorage.removeItem('SYM_QUESTIONS_SELECTION');
+      } catch (_) {}
+      if (close) close();
+      launchPvPArena();
+    }).catch(function(){
+      try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {}
+      if (close) close();
+      launchPvPArena();
+    });
+  }
+  function openPvPContentChooser(){
+    var mats = (window.SymMix && typeof SymMix.materials === 'function') ? SymMix.materials() : [];
+    // No mixer / no materials → just open with the full bank.
+    if (!mats.length) { try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {} return launchPvPArena(); }
+    var prev = document.getElementById('pvp-content-chooser'); if (prev) prev.remove();
+    var sel = {};
+    var ov = el('div',{ id:'pvp-content-chooser', class:'game-overlay active',
+      style:'position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;background:rgba(8,6,4,.72);backdrop-filter:blur(4px);' });
+    if (window.symApplyThemeClass) { try { window.symApplyThemeClass(ov); } catch (_) {} }
+    var card = el('div',{ class:'has-accent',
+      style:'--ca:'+SITE+';width:min(520px,92vw);max-height:88vh;overflow:auto;background:var(--sym-parch,#1a1410);color:var(--sym-ink,#eadfce);border:1px solid color-mix(in srgb,var(--ca) 40%,transparent);border-radius:16px;padding:22px;box-shadow:0 24px 60px rgba(0,0,0,.5);' });
+    var esc = function(e){ if (e.key === 'Escape') close(); };
+    var close = function(){ try { ov.remove(); } catch (_) {} document.removeEventListener('keydown', esc); };
+    document.addEventListener('keydown', esc);
+    ov.addEventListener('click', function(e){ if (e.target === ov) close(); });
+    card.appendChild(el('div',{ style:'font:800 18px/1.2 Inter,sans-serif;margin-bottom:4px' }, L({ gr:'Διάλεξε περιεχόμενο για τον Ἀγῶνα', en:'Choose content for the duel' })));
+    card.appendChild(el('div',{ style:'opacity:.7;font-size:13px;margin-bottom:16px' }, L({ gr:'Διάλεξε ύλη για τις ερωτήσεις, ή ξεκίνα με όλο το περιεχόμενο.', en:'Pick material for the questions, or start with all content.' })));
+    var listWrap = el('div',{ style:'display:flex;flex-direction:column;gap:8px;margin-bottom:18px' });
+    var count = el('span', {}, '0');
+    var combineBtn = el('button',{ class:'sc-cta sc-cta--solid', onclick:function(){ _pvpCombineAndGo(sel, combineBtn, close); } });
+    function refresh(){
+      var n = Object.keys(sel).filter(function(k){ return sel[k]; }).length;
+      count.textContent = String(n);
+      combineBtn.disabled = n === 0;
+      combineBtn.style.opacity = n === 0 ? '.5' : '1';
+    }
+    mats.forEach(function(m){
+      var on = false;
+      var row = el('button',{ style:'display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ca) 24%,transparent);background:rgba(255,255,255,.03);color:inherit;cursor:pointer;font:600 14px Inter,sans-serif;' });
+      var chk = el('span',{ style:'width:20px;flex:none;font-weight:900;color:var(--ca)' }, '');
+      row.appendChild(chk);
+      row.appendChild(el('span',{ style:'flex:1' }, _pvpMatLabel(m)));
+      row.addEventListener('click', function(){ on = !on; sel[m.id] = on; chk.textContent = on ? '✓' : ''; row.style.background = on ? 'color-mix(in srgb,var(--ca) 16%,transparent)' : 'rgba(255,255,255,.03)'; refresh(); });
+      listWrap.appendChild(row);
+    });
+    card.appendChild(listWrap);
+    var bar = el('div',{ style:'display:flex;gap:10px;justify-content:flex-end;align-items:center;flex-wrap:wrap' });
+    bar.appendChild(el('button',{ class:'sc-cta sc-cta--ghost', onclick:function(){ try { localStorage.removeItem('SYM_QUESTIONS_SELECTION'); } catch (_) {} close(); launchPvPArena(); } }, L({ gr:'Όλο το περιεχόμενο', en:'All content' })));
+    combineBtn.appendChild(el('span', {}, L({ gr:'Συνδυασμός & Είσοδος (', en:'Combine & enter (' })));
+    combineBtn.appendChild(count);
+    combineBtn.appendChild(el('span', {}, ')'));
+    bar.appendChild(combineBtn);
+    card.appendChild(bar);
+    ov.appendChild(card);
+    document.body.appendChild(ov);
+    if (window.injectIllus) { try { injectIllus(card); } catch (_) {} }
+    refresh();
+  }
+  window.openPvPContentChooser = openPvPContentChooser;
+
+  // ── Real Live Arena launcher ──
+  // The home "Live" screen (S.live) used to be a mockup (hardcoded PIN, fake
+  // players). This lazy-loads the REAL LiveArena engine (Firestore live_arenas)
+  // via synLaunch('openLiveArena') and opens the host/join picker. If a 6-digit
+  // PIN is supplied (student "Join with PIN"), it pre-fills the join screen.
+  // Firestore rules require auth for live_arenas — LiveArena.submitJoin already
+  // prompts sign-in, but we also surface a friendly prompt up-front for hosting.
+  function openRealLiveArena(pin, opts){
+    const _pin = (pin || '').toString().replace(/\D/g, '').slice(0, 6);
+    // Duel join: a friend followed a ?join=PIN&duel=1 invite. Route into the
+    // 2-seat duel-join flow instead of the class-broadcast student join.
+    const _duel = !!(opts && opts.duel);
+    if (_pin && _duel && window.SYN_GAMES && window.SYN_GAMES.openLiveArena && window.synLaunch) {
+      return Promise.resolve(window.synLaunch('openLiveArena')).then(()=>{
+        if (typeof LiveArena === 'undefined' || typeof LiveArena.joinDuel !== 'function') return;
+        LiveArena.joinDuel(_pin);
+      }).catch((e)=>{ console.warn('[screens] duel join failed', e); });
+    }
+    // Host (no PIN) → the light synthesis universal ύλη picker (matches the game
+    // panel / PvP). On "start" it builds the bank and opens the host lobby. The
+    // student join (PIN) path keeps the live overlay flow below.
+    if (!_pin && window.SymCurriculum && typeof SymCurriculum.openForLiveHost === 'function') {
+      return SymCurriculum.openForLiveHost();
+    }
+    if (!(window.synLaunch && window.SYN_GAMES && window.SYN_GAMES.openLiveArena)) {
+      // Manifest not loaded — should not happen, but fail loudly rather than silently.
+      if (typeof window.showToast === 'function') showToast('Η Ζωντανή Αρένα δεν είναι διαθέσιμη', 'Live Arena unavailable');
+      return;
+    }
+    // synLaunch lazy-loads la-overlay + the engine, then calls window.openLiveArena().
+    // No PIN = the "Host" button → tell openLiveArena to open the host content
+    // picker directly (was falling to the student PIN screen for non-teachers).
+    Promise.resolve(window.synLaunch('openLiveArena', _pin ? undefined : { host: true })).then(()=>{
+      if (typeof LiveArena === 'undefined') return;
+      if (_pin && _pin.length === 6) {
+        // Student join with a known PIN: open join screen + prefill, then submit.
+        LiveArena.launchStudent();
+        const inp = document.getElementById('la-pin-input');
+        if (inp) { inp.value = _pin; }
+        // Auto-submit so "Join" on the Live screen goes straight in.
+        if (typeof LiveArena.submitJoin === 'function') LiveArena.submitJoin();
+      } else if (typeof LiveArena.pickDataset === 'function') {
+        // Belt-and-suspenders: ensure the host content picker is showing.
+        LiveArena.pickDataset();
+      }
+    }).catch((e)=>{ console.warn('[screens] Live Arena launch failed', e); });
+  }
+  window.openRealLiveArena = openRealLiveArena;
   // "Coming soon" helpers — tiles flagged `soon:true` in data.js have no real
   // game yet. Reuse the shared badge + friendly notice defined in dir-synthesis.js;
   // fall back to inline equivalents if that module hasn't registered them.
@@ -59,6 +201,41 @@
     if (!game || game.soon) return null;
     return (window.SYM && typeof SYM.levelBankFor === 'function') ? SYM.levelBankFor(game) : null;
   }
+  // ── DEFAULT injection metadata for engines missing a SymMix.ENGINE_INJECTION
+  //    entry, so EVERY Game-Panel engine reaches the universal content picker
+  //    (engineSetup) rather than the bare "Start" card. SymMix.ENGINE_INJECTION
+  //    (syn-mix.js) still wins when present; this only fills the gaps.
+  //    Mode is chosen from how each engine actually consumes its bank:
+  //    • 'sym'    → engine reads window.SYM_QUESTIONS at open (moirai, ekklisia,
+  //                 oracle, parthenon, olympus, hippodrome, erinyes; also the
+  //                 safe universal default — injectBankAndLaunch snapshots/restores
+  //                 SYM_QUESTIONS around launch, harmless for engines that ignore it).
+  //    • 'config' → engine takes cfg.questions (labyrinth → openLabyrinth(cfg.questions)).
+  var _DEFAULT_INJECTION = {
+    openMoirai:      { mode:'sym', closeFn:'closeMoirai' },
+    openEkklisia:    { mode:'sym', closeFn:'closeEkklisia' },
+    openOracle:      { mode:'sym', closeFn:'closeOracle' },
+    openParthenon:   { mode:'sym', closeFn:'closeParthenon' },
+    openOlympus:     { mode:'sym', closeFn:'closeOlympus' },
+    openHippodrome:  { mode:'sym', closeFn:'closeHippodrome' },
+    openErinyes:     { mode:'sym', closeFn:'closeErinyes' },
+    openLabyrinth:   { mode:'config' }
+    // NOTE: invaders / myth-memory / epic-puzzle are self-contained arcades with
+    // their own built-in pack menus — they do NOT read the injected SYM_QUESTIONS
+    // bank, so routing them through the "Διάλεξε ύλη" picker would silently discard
+    // the user's selection (a false promise). Omit them → S.level falls through to
+    // the honest direct-launch card. Re-add only once each grows a bank adapter.
+  };
+  // Resolve the injection descriptor for an openFn: a real SymMix entry wins,
+  // else the panel default above. Returns null for engines we know nothing about
+  // (self-contained arcades etc.) so they keep the honest bare "Start" card.
+  function synResolveInjection(fn){
+    if (!fn) return null;
+    var sm = (window.SymMix && SymMix.ENGINE_INJECTION) ? SymMix.ENGINE_INJECTION[fn] : null;
+    if (sm) return sm;
+    if (Object.prototype.hasOwnProperty.call(_DEFAULT_INJECTION, fn)) return _DEFAULT_INJECTION[fn];
+    return null;
+  }
   // Resolve+launch a tile. Content-bank games → level selector. Self-contained
   // games → launch the real opener immediately. Coming-soon → friendly notice.
   // Safe fallback: if nothing resolves, fall through to the level screen so a
@@ -67,7 +244,7 @@
     if (game && game.soon) return comingSoon(game);
     if (gameNeedsLevelPicker(game)) return go('level', ctx);
     const fn = window.synResolveLaunch && synResolveLaunch(game);
-    if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
+    if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn, ...((game.launch && game.launch.args) || []));
     return go('level', ctx);   // fallback — keeps every tile launchable
   }
   function pill(t, accent){ return el('span',{class:'sc-pill has-accent', style:`--ca:${accent||SITE}`}, t); }
@@ -167,10 +344,14 @@
 
     function gamesPane(){
       const wrap = el('div',{});
+      // include admin-assigned template tiles for this class+subject (mirrors the
+      // subject-page renderer) so they appear here too and the count is correct.
+      const _assigned = (window.synAssignedTiles && window.synAssignedTiles(cls.id, subject.id)) || [];
+      const _all = subject.games.concat(_assigned);
       wrap.appendChild(viewBar({ admin:true,
-        left: el('span',{class:'sc-count'}, subject.games.length+' '+L({gr:'παιχνίδια',en:'games'})) }));
+        left: el('span',{class:'sc-count'}, _all.length+' '+L({gr:'παιχνίδια',en:'games'})) }));
       const listId = 'subj_'+subject.id;
-      let games = subject.games.map((g,i)=>({ g, rid:subject.id+'_'+i }));
+      let games = _all.map((g,i)=>({ g, rid:subject.id+'_'+i }));
       // favorites first
       games.sort((a,b)=> (SymStore.isFav(a.rid)?-1:0) - (SymStore.isFav(b.rid)?-1:0));
       const grid = el('div', { class:'sc-cards has-accent'+(ST().display!=='grid'?' sc-cards--'+ST().display:''), style:`--ca:${accent}` });
@@ -243,9 +424,9 @@
   /* ══ 2 · MODE SELECT ══ */
   S.mode = function(home, ctx){
     const { cls, subject, game, accent } = defaults(ctx);
-    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(game),
+    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
       title:L({gr:'Επίλεξε Λειτουργία',en:'Choose a mode'}), sub:L({gr:'Πώς θες να παίξεις απόψε;',en:'How do you want to play tonight?'}),
-      actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(game),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
+      actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(gName(game)),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
     const modes = [
       // Solo / Practice → real-launch dispatch: content-bank games open the
       // level selector, self-contained games launch straight into the game.
@@ -274,24 +455,43 @@
     const showType = SymPreview.typeFor(game);
     const bank = gameNeedsLevelPicker(game);
 
-    const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(game),
-      title:L(game),
-      actions:[ el('button',{class:'lv-share', onclick:()=>go('live')},[ glyph('grid-blocks','lv-share__gl'), L({gr:'Μοιράσου στην τάξη',en:'Share to class'}) ]) ] });
+    // Origin-aware back target: when reached from the Game Panel, return there;
+    // otherwise (subject page / mode screen launches) go back to the subject.
+    const fromGamePanel = !!(ctx.param && ctx.param.from === 'gamepanel');
+    const backTo    = fromGamePanel ? 'gamepanel' : 'subject';
+    const backLabel = fromGamePanel ? L({gr:'Πίνακας Παιχνιδιών',en:'Game Panel'}) : L(subject);
 
-    // ── No real level bank (reached only via launchTile's safe fallback for a
-    //    game without GP_LEVEL_PROVIDERS data): offer a single honest launch. ──
+    const body = P(home, { back:backTo, backLabel, accent, eyebrow:L(subject)+' · '+L(gName(game)),
+      title:L(gName(game)) });
+
+    // ── No real level bank. Two sub-cases:
+    //    (a) an ENGINE that can take injected content (Agora Surfers, Heptapylos,
+    //        …) → rich "mix any material" setup (material picker + multi-select).
+    //    (b) anything else → a single honest direct-launch card (unchanged). ──
     if (!bank) {
       const fn = window.synResolveLaunch && synResolveLaunch(game);
+      // Injection: real SymMix entry, else a panel default so EVERY quiz-style
+      // engine reaches the universal picker (not just the ~17 in ENGINE_INJECTION).
+      const inj = synResolveInjection(fn);
+      // Gate on the picker's ACTUAL source (SymMix.catalog() — grammar + class
+      // content + published packs), NOT grammar materials(): the old materials()
+      // gate wrongly hid the picker whenever grammar generators returned empty,
+      // even though the catalog had plenty of hostable content.
+      const hasCat = !!(window.SymMix && SymMix.catalog &&
+        (SymMix.catalog() || []).some(g => (g.items||[]).length));
+      if (inj && hasCat) { engineSetup(body, game, fn, inj, [], accent); return; }
+
       const card = el('div',{class:'lv-shell sc-stagger has-accent', style:`--ca:${accent}`});
       card.appendChild(el('button',{class:'lv-cat lv-cat--custom', style:'width:100%', onclick:()=>{
         if (game && game.soon) return comingSoon(game);
         if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn);
-        return SymPreview.open(showType,{title:L(game), illu:game.illu});
+        return SymPreview.open(showType,{title:L(gName(game)), illu:game.illu});
       }},[ el('div',{class:'lv-cat__b'},[
         el('span',{class:'lv-cat__t'}, L({gr:'Ξεκίνα το παιχνίδι',en:'Start the game'})),
         el('span',{class:'lv-cat__m'}, L({gr:'Χωρίς επίπεδα — άμεση έναρξη',en:'No levels — launches directly'})) ]),
         el('span',{class:'lv-cat__n'},'→') ]));
       body.appendChild(card);
+      body.appendChild(shareToClass());
       return;
     }
 
@@ -336,7 +536,7 @@
     function launchLevel(lv, group){
       if (game && game.soon) return comingSoon(game);
       if (fn && window.SYN_GAMES && SYN_GAMES[fn] && window.synLaunch) return synLaunch(fn, lv.id, group);
-      return SymPreview.open(showType,{title:L(game), illu:game.illu});
+      return SymPreview.open(showType,{title:L(gName(game)), illu:game.illu});
     }
 
     function paintList(){
@@ -377,29 +577,501 @@
     }
     shell.appendChild(rail); shell.appendChild(list);
     body.appendChild(shell);
+    body.appendChild(shareToClass());
     paintList();
+
+    // Bottom "share to class" action: opens a themed QR/link modal scoped to
+    // this game (encoding specific levels + a boot auto-launch is a later phase).
+    function shareToClass(){
+      return el('button',{class:'lv-sharebtn', onclick:()=>{
+        const launchFn = (window.synResolveLaunch && synResolveLaunch(game)) || '';
+        if (window.showQR) window.showQR(L(gName(game)), { game: launchFn });
+      }},[
+        glyph('grid-blocks','lv-sharebtn__gl'),
+        el('span',{class:'lv-sharebtn__b'},[
+          el('span',{class:'lv-sharebtn__t'}, L({gr:'Μοιράσου στην τάξη',en:'Share to class'})),
+          el('span',{class:'lv-sharebtn__d'}, L({gr:'Σκάναρε το QR ή στείλε τον σύνδεσμο',en:'Scan the QR or send the link'})),
+        ]),
+        el('span',{class:'lv-sharebtn__qr',html:'&#9783;'}),
+      ]);
+    }
   };
+
+  /* ── ENGINE SETUP (Phase 2 · multi-select content mixing) ──────────────
+     For engine games that ship no questions but accept injected content
+     (Agora Surfers, Heptapylos, …): pick a grammar MATERIAL, then MULTI-
+     SELECT its levels, then launch the engine with the merged bank.
+     The existing single-pick grammar path (S.level's bank branch) is
+     untouched — this only replaces the old "no levels" fallback card. */
+  function engineSetup(body, game, fn, inj, mats, accent){
+    const wrap = el('div',{class:'syn-mix sc-stagger has-accent', style:`--ca:${accent}`});
+
+    // ── universal "Διάλεξε ύλη" picker (Ver1 ecx) ──
+    // Multi-select ANY admin-uploaded ύλη from the universal catalog (grammar +
+    // class content + published packs), filter by subject tag, "+ MIX" to
+    // combine, pick LEVELS per leveled source, then launch with the merged bank.
+    const sel = new Map();        // dsId → { all:bool, levels:Set, item }
+    let search = '', activeTag = null;
+    let cat = (window.SymMix && SymMix.catalog) ? SymMix.catalog() : [];
+
+    // ── teacher's own uploaded questionnaire (mixed in alongside the catalog) ──
+    // Parsed MC items in the engine shape {q:{gr,en}, a:[≤4 strings], c:index};
+    // treated as a selected source so the footer count + Start include them.
+    var customQs = [];
+
+    // Coerce any raw text into a {gr,en} bilingual question label.
+    function _ownQText(v){
+      if (v && typeof v === 'object') return { gr: (v.gr||v.en||''), en: (v.en||v.gr||'') };
+      var s = (v == null ? '' : String(v)).trim();
+      return { gr:s, en:s };
+    }
+    // Normalise one loose item ({q, opts|a|options|choices, ans|correct|c|answer})
+    // into the engine MC shape, or null if it can't form ≥2 options.
+    function _ownNorm(item){
+      if (!item || typeof item !== 'object') return null;
+      var qraw = item.q != null ? item.q : (item.question != null ? item.question : item.front);
+      if (qraw == null || (typeof qraw === 'string' && !qraw.trim())) return null;
+      var opts, c = 0;
+      var rawOpts = item.a || item.opts || item.options || item.choices;
+      if (Array.isArray(rawOpts) && rawOpts.length){
+        opts = rawOpts.map(function(o){ return (o == null ? '' : String(o)).trim(); }).filter(Boolean).slice(0,4);
+        // correct index from explicit ans|c|correct, or by matching the correct text
+        var ci = (typeof item.ans === 'number') ? item.ans
+               : (typeof item.c === 'number') ? item.c
+               : (typeof item.correct === 'number') ? item.correct : null;
+        if (ci != null && ci >= 0 && ci < opts.length){ c = ci; }
+        else {
+          var ctext = item.correct || item.answer || item.ans;
+          if (ctext != null && typeof ctext !== 'number'){
+            var idx = opts.indexOf(String(ctext).trim());
+            if (idx >= 0) c = idx;
+          }
+        }
+      } else {
+        // {correct/answer/a, distractors|wrong}: correct first → index 0
+        var correct = item.correct || item.answer || item.a || item.back || '';
+        var distract = item.distractors || item.wrong || item.options || [];
+        opts = [String(correct).trim()].concat((Array.isArray(distract)?distract:[]).map(function(o){return String(o).trim();}))
+               .filter(Boolean).slice(0,4);
+        c = 0;
+      }
+      if (opts.length < 2) return null;
+      return { q:_ownQText(qraw), a:opts, c:c };
+    }
+    // JSON: array of items, or {questions:[…]} wrapper.
+    function _ownParseJSON(text){
+      var data = JSON.parse(text);
+      var arr = Array.isArray(data) ? data : (data && Array.isArray(data.questions) ? data.questions : null);
+      if (!arr) throw new Error('expected array or {questions:[…]}');
+      return arr.map(_ownNorm).filter(Boolean);
+    }
+    // Split a CSV/TSV line honouring simple double-quoted fields.
+    function _ownSplitRow(line, sep){
+      var out = [], cur = '', q = false;
+      for (var i=0; i<line.length; i++){
+        var ch = line[i];
+        if (ch === '"'){ if (q && line[i+1] === '"'){ cur += '"'; i++; } else q = !q; }
+        else if (ch === sep && !q){ out.push(cur); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur);
+      return out.map(function(c){ return c.trim().replace(/^"|"$/g,''); });
+    }
+    // CSV/TSV: columns = question, optionA..D, correctIndex|letter|text. Header optional.
+    function _ownParseDelimited(text, sep){
+      var lines = text.split(/\r?\n/).filter(function(l){ return l.trim(); });
+      if (!lines.length) return [];
+      var first = _ownSplitRow(lines[0], sep);
+      var hasHeader = /^(question|q|ερώτηση|ερωτηση)/i.test((first[0]||'').trim());
+      var start = hasHeader ? 1 : 0;
+      // Locate a "correct" column from the header (else assume options are cols 1..4)
+      var correctCol = -1;
+      if (hasHeader){
+        first.forEach(function(h,i){ if (/correct|answer|ans|σωστ/i.test(h)) correctCol = i; });
+      }
+      var out = [];
+      for (var r=start; r<lines.length; r++){
+        var cols = _ownSplitRow(lines[r], sep);
+        var q = cols[0];
+        if (!q) continue;
+        var optCols, cc;
+        if (correctCol > 0){
+          cc = cols[correctCol];
+          optCols = cols.slice(1).filter(function(_,i){ return (i+1) !== correctCol; });
+        } else {
+          optCols = cols.slice(1, 5);
+          cc = null;
+        }
+        var opts = optCols.map(function(o){ return (o||'').trim(); }).filter(Boolean).slice(0,4);
+        if (opts.length < 2) continue;
+        var c = 0;
+        if (cc != null && String(cc).trim() !== ''){
+          var s = String(cc).trim();
+          if (/^\d+$/.test(s)){ var n = parseInt(s,10); if (n>=0 && n<opts.length) c = n; }
+          else if (/^[A-Da-d]$/.test(s)){ var li = s.toUpperCase().charCodeAt(0)-65; if (li<opts.length) c = li; }
+          else { var ti = opts.indexOf(s); if (ti>=0) c = ti; }
+        }
+        out.push({ q:_ownQText(q), a:opts, c:c });
+      }
+      return out;
+    }
+    // TXT: Q:/A:/W: blocks separated by blank lines (correct = A, distractors = W).
+    function _ownParseTXT(text){
+      return text.split(/\n{2,}/).map(function(block){
+        var lines = block.split(/\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+        var q = '', ans = '', wrong = [];
+        lines.forEach(function(l){
+          if (/^Q:/i.test(l)) q = l.replace(/^Q:\s*/i,'');
+          else if (/^A:/i.test(l)) ans = l.replace(/^A:\s*/i,'');
+          else if (/^W:/i.test(l)) wrong.push(l.replace(/^W:\s*/i,''));
+        });
+        if (!q || !ans) return null;
+        var opts = [ans].concat(wrong).map(function(o){ return o.trim(); }).filter(Boolean).slice(0,4);
+        if (opts.length < 2) return null;
+        return { q:_ownQText(q), a:opts, c:0 };
+      }).filter(Boolean);
+    }
+
+    // ── upload card (teachers/admin only) ──
+    // currentUserRole is a top-level `let` in auth.js (admins get role 'teacher');
+    // window.currentUserRole / window.isAdmin do NOT exist, and screens.js's local
+    // `isAdmin` is the edit-mode helper — so gate on the bare auth role.
+    var isTeacher = (typeof currentUserRole !== 'undefined' && (currentUserRole === 'teacher' || currentUserRole === 'admin'));
+    var ownFile = el('input',{ type:'file', accept:'.json,.csv,.tsv,.txt', style:'display:none' });
+    var ownOk = el('div',{class:'syn-ds-upload__ok', style:'display:none'});
+    var ownCard;
+    function _ownClear(){
+      customQs = [];
+      ownOk.style.display = 'none';
+      ownCard.classList.remove('on');
+      ownCard.querySelector('.syn-ds-upload__cta').textContent = L({gr:'Ανέβασε αρχείο',en:'Upload file'});
+      if (typeof updateBar === 'function') updateBar();
+    }
+    function _ownShowOk(n){
+      ownOk.innerHTML = '';
+      ownOk.appendChild(el('span', null, '✓ ' + L({ gr: n + (n===1?' ερώτηση':' ερωτήσεις') + ' εντοπίστηκαν', en: n + (n===1?' question':' questions') + ' detected' })));
+      ownOk.appendChild(el('button',{ onclick:function(ev){ ev.stopPropagation(); _ownClear(); } }, L({gr:'Αφαίρεση',en:'Remove'})));
+      ownOk.style.display = '';
+      ownCard.classList.add('on');
+      ownCard.querySelector('.syn-ds-upload__cta').textContent = '✓ ' + L({gr:'Στη μείξη',en:'In mix'});
+    }
+    function _ownShowErr(){
+      ownOk.innerHTML = '';
+      ownOk.appendChild(el('p',{class:'syn-ds-upload__err'}, '✗ ' + L({gr:'Αδύνατη ανάγνωση αρχείου. Έλεγξε τη μορφή.',en:'Could not parse file. Check the format.'})));
+      ownOk.style.display = '';
+      ownCard.classList.remove('on');
+    }
+    function _ownHandleFile(input){
+      var file = input && input.files && input.files[0];
+      if (!file) return;
+      var name = (file.name||'').toLowerCase();
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try {
+          var text = ev.target.result;
+          var qs;
+          if (name.endsWith('.json')) qs = _ownParseJSON(text);
+          else if (name.endsWith('.csv')) qs = _ownParseDelimited(text, ',');
+          else if (name.endsWith('.tsv')) qs = _ownParseDelimited(text, '\t');
+          else qs = _ownParseTXT(text);
+          if (!qs || !qs.length) throw new Error('no questions');
+          customQs = qs;
+          _ownShowOk(qs.length);
+        } catch(_){
+          customQs = [];
+          _ownShowErr();
+        }
+        if (typeof updateBar === 'function') updateBar();
+        input.value = '';
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+    ownFile.addEventListener('change', function(){ _ownHandleFile(ownFile); });
+    if (isTeacher){
+      ownCard = el('div',{class:'syn-ds-upload', onclick:function(){ ownFile.click(); }},[
+        el('span',{class:'syn-ds-upload__ic'}, '📤'),
+        el('span',{class:'syn-ds-upload__info'},[
+          el('span',{class:'syn-ds-upload__name'}, L({gr:'Δικό μου ερωτηματολόγιο',en:'My own questionnaire'})),
+          el('span',{class:'syn-ds-upload__meta'}, L({gr:'Ανέβασε τις δικές σου ερωτήσεις και φιλοξένησέ τες με αυτή τη μηχανή.',en:'Upload your own questions and host them with this engine.'})),
+          el('span',{class:'syn-ds-upload__pills'},[
+            el('span',{class:'syn-ds-upload__pill'}, 'JSON'),
+            el('span',{class:'syn-ds-upload__pill'}, 'CSV'),
+            el('span',{class:'syn-ds-upload__pill'}, 'TSV'),
+            el('span',{class:'syn-ds-upload__pill'}, 'TXT'),
+          ]),
+        ]),
+        el('span',{class:'syn-ds-upload__cta'}, L({gr:'Ανέβασε αρχείο',en:'Upload file'})),
+      ]);
+      wrap.appendChild(ownCard);
+      wrap.appendChild(ownFile);
+      wrap.appendChild(ownOk);
+    } else {
+      ownCard = el('div',{class:'syn-ds-upload locked'},[
+        el('span',{class:'syn-ds-upload__ic'}, '🔒'),
+        el('span',{class:'syn-ds-upload__info'},[
+          el('span',{class:'syn-ds-upload__name'}, L({gr:'Δικό μου ερωτηματολόγιο',en:'My own questionnaire'})),
+          el('span',{class:'syn-ds-upload__meta'}, L({gr:'Ανέβασε τις δικές σου ερωτήσεις (μόνο για καθηγητές).',en:'Upload your own questions (teachers only).'})),
+        ]),
+        el('span',{class:'syn-ds-upload__flag'}, '🔒 ' + L({gr:'Απαιτείται συνδρομή καθηγητή',en:'Teacher subscription required'})),
+      ]);
+      wrap.appendChild(ownCard);
+    }
+
+    wrap.appendChild(el('div',{class:'syn-mix__lbl', style:'margin-top:0'}, L({gr:'Διάλεξε ύλη',en:'Choose content'})));
+    wrap.appendChild(el('p',{class:'sc-cap', style:'margin:0 0 6px;opacity:.8'},
+      L({gr:'Αυτόματη λίστα: γραμματική + ύλη τάξεων + δημοσιευμένα πακέτα.',en:'Auto-listed: grammar + class content + published packs.'})));
+
+    const searchInput = el('input',{class:'syn-mix__search', type:'text',
+      placeholder:L({gr:'Αναζήτηση ύλης…',en:'Search content…'}),
+      oninput:(e)=>{ search=(e.target.value||'').toLowerCase(); paintList(); }});
+    wrap.appendChild(searchInput);
+
+    // ── subject-tag filter row (the categories present, as icon chiplets) ──
+    const tagRow = el('div',{class:'syn-mix__tags'});
+    wrap.appendChild(tagRow);
+    function paintTags(){
+      tagRow.innerHTML='';
+      const chip = (key,label)=> el('button',{class:'syn-tagchip'+(activeTag===key?' on':''),
+        onclick:()=>{ activeTag=key; paintTags(); paintList(); }},
+        [ el('span',{class:'syn-tagchip__t'}, label) ]);
+      tagRow.appendChild(chip(null, L({gr:'Όλα',en:'All'})));
+      cat.forEach(g=>{ if((g.items||[]).length) tagRow.appendChild(chip(g.group, g.group)); });
+    }
+
+    const listWrap = el('div',{class:'syn-mix__cats'});
+    wrap.appendChild(listWrap);
+
+    // Per-source level picker WITH the same hide/unhide collapse as the Live/PvP
+    // picker (curriculum-picker.js): a whole-list fold header (.syn-lv-head /
+    // .syn-lv-fold) plus per-category fold chevrons (.syn-lvgrp-fold). Fold state
+    // lives in the module-scoped _lvHidden / _lvFoldG maps so it survives repaints.
+    function levelPanel(it, st){
+      const panel = el('div',{class:'syn-ds-levels'});
+      const allIds = (it.levels||[]).map(lv=>lv.id);
+      const allOn  = allIds.length>0 && allIds.every(id=>st.levels.has(id));
+      const selN   = allIds.filter(id=>st.levels.has(id)).length;
+      const hidden = !!_lvHidden[it.id];
+
+      // ── Header: title + selected-count + a hide/unhide (collapse) toggle ──
+      panel.appendChild(el('div',{class:'syn-lv-head'},[
+        el('span',{class:'syn-lv-head__t'},[
+          L({gr:'Επίπεδα',en:'Levels'}),
+          el('span',{class:'syn-lv-head__c'+(selN?' on':'')}, selN+'/'+allIds.length),
+        ]),
+        el('button',{class:'syn-lv-fold'+(hidden?' folded':''),
+          title: hidden ? L({gr:'Δείξε τα επίπεδα',en:'Show levels'}) : L({gr:'Κρύψε τα επίπεδα',en:'Hide levels'}),
+          onclick:()=>{ _lvHidden[it.id] = !hidden; paintList(); }},[
+          el('span',{class:'syn-lv-fold__lbl'}, hidden ? L({gr:'Δείξε',en:'Show'}) : L({gr:'Κρύψε',en:'Hide'})),
+          el('span',{class:'syn-lv-fold__chev'}, '▾'),
+        ]),
+      ]));
+      if (hidden) return panel;   // collapsed — header only
+
+      // mass select-all / clear (selects EVERY level pill, ticking them all)
+      panel.appendChild(el('button',{class:'syn-lvpill--all'+(allOn?' on':''),
+        onclick:()=>{ if(allOn) st.levels.clear(); else allIds.forEach(id=>st.levels.add(id)); paintList(); updateBar(); }},
+        allOn ? ('✓ '+L({gr:'Όλα επιλεγμένα — καθάρισε',en:'All selected — clear'}))
+              : L({gr:'Επιλογή όλων των επιπέδων',en:'Select all levels'})));
+      const order=[], byG={};
+      (it.levels||[]).forEach(lv=>{ const g=lv.group||''; if(!byG[g]){byG[g]=[];order.push(g);} byG[g].push(lv); });
+      let n=0;
+      order.forEach(g=>{
+        const rows = byG[g];
+        const gOn  = rows.length>0 && rows.every(lv=>st.levels.has(lv.id));
+        const gKey = it.id + '::' + g;
+        const gFold = !!_lvFoldG[gKey];
+        panel.appendChild(el('div',{class:'syn-lvgrp-row'+(gFold?' folded':'')},[
+          el('button',{class:'syn-lvgrp-fold', title: gFold ? L({gr:'Δείξε',en:'Show'}) : L({gr:'Κρύψε',en:'Hide'}),
+            onclick:()=>{ _lvFoldG[gKey] = !gFold; paintList(); }}, '▾'),
+          el('span',{class:'syn-lvgrp'}, g||L({gr:'Επίπεδα',en:'Levels'})),
+          el('button',{class:'syn-lvgrp-all'+(gOn?' on':''), onclick:()=>{
+            const turnOn = !gOn;
+            rows.forEach(lv=>{ if(turnOn) st.levels.add(lv.id); else st.levels.delete(lv.id); });
+            paintList(); updateBar();
+          }}, gOn ? L({gr:'Καμία',en:'None'}) : L({gr:'Όλα',en:'All'})),
+        ]));
+        rows.forEach((lv)=>{
+          n++;
+          if (gFold) return;   // category collapsed — keep numbering stable, skip the row
+          const lon = st.levels.has(lv.id);
+          panel.appendChild(el('button',{class:'syn-lvrowpill'+(lon?' on':'')+(lv.color?' syn-lvpill--'+lv.color:''),
+            onclick:()=>{
+              if(st.levels.has(lv.id)) st.levels.delete(lv.id); else st.levels.add(lv.id);
+              paintList(); updateBar();
+            }}, [
+            el('span',{class:'syn-lvpill__box'}, lon?'✓':''),
+            el('span',{class:'syn-lvpill__n'}, String(n).padStart(2,'0')),
+            el('span',{class:'syn-lvpill__t'},[
+              lv.section ? el('span',{class:'syn-lvpill__sec'}, lv.section+' · ') : null,
+              lv.desc || ('Επίπεδο '+lv.id) ]) ]));
+        });
+      });
+      return panel;
+    }
+
+    function paintList(){
+      listWrap.innerHTML='';
+      let shown=0;
+      cat.forEach(group=>{
+        if(activeTag && group.group!==activeTag) return;
+        const items = (group.items||[]).filter(i=> !search
+          || (i.label||'').toLowerCase().includes(search)
+          || (i.meta||'').toLowerCase().includes(search));
+        if(!items.length) return;
+        listWrap.appendChild(el('div',{class:'syn-ds-cat'}, group.group));
+        const grid = el('div',{class:'syn-ds-grid'});
+        items.forEach(it=>{
+          shown++;
+          const st = sel.get(it.id);
+          const on = !!st;
+          const card = el('div',{class:'syn-ds'+(on?' on':'')+(it.locked?' locked':'')},[
+            el('span',{class:'syn-ds__ic'}, it.icon||'◆'),
+            el('span',{class:'syn-ds__info'},[
+              el('span',{class:'syn-ds__name'}, it.label + (it.isNew?' •':'')),
+              el('span',{class:'syn-ds__meta'}, (function(){
+                if(!(on && it.leveled)) return it.meta||'';
+                const total = (it.levels||[]).length;
+                return st.levels.size >= total
+                  ? L({gr:'όλα τα επίπεδα',en:'all levels'})
+                  : (st.levels.size + ' / ' + total + ' ' + L({gr:'επίπεδα',en:'levels'}));
+              })()),
+            ]),
+            it.locked
+              ? el('span',{class:'syn-ds__flag'}, '🔒 Pro')
+              : el('button',{class:'syn-ds__mix'+(on?' on':''), onclick:()=>{
+                  if(sel.has(it.id)) sel.delete(it.id);
+                  // default: ALL levels of this source selected (works out of the box)
+                  else sel.set(it.id, { levels:new Set((it.levels||[]).map(l=>l.id)), item:it });
+                  paintList(); updateBar();
+                }}, on ? ('✓ '+L({gr:'Στη μείξη',en:'In mix'})) : ('+ MIX')),
+          ]);
+          grid.appendChild(card);
+          // per-source level picker (leveled sources only)
+          if(on && it.leveled && it.levels && it.levels.length) grid.appendChild(levelPanel(it, st));
+        });
+        listWrap.appendChild(grid);
+      });
+      if(!shown) listWrap.appendChild(el('p',{class:'sc-hint'}, L({gr:'Καμία ύλη δεν ταιριάζει.',en:'No content matches.'})));
+    }
+
+    // ── sticky "N sources" bar + Start ──
+    const bar = el('div',{class:'syn-mix__bar'});
+    const count = el('span',{class:'syn-mix__count'});
+    const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
+      if(!sel.size && !customQs.length) return;
+      const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: Array.from(st.levels) }));
+      startBtn.disabled = true;
+      const old = startBtn.textContent;
+      startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
+      // Catalog picks (may be empty) resolve through SymMix.bankMulti; the teacher's
+      // uploaded customQs are then appended onto the merged bank. If only customQs
+      // were provided (no dataset picks) we still launch with just those.
+      const bankP = (picks.length && window.SymMix && SymMix.bankMulti)
+        ? Promise.resolve(SymMix.bankMulti(picks))
+        : Promise.resolve([]);
+      bankP.then(qs=>{
+        const merged = (qs||[]).concat(customQs);
+        const onlyOwn = !picks.length && customQs.length;
+        const title = onlyOwn
+          ? (L(gName(game)) + ' · ' + L({gr:'Δικό μου ερωτηματολόγιο',en:'My questionnaire'}))
+          : (picks.length===1 && !customQs.length)
+            ? L(gName(game))
+            : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
+        return injectBankAndLaunch(fn, inj, merged, title);
+      }).then(()=>{ startBtn.disabled=false; startBtn.textContent=old; })
+        .catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
+    }});
+    bar.appendChild(count);
+    bar.appendChild(el('span',{class:'syn-mix__sp'}));
+    bar.appendChild(startBtn);
+
+    function updateBar(){
+      // The uploaded questionnaire counts as one extra source in the mix.
+      const n = sel.size + (customQs.length ? 1 : 0);
+      count.textContent = n+' '+L({gr:'πηγές',en:'sources'});
+      startBtn.disabled = n===0;
+      startBtn.classList.toggle('is-off', n===0);
+      startBtn.textContent = n
+        ? L({gr:'Ξεκίνα με '+n+(n===1?' πηγή':' πηγές'),en:'Start with '+n})
+        : L({gr:'Διάλεξε ύλη',en:'Choose content'});
+    }
+
+    wrap.appendChild(bar);
+    body.appendChild(wrap);
+    paintTags(); paintList(); updateBar();
+
+    // Merge Firestore published packs (config/datasets + custom_games), then refresh.
+    if (window.GP_CONTENT && typeof GP_CONTENT.loadCloud === 'function'){
+      Promise.resolve(GP_CONTENT.loadCloud()).then(()=>{
+        if (window.SymMix && SymMix.catalog){ cat = SymMix.catalog(); paintTags(); paintList(); }
+      }).catch(()=>{});
+    }
+  }
+
+  /* Build the combined bank for (ds, ids) and launch the engine with it,
+     per the engine's injection mode. Returns a Promise (resolves after the
+     opener is invoked). Reused by the boot deep-link handler in app.js. */
+  function launchEngineWithBank(fn, inj, ds, ids, title){
+    if (!(window.SymMix && typeof SymMix.bank === 'function')) return Promise.resolve();
+    return SymMix.bank(ds, ids).then(function(qs){ return injectBankAndLaunch(fn, inj, qs, title); });
+  }
+
+  /* Inject a PREBUILT bank (e.g. from SymMix.bankMulti — the universal picker)
+     into an engine and launch it, per the engine's injection mode. */
+  function injectBankAndLaunch(fn, inj, qs, title){
+    inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
+    return Promise.resolve().then(function(){
+      qs = qs || [];
+      if (inj.mode === 'config'){
+        // Engine takes a config arg (Agora Surfers reads config.questions).
+        return window.synLaunch ? window.synLaunch(fn, { questions: qs, title: title }) : null;
+      }
+      // mode 'sym': engine reads window.SYM_QUESTIONS at open. Snapshot the
+      // shared bank, swap in our selection, and RESTORE it when the engine's
+      // close fn runs (mirrors the Heptapylos HEP_Q snapshot/restore pattern),
+      // so the global library isn't clobbered for the next launch.
+      if (qs.length){
+        var prev = window.SYM_QUESTIONS;
+        window.SYM_QUESTIONS = qs;
+        var closeName = inj.closeFn;
+        if (closeName){
+          var restore = function(){
+            try { window.SYM_QUESTIONS = prev; } catch(_){}
+            try { if (window[closeName] && window[closeName].__symMixWrapped) window[closeName] = window[closeName].__symMixOrig; } catch(_){}
+          };
+          // Wrap the engine's close fn once so the restore fires on teardown.
+          var attachWrap = function(){
+            var orig = window[closeName];
+            if (typeof orig === 'function' && !orig.__symMixWrapped){
+              var wrapped = function(){ var r = orig.apply(this, arguments); restore(); return r; };
+              wrapped.__symMixWrapped = true; wrapped.__symMixOrig = orig;
+              window[closeName] = wrapped;
+            }
+          };
+          return Promise.resolve(window.synLaunch ? window.synLaunch(fn, { title: title }) : null)
+            .then(function(r){ attachWrap(); return r; });
+        }
+      }
+      return window.synLaunch ? window.synLaunch(fn, { title: title }) : null;
+    });
+  }
+  window.launchEngineWithBank = launchEngineWithBank;
+  window.injectBankAndLaunch = injectBankAndLaunch;
 
   /* ══ 4 · GAME PANEL ══ (all engines · display modes · favorites · admin edit) */
   S.gamepanel = function(home, ctx){
     const body = P(home, { back:'home', accent:SITE, eyebrow:L({gr:'Μηχανές & Ύλη',en:'Engines & content'}),
       title:L({gr:'Πίνακας Παιχνιδιών',en:'Game Panel'}), sub:L({gr:'Διάλεξε μηχανή, ταίριαξέ τη με ύλη — ή ανέβασε δική σου.',en:'Pick an engine, pair it with any material — or upload your own.'}) });
     const cats = ['Όλα','Ιλιάδα','Οδύσσεια','Γραμματική','Ιστορία','Λατινικά'];
-    // ── game mode selection ──
-    const gmodes = [
-      { v:'solo', illu:'runner', t:{gr:'Ατομικά',en:'Solo'}, d:{gr:'Παίξε μόνος σου',en:'Play on your own'}, to:()=>go('subject') },
-      { v:'live', illu:'lightning-bolt', t:{gr:'Live Arena',en:'Live Arena'}, d:{gr:'Όλη η τάξη ζωντανά',en:'Whole class, live'}, to:()=>go('live',{step:'config'}) },
-      { v:'tow', illu:'rope', t:{gr:'Διελκυστίνδα',en:'Tug of War'}, d:{gr:'Ομάδες, τράβα τη γραμμή',en:'Teams, pull the line'}, to:()=>go('live',{step:'config',cfg:{mode:'team',teams:3,gmode:'tow',time:5,score:['standard'],count:10}}) },
-      { v:'pvp', illu:'crossed-swords', t:{gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'}, d:{gr:'Μονομαχίες & ομαδικοί αγώνες',en:'Duels & free-for-all'}, to:()=>launchPvPArena() },
-      { v:'practice', illu:'scroll', t:{gr:'Εξάσκηση',en:'Practice'}, d:{gr:'Χωρίς βαθμολογία',en:'No scoring'}, to:()=>go('subject') },
-    ];
-    const gmwrap = el('div',{class:'sc-pmodes sc-stagger'}, gmodes.map(m=> el('button',{class:'sc-pmode', onclick:m.to},[
-      el('span',{class:'sc-pmode__ic'},[ glyph(m.illu,'sc-pmode__gl') ]),
-      el('span',{class:'sc-pmode__b'},[ el('span',{class:'sc-pmode__t'}, L(m.t)), el('span',{class:'sc-pmode__d'}, L(m.d)) ]),
-    ])));
-    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:'margin-top:0'}, L({gr:'Λειτουργία παιχνιδιού',en:'Game mode'})));
-    body.appendChild(gmwrap);
-    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger'}, L({gr:'Μηχανές',en:'Engines'})));
+    // (Game-mode block removed from the panel per owner request — game modes live
+    //  on the subject/Live screens, not here.)
+    // Curriculum browse — admin-authored content by στάδιο → τάξη → μάθημα → παιχνίδι
+    body.appendChild(el('button',{class:'lv-cat lv-cat--custom sc-stagger', style:'width:100%;margin:0 0 16px;text-align:left', onclick:()=>{ if(window.SymCurriculum) SymCurriculum.openPanel(); else go('curriculum'); }},[
+      el('div',{class:'lv-cat__b'},[
+        el('span',{class:'lv-cat__t'}, L({gr:'Διάλεξε από την ύλη',en:'Browse by curriculum'})),
+        el('span',{class:'lv-cat__m'}, L({gr:'Στάδιο → τάξη → μάθημα → παιχνίδι · περιεχόμενο διαχείρισης',en:'Stage → grade → subject → game · admin content'})) ]),
+      el('span',{class:'lv-cat__n'},'→') ]));
+    body.appendChild(el('div',{class:'sc-sec-lbl sc-stagger', style:'margin-top:0'}, L({gr:'Μηχανές',en:'Engines'})));
     const filwrap = el('div',{class:'sc-fils sc-stagger'}, cats.map((c,i)=>chip(c,i===0)));
     body.appendChild(filwrap);
     // ── FULL engine catalogue ──
@@ -449,10 +1121,21 @@
     const ordered = SymStore.order('gamepanel', items.map(x=>x.rid));
     items.sort((a,b)=> ordered.indexOf(a.rid)-ordered.indexOf(b.rid));
     items.sort((a,b)=> (SymStore.isFav(b.rid)?1:0)-(SymStore.isFav(a.rid)?1:0));
+    // Engine-card icons: consistent line-art SVG everywhere. The curated SY.ENGINES
+    // carry `illu`; the GP_ENGINES entries only carry an emoji `icon`, which looked
+    // inconsistent next to the SVGs — map each to a known illu key (these all exist
+    // in the _injectIllus registry), falling back to a neutral default.
+    const GP_ILLU = {
+      naumachia:'trident', heptapylos:'walls', invaders:'invader', labyrinth:'labyrinth',
+      'myth-memory':'cards', phalanx:'shield-round', 'rapid-fire':'lightning-bolt', tow:'sword',
+      'epic-puzzle':'timeline', dig:'amphora', mnemosyne:'lyre', blade:'sword', 'temple-run':'runner',
+      'golden-fleece':'trireme', halieia:'trident', krypteia:'torch', hegemonia:'acropolis',
+      toxotes:'helmet', agora:'column', discus:'wreath-laurel'
+    };
     items.forEach(({e,rid,a})=>{
-      grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e})},[
+      grid.appendChild(el('a',{class:'sc-engc has-accent',href:'javascript:void 0','data-rid':rid,style:`--ca:${a}`,onclick:()=>go('level',{game:e, from:'gamepanel'})},[
         favBtn(rid),
-        el('span',{class:'sc-engc__ban'},[ e.illu ? glyph(e.illu,'sc-engc__illu') : el('span',{class:'sc-engc__illu sc-engc__illu--emoji'}, e.icon || '🎮') ]),
+        el('span',{class:'sc-engc__ban'},[ glyph(e.illu || GP_ILLU[e.id] || 'amphora','sc-engc__illu') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
         el('span',{class:'sc-engc__tools'},[
           el('button',{class:'sc-engc__eye', title:'Preview', onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu}); }, html:'&#128065;'}),
@@ -473,20 +1156,44 @@
     const body = P(home, { back:'home', accent, eyebrow:L({gr:'Ζωντανή Αρένα',en:'Live Arena'}),
       title: step==='lobby'?L({gr:'Λόμπι Μάχης',en:'Battle Lobby'}):L({gr:'Ζωντανή Μάχη',en:'Live Battle'}),
       sub: step==='lobby'?L({gr:'Οι μαθητές μπαίνουν με PIN ή QR.',en:'Students join with a PIN or QR.'}):L({gr:'Φιλοξένησε ή μπες σε αγώνα.',en:'Host or join a match.'}),
-      actions: step==='lobby'?[ el('button',{class:'sc-cta sc-cta--solid'},[ glyph('play-button','sc-cta__gl'), L({gr:'Έναρξη',en:'Start'}) ]) ]:null });
+      actions: null });
 
     if(step==='choose'){
       const ch = el('div',{class:'sc-live2 sc-stagger'});
-      ch.appendChild(el('button',{class:'sc-host', onclick:()=>go('live',{step:'config',cfg})},[
+      // ── Host: launch the REAL Live Arena engine (Firestore live_arenas room
+      //    → PIN → share → student join). openLiveArena() with no cfg opens the
+      //    host/join picker (teachers) or the student join screen. This replaces
+      //    the old mockup config/lobby flow (hardcoded PIN, fake players). ──
+      ch.appendChild(el('button',{class:'sc-host', onclick:()=>openRealLiveArena()},[
         el('span',{class:'sc-host__ic'},[ glyph('crown-laurel','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Φιλοξένησε',en:'Host'})),
         el('span',{class:'sc-host__d'}, L({gr:'Στήσε αγώνα για την τάξη σου',en:'Set up a match for your class'})),
       ]));
+      const joinPin = el('input',{class:'sc-join2__pin',maxlength:'6',inputmode:'numeric',placeholder:'000000',
+        oninput:(e)=>{ e.target.value = e.target.value.replace(/\D/g,''); }});
       ch.appendChild(el('div',{class:'sc-join2'},[
         el('span',{class:'sc-host__ic'},[ glyph('lightning-bolt','sc-gl') ]),
         el('span',{class:'sc-host__t'}, L({gr:'Μπες με PIN',en:'Join with PIN'})),
-        el('div',{class:'sc-join2__form'},[ el('input',{class:'sc-join2__pin',maxlength:'6',placeholder:'A7K92M'}),
-          el('button',{class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>go('live',{step:'lobby',cfg})}, L({gr:'Μπες',en:'Join'})) ]),
+        el('div',{class:'sc-join2__form'},[ joinPin,
+          el('button',{class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>openRealLiveArena(joinPin.value)}, L({gr:'Μπες',en:'Join'})) ]),
+      ]));
+      // ── PvP · Ο Ἀγών — the standalone duel arena, surfaced here on Live
+      //    (previously only reachable from the Game Panel; user: "on live I cannot see pvp").
+      ch.appendChild(el('button',{class:'sc-host sc-host--pvp', onclick:()=>{ if(window.SymCurriculum) SymCurriculum.openForPvp(); else openPvPContentChooser(); }},[
+        el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
+        el('span',{class:'sc-host__t'}, L({gr:'Ο Ἀγών · PvP',en:'The Agon · PvP'})),
+        el('span',{class:'sc-host__d'}, L({gr:'Μονομαχίες μαθητών — διάλεξε ύλη & άνοιγμα Αρένας',en:'Student duels — pick content & open the Arena'})),
+      ]));
+      // ── Φιλική Μάχη · 1v1 — a REAL head-to-head duel vs one invited friend
+      //    (Firestore duels/{pin} room, ?join=PIN&duel=1 invite). Unlike the PvP
+      //    card above (standalone simulated arena), this networks two real players
+      //    through the shared quiz bank. Phase-1: quiz-engine duels only.
+      ch.appendChild(el('button',{class:'sc-host sc-host--duel', onclick:()=>{
+        if(window.SymCurriculum && typeof SymCurriculum.openForFriendlyBattle==='function') SymCurriculum.openForFriendlyBattle();
+      }},[
+        el('span',{class:'sc-host__ic'},[ glyph('crossed-swords','sc-gl') ]),
+        el('span',{class:'sc-host__t'}, L({gr:'Φιλική Μάχη · 1v1',en:'Friendly Battle · 1v1'})),
+        el('span',{class:'sc-host__d'}, L({gr:'Κάλεσε έναν φίλο και μονομαχήστε',en:'Invite one friend and duel'})),
       ]));
       body.appendChild(ch);
       return;
@@ -633,29 +1340,26 @@
       return;
     }
 
-    // lobby
-    const gName = (cfg.game && L(cfg.game)) || L({gr:'Παιχνίδι',en:'Game'});
-    const partName = cfg.mode==='team'?{gr:cfg.teams+' Ομάδες',en:cfg.teams+' Teams'}:{gr:'Μόνος',en:'Solo'};
-    const contentName = (cfg.content==='upload') ? {gr:'Δικό σου ('+cfg.count+' ερωτ.)',en:'Custom ('+cfg.count+' Qs)'} : (cfg.nav ? {gr:cfg.nav.subject+' · '+cfg.nav.exercise,en:cfg.nav.subject+' · '+cfg.nav.exercise} : {gr:'Υπάρχον',en:'Existing'});
-    body.appendChild(el('div',{class:'sc-cfg-recap sc-stagger'},[
-      pill(gName, accent), pill(L(contentName), accent), pill(L(partName), accent), pill((cfg.time||5)+' '+L({gr:'λεπτά',en:'min'}), accent),
-      el('button',{class:'sc-mini', onclick:()=>go('live',{step:'config',cfg})}, '✎ '+L({gr:'Αλλαγή',en:'Edit'})),
-    ]));
+    // ── lobby → launch the REAL Live Arena ──────────────────────────────
+    // This step previously rendered a static mockup (hardcoded PIN "A7K92M",
+    // fake QR, fake player list) that did nothing. Now it boots the real
+    // LiveArena engine (Firestore live_arenas → real PIN + QR + live players),
+    // and shows a brief opening panel with a manual fallback in case the
+    // engine is still loading.
+    // NOTE: the config step's cfg (game/level/teams/time/scoring) is NOT
+    // forwarded here — the real LiveArena engine owns its own host picker
+    // where the teacher configures the round (and prompts sign-in for
+    // signed-out users). We therefore do NOT render a recap of those values,
+    // which the engine would otherwise silently drop.
     const wrap = el('div',{class:'sc-live sc-stagger'});
-    wrap.appendChild(el('div',{class:'sc-live__join'},[
-      el('div',{class:'sc-live__url'},[ el('span',{class:'sc-live__urll'},L({gr:'Μπες από',en:'Join at'})), el('b',{},'symposi-on.com') ]),
-      el('div',{class:'sc-live__pinrow'},[
-        el('div',{class:'sc-qr'}, Array.from({length:64}).map((_,i)=>el('i',{class:(i*7+((i*i)%5))%3===0?'on':''}))),
-        el('div',{class:'sc-live__pinbox'},[ el('span',{class:'sc-live__pinl'},'PIN'), el('div',{class:'sc-live__pin'},'A7K92M'),
-          el('div',{class:'sc-live__share'},[ el('button',{class:'sc-mini'},'⌁ '+L({gr:'Σύνδεσμος',en:'Link'})), el('button',{class:'sc-mini'},'⎘ PIN') ]) ]),
-      ]),
-    ]));
-    const players = ['Αλέξης','Μαρία','Νίκος','Ελένη','Γιώργος','Σοφία','Δημήτρης','Κατερίνα','Παύλος'];
-    wrap.appendChild(el('div',{class:'sc-live__players'},[
-      el('div',{class:'sc-live__phd'},[ el('span',{},[glyph('owl','sc-gl'),' '+L({gr:'Παίκτες',en:'Players'})]), el('span',{class:'sc-live__count'},'9') ]),
-      el('div',{class:'sc-live__grid'}, players.map(n=>el('div',{class:'sc-pl'},[ el('span',{class:'sc-pl__av'}, n[0]), el('span',{class:'sc-pl__n'}, n) ]))),
+    wrap.appendChild(el('div',{class:'sc-live__join', style:'text-align:center'},[
+      el('div',{class:'sc-live__url'},[ el('span',{class:'sc-live__urll'},L({gr:'Άνοιγμα Ζωντανής Αρένας…',en:'Opening Live Arena…'})) ]),
+      el('button',{class:'sc-cta sc-cta--solid', style:'margin-top:14px', onclick:()=>openRealLiveArena()},[
+        glyph('lightning-bolt','sc-cta__gl'), L({gr:'Άνοιξε την Αρένα',en:'Open the Arena'}) ]),
     ]));
     body.appendChild(wrap);
+    // Auto-open the real engine on entering the lobby step.
+    setTimeout(()=>openRealLiveArena(), 0);
   };
 
   /* ══ 6 · HERO PROFILE ══ */
