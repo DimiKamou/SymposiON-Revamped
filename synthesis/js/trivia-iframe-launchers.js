@@ -175,6 +175,25 @@
     if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; }
   }
 
+  // ── RECREATION OF KEY HISTORICAL BATTLES (iframe; one chronicle per era) ──
+  // era: 'ancient' (Ιστορία Α΄) | 'byzantine' (Ιστορία Β΄) | 'revolution' (Ιστορία Γ΄)
+  function openBattles(era) {
+    const files = { ancient: 'ancient.html', byzantine: 'byzantine.html', revolution: 'revolution.html' };
+    const src = _appBase() + 'games/battles/' + (files[era] || files.ancient);
+    const wrap = document.getElementById('battles-wrap');
+    if (wrap) {
+      const ifr = wrap.querySelector('iframe');
+      if (!ifr) wrap.innerHTML = '<iframe src="' + src + '" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+      else if (ifr.getAttribute('src') !== src) ifr.setAttribute('src', src);   // re-scope to the requested era
+    }
+    const ov = document.getElementById('battles-overlay');
+    if (ov) { ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
+  }
+  function closeBattles() {
+    const ov = document.getElementById('battles-overlay');
+    if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; }
+  }
+
   // ── MNEMOSYNE STUDY MODE ────────────────────────────────────
   function closeStudyOverlay() {
     const ov = document.getElementById('study-overlay');
@@ -467,6 +486,8 @@
   window.closeIstoria      = closeIstoria;
   window.openHistoryGame   = openHistoryGame;
   window.closeHistoryGame  = closeHistoryGame;
+  window.openBattles       = openBattles;
+  window.closeBattles      = closeBattles;
   window.navToStudy        = navToStudy;
   window.closeStudyOverlay = closeStudyOverlay;
 })();
