@@ -241,6 +241,25 @@ export const UNIT = {
 
   // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
   //  Ετυμολογικοί συσχετισμοί λατινικών λέξεων με ελληνικές ή άλλων ευρωπαϊκών γλωσσών.
+  transforms: [
+    { id:"Α", label:"Μετατροπή ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Gaius Sallustius tradit multos etiam milites Romanos in eadem cruentissima pugna occisos esse, multos autem graviter vulneratos esse", to:"A Gaio Sallustio traditur multos etiam milites Romanos in eadem cruentissima pugna occisos esse, multos autem graviter vulneratos esse" }
+    ]},
+    { id:"Β", label:"Μετατροπή παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Catilina a Cicerone ex urbe expulsus est", to:"Cicero Catilinam ex urbe expulit" },
+      { from:"Socii eius deprehensi sunt et in carcere strangulati sunt (a militibus)", to:"(Milites) socios eius deprehenderunt (ή deprehendere) et in carcere strangulaverunt (ή strangulavere)" },
+      { from:"Ab Antonio, altero consule, Catilina ipse cum exercitu suo, proelio victus, interfectus est", to:"Antonius, alter consul, Catilinam ipsum cum exercitu suo, proelio victum, interfecit" },
+      { from:"Gaius Sallustius tradit multos etiam milites Romanos in eadem cruentissima pugna occisos esse, multos autem graviter vulneratos esse (ab hostibus)", to:"Gaius Sallustius tradit (hostes) multos etiam milites Romanos in eadem cruentissima pugna occidisse, multos autem graviter vulneravisse" }
+    ]},
+    { id:"Γ", label:"Μετατροπή σε απαρεμφατική σύνταξη με εξάρτηση από «Eutropius dicit»", items:[
+      { from:"Marco Tullio Cicerone et Gaio Antonio consulibus, Lucius Sergius Catilina, nobilissimi generis vir sed ingenii pravissimi, contra rem publicam coniuravit", to:"Eutropius dicit Marco Tullio Cicerone et Gaio Antonio consulibus, Lucium Sergium Catilinam, nobilissimi generis virum sed ingenii pravissimi, contra rem publicam coniuravisse" },
+      { from:"Eum clari quidam sed improbi viri consecuti erant", to:"Eutropius dicit eum claros quosdam sed improbos viros consecutos esse" },
+      { from:"Catilina a Cicerone ex urbe expulsus est", to:"Eutropius dicit Catilinam a Cicerone ex urbe expulsum esse" },
+      { from:"Socii eius deprehensi sunt et in carcere strangulati sunt", to:"Eutropius dicit socios eius deprehensos esse et in carcere strangulatos esse" },
+      { from:"Ab Antonio, altero consule, Catilina ipse cum exercitu suo, proelio victus, interfectus est", to:"Eutropius dicit ab Antonio, altero consule, Catilinam ipsum cum exercitu suo, proelio victum, interfectum esse" },
+      { from:"Gaius Sallustius tradit multos etiam milites Romanos in eadem cruentissima pugna occisos esse, multos autem graviter vulneratos esse", to:"Eutropius dicit Gaium Sallustium tradere multos etiam milites Romanos in eadem cruentissima pugna occisos esse, multos autem graviter vulneratos esse" }
+    ]}
+  ],
   etymology: [
     { la:"Marco Tullio Cicerōne", el:"Μάρκος Τύλλιος Κικέρωνας" },
     { la:"Gaio Antōnio", el:"Γάιος Αντώνιος" },

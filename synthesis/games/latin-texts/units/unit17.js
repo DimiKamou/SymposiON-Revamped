@@ -250,6 +250,66 @@ export const UNIT = {
     { tag:"Συνεκφορά", title:"res militaris = τα στρατιωτικά", body:"Η συνεκφορά res militaris σημαίνει «τα στρατιωτικά ζητήματα»· το rei είναι γενική ως συμπλήρωμα (αντικειμενική) στο periti. Χρησιμοποιείται σπάνια στον πληθ." },
     { tag:"Αντωνυμία", title:"alius: αντωνυμικό επίθετο", body:"Το alius, alia, aliud είναι αντωνυμικό επίθετο με γεν. ενικ. alius και δοτ. ενικ. alii. Το σχήμα «Alius alia de causa» αποδίδεται «ο καθένας για διαφορετικό λόγο»." },
     { tag:"Συνεκφορά", title:"vultum fingere = προσποιούμαι", body:"Η έκφραση vultum fingere (κυριολ. «πλάθω το πρόσωπο») σημαίνει «προσποιούμαι»." }
+  ],
+  transforms: [
+    { id:"Α", label:"Μετατροπή ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Magnus timor exercitum occupāvit ex vocibus Gallōrum ac mercatōrum, qui Germānos ingenti magnitudine corporum et incredibili virtūte esse praedicābant", to:"Magnō timōre exercitus occupātus est ex vocibus Gallōrum ac mercatōrum, a quibus Germānos ingenti magnitudine corporum et incredibili virtūte esse praedicabātur", note:"απρόσωπο" },
+      { from:"Hi neque vultum fingere neque lacrimas tenēre poterant;", to:"Ab his neque vultum fingi neque lacrimas tenēri poterat", note:"απρόσωπο" }
+    ]},
+    { id:"Β", label:"Μετατροπή παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Totis castris testamenta obsignabantur (ab eis)", to:"Totis castris (ii) testamenta obsignābant" },
+      { from:"Horum vocibus ac timōre paulātim etiam ii, qui rei militāris perīti habebantur (a Rōmānis), perturbabantur", to:"Horum voces ac timor paulātim etiam eos, quos rei militāris perītos habēbant (Rōmāni), perturbabant" }
+    ]},
+    { id:"Γ", label:"Μετατροπή σε απαρεμφατική σύνταξη με εξάρτηση από «Caesar narrat»", items:[
+      { from:"Magnus timor exercitum occupāvit ex vocibus Gallōrum ac mercatōrum", to:"Caesar narrat magnum timōrem exercitum occupavisse ex vocibus Gallōrum ac mercatōrum" },
+      { from:"Alius aliā de causā discedere cupiēbat", to:"Caesar narrat alium aliā de causā discedere cupivisse" },
+      { from:"Nonnulli pudōre adducti remanēbant", to:"Caesar narrat nonnullos pudōre adductos remansisse" },
+      { from:"Hi neque vultum fingere neque lacrimas tenēre poterant; abditi in tabernaculis aut suum fatum querebantur aut cum familiaribus suis commūne periculum miserabantur", to:"Caesar narrat eos neque vultum fingere neque lacrimas tenēre potuisse; abditos in tabernaculis aut suum fatum questos esse aut cum familiaribus suis commūne periculum miserātos esse" },
+      { from:"Totis castris testamenta obsignabantur", to:"Caesar narrat totis castris testamenta obsignāta esse" },
+      { from:"Horum vocibus ac timōre paulātim etiam ii [...] perturbabantur", to:"Caesar narrat illōrum vocibus ac timōre paulātim etiam eos [...] perturbātos esse" }
+    ]}
+  ],
+  etymology: [
+    { la:"magnus", el:"μέγας." },
+    { la:"timor", el:"(αγγλ.) timorous (= δειλός, φοβισμένος)." },
+    { la:"exercitum", el:"(ισπαν.) ejército (= στρατός) // (γαλλ.) exercice (= άσκηση)." },
+    { la:"occupāvit", el:"(ιταλ.) capire (= καταλαβαίνω)." },
+    { la:"vocibus", el:"(αγγλ.) revocation (= ανάκληση), vocal (= φωνητικός), voice (= φωνή) // (γαλλ.) vocabulaire (= λεξιλόγιο)." },
+    { la:"Gallōrum", el:"Γάλλος, Γαλλία." },
+    { la:"mercatōrum", el:"(αγγλ.) merchant, (γαλλ.) marchand." },
+    { la:"Germānos", el:"Γερμανός, Γερμανία." },
+    { la:"magnitudine", el:"μέγας // (αγγλ.) magnitude (= μέγεθος, σημασία) // (γαλλ.) magnifique (= θαυμάσιος)." },
+    { la:"corporum", el:"κόρπους (= σώμα κειμένων)." },
+    { la:"in-credibili", el:"(αγγλ.) incredible." },
+    { la:"virtūte (vir)", el:"βιρτουόζος (< ιταλ. virtuoso)." },
+    { la:"esse (es-)", el:"είμι." },
+    { la:"prae-dicābant", el:"δείκ-νυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση)." },
+    { la:"alius, aliā", el:"ἄλλος, ἄλλη, ἄλλο." },
+    { la:"causā", el:"(αγγλ.) cause." },
+    { la:"cupiēbat", el:"(γαλλ.) cupidité (= απληστία)." },
+    { la:"nonnulli", el:"νούλα [< ιταλ. nulla (= μηδενικό, χωρίς αξία)]." },
+    { la:"adducti", el:"(αγγλ.) adductor (= προσαγωγός μυς)." },
+    { la:"remanēbant", el:"μένω, μόνος." },
+    { la:"fingere", el:"φιγούρα, φιγουράρω, φιγουρίνι (< ιταλ. figura, figurare, figurino)." },
+    { la:"lacrimas", el:"δάκρυμα (= αιτία δακρύων, δάκρυ), δάκρυον." },
+    { la:"tenēre", el:"(γαλλ.) tenir (= κρατώ)." },
+    { la:"poterant [(potis = δυνατός) + sum]", el:"πόσις, δεσ-πότης («κύριος σπιτιού»)." },
+    { la:"tabernaculis (< taberna)", el:"ταβέρνα." },
+    { la:"fatum", el:"φημί (= λέω, ισχυρίζομαι), φατός (= αυτός που μπορεί να ειπωθεί, ονομαστός) // fata morgana (είδος αντικατοπτρισμού)." },
+    { la:"familiaribus (familia)", el:"φαμίλια // (γαλλ.) famille (= οικογένεια) // (αγγλ.) family (= οικογένεια / οικογενειακός)." },
+    { la:"commūne", el:"(γαλλ.) commune // κομμουνισμός (< γαλλ. communisme)." },
+    { la:"periculum, perīti", el:"πείρα, πειρατής· απειρία." },
+    { la:"miserabantur", el:"μιζέρια, μίζερος (< ιταλ.)." },
+    { la:"totis", el:"(γαλλ.) totalité (= ολότητα) // (αγγλ.) total (= σύνολο, άθροισμα)." },
+    { la:"castris", el:"κάστρο." },
+    { la:"testamenta", el:"(αγγλ.) testament." },
+    { la:"ob-signabantur", el:"σινιάλο (< ιταλ.) // (αγγλ.) sign (= σήμα, σημάδι) // (γαλλ.) signe (= σήμα, σημάδι, δείγμα)." },
+    { la:"timōre", el:"(αγγλ.) timorous (= δειλός, φοβισμένος)." },
+    { la:"paulātim (paulus)", el:"παῦρος (= μικρός, λίγος)." },
+    { la:"rei", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)." },
+    { la:"militāris", el:"μιλιταρισμός (< γαλλ.)." },
+    { la:"habebantur", el:"(γερμ.) haben, (αγγλ.) have." },
+    { la:"per-turbabantur", el:"τύρβη (= ταραχή), τούρμπο, τουρμπίνα (< γαλλ.)." }
   ]
 };
 

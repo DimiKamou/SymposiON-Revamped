@@ -267,6 +267,70 @@ export const UNIT = {
     { tag:"Πρόθεση", title:"e / ex", body:"Η ex αποβάλλει το x πριν από σύμφωνο (e somno) και το διατηρεί πριν από φωνήεν ή h (ex Hispania, ex infesto, ex spelunca)." },
     { tag:"Προσδιορισμός", title:"Επιρρ. κατηγορούμενα του τρόπου", body:"fessus (στο ενν. Hercules μέσω dormivisse) και fretus (στο Cacus μέσω traxit) είναι επιρρηματικά κατηγορούμενα του τρόπου, όχι απλοί επιθετικοί προσδιορισμοί." },
     { tag:"Μετοχές", title:"Ποικιλία μετοχών", body:"excitatus / aversos / conatus = χρονικές· confusus = αιτιολογική· auditus = επιθετική· versa = κατηγορηματικός προσδ. Το conatus προέρχεται από αποθετικό ρήμα, άρα έχει ενεργητική σημασία." }
+  ],
+  transforms: [
+    { id:"Α", label:"Μετατροπή ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"... postea Romulus urbem Romam condidit", to:"postea a Romulo urbs Roma condidita est." },
+      { from:"Tum Cacus pastor, fretus viribus, boves quosdam in speluncam caudis traxit aversos", to:"Tum a Caco pastore, freto viribus, boves quidam in speluncam caudis tracti sunt aversi." },
+      { from:"... Hercules, e somno excitatus, gregem aspexit...", to:"ab Hercule, e somno excitato, grex aspectus est..." },
+      { from:"... (Hercules) boum vestigia foras versa vidit...", to:"(ab Hercule) boum vestigia foras versa visa sunt..." },
+      { from:"(Hercules) confusus gregem ex loco infesto amovere coepit", to:"(ab Hercule) confuso grex ex loco infesto amoveri coeptus est." },
+      { from:"Sed bovum mugitus ex spelunca auditus Herculem convertit", to:"Sed bovum mugitu ex spelunca audito Hercules conversus est." }
+    ]},
+    { id:"Β", label:"Μετατροπή παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Hercules boves Geryonis ex Hispania in eum locum adduxisse dicitur", to:"Herculem boves Geryonis ex Hispania in eum locum adduxisse dicunt." },
+      { from:"Prope Tiberim fluvium Hercules boves refecisse fertur et ipse de via fessus ibi dormivisse", to:"Prope Tiberim fluvium Herculem boves refecisse ferunt et ipsum de via fessum ibi dormivisse." },
+      { from:"Tum Cacus, vi prohibere eum conatus, Herculis clava interficitur", to:"Tum Cacum, vi prohibere eum conatum, Hercules clava interficit." }
+    ]},
+    { id:"Γ", label:"Μετατροπή σε απαρεμφατική σύνταξη με εξάρτηση από «Titus Livius narrat»", items:[
+      { from:"Hercules boves Geryonis ex Hispania in eum locum adduxisse dicitur, ubi postea Romulus urbem Romam condidit", to:"Titus Livius narrat Herculem boves Geryonis ex Hispania in eum locum adduxisse dici." },
+      { from:"Prope Tiberim fluvium Hercules boves refecisse fertur et ipse de via fessus ibi dormivisse", to:"Titus Livius narrat prope Tiberim fluvium Herculem boves refecisse ferri et ipsum de via fessum ibi dormivisse." },
+      { from:"Tum Cacus pastor, fretus viribus, boves quosdam in speluncam caudis traxit aversos", to:"Titus Livius narrat tum Cacum pastorem, fretum viribus, boves quosdam in speluncam caudis traxisse aversos." },
+      { from:"... (Hercules) pergit ad proximam speluncam", to:"Titus Livius narrat (Herculem) pergere ad proximam speluncam.", note:"printed 'proximan' (typo) in both source clause and result on p.172; normalized to 'proximam'" },
+      { from:"... (Hercules) confusus gregem ex loco infesto amovere coepit", to:"Titus Livius narrat (Herculem) confusum gregem ex loco infesto amovere coepisse." },
+      { from:"... bovum mugitus ex spelunca auditus Herculem convertit", to:"Titus Livius narrat bovum mugitum ex spelunca auditum Herculem convertisse." },
+      { from:"Tum Cacus, vi prohibere eum conatus, Herculis clava interficitur", to:"Titus Livius narrat tum Cacum, vi prohibere eum conatum, Herculis clava interfici." }
+    ]}
+  ],
+  etymology: [
+    { la:"Hercules, Herculem, Herculis", el:"Ηρακλής." },
+    { la:"boves, boum, bovum", el:"βοῦς / βόδι." },
+    { la:"Geryonis", el:"Γηρυόνης." },
+    { la:"Hispania", el:"Ισπανία." },
+    { la:"locum, loco", el:"(αγγλ.) location (= τοποθεσία)." },
+    { la:"adduxisse", el:"(αγγλ.) adductor (= προσαγωγός μυς)." },
+    { la:"dicitur", el:"δείκ-νυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση)." },
+    { la:"Romulus, Romam", el:"Ρωμύλος, Ρώμη, Ρωμαίος, ρωμαϊκός, ρωμιός." },
+    { la:"urbem", el:"(γαλλ.) urbain (= αστικός)." },
+    { la:"Tiberim", el:"Τίβερης." },
+    { la:"fluvium", el:"φλέω (= είμαι κατάμεστος), φλύω (= αναβράζω), φλοῖσβος (= ήχος κυμμάτων) // (γερμ.) fluss (= ποτάμι)." },
+    { la:"re-fecisse, inter-ficitur", el:"(αγγλ.) facts (= γεγονότα)." },
+    { la:"fertur", el:"φέρω // (αγγλ.) transfer (= μεταφορά)." },
+    { la:"fessus (fatiscor)", el:"(γαλλ.) fatigué (= κουρασμένος)." },
+    { la:"dormivisse", el:"(γαλλ.) dormir (= κοιμάμαι)." },
+    { la:"Cacus", el:"Κάκος." },
+    { la:"pastor", el:"πάστορας." },
+    { la:"viribus, vi", el:"(Ϝις) ἴς (= δύναμη)." },
+    { la:"speluncam, spelunca", el:"σπήλυγξ (= σπήλαιον)." },
+    { la:"caudis", el:"(αγγλ.) caudal (= ο της ουράς, ουραίος)." },
+    { la:"traxit", el:"(αγγλ.) extraction (= εξαγωγή), τρακτέρ (< γαλλ.)." },
+    { la:"aversos, versa, convertit", el:"(verso) βέρσο (= πίσω μέρος σελίδας), ρεβέρ (< γαλλ.), v.s. (= εναντίον)." },
+    { la:"somno", el:"ὕπνος." },
+    { la:"excitatus", el:"(γαλλ.) inciter (= υποκινώ)." },
+    { la:"gregem", el:"ἀ-γείρω (= συγκεντρώνω)." },
+    { la:"aspexit", el:"(αγγλ.) pro-spect (= προοπτική, άποψη) // σπέκουλα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.)." },
+    { la:"partem", el:"πάρτη, παρτίδα // (γαλλ.) partie." },
+    { la:"ab-esse (es-)", el:"εἰμί." },
+    { la:"sensit", el:"(γαλλ.) sentir (= αισθάνομαι, νιώθω), sensible (= ευαίσθητος)." },
+    { la:"vestigia", el:"(αγγλ.) vestige (= ίχνος), in-vestigation (= έρευνα, εξέταση)." },
+    { la:"foras", el:"θύρα." },
+    { la:"vidit", el:"(Ϝιδεῖν) ιδέα, βίντεο [< αγγλ. video]." },
+    { la:"confusus", el:"(αγγλ.) confused (= μπερδεμένος, συγκεχυμένος) // (αγγλ.) confusion (= σύγχυση)." },
+    { la:"infesto", el:"(γαλλ.) infester (= λυμαίνομαι)." },
+    { la:"amovere", el:"(αγγλ.) move (= κινούμαι) // μοτέρ (< γαλλ.) // μοτίβο (= επαναλαμβανόμενο στοιχείο μουσικού θέματος) [< ιταλ. motivo (= κίνητρο)]." },
+    { la:"mugitus", el:"μυκάομαι -ῶμαι (= μουγκανίζω, μουγκρίζω), μυκηθμός (= μουγκανητό, μούγκρισμα)." },
+    { la:"auditus", el:"ἀΐω." },
+    { la:"pro-hibere", el:"(γερμ.) haben, (αγγλ.) have." }
   ]
 };
 
