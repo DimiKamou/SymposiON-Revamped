@@ -158,7 +158,7 @@
 <header class="bar">
   <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
     <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
-  <span class="brand">Symposi<b>ON</b></span>
+  <span class="brand" onclick="try{var c=(window.parent&&window.parent.closeAdidakto)||(window.top&&window.top.closeAdidakto);c?c():0}catch(e){}" style="cursor:pointer" title="Επιστροφή στο μενού">Symposi<b>ON</b></span>
   <span class="bar-sub">Αδίδακτο</span>
   <span class="spacer"></span>
   <select class="picker" id="picker" aria-label="Επιλογή κειμένου"></select>
@@ -288,11 +288,14 @@ function render(t){
   });
 
   const qs=t.questions||[];
+  // q.code is an INTERNAL id (gram-…, synt-…, translate) — never show it raw.
+  // Render the question number + a readable type label instead.
+  const QK={translate:'Μετάφραση',grammar:'Γραμματική',syntax:'Συντακτικό',comprehension:'Κατανόηση',interpretation:'Ερμηνεία',lexis:'Λεξιλόγιο'};
   document.getElementById('compCount').textContent=qs.length+' ερωτήσεις';
   document.getElementById('comp').innerHTML=qs.map((q,i)=>{
     const isTr=q.type==='translate';
     return `<div class="cq" data-i="${i}">
-      <div class="cqt"><span class="qn">${esc(q.code||(i+1)+'.')}</span>${esc(q.q)}${q.points?`<span class="cqp">${q.points} μ.</span>`:''}</div>
+      <div class="cqt"><span class="qn">${i+1}.</span>${QK[q.type]?`<span class="qkind" style="display:inline-block;font:700 10px/1 var(--disp,inherit);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sink);border:1px solid var(--line-soft);border-radius:6px;padding:3px 7px;margin:0 8px 0 2px;vertical-align:middle">${esc(QK[q.type])}</span>`:''}${esc(q.q)}${q.points?`<span class="cqp">${q.points} μ.</span>`:''}</div>
       <textarea class="ca ${isTr?'gr':''}" placeholder="Η απάντησή σου…"></textarea>
       <div class="ws-actions"><button class="reveal-btn" data-i="${i}">Δες ενδεικτική απάντηση</button></div>
       <div class="model" id="qa${i}"><div class="ml">Ενδεικτική απάντηση</div><div class="mtxt">${esc(q.answer)}</div>${q.rubric?`<div class="mtxt" style="margin-top:8px;color:var(--fg-70);font-size:12.5px"><b>Κριτήρια:</b> ${esc(q.rubric)}</div>`:''}</div>
