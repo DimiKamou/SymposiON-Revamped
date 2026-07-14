@@ -164,6 +164,24 @@
         E('div',{class:'pv-foot'},[ E('span',{},lang()==='en'?'Flip two cards to match':'Γύρνα δύο κάρτες'), E('span',{class:'pv-timer'},'00:42') ]),
       ]);
     },
+    /* 3D museum / diorama walkthrough (Αγία Σοφία · Κνωσός · Ακρόπολις · Κωνσταντινούπολη) */
+    museum(o){
+      o = o || {};
+      return E('div',{class:'pv-scene pv-scene--museum'},[
+        hud(o.title||(lang()==='en'?'3D Museum':'3D Μουσείο'), lang()==='en'?'Interactive walkthrough':'Διαδραστική περιήγηση', {lives:'360°', score:''}),
+        E('div',{class:'pv-stage pv-stage--museum'},[
+          E('div',{class:'pv-museum'},[
+            illu(o.illu||'acropolis'),
+            E('span',{class:'pv-museum__hot',style:'left:26%;top:40%'}),
+            E('span',{class:'pv-museum__hot',style:'left:72%;top:32%'}),
+            E('span',{class:'pv-museum__hot pv-museum__hot--pulse',style:'left:50%;top:62%'}),
+            E('span',{class:'pv-museum__badge'}, lang()==='en'?'360° · drag to look':'360° · σύρε γύρω'),
+          ]),
+          E('div',{class:'pv-q pv-q--sm'}, lang()==='en'?'Explore the monument in 3D — tap the glowing points for facts.':'Εξερεύνησε το μνημείο σε 3D — πάτα τα φωτεινά σημεία για πληροφορίες.'),
+        ]),
+        E('div',{class:'pv-foot'},[ E('span',{},lang()==='en'?'Drag to look around · tap hotspots':'Σύρε για περιήγηση · πάτα τα σημεία'), E('span',{class:'pv-timer',html:'&#9673;'}) ]),
+      ]);
+    },
   };
 
   const SCENES = [
@@ -174,6 +192,7 @@
     { type:'flash',        gr:'Κάρτες Μνήμης',       en:'Flashcards' },
     { type:'runner',       gr:'Runner',              en:'Runner' },
     { type:'memory',       gr:'Μνήμη',               en:'Memory' },
+    { type:'museum',       gr:'3D Μουσείο',          en:'3D Museum' },
   ];
 
   function scene(type, opts) {
@@ -186,6 +205,9 @@
   // pick a scene type from a game name/illu heuristically
   function typeFor(g){
     const n = (L(g)||'').toLowerCase(), illu = (g.illu||'');
+    const meta = (g.meta && typeof g.meta==='object' ? (L(g.meta)||'') : (g.meta||'')).toLowerCase();
+    // 3D cultural experiences → museum walkthrough mock (name OR meta)
+    if (/αγία σοφία|hagia|κνωσ|knoss|ακρόπολ|acropol|κωνσταντιν|constantin|3d μουσ|3d διόραμα|3d museum|3d diorama|διόραμα/.test(n+' '+meta)) return 'museum';
     if (/λύω|lyo|κλίσ|ρήμ|verb|συνηρ|ανώμαλ/.test(n)) return 'grammar-verb';
     if (/latin|λατιν|noun|ουσιαστ|declens|κλίση ουσ/.test(n)) return 'grammar-noun';
     if (/tug|διελκ|tow/.test(n)) return 'tow';

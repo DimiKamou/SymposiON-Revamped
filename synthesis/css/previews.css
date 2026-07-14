@@ -92,6 +92,27 @@
 }
 .pv-modal__desc { padding: 12px 16px 0; font-size: 13.5px; line-height: 1.5; color: var(--fg-70, var(--muted)); }
 .pv-frame { padding: 14px; }
+
+/* ── 3D museum / diorama experience preview ── */
+.pv-stage--museum { display: flex; flex-direction: column; gap: 12px; }
+.pv-museum { position: relative; height: 180px; border-radius: 14px; overflow: hidden; display: grid; place-items: center;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold-soft) 60%, transparent), transparent 55%),
+             radial-gradient(120% 80% at 50% 6%, var(--sage-soft), transparent 60%), var(--sink); }
+/* perspective floor grid → a sense of depth */
+.pv-museum::after { content: ''; position: absolute; left: -20%; right: -20%; bottom: -12%; height: 58%; pointer-events: none; opacity: .5;
+  background-image: linear-gradient(color-mix(in srgb, var(--gold) 30%, transparent) 1px, transparent 1px),
+                    linear-gradient(90deg, color-mix(in srgb, var(--gold) 22%, transparent) 1px, transparent 1px);
+  background-size: 34px 34px; transform: perspective(340px) rotateX(60deg); transform-origin: bottom center; }
+.pv-museum .pv-illu { width: 96px; height: 96px; color: var(--terra-dk); position: relative; z-index: 1;
+  filter: drop-shadow(0 10px 16px color-mix(in srgb, var(--terra) 30%, transparent)); }
+.pv-museum__hot { position: absolute; width: 14px; height: 14px; border-radius: 50%; z-index: 2; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #fff 30%, var(--terra) 72%); box-shadow: 0 0 0 4px color-mix(in srgb, var(--terra) 26%, transparent); }
+.pv-museum__hot--pulse { animation: pvHot 1.6s ease-in-out infinite; }
+@keyframes pvHot { 0%, 100% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--terra) 26%, transparent); } 50% { box-shadow: 0 0 0 11px color-mix(in srgb, var(--terra) 5%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .pv-museum__hot--pulse { animation: none; } }
+.pv-museum__badge { position: absolute; right: 10px; top: 10px; z-index: 3; font-family: var(--disp, sans-serif); font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--fg); background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; backdrop-filter: blur(4px); }
 .pv-modal__cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .pv-modal__note { font-size: 12px; color: var(--muted); flex: 1; min-width: 180px; }
 .pv-modal__play { display: inline-flex; align-items: center; gap: 8px; background: var(--terra-dk); color: #fff; border: 0; font-family: var(--sans, sans-serif); font-weight: 700; font-size: 13.5px; padding: 11px 18px; border-radius: 999px; cursor: pointer; }
