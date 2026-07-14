@@ -66,6 +66,14 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     eager:   false,
     fb:      false
   },
+  // ── Recreation of Key Historical Battles (iframe → games/battles/<era>.html) ──
+  openBattles: {
+    js:      [],
+    css:     [],
+    overlay: 'battles-overlay',
+    eager:   false,
+    fb:      false
+  },
   // ── Symposion board game (iframe overlay) ──────────────────
   openSymposion: {
     js:      [],
@@ -94,6 +102,9 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   // Study / Flashcards
   'Flashcards':              'synOpenStudyFlashcards',
   'Κάρτες Μνήμης':           'synOpenStudyFlashcards',
+  // Recreation of Key Historical Battles (era comes from the tile's launch.args)
+  'Recreation of Key Historical Battles':        'openBattles',
+  'Αναπαράσταση Κορυφαίων Ιστορικών Μαχών':      'openBattles',
   // Symposion
   'Symposion':               'openSymposion',
   'Συμπόσιον':               'openSymposion'
