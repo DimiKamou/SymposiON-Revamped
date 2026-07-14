@@ -67,6 +67,74 @@ const g = (gr, en, meta, illu, launch) => {
 // shorthand for a coming-soon tile (no real game behind it yet)
 const gSoon = (gr, en, meta, illu) => g(gr, en, meta, illu, { soon: true });
 
+// ── Shared tile-sets — surfaced BOTH under the «Γραμματική·Θεωρία» tracks and
+//    under the grade tabs, so students find them browsing by class. Each use
+//    maps to fresh tile objects so the same set can render in several panels. ──
+const clone = arr => arr.map(t => ({ ...t }));
+// Λατινικά · Ανάλυση Κειμένων — Β΄ Λυκείου (Ενότητες 1–15, coming soon).
+const LATIN_TEXTS_B_GAMES = [
+  gSoon('Ενότητα 1','Unit 1','σύντομα','scroll'),   gSoon('Ενότητα 2','Unit 2','σύντομα','scroll'),
+  gSoon('Ενότητα 3','Unit 3','σύντομα','scroll'),   gSoon('Ενότητα 4','Unit 4','σύντομα','scroll'),
+  gSoon('Ενότητα 5','Unit 5','σύντομα','scroll'),   gSoon('Ενότητα 6','Unit 6','σύντομα','scroll'),
+  gSoon('Ενότητα 7','Unit 7','σύντομα','scroll'),   gSoon('Ενότητα 8','Unit 8','σύντομα','scroll'),
+  gSoon('Ενότητα 9','Unit 9','σύντομα','scroll'),   gSoon('Ενότητα 10','Unit 10','σύντομα','scroll'),
+  gSoon('Ενότητα 11','Unit 11','σύντομα','scroll'), gSoon('Ενότητα 12','Unit 12','σύντομα','scroll'),
+  gSoon('Ενότητα 13','Unit 13','σύντομα','scroll'), gSoon('Ενότητα 14','Unit 14','σύντομα','scroll'),
+  gSoon('Ενότητα 15','Unit 15','σύντομα','scroll'),
+];
+// Λατινικά · Ανάλυση Κειμένων — Γ΄ Λυκείου Προσανατολισμού (Εισαγωγή + 16–50).
+const LATIN_TEXTS_C_GAMES = [
+  g('Εισαγωγή','Introduction','Ρωμαϊκή λογοτεχνία · συγγραφείς · ασκήσεις','book',{fn:'openLatinIntro'}),
+  g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
+  g('Ενότητα 17','Unit 17','Φόβος μπροστά στο άγνωστο','scroll',{fn:'openLatinText17'}),
+  g('Ενότητα 18','Unit 18','Ο Ηρακλής στην Ιταλία','scroll',{fn:'openLatinText18'}),
+  g('Ενότητα 19','Unit 19','Η συνωμοσία του Κατιλίνα','scroll',{fn:'openLatinText19'}),
+  g('Ενότητα 20','Unit 20','Πίσω από τις κουρτίνες ή πώς ο Κλαύδιος έγινε αυτοκράτορας','scroll',{fn:'openLatinText20'}),
+  g('Ενότητα 21','Unit 21','Πώς πήρε το όνομά του το Πίσαυρο','scroll',{fn:'openLatinText21'}),
+  g('Ενότητα 22','Unit 22','Προτροπές προς τους Ρωμαίους','scroll',{fn:'openLatinText22'}),
+  g('Ενότητα 23','Unit 23','Ένας υπέροχος άνθρωπος','scroll',{fn:'openLatinText23'}),
+  g('Ενότητα 24','Unit 24','Το πάθημα ενός ψεύτη','scroll',{fn:'openLatinText24'}),
+  g('Ενότητα 25','Unit 25','Πώς ένα σύκο στάθηκε αφορμή να καταστραφεί η Καρχηδόνα','scroll',{fn:'openLatinText25'}),
+  gSoon('Ενότητα 26','Unit 26','σύντομα — νέα σάρωση','scroll'),
+  g('Ενότητα 27','Unit 27','Το πνεύμα ωριμάζει όπως και οι καρποί','scroll',{fn:'openLatinText27'}),
+  g('Ενότητα 29','Unit 29','Ο Οκταβιανός, ο παπουτσής και το κοράκι','scroll',{fn:'openLatinText29'}),
+  g('Ενότητα 31','Unit 31','Η γενναιότητα δε βγαίνει πάντα σε καλό','scroll',{fn:'openLatinText31'}),
+  g('Ενότητα 32','Unit 32','Ένας πανηγυρικός της λογοτεχνίας','scroll',{fn:'openLatinText32'}),
+  g('Ενότητα 33','Unit 33','Καιρός για ανασυγκρότηση','scroll',{fn:'openLatinText33'}),
+  g('Ενότητα 34','Unit 34','Ο Σκιπίωνας ο Αφρικανός και οι λήσταρχοι','scroll',{fn:'openLatinText34'}),
+  g('Ενότητα 35','Unit 35','Ο φιλόσοφος μπροστά στα δεινά της εξορίας','scroll',{fn:'openLatinText35'}),
+  g('Ενότητα 36','Unit 36','Μια απόπειρα δωροδοκίας','scroll',{fn:'openLatinText36'}),
+  g('Ενότητα 37','Unit 37','Η κατάρα των εμφυλίων πολέμων','scroll',{fn:'openLatinText37'}),
+  g('Ενότητα 38','Unit 38','Η μοίρα της Καικιλίας','scroll',{fn:'openLatinText38'}),
+  g('Ενότητα 39','Unit 39','Ένα πρότυπο ιδανικού ανθρώπου','scroll',{fn:'openLatinText39'}),
+  g('Ενότητα 40','Unit 40','Ακλόνητη αποφασιστικότητα μπροστά στις απειλές του δικτάτορα','scroll',{fn:'openLatinText40'}),
+  g('Ενότητα 41','Unit 41','Μίλα για να σε καταλαβαίνουν, όχι για να μιλάς','scroll',{fn:'openLatinText41'}),
+  g('Ενότητα 42','Unit 42','Ο Κικέρωνας και η συνωμοσία του Κατιλίνα','scroll',{fn:'openLatinText42'}),
+  g('Ενότητα 43','Unit 43','Η οργή της μάνας','scroll',{fn:'openLatinText43'}),
+  g('Ενότητα 44','Unit 44','Η ζωή των τυράννων','scroll',{fn:'openLatinText44'}),
+  g('Ενότητα 45','Unit 45','Μια επιστολή στα ελληνικά αναπτερώνει το ηθικό των πολιορκημένων','scroll',{fn:'openLatinText45'}),
+  g('Ενότητα 46','Unit 46','Το γενικό συμφέρον μπαίνει πριν από το ατομικό','scroll',{fn:'openLatinText46'}),
+  g('Ενότητα 47','Unit 47','Ο Αύγουστος και η φιλαρέσκεια της κόρης του, της Ιουλίας','scroll',{fn:'openLatinText47'}),
+  g('Ενότητα 48','Unit 48','Το ελάφι του Σερτώριου','scroll',{fn:'openLatinText48'}),
+  g('Ενότητα 49','Unit 49','Η Πορκία και ο Βρούτος','scroll',{fn:'openLatinText49'}),
+  g('Ενότητα 50','Unit 50','Η φτώχεια και η απληστία είναι κακοί σύμβουλοι της εξουσίας','scroll',{fn:'openLatinText50'}),
+];
+// Αρχαία · Συντακτικό — openSyntaktiko topic entries (πτώσεις / μετοχές / προτάσεις).
+const ARXAIA_SYNTAX_GAMES = [
+  g('Πτώσεις & Λειτουργίες','Cases & Functions','Θεωρία · ασκήσεις · κατανόηση','scroll',{fn:'openSyntaktiko',args:['ptoseis']}),
+  g('Μετοχές','Participles','Επιθετική / κατηγορηματική / επιρρηματική','column',{fn:'openSyntaktiko',args:['metoxes']}),
+  g('Δευτερεύουσες Προτάσεις','Clauses','Ονοματικές & επιρρηματικές','labyrinth',{fn:'openSyntaktiko',args:['protaseis']}),
+];
+// 3D πολιτισμικές εμπειρίες — pinned into grade History panels by era.
+const EXP_ANCIENT_GAMES = [
+  g('Κνωσός','Knossos','3D Μουσείο · Μινωικό ανάκτορο','labyrinth',{fn:'openKnossos'}),
+  g('Ακρόπολις 432 π.Χ.','Acropolis 432 BC','3D Μουσείο · Παρθενώνας','column',{fn:'openAcropolis'}),
+];
+const EXP_BYZANTINE_GAMES = [
+  g('Κωνσταντινούπολις','Constantinople 330–1453','3D Διόραμα · 6 εποχές εξέλιξης','walls',{fn:'openConstantinople'}),
+  g('Αγία Σοφία 537','Hagia Sophia 537','3D Μουσείο · ο Ναός του Ιουστινιανού','acropolis',{fn:'openHagiaSophia'}),
+];
+
 // ── Subjects per class. illu = line-art name from images/illustrations ──
 const SUBJECTS = {
   'gym-a': [
@@ -89,7 +157,9 @@ const SUBJECTS = {
               g('Ανώμαλα Ρήματα','Irregular Verbs','Match · κλίση','wreath',{fn:'openAnwmalaRimata'}) ] },
     { id:'istoria-a', roman:'V', illu:'acropolis', gr:'Ιστορία', en:'History', sub:'History',
       summary:{ gr:'Αρχαία ιστορία — από τον Μαραθώνα ώς τον Μ. Αλέξανδρο.', en:'Ancient history — from Marathon to Alexander the Great.' },
-      games:[ g('Αναπαράσταση Κορυφαίων Ιστορικών Μαχών','Recreation of Key Historical Battles','Στρατηγική · Μαραθώνας → Ώπις · δίγλωσσο','shield-spear',{fn:'openBattles',args:['ancient']}) ] },
+      games:[ g('Αναπαράσταση Κορυφαίων Ιστορικών Μαχών','Recreation of Key Historical Battles','Στρατηγική · Μαραθώνας → Ώπις · δίγλωσσο','shield-spear',{fn:'openBattles',args:['ancient']}),
+              g('Κνωσός','Knossos','3D Μουσείο · Μινωικό ανάκτορο','labyrinth',{fn:'openKnossos'}),
+              g('Ακρόπολις 432 π.Χ.','Acropolis 432 BC','3D Μουσείο · Παρθενώνας','column',{fn:'openAcropolis'}) ] },
   ],
   'gym-b': [
     { id:'iliada', roman:'II', illu:'helmet', gr:'Ιλιάδα', en:'Iliad', sub:'Iliad',
@@ -113,6 +183,8 @@ const SUBJECTS = {
     { id:'istoria', roman:'V', illu:'acropolis', gr:'Ιστορία', en:'History', sub:'History',
       summary:{ gr:'Εξάσκηση με 7 τρόπους — flashcards έως timeline.', en:'Practice 7 ways — flashcards to timeline.' },
       games:[ g('Αναπαράσταση Κορυφαίων Ιστορικών Μαχών','Recreation of Key Historical Battles','Στρατηγική · Θέματα → Άλωση 1453 · δίγλωσσο','walls',{fn:'openBattles',args:['byzantine']}),
+              g('Κωνσταντινούπολις','Constantinople 330–1453','3D Διόραμα · 6 εποχές εξέλιξης','walls',{fn:'openConstantinople'}),
+              g('Αγία Σοφία 537','Hagia Sophia 537','3D Μουσείο · ο Ναός του Ιουστινιανού','acropolis',{fn:'openHagiaSophia'}),
               g('Πολλαπλής Επιλογής','Multiple Choice','Quiz · 4 επιλογές','scroll'),
               g('Αντιστοίχιση','Matching','Match · pairs','trireme'),
               g('Κάρτες Μνήμης','Flashcards','Spaced repetition','amphora'),
@@ -145,6 +217,9 @@ const SUBJECTS = {
               g('Επίθετα','Adjectives','Κλίση & συμφωνία','scroll',{fn:'openEpitheta'}),
               g('Παραθετικά','Adjective Degrees','10 επίπεδα','wreath',{fn:'openParatheta'}),
               g('Ξίφος Γραμματικού','Grammarian\u2019s Blade','Slice · τύποι','shield-spear') ] },
+    { id:'syntaktiko-gc', roman:'IV', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
+      summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
+      games: clone(ARXAIA_SYNTAX_GAMES) },
     { id:'istoria-c', roman:'V', illu:'acropolis', gr:'Ιστορία', en:'History', sub:'History',
       summary:{ gr:'Νεότερη ιστορία — 1821, Βαλκανικοί, το Έπος του \'40.', en:'Modern history — 1821, Balkan Wars, the Epic of 1940.' },
       games:[ g('Αναπαράσταση Κορυφαίων Ιστορικών Μαχών','Recreation of Key Historical Battles','Στρατηγική · 1821 → Κρήτη 1941 · δίγλωσσο','banner-1821',{fn:'openBattles',args:['revolution']}) ] },
@@ -161,6 +236,12 @@ const SUBJECTS = {
       summary:{ gr:'Κειμενικά είδη, επιχειρηματολογία και λεξιλόγιο.', en:'Text types, argumentation and vocabulary.' },
       games:[ gSoon('Λεξιλόγιο','Vocabulary','Κάρτες μνήμης · όροι','book'),
               g('Rapid Fire','Rapid Fire','Speed quiz','lightning-bolt') ] },
+    { id:'syntaktiko-a', roman:'V', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
+      summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
+      games: clone(ARXAIA_SYNTAX_GAMES) },
+    { id:'istoria-lyk-a', roman:'VI', illu:'acropolis', gr:'Ιστορία', en:'History', sub:'History',
+      summary:{ gr:'Αρχαίος κόσμος — περιήγηση σε Κνωσό και Ακρόπολη.', en:'The ancient world — walk Knossos and the Acropolis.' },
+      games: clone(EXP_ANCIENT_GAMES) },
   ],
   'lyk-b': [
     { id:'rhetoric', roman:'IV', illu:'owl', gr:'Ρητορικά Κείμενα', en:'Rhetoric', sub:'Isocrates · Lysias',
@@ -174,6 +255,15 @@ const SUBJECTS = {
       games:[ g('Κλίση Ουσιαστικών','Noun Declension','5 κλίσεις','column',{fn:'openLatNouns'}),
               g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
               g('Επίθετα','Adjectives','Κλίση & βαθμοί','wreath',{fn:'openLatEpitheta'}) ] },
+    { id:'latinika-b-texts', roman:'VII', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Β΄ Λυκείου',
+      summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
+      games: clone(LATIN_TEXTS_B_GAMES) },
+    { id:'syntaktiko-b', roman:'V', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
+      summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
+      games: clone(ARXAIA_SYNTAX_GAMES) },
+    { id:'istoria-lyk-b', roman:'VIII', illu:'walls', gr:'Ιστορία', en:'History', sub:'History',
+      summary:{ gr:'Μεσαιωνικός κόσμος — Κωνσταντινούπολη και Αγία Σοφία.', en:'The medieval world — Constantinople and Hagia Sophia.' },
+      games: clone(EXP_BYZANTINE_GAMES) },
   ],
   'lyk-c': [
     { id:'archaia-kat', roman:'III', illu:'scroll', gr:'Αρχαία Κατεύθυνσης', en:'Ancient Greek (Advanced)', sub:'Authored corpus',
@@ -183,17 +273,21 @@ const SUBJECTS = {
               g('Προσομοίωση Πανελληνίων','Exam Simulator','Πλήρες διαγώνισμα · χρονόμετρο · βαθμολόγηση','column',{fn:'openExamSim'}),
               g('Κείμενα · Μεταφράσεις','Texts · Translations','Παράλληλο κείμενο · σύνταξη','scroll',{fn:'openParallelLesson',args:['texts-lyk-c']}) ] },
     { id:'istoria-kat', roman:'V', illu:'acropolis', gr:'Ιστορία Κατεύθυνσης', en:'History (Advanced)', sub:'History',
-      summary:{ gr:'Πανελλήνιες — πηγές, χρονολόγιο και ανάλυση.', en:'National exams — sources, timeline, analysis.' },
-      games:[ g('Πολλαπλής Επιλογής','Multiple Choice','Quiz','scroll'),
-              g('Κάρτες Μνήμης','Flashcards','Spaced repetition','amphora'),
-              g('Χρονολόγιο','Timeline','Σύρε · σειρά','acropolis'),
-              gSoon('Πηγές','Sources','Ανάλυση πηγών','book') ] },
+      summary:{ gr:'Πανελλήνιες — μελέτη ανά υποκεφάλαιο, 173 πηγές, γραπτή εξάσκηση.', en:'National exams — per-chapter study, 173 sources, written practice.' },
+      games:[ g('Ιστορία Άτλας','History Atlas','30 υποενότητες · Μελέτη → εξάσκηση → πηγές','acropolis',{fn:'openIstoria',args:['g3']}),
+              g('Αναπαράσταση Κορυφαίων Ιστορικών Μαχών','Recreation of Key Historical Battles','Στρατηγική · Επανάσταση 1821 · δίγλωσσο','shield-spear',{fn:'openBattles',args:['revolution']}) ] },
     { id:'latinika-c', roman:'VI', illu:'walls', gr:'Λατινικά', en:'Latin', sub:'Latin · Advanced',
       summary:{ gr:'Κατεύθυνση — σύνταξη, κατάταξη και θεωρία.', en:'Advanced — syntax, classification and theory.' },
       games:[ g('Ανώμαλα Ρήματα','Irregular Verbs','possum · eo · fero','helmet',{fn:'openLatAnwmala'}),
               g('Κατάταξη Κειμένων','Text Sorting','Συντακτικό','scroll',{fn:'openLatKata'}),
               g('Επίθετα ανά Κείμενο','Adjectives by Text','Κλίση & βαθμοί','wreath',{fn:'openLatEpithetaKata'}),
               g('Θεωρία','Theory','Σημειώσεις · κανόνες','book',{fn:'openLatAnwmalaTheory'}) ] },
+    { id:'latinika-c-texts', roman:'VII', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
+      summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
+      games: clone(LATIN_TEXTS_C_GAMES) },
+    { id:'syntaktiko-c', roman:'VIII', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
+      summary:{ gr:'Συντακτικό αδίδακτου — πτώσεις, μετοχές, δευτερεύουσες προτάσεις.', en:'Syntax for the unseen text — cases, participles, subordinate clauses.' },
+      games: clone(ARXAIA_SYNTAX_GAMES) },
   ],
 };
 
