@@ -67,6 +67,12 @@ const Krypteia = (() => {
   let st = {};
   let timers = { game:null, bots:null, dx:null, anim:null };
   let cfg = { rivals:5, time:180 };
+  // weak-device heuristic (presentation only): thinner canvas backdrop and
+  // stilled loops on touch phones / narrow viewports / low memory
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   /* fire a cinematic-FX event; no-op if nothing is listening (standalone-safe) */
   function _fx(type, detail){ try{ window.dispatchEvent(new CustomEvent('kr:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){} }
@@ -78,6 +84,7 @@ const Krypteia = (() => {
     if (gp && gp.title) { const _t=document.querySelector('#kr-overlay .overlay-title'); if(_t) _t.textContent=gp.title; }
     document.getElementById('kr-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+    _bdStart();
     if (!document.getElementById('kr-screen-seal')) build();
     syncLang();
     show('kr-screen-seal');
@@ -86,6 +93,7 @@ const Krypteia = (() => {
   }
   function close() {
     stopAll();
+    _bdStop();
     document.getElementById('kr-overlay').classList.remove('active');
     document.body.style.overflow = '';
   }
@@ -98,7 +106,7 @@ const Krypteia = (() => {
     if (document.getElementById('kr-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'kr-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' kr-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeKrypteia()">\u2039 <span>' + T('\u03a0\u0399\u03a3\u03a9','BACK') + '</span></button>' +
@@ -108,6 +116,7 @@ const Krypteia = (() => {
           '<button data-lang="en" class="' + (L()==='en'?'on':'') + '">EN</button>' +
         '</div>' +
       '</div>' +
+      '<canvas id="kr-backdrop" aria-hidden="true"></canvas>' +
       '<div class="overlay-stage"><div id="kr-wrap"></div></div>';
     document.body.appendChild(ov);
     ov.querySelectorAll('.ov-lang button').forEach(b=>{
@@ -160,13 +169,14 @@ const Krypteia = (() => {
         </div>
         <div class="kr-timer" id="kr-timer"><span class="kr-timer-lbl" data-i18n="time"></span><span class="kr-timer-val" id="kr-timer-val">3:00</span></div>
         <div class="kr-hud-stats">
-          <div class="kr-stat"><span class="kr-stat-lbl" data-i18n="drachmas"></span><span class="kr-stat-val" id="kr-score">0</span></div>
+          <div class="kr-stat kr-stat-dr"><span class="kr-stat-lbl" data-i18n="drachmas"></span><span class="kr-stat-row"><span class="kr-pouch" aria-hidden="true"><i id="kr-pouch-fill"></i></span><span class="kr-stat-val" id="kr-score">0</span></span></div>
           <div class="kr-stat"><span class="kr-stat-lbl" data-i18n="mult"></span><span class="kr-stat-val" id="kr-mult">×1</span></div>
         </div>
       </div>
+      <div class="kr-cord" id="kr-cord" aria-hidden="true"><div class="kr-cord-burn" id="kr-cord-burn"><i class="kr-cord-ember"></i></div></div>
       <div class="kr-qbody">
         <div class="kr-q-meta"><span class="kr-q-num" id="kr-qnum">ΓΡΙΦΟΣ 001</span><span class="kr-q-line"></span></div>
-        <div class="kr-q-card"><div class="kr-q-text" id="kr-qtext"></div></div>
+        <div class="kr-q-card"><i class="kr-nail kr-nail-tl"></i><i class="kr-nail kr-nail-tr"></i><i class="kr-nail kr-nail-bl"></i><i class="kr-nail kr-nail-br"></i><div class="kr-q-text" id="kr-qtext"></div></div>
         <div class="kr-answers" id="kr-answers"></div>
         <div class="kr-feedback" id="kr-feedback"></div>
       </div>
@@ -277,6 +287,12 @@ const Krypteia = (() => {
     const m=Math.floor(st.timeLeft/60), s=st.timeLeft%60;
     document.getElementById('kr-timer-val').textContent = m+':'+String(s).padStart(2,'0');
     document.getElementById('kr-timer').classList.toggle('low', st.timeLeft<=30);
+    /* decorative burning-cord: mirrors the same timeLeft value, nothing more */
+    const cord=document.getElementById('kr-cord'), burn=document.getElementById('kr-cord-burn');
+    if (cord && burn) {
+      burn.style.width=(Math.max(0, st.timeLeft/cfg.time)*100).toFixed(2)+'%';
+      cord.classList.toggle('low', st.timeLeft<=30);
+    }
   }
   function tickBots() {
     if (st.over) return;
@@ -292,15 +308,36 @@ const Krypteia = (() => {
   function myRank(){ return ranked().findIndex(p=>p.isMe)+1; }
   function renderBoard(flash) {
     const board=ranked();
+    const top=Math.max(1, board[0].drachmas);
     document.getElementById('kr-board').innerHTML = board.map((p,i)=>{
       const fl = flash && flash.name===p.name ? (' '+flash.kind) : '';
-      return `<div class="kr-board-row${p.isMe?' me':''}${fl}"><span class="kr-br-pos">${i+1}</span><span class="kr-br-seal">${p.glyph}</span><span class="kr-br-name">${p.name}</span><span class="kr-br-gold">${p.drachmas}</span></div>`;
+      return `<div class="kr-board-row${p.isMe?' me':''}${i===0?' lead':''}${fl}"><span class="kr-br-pos">${i+1}</span><span class="kr-br-seal">${p.glyph}</span><span class="kr-br-name">${p.name}</span><span class="kr-br-gold">${p.drachmas}</span><i class="kr-br-bar" style="--kr-w:${Math.min(100,p.drachmas/top*100).toFixed(1)}%"></i></div>`;
     }).join('');
     if(window.SymStandings) SymStandings.feed('kr', board, {key:'drachmas', unit:'δρ', accent:'var(--sym-terra)', title:'ΚΡΥΠΤΕΙΑ'});
   }
   function updHUD() {
     document.getElementById('kr-score').textContent = st.me.drachmas;
     document.getElementById('kr-mult').textContent = '×'+st.mult;
+    /* decorative: pouch fill (my hoard vs the current leader) + score delta pop */
+    const pf=document.getElementById('kr-pouch-fill');
+    if (pf && st.players) {
+      const top=Math.max(1, ...st.players.map(p=>p.drachmas));
+      pf.style.height=(st.me.drachmas<=0?0:Math.max(8, Math.min(100, st.me.drachmas/top*100))).toFixed(1)+'%';
+    }
+    const prev=(typeof st._shownScore==='number')?st._shownScore:st.me.drachmas;
+    const diff=st.me.drachmas-prev; st._shownScore=st.me.drachmas;
+    if (diff!==0) {
+      const host=document.querySelector('.kr-stat-dr');
+      if (host) {
+        const d=document.createElement('span');
+        d.className='kr-score-pop '+(diff>0?'up':'dn');
+        d.textContent=(diff>0?'+':'')+diff;
+        host.appendChild(d);
+        setTimeout(()=>{ try{ d.remove(); }catch(_){} }, 1150);
+        const pouch=host.querySelector('.kr-pouch');
+        if (pouch && diff>0){ pouch.classList.remove('bump'); void pouch.offsetWidth; pouch.classList.add('bump'); }
+      }
+    }
   }
 
   /* ───────── question loop ───────── */
@@ -310,10 +347,12 @@ const Krypteia = (() => {
     st.answered=false; st.cur=getQ(); st.qNum++;
     document.getElementById('kr-qnum').textContent=(L()==='en'?'RIDDLE ':'ΓΡΙΦΟΣ ')+String(st.qNum).padStart(3,'0');
     document.getElementById('kr-qtext').textContent=QT(st.cur.q);
+    const qc=document.querySelector('#kr-screen-arena .kr-q-card');
+    if (qc){ qc.classList.remove('kr-q-in'); void qc.offsetWidth; qc.classList.add('kr-q-in'); }
     const fb=document.getElementById('kr-feedback'); fb.textContent=''; fb.className='kr-feedback';
     const wrap=document.getElementById('kr-answers'); wrap.innerHTML='';
     const keys=['Α','Β','Γ','Δ'];
-    st.cur.a.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='kr-ans'; b.innerHTML=`<span class="kr-ans-key">${keys[i]}</span><span>${opt}</span>`; b.onclick=()=>answer(i,b); wrap.appendChild(b); });
+    st.cur.a.forEach((opt,i)=>{ const b=document.createElement('button'); b.className='kr-ans'; b.style.setProperty('--kr-d',(i*60)+'ms'); b.innerHTML=`<span class="kr-ans-key">${keys[i]}</span><span>${opt}</span>`; b.onclick=()=>answer(i,b); wrap.appendChild(b); });
   }
   function answer(chosen, btn) {
     if (st.answered || st.over || st.busy) return;
@@ -355,9 +394,10 @@ const Krypteia = (() => {
       <div class="kr-op-sub">${T('Διάλεξε έναν κρυπτογραφημένο κώδικα.','Choose an enciphered code.')}</div>
       <div class="kr-tablets" id="kr-tablets">
         ${st.tablets.map((tb,i)=>`
-          <div class="kr-tablet" data-i="${i}">
+          <div class="kr-tablet" data-i="${i}" style="--kr-d:${i*90}ms">
             <div class="kr-tablet-inner">
               <div class="kr-tablet-face kr-tablet-front">
+                <i class="kr-tb-hole kr-tb-hole-l"></i><i class="kr-tb-hole kr-tb-hole-r"></i>
                 <div class="kr-tablet-wax">${tb.rival.glyph}</div>
                 <div class="kr-tablet-code">${tb.rival.code}</div>
                 <div class="kr-tablet-codelbl">${T('ΚΩΔΙΚΑΣ','CODE')} · ${tb.rival.name}</div>
@@ -367,6 +407,7 @@ const Krypteia = (() => {
           </div>`).join('')}
       </div>`;
     modal.classList.add('show');
+    _fx('op');
     inner.querySelectorAll('.kr-tablet').forEach(el=> el.onclick=()=>pickTablet(+el.dataset.i, el));
   }
 
@@ -385,9 +426,12 @@ const Krypteia = (() => {
     inner.querySelectorAll('.kr-tablet').forEach(t=>t.style.pointerEvents='none');
     const tb = st.tablets[i];
     const m = EFF_META[tb.effect];
-    document.getElementById('kr-tb-back-'+i).innerHTML =
+    const back=document.getElementById('kr-tb-back-'+i);
+    back.innerHTML =
       `<div class="kr-tablet-icon">${m.icon}</div><div class="kr-tablet-effect ${m.cls}">${m.name()}</div><div class="kr-tablet-effdesc">${m.desc()}</div>`;
+    back.classList.add(m.cls);
     el.classList.add('flipped');
+    _fx('flip',{cls:m.cls});
     setTimeout(()=>resolveEffect(tb), 1050);
   }
 
@@ -423,7 +467,7 @@ const Krypteia = (() => {
       <div class="kr-op-head">${T('Η ΣΦΡΑΓΙΣ ΕΣΠΑΣΕ ΚΑΘΑΡΑ','THE SEAL BROKE CLEAN')}</div>
       <div class="kr-op-sub">${m.icon} ${T('Διάλεξε ποιον θα','Choose whom to')} <b style="color:#E08577">${m.name()}</b> — ${T('χτύπα όποιον θες!','strike anyone you like!')}</div>
       <div class="kr-victims">
-        ${list.map(p=>`<div class="kr-victim" data-name="${p.name}">
+        ${list.map((p,vi)=>`<div class="kr-victim" data-name="${p.name}" style="--kr-d:${vi*55}ms">
           <span class="kr-victim-seal">${p.glyph}</span>
           <span class="kr-victim-name">${p.name}${p===list[0]?`<span class="kr-victim-tag">${T('ΠΡΩΤΟΣ','LEADER')}</span>`:''}</span>
           <span class="kr-victim-code">${p.code}</span>
@@ -444,10 +488,12 @@ const Krypteia = (() => {
     const m = EFF_META[type];
     inner.innerHTML = `
       <div class="kr-dx-target"><span class="l">▶ ${T('ΣΤΟΧΟΣ','TARGET')} · ${m.name()}</span><span class="n">${target.name}</span><span class="c">${T('ΚΩΔΙΚΑΣ','CODE')}: ${target.code} · ${T('θησαυρός','hoard')} ${target.drachmas}</span></div>
-      <div class="kr-dx-timer"><div class="kr-dx-timer-fill" id="kr-dx-fill"></div></div>
+      <div class="kr-dx-timer"><div class="kr-dx-timer-fill" id="kr-dx-fill"><i class="kr-cord-ember"></i></div></div>
       <div class="kr-dx-prompt">${T('Σπάσε τη σκυτάλη: πάτα τα γράμματα με τη σωστή σειρά.','Break the scytale: tap the letters in the right order.')}</div>
-      <div class="kr-dx-slots" id="kr-dx-slots">${word.split('').map(()=>`<div class="kr-dx-slot"></div>`).join('')}</div>
-      <div class="kr-dx-tiles" id="kr-dx-tiles">${scrambled.map((o,i)=>`<button class="kr-dx-tile" data-idx="${o.idx}" data-pos="${i}">${o.ch}</button>`).join('')}</div>`;
+      <div class="kr-scytale"><i class="kr-scy-knob kr-scy-knob-l"></i><i class="kr-scy-rod"></i><i class="kr-scy-knob kr-scy-knob-r"></i>
+        <div class="kr-dx-slots" id="kr-dx-slots">${word.split('').map((_,si)=>`<div class="kr-dx-slot" style="--kr-d:${si*50}ms"></div>`).join('')}</div>
+      </div>
+      <div class="kr-dx-tiles" id="kr-dx-tiles">${scrambled.map((o,i)=>`<button class="kr-dx-tile" data-idx="${o.idx}" data-pos="${i}" style="--kr-d:${120+i*45}ms">${o.ch}</button>`).join('')}</div>`;
     inner.querySelectorAll('.kr-dx-tile').forEach(b=> b.onclick=()=>tapTile(b));
     _fx('decrypt-start',{name:target.name});
     // per-hack timer
@@ -470,7 +516,7 @@ const Krypteia = (() => {
       slots[st.dxNext].textContent = word[st.dxNext];
       slots[st.dxNext].classList.add('filled');
       st.dxNext++;
-      _fx('decrypt-tap',{el:slots[st.dxNext-1]});
+      _fx('decrypt-tap',{el:slots[st.dxNext-1], n:st.dxNext, of:word.length});
       if (st.dxNext>=word.length) { if(timers.dx){clearInterval(timers.dx);timers.dx=null;} decryptWin(); }
     } else {
       btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),300);
@@ -507,6 +553,7 @@ const Krypteia = (() => {
       <div class="kr-op-head">${isMul?T('ΠΟΛΛΑΠΛΑΣΙΑΣΜΟΣ','MULTIPLY'):T('ΔΙΑΙΡΕΣΗ','DIVIDE')}</div>
       <div class="kr-op-sub">${isMul?T('Ρίξε το ζάρι της Μοίρας — πολλαπλασίασε τις δραχμές σου.',"Roll the die of Fate — multiply your drachmas."):T(`Ρίξε το ζάρι — διαίρεσε τον θησαυρό του ${target.name}.`,`Roll the die — divide ${target.name}'s hoard.`)}</div>
       <div class="kr-die-wrap"><div class="kr-die roll" id="kr-die">${Array.from({length:9},()=>'<div class="kr-pip"></div>').join('')}</div><div class="kr-result-desc" id="kr-die-cap">${T('…κυλά…','…rolling…')}</div></div>`;
+    _fx('dice');
     const die=document.getElementById('kr-die');
     let ticks=0;
     if(timers.anim) clearInterval(timers.anim);
@@ -609,6 +656,131 @@ const Krypteia = (() => {
       const tick=()=>{ x+=vx; y+=vy; vy+=0.4; life-=0.024; el.style.transform=`translate(${x}px,${y}px) rotate(${x*4}deg)`; el.style.opacity=life; if(life>0) requestAnimationFrame(tick); else el.remove(); };
       requestAnimationFrame(tick);
     }
+  }
+
+  /* ───────── moonlit-camp backdrop (canvas, purely decorative) ─────────
+     Lives behind every screen inside the overlay: night sky + twinkling
+     stars + crescent moon, twin mountain ridges, watch-fires with rising
+     embers, drifting ground fog and a whisper of falling cipher glyphs.
+     Draws a single static frame under prefers-reduced-motion; the rAF loop
+     is cancelled on close(). Gameplay state is never read or written here. */
+  let bd = null;
+  function _ridge(base, amp, rough, R){
+    const pts=[]; let y=base+(R()-0.5)*amp;
+    for(let i=0;i<=64;i++){ y+=(R()-0.5)*amp*2/rough; y=Math.max(base-amp, Math.min(base+amp, y)); pts.push(y); }
+    return pts;
+  }
+  function _ridgePath(ctx, pts, w, h){
+    ctx.beginPath(); ctx.moveTo(-2, pts[0]*h);
+    for(let i=1;i<=64;i++) ctx.lineTo(i/64*w, pts[i]*h);
+    ctx.lineTo(w+2, h+2); ctx.lineTo(-2, h+2); ctx.closePath();
+  }
+  function _bdStart(){
+    const cv=document.getElementById('kr-backdrop'); if(!cv) return;
+    _bdStop();
+    const ctx=cv.getContext('2d'); if(!ctx) return;
+    const reduce=!!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const R=Math.random;
+    const S={ ctx, cv, reduce, raf:0, w:0, h:0,
+      dpr:Math.min(1.5, window.devicePixelRatio||1),
+      stars:Array.from({length:LITE?55:110},()=>({x:R(),y:R()*0.60,r:0.6+R()*1.1,ph:R()*6.28,sp:0.4+R()*1.6,g:R()<0.22})),
+      glyphs:Array.from({length:LITE?5:11},()=>({x:R(),sp:9+R()*17,off:R()*900,fs:10+R()*5,n:6+((R()*9)|0),ch:Array.from({length:16},()=>GREEK[(R()*GREEK.length)|0])})),
+      fires:[0.13,0.30,0.52,0.71,0.88].map(x=>({x:Math.min(0.96,Math.max(0.03,x+(R()-0.5)*0.05)),ph:R()*6.28,sp:2.2+R()*1.6,sc:0.8+R()*0.55})),
+      embers:Array.from({length:LITE?10:24},()=>({f:(R()*5)|0,sp:0.06+R()*0.09,dr:(R()-0.5)*36,r:0.9+R()*1.3,ph:R()})),
+      farPts:_ridge(0.50,0.055,7,R), nearPts:_ridge(0.665,0.075,5,R) };
+    bd=S;
+    const frame=(now)=>{ if(bd!==S) return; _bdDraw(S, now); S.raf=requestAnimationFrame(frame); };
+    if (reduce) _bdDraw(S, 0);
+    else S.raf=requestAnimationFrame(frame);
+  }
+  function _bdStop(){ if(bd){ if(bd.raf) cancelAnimationFrame(bd.raf); bd=null; } }
+  function _bdDraw(S, now){
+    const cv=S.cv, ctx=S.ctx, t=now/1000;
+    const W=cv.clientWidth||window.innerWidth, H=cv.clientHeight||window.innerHeight;
+    if(!W||!H) return;
+    if(S.w!==W||S.h!==H){ S.w=W; S.h=H; cv.width=Math.round(W*S.dpr); cv.height=Math.round(H*S.dpr); }
+    ctx.setTransform(S.dpr,0,0,S.dpr,0,0);
+    const w=S.w, h=S.h;
+    /* sky */
+    let g=ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#04050C'); g.addColorStop(0.45,'#0A0912'); g.addColorStop(0.64,'#150E13');
+    g.addColorStop(0.74,'#221109'); g.addColorStop(1,'#070404');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    /* stars */
+    for(const s of S.stars){
+      const a=S.reduce?0.5:(0.22+0.5*(0.5+0.5*Math.sin(t*s.sp+s.ph)));
+      ctx.globalAlpha=a; ctx.fillStyle=s.g?'#E8D9A8':'#D9E0F0';
+      ctx.fillRect(s.x*w, s.y*h, s.r, s.r);
+    }
+    ctx.globalAlpha=1;
+    /* crescent moon + halo — low over the ridge, clear of the HUD plaque */
+    const mx=w*0.93, my=h*0.295, mr=Math.max(13, Math.min(22, w*0.018));
+    g=ctx.createRadialGradient(mx,my,mr*0.5,mx,my,mr*6);
+    g.addColorStop(0,'rgba(213,220,252,0.16)'); g.addColorStop(0.4,'rgba(190,200,250,0.05)'); g.addColorStop(1,'rgba(190,200,250,0)');
+    ctx.fillStyle=g; ctx.fillRect(mx-mr*6,my-mr*6,mr*12,mr*12);
+    ctx.beginPath(); ctx.arc(mx,my,mr,0,6.2832); ctx.fillStyle='#E9E6D6'; ctx.fill();
+    ctx.beginPath(); ctx.arc(mx-mr*0.55,my-mr*0.28,mr*0.82,0,6.2832); ctx.fillStyle='#0B0A13'; ctx.fill();
+    /* falling cipher glyphs (very faint) */
+    ctx.save(); ctx.fillStyle='#C9A14A'; ctx.textBaseline='top';
+    for(const c of S.glyphs){
+      ctx.font=c.fs+'px monospace';
+      const lh=c.fs*1.15, colH=c.n*lh, span=h*0.60+colH;
+      const y0=((S.reduce?c.off:(t*c.sp+c.off))%span)-colH;
+      for(let i=0;i<c.n;i++){
+        ctx.globalAlpha=(i===c.n-1)?0.13:0.05;
+        ctx.fillText(c.ch[i%16], c.x*w, y0+i*lh);
+      }
+    }
+    ctx.restore(); ctx.globalAlpha=1;
+    /* mountain ridges */
+    _ridgePath(ctx,S.farPts,w,h);  ctx.fillStyle='#0A0711'; ctx.fill();
+    _ridgePath(ctx,S.nearPts,w,h); ctx.fillStyle='#130C0B'; ctx.fill();
+    /* firelit rim along the near crest */
+    ctx.beginPath(); ctx.moveTo(-2,S.nearPts[0]*h);
+    for(let i=1;i<=64;i++) ctx.lineTo(i/64*w, S.nearPts[i]*h);
+    ctx.strokeStyle='rgba(217,123,92,0.14)'; ctx.lineWidth=1.2; ctx.stroke();
+    /* watch-fires on the near ridge */
+    for(let i=0;i<S.fires.length;i++){
+      const f=S.fires[i];
+      const fx=f.x*w, fy=S.nearPts[Math.max(0,Math.min(64,Math.round(f.x*64)))]*h-2;
+      const fl=S.reduce?1:(0.72+0.22*(0.5+0.5*Math.sin(t*f.sp+f.ph))+0.08*Math.sin(t*7.3+f.ph*2));
+      const rad=(30+42*f.sc)*fl;
+      g=ctx.createRadialGradient(fx,fy,0,fx,fy,rad);
+      g.addColorStop(0,'rgba(255,176,84,'+(0.42*fl).toFixed(3)+')');
+      g.addColorStop(0.35,'rgba(226,116,46,'+(0.19*fl).toFixed(3)+')');
+      g.addColorStop(1,'rgba(226,116,46,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(fx,fy,rad,0,6.2832); ctx.fill();
+      ctx.fillStyle='rgba(255,150,60,'+(0.5*fl).toFixed(3)+')';
+      ctx.beginPath(); ctx.arc(fx,fy-3*fl,1.1+2.1*fl*f.sc,0,6.2832); ctx.fill();
+      ctx.fillStyle='rgba(255,214,138,'+(0.85*fl).toFixed(3)+')';
+      ctx.beginPath(); ctx.arc(fx,fy-1,1.5+1.2*fl*f.sc,0,6.2832); ctx.fill();
+    }
+    /* rising embers */
+    if(!S.reduce){
+      for(const e of S.embers){
+        const f=S.fires[e.f];
+        const fy=S.nearPts[Math.max(0,Math.min(64,Math.round(f.x*64)))]*h-2;
+        const pr=(t*e.sp+e.ph)%1;
+        const x=f.x*w+Math.sin(t*1.4+e.ph*9)*5+e.dr*pr, y=fy-pr*h*0.26;
+        ctx.globalAlpha=Math.max(0,(1-pr))*0.55;
+        ctx.fillStyle='#F4A23C'; ctx.fillRect(x,y,e.r,e.r);
+      }
+      ctx.globalAlpha=1;
+    }
+    /* ground fog */
+    for(let i=0;i<3;i++){
+      const fx=w*(0.18+0.32*i)+(S.reduce?0:Math.sin(t*0.07+i*2.1)*w*0.04), fy=h*(0.80+0.045*i);
+      g=ctx.createRadialGradient(fx,fy,0,fx,fy,w*0.26);
+      g.addColorStop(0,'rgba(26,17,26,0.16)'); g.addColorStop(1,'rgba(26,17,26,0)');
+      ctx.fillStyle=g; ctx.fillRect(fx-w*0.26,fy-w*0.26,w*0.52,w*0.52);
+    }
+    /* warm camp under-glow + vignette */
+    g=ctx.createRadialGradient(w*0.5,h*1.06,0,w*0.5,h*1.06,h*0.6);
+    g.addColorStop(0,'rgba(217,123,92,0.10)'); g.addColorStop(1,'rgba(217,123,92,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,h*0.45,w,h*0.55);
+    g=ctx.createRadialGradient(w*0.5,h*0.46,Math.min(w,h)*0.34,w*0.5,h*0.52,Math.max(w,h)*0.78);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.55)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
   }
 
   return { open, close, _afterOp, _restart, syncLang };

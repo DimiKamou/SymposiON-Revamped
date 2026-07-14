@@ -6,10 +6,26 @@
 import * as THREE from 'three';
 import { G, ACT, rand, choice } from './config.js';
 import {
-  buildColumn, buildBrokenColumn, buildOlive, buildCypress, buildCloud, buildTemple,
+  buildColumn, buildBrokenColumn, buildOlive, buildCypress, buildCypressRow,
+  buildCloud, buildTemple, buildPropylaea, buildHerm, buildVergeAmphorae,
+  buildVergeStatue, buildVergeStall, buildLantern, buildBirdFlock,
+  buildTholos, buildRocks,
   OBSTACLES,
 } from './builders-world.js';
 import { buildCoin, buildPowerup, PU_TYPES } from './builders-actors.js';
+import { QUALITY } from './quality.js';
+
+/* mid-distance meadow dressing (beyond the verge props, before the temples).
+   Separate pool keys from the roadside spawns so per-kind scale ranges stay
+   consistent when objects are recycled. */
+const FAR_KINDS = [
+  { key: 'far_cyp',   make: buildCypress,    s: [1.25, 1.6] },
+  { key: 'far_cyprow',make: buildCypressRow, s: [1.15, 1.4] },
+  { key: 'far_olive', make: buildOlive,      s: [1.3, 1.7] },
+  { key: 'far_col',   make: () => buildColumn(6 + Math.random() * 2), s: [1.05, 1.25] },
+  { key: 'far_tholos',make: buildTholos,     s: [0.9, 1.15] },
+  { key: 'far_rocks', make: buildRocks,      s: [1.0, 1.5] },
+];
 
 export class World {
   constructor(scene) {
@@ -24,6 +40,8 @@ export class World {
     this.contentFrontier = 0;
     this.lastPuDist = 0;
     this.rowsSinceObstacle = 0;
+    this.nextGateAt = 120;
+    this.time = 0;               // running clock for scenery ticks (flames, birds)
 
     this._initClouds();
     this._initTemples();
@@ -74,10 +92,12 @@ export class World {
     this.contentFrontier = 28;     // small grace gap before first obstacle
     this.lastPuDist = 0;
     this.rowsSinceObstacle = 0;
+    this.nextGateAt = 120;
   }
 
   /* ── per-frame ─────────────────────────────────────────────── */
   update(distance, speed, dt) {
+    this.time += dt;
     // spawn scenery ahead
     while (this.sceneryFrontier < distance + G.DRAW_AHEAD) {
       this._spawnScenery(this.sceneryFrontier);
@@ -89,11 +109,27 @@ export class World {
       this.contentFrontier += G.CHUNK;
     }
 
+    // moving hazards close in faster than the road & their wheels spin
+    for (const o of this.obstacles) {
+      if (o.userData.moving) {
+        o.userData.wz -= (o.userData.zSpeed || 6) * dt;
+        if (o.userData.wheels) {
+          const spin = (speed + (o.userData.zSpeed || 6)) * dt * 1.9;
+          for (const w of o.userData.wheels) w.rotation.x += spin;
+        }
+      }
+    }
+
     // reposition + recycle
     this._stream(this.scenery, distance);
     this._stream(this.coins, distance);
     this._stream(this.obstacles, distance);
     this._stream(this.powerups, distance);
+
+    // living scenery: lantern sway, brazier flames, bird flocks
+    for (const o of this.scenery) {
+      if (o.userData.tick) o.userData.tick(dt, this.time);
+    }
 
     // distant temples recycle slowly
     for (const t of this.temples) {
@@ -122,20 +158,86 @@ export class World {
   }
 
   _spawnScenery(wz) {
+    // monumental propylaea gate spanning the road every few hundred metres
+    if (wz >= this.nextGateAt) {
+      this.nextGateAt = wz + rand(240, 400);
+      const gate = this._get('gate', buildPropylaea);
+      gate.userData.poolKey = 'gate';
+      gate.userData.wz = wz + 3;
+      gate.position.set(0, 0, distanceless(wz));
+      gate.rotation.y = 0;
+      this.scenery.push(gate);
+    }
+    // occasional swift flock crossing the sky
+    if (Math.random() < 0.10) this._spawnFlock(wz + rand(-4, 4));
+
     for (const side of [-1, 1]) {
       const r = Math.random();
-      let key, factory;
-      if (r < 0.5) { key = 'col'; factory = () => buildColumn(rand(4.5, 6.5)); }
-      else if (r < 0.7) { key = 'broken'; factory = buildBrokenColumn; }
-      else if (r < 0.88) { key = 'olive'; factory = buildOlive; }
-      else { key = 'cypress'; factory = buildCypress; }
+      let key, factory, near = false, faceRoad = false, far = false;
+      if      (r < 0.30) { key = 'col'; factory = () => buildColumn(rand(4.5, 6.5)); }
+      else if (r < 0.42) { key = 'broken'; factory = buildBrokenColumn; }
+      else if (r < 0.52) { key = 'herm'; factory = buildHerm; near = true; faceRoad = true; }
+      else if (r < 0.60) { key = 'pots'; factory = buildVergeAmphorae; near = true; }
+      else if (r < 0.68) { key = 'statue'; factory = buildVergeStatue; near = true; faceRoad = true; }
+      else if (r < 0.75) { key = 'stall'; factory = buildVergeStall; faceRoad = true; }
+      else if (r < 0.81) { key = 'lantern'; factory = buildLantern; near = true; }
+      else if (r < 0.91) { key = 'olive'; factory = buildOlive; }
+      else if (r < 0.96) { key = 'cypress'; factory = buildCypress; }
+      else { key = 'cyprow'; factory = buildCypressRow; far = true; }
       const o = this._get(key, factory);
       o.userData.poolKey = key;
       o.userData.wz = wz;
-      o.position.set(side * rand(6.6, 9.5), 0, distanceless(wz));
-      o.rotation.y = rand(0, Math.PI * 2);
+      const dist = key === 'stall' ? rand(7.2, 8.0)
+        : far ? rand(9.0, 11.5)
+        : near ? rand(6.1, 7.4) : rand(6.6, 9.5);
+      o.position.set(side * dist, 0, distanceless(wz));
+      // road-facing props look INTO the runway; lanterns hang their lamp
+      // over the verge toward the road; the rest tumble freely.
+      o.rotation.y = faceRoad ? (side > 0 ? -Math.PI / 2 : Math.PI / 2) + rand(-0.25, 0.25)
+        : key === 'lantern' ? (side > 0 ? Math.PI : 0)
+        : key === 'cyprow' ? rand(-0.2, 0.2)
+        : rand(0, Math.PI * 2);
       this.scenery.push(o);
+
+      // mid-distance meadow band — groves, shrines and rocks that fill the
+      // empty green between the verge and the horizon temples. Density is
+      // trimmed on weak devices to protect the frame budget.
+      if (Math.random() < (QUALITY.weak ? 0.26 : 0.5)) {
+        const kind = choice(FAR_KINDS);
+        const f = this._get(kind.key, kind.make);
+        f.userData.poolKey = kind.key;
+        f.userData.wz = wz + rand(-3, 3);
+        f.scale.setScalar(rand(kind.s[0], kind.s[1]));
+        f.position.set(side * rand(13.5, 25), 0, distanceless(wz));
+        f.rotation.y = rand(0, Math.PI * 2);
+        this.scenery.push(f);
+      }
     }
+  }
+
+  /* swifts wheeling high across the road — cheap life in the sky */
+  _spawnFlock(wz) {
+    const o = this._get('flock', buildBirdFlock);
+    o.userData.poolKey = 'flock';
+    o.userData.wz = wz;
+    const u = o.userData;
+    u.baseY = rand(7, 11.5);
+    u.driftX = (Math.random() < 0.5 ? -1 : 1) * rand(0.8, 1.8);
+    o.position.set(rand(-16, 16), u.baseY, distanceless(wz));
+    o.rotation.y = u.driftX > 0 ? -0.35 : 0.35;
+    if (!u.tick) {
+      u.tick = (dt, t) => {
+        o.position.x += u.driftX * dt;
+        o.position.y = u.baseY + Math.sin(t * 1.1 + u.baseY) * 0.4;
+        u.wz -= dt * 2.2;                       // they glide gently toward you
+        for (const b of u.birds) {
+          const w = Math.sin(t * b.spd + b.ph) * 0.62;
+          b.wl.rotation.z = w; b.wr.rotation.z = -w;
+          b.grp.position.y += Math.cos(t * b.spd + b.ph) * dt * 0.5;   // wing-beat bounce
+        }
+      };
+    }
+    this.scenery.push(o);
   }
 
   _addCoin(wz, lane, y = 1.1) {
@@ -157,6 +259,7 @@ export class World {
     o.userData.hit = false;
     o.userData.scored = false;
     o.userData.didCrash = false;
+    o.userData.passFx = false;
     if (o.userData.action === undefined) {
       const sample = factory();
       o.userData.action = sample.userData.action;
@@ -218,7 +321,21 @@ export class World {
     this.rowsSinceObstacle++;
     const lane = (Math.random() * 3) | 0;
     const n = 3 + (Math.random() * 3 | 0);
-    for (let k = 0; k < n; k++) this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane);
+    // Subway-Surfers coin grammar: straight runs, floating arcs, lane weaves
+    const pat = Math.random();
+    if (pat < 0.3) {                                     // arc — jump through it
+      for (let k = 0; k < n; k++) {
+        const y = 1.0 + Math.sin((k / (n - 1)) * Math.PI) * 1.5;
+        this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane, y);
+      }
+    } else if (pat < 0.45 && n >= 4) {                   // weave into a neighbour lane
+      const lane2 = lane === 1 ? (Math.random() < 0.5 ? 0 : 2) : 1;
+      for (let k = 0; k < n; k++) {
+        this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, k < n / 2 ? lane : lane2);
+      }
+    } else {
+      for (let k = 0; k < n; k++) this._addCoin(wz + k * 2.3 - (n - 1) * 1.15, lane);
+    }
   }
 
   collectCoin(o) {

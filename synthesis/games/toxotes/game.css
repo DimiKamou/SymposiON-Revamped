@@ -1,6 +1,7 @@
 /* ══════════════════ ΤΟΞΟΤΗΣ — Archer shooter ══════════════════
    Loose arrows at flying amphorae. Two modes: True Shot & Volley.
-   Palette: terracotta + gold over a dusk-forest range.
+   Palette: terracotta + gold under a silver moon — the play range is a
+   moonlit grove painted procedurally on #tx-bg-canvas / #tx-fx-canvas.
 ═══════════════════════════════════════════════════════════════════════ */
 
 #tx-overlay { --tx-ink:#0E0805; }
@@ -43,7 +44,7 @@
 .tx-hud { display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:980px; width:100%; margin:0 auto 10px; }
 .tx-score { display:flex; align-items:baseline; gap:8px; }
 .tx-score-lbl { font-family:var(--sym-mono); font-size:10px; letter-spacing:2px; color:var(--sym-stone); }
-.tx-score-val { font-family:var(--sym-display); font-size:26px; color:var(--sym-gold-lt); line-height:1; }
+.tx-score-val { font-family:var(--sym-display); font-size:26px; color:var(--sym-gold-lt); line-height:1; text-shadow:0 0 14px rgba(227,199,102,0.35); }
 .tx-mid { font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-stone); }
 .tx-streak { font-family:var(--sym-display); font-size:13px; letter-spacing:1.5px; color:var(--sym-stone-dk); min-width:70px; text-align:right; }
 .tx-streak.hot { color:var(--sym-gold); text-shadow:0 0 12px rgba(196,164,72,0.5); }
@@ -58,53 +59,98 @@
 .tx-qbar.flash.ok .tx-q-tag, .tx-qbar.volley .tx-q-tag { color:var(--sym-gold); }
 .tx-qbar.flash.bad { border-left-color:var(--sym-blood); }
 .tx-qbar.flash.bad .tx-q-tag { color:#E08577; }
-.tx-timer { font-family:var(--sym-display); font-size:24px; letter-spacing:1px; color:var(--sym-gold-lt); margin-left:auto; }
+.tx-qbar.volley { animation:tx-volley-bar 1.2s ease-in-out infinite; }
+@keyframes tx-volley-bar {
+  0%,100% { box-shadow:0 0 0 rgba(227,199,102,0); }
+  50%     { box-shadow:0 0 22px rgba(227,199,102,0.18); }
+}
+.tx-timer { font-family:var(--sym-display); font-size:24px; letter-spacing:1px; color:var(--sym-gold-lt); margin-left:auto; text-shadow:0 0 12px rgba(227,199,102,0.4); }
 
-/* ── Range ── */
+/* ── Range: the moonlit grove ── */
 .tx-range {
   position:relative; max-width:980px; width:100%; margin:0 auto; flex:1; min-height:clamp(320px,48vh,540px);
   border-radius:8px; overflow:hidden; cursor:crosshair;
+  /* fallback scene for the pre-canvas frame — matches the painted backdrop */
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(127,176,188,0.12), transparent 60%),
-    linear-gradient(180deg, #16242A 0%, #14181A 55%, #181410 100%);
-  border:1px solid rgba(217,123,92,0.16);
-  touch-action:manipulation;
+    radial-gradient(220px 160px at 20% 15%, rgba(201,220,232,0.16), transparent 70%),
+    radial-gradient(120% 60% at 50% 108%, rgba(20,32,22,0.9), transparent 70%),
+    linear-gradient(180deg, #060B15 0%, #0B1620 42%, #122129 72%, #0E1712 100%);
+  border:1px solid rgba(150,170,185,0.18);
+  box-shadow:0 18px 50px rgba(0,0,0,0.5), inset 0 0 90px rgba(0,0,0,0.35);
+  /* none (not manipulation): touch drag across the grove must aim the bow
+     via pointermove instead of panning the page */
+  touch-action:none;
 }
-.tx-ground { position:absolute; left:0; right:0; bottom:0; height:22%; pointer-events:none;
-  background:radial-gradient(140% 100% at 50% 100%, rgba(106,135,82,0.4), transparent 70%);
+#tx-bg-canvas, #tx-fx-canvas {
+  position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none; display:block;
+}
+#tx-bg-canvas { z-index:0; }
+#tx-fx-canvas { z-index:5; }
+/* soft moon-mist over the painted ground (sits between backdrop and targets) */
+.tx-ground { position:absolute; left:0; right:0; bottom:0; height:24%; pointer-events:none; z-index:1;
+  background:radial-gradient(150% 100% at 24% 100%, rgba(160,190,205,0.10), transparent 62%),
+             radial-gradient(140% 100% at 70% 100%, rgba(106,135,82,0.14), transparent 70%);
   -webkit-mask:linear-gradient(180deg, transparent, #000); mask:linear-gradient(180deg, transparent, #000); }
 
-/* amphora target */
+/* amphora target — dark under-shadow + faint silver moon-bounce on the upper-left,
+   so targets sit in the scene light instead of reading as stickers */
 .tx-amphora { position:absolute; width:clamp(50px,7vw,66px); border:none; background:none; padding:0; cursor:crosshair; z-index:3;
-  filter:drop-shadow(0 4px 7px rgba(0,0,0,0.5)); }
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,0.6)) drop-shadow(-2px -3px 6px rgba(150,185,214,0.22)); }
 .tx-amphora-svg { width:100%; height:auto; display:block; pointer-events:none; }
 .tx-amphora.drift { animation:tx-bob var(--dur,4s) var(--dly,0s) ease-in-out infinite alternate; }
 @keyframes tx-bob { from{transform:translateY(0);} to{transform:translate(var(--sx,0),-16px);} }
 .tx-label { position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:6px;
   width:max-content; max-width:170px; white-space:normal; text-align:center;
-  background:rgba(13,10,6,0.9); border:1px solid rgba(217,123,92,0.4); border-radius:20px;
+  background:linear-gradient(180deg, rgba(24,15,9,0.95), rgba(12,8,5,0.95));
+  border:1px solid rgba(217,123,92,0.45); border-radius:20px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(240,235,224,0.07);
   padding:5px 12px; font-family:var(--sym-sans); font-size:13.5px; line-height:1.25; color:var(--sym-cream); pointer-events:none; }
 .tx-label b { color:var(--sym-terra-lt); margin-right:3px; }
-.tx-vbadge { position:absolute; top:-4px; right:-4px; font-size:17px; pointer-events:none; filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7)); z-index:4; }
-.tx-vbadge.gold { color:#FFE48A; }
+.tx-vbadge { position:absolute; top:-4px; right:-4px; font-size:17px; pointer-events:none; filter:drop-shadow(0 1px 3px rgba(0,0,0,0.8)); z-index:4; }
+.tx-vbadge.gold { color:#FFE48A; text-shadow:0 0 8px rgba(255,228,138,0.8); }
 .tx-amphora.reveal { animation:none; }
-.tx-amphora.reveal .tx-amphora-svg { filter:drop-shadow(0 0 14px rgba(196,164,72,0.9)); }
+.tx-amphora.reveal .tx-amphora-svg { animation:tx-reveal-pulse 0.9s ease-in-out 2; filter:drop-shadow(0 0 16px rgba(227,199,102,0.95)); }
+@keyframes tx-reveal-pulse {
+  0%,100% { filter:drop-shadow(0 0 10px rgba(227,199,102,0.55)); transform:scale(1); }
+  50%     { filter:drop-shadow(0 0 22px rgba(227,199,102,1)); transform:scale(1.06); }
+}
 .tx-amphora.reveal .tx-label { border-color:var(--sym-gold); box-shadow:0 0 16px rgba(196,164,72,0.5); }
-.tx-amphora.shatter { animation:tx-shatter .42s ease forwards; pointer-events:none; }
-@keyframes tx-shatter { 0%{transform:scale(1);} 30%{transform:scale(1.25) rotate(6deg);} 100%{transform:scale(.2) rotate(-18deg); opacity:0;} }
-.tx-amphora.shatter.bad { filter:drop-shadow(0 0 10px rgba(158,59,46,0.8)); }
-.tx-amphora.shatter.gold { filter:drop-shadow(0 0 14px rgba(196,164,72,0.9)); }
 
-/* arrow + reticle + score pops */
-.tx-arrow { position:absolute; transform-origin:center; color:var(--sym-cream); font-size:22px; pointer-events:none; z-index:6;
-  text-shadow:0 0 6px rgba(0,0,0,0.6); }
-.tx-reticle { position:absolute; width:44px; height:44px; transform:translate(-50%,-50%); pointer-events:none; z-index:7; opacity:0; transition:opacity .2s; }
-.tx-pop { position:absolute; transform:translate(-50%,-50%); font-family:var(--sym-display); font-size:20px; pointer-events:none; z-index:6;
-  animation:tx-pop 0.8s ease-out forwards; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
-.tx-pop.good { color:var(--sym-gold-lt); }
-.tx-pop.gold { color:#FFE48A; font-size:26px; }
-.tx-pop.bad { color:#E08577; }
-@keyframes tx-pop { from{opacity:0; transform:translate(-50%,-50%) scale(.6);} 20%{opacity:1; transform:translate(-50%,-90%) scale(1.1);} 100%{opacity:0; transform:translate(-50%,-180%) scale(1);} }
+/* shatter: hold + tremble while the arrow flies, then burst (canvas shards take over) */
+.tx-amphora.shatter { animation:tx-shatter .42s cubic-bezier(.3,.0,.7,1) forwards; pointer-events:none; }
+@keyframes tx-shatter {
+  0%   { transform:scale(1) rotate(0deg); opacity:1; filter:brightness(1); }
+  18%  { transform:scale(1.02) rotate(-1.5deg); }
+  32%  { transform:scale(1.04) rotate(1.5deg); opacity:1; }
+  40%  { transform:scale(1.22) rotate(3deg); opacity:1; filter:brightness(1.9); }
+  100% { transform:scale(.18) rotate(-16deg); opacity:0; filter:brightness(1.2); }
+}
+.tx-amphora.shatter.bad  { filter:drop-shadow(0 0 12px rgba(158,59,46,0.85)); }
+.tx-amphora.shatter.gold { filter:drop-shadow(0 0 16px rgba(227,199,102,0.95)); }
+.tx-amphora.shatter.good { filter:drop-shadow(0 0 12px rgba(255,225,160,0.8)); }
+
+/* reticle + score pops (arrow itself is drawn on #tx-fx-canvas) */
+.tx-reticle { position:absolute; width:48px; height:48px; transform:translate(-50%,-50%); pointer-events:none; z-index:7; opacity:0;
+  transition:opacity .2s; filter:drop-shadow(0 0 7px rgba(229,154,126,0.55)); }
+.tx-reticle.tx-ret-fire { animation:tx-ret-kick .22s cubic-bezier(.2,.8,.3,1.4); }
+@keyframes tx-ret-kick {
+  0%   { transform:translate(-50%,-50%) scale(1); }
+  35%  { transform:translate(-50%,-50%) scale(.78); }
+  100% { transform:translate(-50%,-50%) scale(1); }
+}
+.tx-pop { position:absolute; transform:translate(-50%,-50%); font-family:var(--sym-display); font-size:22px; letter-spacing:1px;
+  pointer-events:none; z-index:6; animation:tx-pop 0.8s cubic-bezier(.2,.9,.3,1) forwards;
+  text-shadow:0 1px 3px rgba(0,0,0,0.75), 0 0 14px rgba(0,0,0,0.4); }
+.tx-pop.good { color:var(--sym-gold-lt); text-shadow:0 1px 3px rgba(0,0,0,0.75), 0 0 16px rgba(227,199,102,0.55); }
+.tx-pop.gold { color:#FFE48A; font-size:30px; text-shadow:0 1px 3px rgba(0,0,0,0.75), 0 0 22px rgba(255,228,138,0.75); }
+.tx-pop.bad { color:#E08577; text-shadow:0 1px 3px rgba(0,0,0,0.75), 0 0 14px rgba(158,59,46,0.5); }
+@keyframes tx-pop {
+  0%   { opacity:0; transform:translate(-50%,-50%) scale(.5); }
+  18%  { opacity:1; transform:translate(-50%,-86%) scale(1.22); }
+  38%  { transform:translate(-50%,-104%) scale(1); }
+  100% { opacity:0; transform:translate(-50%,-195%) scale(.94); }
+}
 
 /* ── Volley answers ── */
 .tx-answers { display:grid; grid-template-columns:1fr 1fr; gap:11px; max-width:760px; width:100%; margin:12px auto 0; }
@@ -119,6 +165,13 @@
 .tx-ans.correct .tx-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
 .tx-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
 .tx-ans.wrong .tx-ans-key { border-color:var(--sym-blood); color:#E08577; }
+
+/* Mobile: narrow the flying-amphora answer labels so they wrap tightly and
+   stay inside the (overflow:hidden) range instead of being clipped at the
+   screen edges. Pairs with the JS lane-inset on narrow ranges. */
+@media (max-width:560px){
+  .tx-label { max-width:118px; font-size:12px; padding:4px 9px; margin-top:5px; }
+}
 
 /* ── End ── */
 #tx-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
@@ -136,3 +189,15 @@
 .tx-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
 .tx-final-s { font-family:var(--sym-mono); font-size:14px; color:var(--sym-gold-lt); }
 .tx-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }
+
+/* ── Reduced motion: calm everything down ── */
+@media (prefers-reduced-motion: reduce) {
+  .tx-screen.active { animation:none; }
+  .tx-qbar.volley { animation:none; }
+  .tx-amphora.shatter { animation:tx-shatter-rm .42s ease forwards; }
+  @keyframes tx-shatter-rm { from{opacity:1;} to{opacity:0; transform:scale(.6);} }
+  .tx-amphora.reveal .tx-amphora-svg { animation:none; }
+  .tx-reticle.tx-ret-fire { animation:none; }
+  .tx-pop { animation:tx-pop-rm 0.8s ease forwards; }
+  @keyframes tx-pop-rm { 0%{opacity:0;} 15%{opacity:1;} 80%{opacity:1;} 100%{opacity:0;} }
+}

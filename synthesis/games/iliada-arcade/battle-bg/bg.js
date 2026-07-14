@@ -3,6 +3,12 @@
 (function () {
 'use strict';
 
+/* weak-device heuristic — halves ambient particle counts and renders the FX
+   canvas at half resolution. Presentation only. */
+const LITE=((typeof matchMedia!=='undefined') && matchMedia('(pointer:coarse)').matches)
+  || window.innerWidth<720 || (navigator.deviceMemory||8)<=4;
+const FX_SCL=LITE?0.5:1;
+
 /* ───────── SVG silhouette builders (simple geometry only) ───────── */
 function warrior({ fill='#0E0A08', dir=1, crest=false, crestColor='#C8542B', bow=false, shield=true }) {
   const flip = dir < 0 ? 'scale(-1,1) translate(-60,0)' : '';
@@ -186,7 +192,7 @@ function buildTroy(scene, key) {
   scene.dataset.rhap = key;
 
   const sky = el('layer troy-sky'); sky.style.background = cfg.sky; scene.appendChild(sky);
-  if (cfg.stars) { const st=el('stars'); for(let i=0;i<70;i++){ const s=document.createElement('span'); s.className='star';
+  if (cfg.stars) { const st=el('stars'); for(let i=0;i<(LITE?32:70);i++){ const s=document.createElement('span'); s.className='star';
       s.style.cssText=`left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*54).toFixed(1)}%;animation-delay:${(Math.random()*3).toFixed(2)}s;opacity:${(.3+Math.random()*.6).toFixed(2)}`; st.appendChild(s);} sky.appendChild(st); }
   if (cfg.sun) { const halo=el('sun-halo'), sun=el('sun');
     halo.style.left=sun.style.left=cfg.sun.x; halo.style.top=sun.style.top=cfg.sun.y;
@@ -198,7 +204,7 @@ function buildTroy(scene, key) {
 
   scene.appendChild(el('vignette')); scene.appendChild(el('grain'));
   const cap=el('caption'); cap.innerHTML=`<b>ΙΛΙΑΔΑ · ${cfg.roman}</b> — ${cfg.label} · ${cfg.sub}`; scene.appendChild(cap);
-  const fx=document.createElement('canvas'); fx.className='fx'; fx.width=1600; fx.height=900; scene.appendChild(fx);
+  const fx=document.createElement('canvas'); fx.className='fx'; fx.width=1600*FX_SCL; fx.height=900*FX_SCL; scene.appendChild(fx);
   return { canvas:fx, cfg };
 }
 
@@ -453,7 +459,7 @@ function buildPalace(scene, key) {
 
   scene.appendChild(el('vignette')); scene.appendChild(el('grain'));
   const cap = el('caption'); cap.innerHTML = `<b>ΟΔΥΣΣΕΙΑ · ${cfg.roman}</b> — ${cfg.label} · ${cfg.sub}`; scene.appendChild(cap);
-  const fx = document.createElement('canvas'); fx.className='fx'; fx.width=1600; fx.height=900; scene.appendChild(fx);
+  const fx = document.createElement('canvas'); fx.className='fx'; fx.width=1600*FX_SCL; fx.height=900*FX_SCL; scene.appendChild(fx);
   return { canvas:fx, cfg };
 }
 
@@ -586,15 +592,17 @@ function odySlaughter(scene, cfg) {
 let troyToken = 0;
 function troyFX(canvas, cfg, token) {
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(FX_SCL,0,0,FX_SCL,0,0);   // draw in 1600×900 coords onto the (possibly half-res) backing
   const F = (cfg && cfg.fx) || {};
   const embers=[], arrows=[], birds=[], glints=[], dust=[];
   const emberSrc = F.embers==='braziers' ? [[300,560],[1180,580]] : [[1420,430]];
   function newEmber(){ const s=emberSrc[(Math.random()*emberSrc.length)|0];
     return {x:s[0]+Math.random()*70-35,y:s[1]+Math.random()*40,vx:-.2-Math.random()*.5,vy:-.4-Math.random()*.8,life:0,max:110+Math.random()*120,r:1+Math.random()*2}; }
-  if(F.embers) for(let i=0;i<46;i++) embers.push(newEmber());
+  if(F.embers) for(let i=0;i<(LITE?22:46);i++) embers.push(newEmber());
   if(F.birds) for(let i=0;i<F.birds;i++) birds.push({x:Math.random()*1600,y:120+Math.random()*120,sp:.3+Math.random()*.3,ph:Math.random()*6});
-  if(F.sea) for(let i=0;i<40;i++) glints.push({x:644+Math.random()*120,y:620+Math.random()*200,a:Math.random()});
-  const dustN = F.dust==='heavy'?120 : F.dust==='med'?70 : F.dust==='light'?34 : 0;
+  if(F.sea) for(let i=0;i<(LITE?18:40);i++) glints.push({x:644+Math.random()*120,y:620+Math.random()*200,a:Math.random()});
+  let dustN = F.dust==='heavy'?120 : F.dust==='med'?70 : F.dust==='light'?34 : 0;
+  if(LITE) dustN=Math.ceil(dustN/2);
   for(let i=0;i<dustN;i++) dust.push({x:Math.random()*1600,y:500+Math.random()*380,r:.8+Math.random()*2.2,sp:.2+Math.random()*.8,a:Math.random()*6,o:.08+Math.random()*.22});
   let arrowT=0;
   function loop(){
@@ -624,16 +632,18 @@ function troyFX(canvas, cfg, token) {
 let palaceToken = 0;
 function palaceFX(canvas, cfg, token) {
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(FX_SCL,0,0,FX_SCL,0,0);
   const F = (cfg && cfg.fx) || {};
   const embers=[], motes=[], arrows=[], glints=[], spray=[], birds=[];
   const emberSrc = F.embers || [];
   const emberCol = F.emberColor==='green' ? ['#CFF0A8','#7FB46A'] : ['#FBE6A0','#E8742A'];
   function newEmber(){ const s=emberSrc[(Math.random()*emberSrc.length)|0]||[800,560];
     return {x:s[0]+Math.random()*50-25,y:s[1]+Math.random()*20,vx:(Math.random()-.5)*.5,vy:-.5-Math.random()*.95,life:0,max:90+Math.random()*120,r:1+Math.random()*1.9}; }
-  if(emberSrc.length) for(let i=0;i<(F.emberCount||50);i++) embers.push(newEmber());
-  for(let i=0;i<(F.motes||0);i++) motes.push({x:Math.random()*1600,y:Math.random()*900,a:Math.random()*6,r:.6+Math.random()*1.4,sp:.1+Math.random()*.2});
-  if(F.sea) for(let i=0;i<40;i++) glints.push({x:560+Math.random()*480,y:600+Math.random()*220,a:Math.random()});
-  if(F.spray) for(let i=0;i<26;i++) spray.push({x:Math.random()*1600,y:560+Math.random()*120,vx:-.4-Math.random()*.6,vy:-.3-Math.random(),life:Math.random()*60,max:50+Math.random()*40});
+  const emberN=Math.ceil((F.emberCount||50)/(LITE?2:1)), moteN=Math.ceil((F.motes||0)/(LITE?2:1));
+  if(emberSrc.length) for(let i=0;i<emberN;i++) embers.push(newEmber());
+  for(let i=0;i<moteN;i++) motes.push({x:Math.random()*1600,y:Math.random()*900,a:Math.random()*6,r:.6+Math.random()*1.4,sp:.1+Math.random()*.2});
+  if(F.sea) for(let i=0;i<(LITE?18:40);i++) glints.push({x:560+Math.random()*480,y:600+Math.random()*220,a:Math.random()});
+  if(F.spray) for(let i=0;i<(LITE?12:26);i++) spray.push({x:Math.random()*1600,y:560+Math.random()*120,vx:-.4-Math.random()*.6,vy:-.3-Math.random(),life:Math.random()*60,max:50+Math.random()*40});
   if(F.birds) for(let i=0;i<F.birds;i++) birds.push({x:Math.random()*1600,y:120+Math.random()*100,sp:.3+Math.random()*.3,ph:Math.random()*6});
   const moteCol = F.moteColor || '#E8C98A';
   let arrowT=120;

@@ -98,6 +98,28 @@
     o.start(t); o.stop(t + 0.18);
   }
 
+  // ── the hero's own footfall — a barely-there leather scuff ──
+  let stepAlt = false;
+  function stepSelf() {
+    if (!ensure() || muted) return;
+    const t = ctx.currentTime;
+    stepAlt = !stepAlt;
+    const dur = 0.07;
+    const n = ctx.createBufferSource();
+    const buf = ctx.createBuffer(1, Math.max(1, (ctx.sampleRate * dur) | 0), ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    n.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = stepAlt ? 350 : 300;
+    f.Q.value = 1.1;
+    const g = ctx.createGain();
+    g.gain.value = 0.03;
+    n.connect(f); f.connect(g); g.connect(master);
+    n.start(t);
+  }
+
   // ── generic sting helper ──
   function tone(type, freq, dur, gain, slideTo, when) {
     if (!ensure() || muted) return;
@@ -147,6 +169,12 @@
       noiseHit(0.25, 0.2, 1200);
     },
     door() { tone('square', 220, 0.14, 0.1, 330); },
+    lowTorch() {  // the torch gutters — a soft, worried sputter
+      const t = ctx ? ctx.currentTime : 0;
+      tone('triangle', 220, 0.14, 0.09, 140, t);
+      tone('triangle', 175, 0.18, 0.08, 110, t + 0.16);
+      noiseHit(0.1, 0.04, 1400);
+    },
     descend() {
       const t = ctx ? ctx.currentTime : 0;
       tone('sine', 330, 0.5, 0.12, 110, t);
@@ -176,7 +204,7 @@
       if (droneGain && ctx) droneGain.gain.setTargetAtTime(0.04 + tension * 0.16, ctx.currentTime, 0.3);
       if (droneFilt && ctx) droneFilt.frequency.setTargetAtTime(160 + tension * 320, ctx.currentTime, 0.3);
     },
-    footstep, sting,
+    footstep, stepSelf, sting,
     setMuted(m) { muted = m; if (master && ctx) master.gain.setTargetAtTime(m ? 0 : 0.9, ctx.currentTime, 0.05); },
     isMuted() { return muted; },
     get tension() { return tension; },

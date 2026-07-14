@@ -22,8 +22,8 @@ const GradeShader = {
     uVignette:  { value: 1.0 },   // strength
     uChroma:    { value: 1.0 },   // edge chromatic aberration
     uGrain:     { value: 1.0 },   // film grain amount
-    uContrast:  { value: 1.10 },
-    uSat:       { value: 1.26 },
+    uContrast:  { value: 1.17 },
+    uSat:       { value: 1.33 },
     uPulse:     { value: 0.0 },   // 0..1 danger red flash driven by game
   },
   vertexShader: /* glsl */`
@@ -67,9 +67,9 @@ const GradeShader = {
       // danger pulse — push toward warm red when the game flags peril
       col = mix(col, col * vec3(1.25, 0.72, 0.66) + vec3(0.12, 0.0, 0.0), uPulse * 0.5);
 
-      // vignette
+      // vignette — a touch heavier so the frame corners cradle the action
       float vig = smoothstep(0.95, 0.30, r2 * 1.9);
-      col *= mix(1.0, vig, 0.55 * uVignette);
+      col *= mix(1.0, vig, 0.62 * uVignette);
 
       // dithered film grain (also kills banding) — kept very light
       float g = hash(uv * vec2(1920.0, 1080.0) + uTime) - 0.5;
@@ -81,33 +81,54 @@ const GradeShader = {
 };
 
 export function makePost(renderer, scene, camera) {
+  // ── LOW tier: no composer at all — raw forward render keeps weak
+  //    school laptops at 60fps. The DOM danger vignette covers pulses.
+  if (!QUALITY.post) {
+    return {
+      composer: null, bloom: null, grade: null,
+      setSize() {},
+      render() { renderer.render(scene, camera); },
+      setPulse() {},
+      setSpeed() {},
+    };
+  }
+
   const size = new THREE.Vector2();
   renderer.getSize(size);
 
-  const composer = new EffectComposer(renderer);
+  // HDR target; MSAA samples on the high tier give the composer path the
+  // edge quality the (bypassed) canvas antialias used to provide.
+  const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+  if (QUALITY.msaa && renderer.capabilities.isWebGL2) rt.samples = QUALITY.msaa;
+
+  const composer = new EffectComposer(renderer, rt);
   composer.setPixelRatio(QUALITY.dpr);
   composer.setSize(size.x, size.y);
 
   composer.addPass(new RenderPass(scene, camera));
 
-  const bloom = new UnrealBloomPass(
-    new THREE.Vector2(size.x, size.y),
-    QUALITY.bloomStrength, QUALITY.bloomRadius, QUALITY.bloomThreshold,
-  );
-  composer.addPass(bloom);
+  // ── HIGH tier only: gentle bloom on sun / gold / molten seams
+  let bloom = null;
+  if (QUALITY.bloom) {
+    bloom = new UnrealBloomPass(
+      new THREE.Vector2(size.x, size.y),
+      QUALITY.bloomStrength, QUALITY.bloomRadius, QUALITY.bloomThreshold,
+    );
+    composer.addPass(bloom);
+  }
 
   // tonemap (uses renderer.toneMapping) + correct sRGB output
   composer.addPass(new OutputPass());
 
   const grade = new ShaderPass(GradeShader);
-  grade.uniforms.uChroma.value = QUALITY.chroma;
+  grade.uniforms.uChroma.value = QUALITY.chroma * 0.55;
   grade.uniforms.uGrain.value = QUALITY.grain ? 1.0 : 0.0;
   grade.renderToScreen = true;
   composer.addPass(grade);
 
   function setSize(w, h) {
     composer.setSize(w, h);
-    bloom.setSize(w, h);
+    if (bloom) bloom.setSize(w, h);
   }
 
   function render(dt) {
@@ -118,5 +139,7 @@ export function makePost(renderer, scene, camera) {
   return {
     composer, bloom, grade, setSize, render,
     setPulse(v) { grade.uniforms.uPulse.value = v; },
+    // chromatic fringe widens with velocity — the "wind in the lens" cue
+    setSpeed(f) { grade.uniforms.uChroma.value = QUALITY.chroma * (0.55 + 0.9 * f); },
   };
 }

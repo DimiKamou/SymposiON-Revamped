@@ -22,6 +22,11 @@
 const Heptapylos = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+  // presentation-only: honor prefers-reduced-motion for particles/shakes
+  const REDUCE = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // cheap low-end / mobile heuristic — fewer ambient particles on weak devices
+  const LITE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   // Pick the language string from a question's `q`, tolerating {gr,en},
   // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
@@ -50,6 +55,8 @@ const Heptapylos = (() => {
   let COLS = 7, ROWS = 6, N = 42, NEED = 4, DUR = 18000;
   const FAST = 0.62;            // ≥ this fraction of clock left ⇒ "fast" ⇒ Double charge
   const KEYS = ['Α', 'Β', 'Γ', 'Δ'];
+  // The seven historical gates of Thebes — shown on the plaques (7-col board only)
+  const GATE_NAMES = ['ΗΛΕΚΤΡΑΙ', 'ΠΡΟΙΤΙΔΕΣ', 'ΝΗΙΣΤΑΙ', 'ΚΡΗΝΑΙΑΙ', 'ΥΨΙΣΤΑΙ', 'ΩΓΥΓΙΑΙ', 'ΟΜΟΛΩΙΔΕΣ'];
 
   // ── Setup options (the "various games" beyond difficulty) ──
   const VARIANTS = {
@@ -117,11 +124,13 @@ const Heptapylos = (() => {
   /* ───────── build markup ───────── */
   function build() {
     document.getElementById('hep-wrap').innerHTML = `
+<div class="hep-ambient" id="hep-ambient" aria-hidden="true"></div>
 <!-- INTRO -->
 <div id="hep-screen-intro" class="hep-screen">
   ${crestSVG('hep-crest')}
   <div class="hep-logo">ΕΠΤΑΠΥΛΟΣ</div>
   <div class="hep-logo-en" data-i18n="subtitle"></div>
+  <div class="hep-meander" aria-hidden="true"></div>
   <div class="hep-intro-txt" data-i18n="intro"></div>
   <div class="hep-powers-legend">
     <div class="hep-pl"><span class="hep-pl-glyph" style="background:rgba(196,164,72,0.25);color:var(--sym-gold-lt)">⛀</span><span class="hep-pl-txt"><span class="hep-pl-name" data-i18n="pDouble"></span><span class="hep-pl-how" data-i18n="pDoubleHow"></span></span></div>
@@ -137,6 +146,7 @@ const Heptapylos = (() => {
 
 <!-- GAME -->
 <div id="hep-screen-game" class="hep-screen">
+  <div class="hep-siege-bg" aria-hidden="true"><i class="sg-moon"></i><i class="sg-smoke"></i><i class="sg-smoke s2"></i><i class="sg-fire f1"></i><i class="sg-fire f2"></i><i class="sg-fire f3"></i><i class="sg-fire f4"></i></div>
   <div class="hep-hud">
     <div class="hep-side me" id="hep-side-me">
       <div class="hep-side-seal">Σ</div>
@@ -152,6 +162,16 @@ const Heptapylos = (() => {
 
   <div class="hep-board-wrap">
     <div class="hep-board">
+      <div class="hep-stage" aria-hidden="true">
+        <div class="hep-parapet"></div>
+        <div class="hep-pilaster left"><i class="pl-cap"></i><i class="pl-shaft"></i><i class="pl-base"></i></div>
+        <div class="hep-pilaster right"><i class="pl-cap"></i><i class="pl-shaft"></i><i class="pl-base"></i></div>
+        <div class="hep-torch left"><i class="tc-glow"></i><i class="tc-stem"></i><i class="tc-cup"></i><i class="tc-flame"></i><i class="tc-flame f2"></i><i class="tc-spark s1"></i><i class="tc-spark s2"></i><i class="tc-spark s3"></i></div>
+        <div class="hep-torch right"><i class="tc-glow"></i><i class="tc-stem"></i><i class="tc-cup"></i><i class="tc-flame"></i><i class="tc-flame f2"></i><i class="tc-spark s1"></i><i class="tc-spark s2"></i><i class="tc-spark s3"></i></div>
+        <div class="hep-bounce left"></div>
+        <div class="hep-bounce right"></div>
+        <div class="hep-ground"></div>
+      </div>
       <div class="hep-gates" id="hep-gates"></div>
       <div class="hep-grid" id="hep-grid"></div>
     </div>
@@ -169,6 +189,12 @@ const Heptapylos = (() => {
     <div class="hep-answers" id="hep-answers"></div>
     <div class="hep-feedback" id="hep-feedback"></div>
   </div>
+  <div class="hep-watch" aria-hidden="true">
+    ${crestSVG('hep-watch-crest')}
+    <div class="hep-watch-title" data-i18n="watchTitle"></div>
+    <div class="hep-watch-meander"></div>
+    <div class="hep-watch-sub" data-i18n="watchSub"></div>
+  </div>
 </div>
 
 <!-- END -->
@@ -184,6 +210,8 @@ const Heptapylos = (() => {
 </div>`;
     renderChamps();
     renderSetup();
+    fxAmbient();
+    fxParallax();
   }
 
   function renderSetup() {
@@ -231,6 +259,8 @@ const Heptapylos = (() => {
     youSub:     { gr: 'χάλκινη σφραγίδα', en: 'bronze seal' },
     again:      { gr: 'ΝΕΑ ΠΟΛΙΟΡΚΙΑ', en: 'NEW SIEGE' },
     exit:       { gr: 'ΕΞΟΔΟΣ', en: 'EXIT' },
+    watchTitle: { gr: 'Η ΠΟΛΙΟΡΚΙΑ ΣΥΝΕΧΙΖΕΤΑΙ', en: 'THE SIEGE GOES ON' },
+    watchSub:   { gr: 'Επτά στρατηλάτες στις επτά πύλες — ο αντίπαλος ετοιμάζει τη ρίψη του.', en: 'Seven captains at seven gates — the rival readies his cast.' },
   };
 
   function syncLang() {
@@ -316,7 +346,8 @@ const Heptapylos = (() => {
   function buildBoard() {
     const colsCSS = `repeat(${COLS},1fr)`;
     const gates = document.getElementById('hep-gates');
-    gates.innerHTML = Array.from({ length: COLS }, (_, c) => `<div class="hep-gate-no">${c + 1}</div>`).join('');
+    gates.innerHTML = Array.from({ length: COLS }, (_, c) =>
+      `<div class="hep-gate-no"><span class="hep-arch"></span><span class="hep-gate-num">${c + 1}</span>${COLS === 7 ? `<span class="hep-gate-name">${GATE_NAMES[c]}</span>` : ''}</div>`).join('');
     gates.style.gridTemplateColumns = colsCSS;
     const g = document.getElementById('hep-grid');
     let html = '';
@@ -328,7 +359,11 @@ const Heptapylos = (() => {
     g.innerHTML = html;
     g.style.gridTemplateColumns = colsCSS;
     const board = g.closest('.hep-board');
-    if (board) board.style.width = `min(${COLS * 62}px, 92vw)`;
+    if (board) {
+      board.style.width = `min(${COLS * 64}px, 92vw)`;
+      // clear any victory FX left over from the previous siege
+      board.querySelectorAll('.hep-crack, .hep-stamp').forEach(el => el.remove());
+    }
     const ghost = document.getElementById('hep-col-ghost');
     if (ghost) ghost.style.width = (100 / COLS) + '%';
     g.onclick = onBoardClick;
@@ -344,11 +379,22 @@ const Heptapylos = (() => {
   function highlightCol(col) {
     const g = document.getElementById('hep-grid');
     g.classList.add('col-hl-on');
-    g.querySelectorAll('.hep-cell').forEach(el => el.classList.toggle('colhl', +el.dataset.c === col && !colFull(col)));
+    // presentational: single out the landing socket — where the seal will strike
+    const lr = lowestEmpty(col);
+    const li = lr < 0 ? -1 : idx(lr, col);
+    g.querySelectorAll('.hep-cell').forEach(el => {
+      el.classList.toggle('colhl', +el.dataset.c === col && !colFull(col));
+      el.classList.toggle('landing', +el.dataset.i === li);
+    });
+    // presentational: light the hovered gate's plaque like a torch catching it
+    document.querySelectorAll('#hep-gates .hep-gate-no').forEach((p, k) => p.classList.toggle('lit', k === col && !colFull(col)));
     const ghost = document.getElementById('hep-col-ghost');
     if (!colFull(col)) {
       ghost.style.left = (col * (100 / COLS)) + '%';
-      ghost.querySelector('.arrow').style.color = st.armed === 'block' ? '#D8CCB7' : 'var(--sym-terra-lt)';
+      const seal = ghost.querySelector('.arrow');
+      seal.style.color = st.armed === 'block' ? '#D8CCB7' : 'var(--sym-terra-lt)';
+      // presentational: the preview seal carries your emblem (blank for a war-stone)
+      seal.setAttribute('data-mk', st.armed === 'block' ? '' : ME.mono);
       ghost.classList.add('show');
     } else ghost.classList.remove('show');
   }
@@ -356,6 +402,8 @@ const Heptapylos = (() => {
     const g = document.getElementById('hep-grid'); if (!g) return;
     g.classList.remove('col-hl-on');
     g.querySelectorAll('.colhl').forEach(el => el.classList.remove('colhl'));
+    g.querySelectorAll('.landing').forEach(el => el.classList.remove('landing'));
+    document.querySelectorAll('#hep-gates .hep-gate-no.lit').forEach(p => p.classList.remove('lit'));
     const ghost = document.getElementById('hep-col-ghost'); if (ghost) ghost.classList.remove('show');
   }
 
@@ -385,8 +433,14 @@ const Heptapylos = (() => {
     disc.className = 'hep-disc ' + kind + ' drop';
     disc.style.setProperty('--fall', (r + 1));
     if (kind !== 'block') disc.innerHTML = `<span class="hep-disc-mk">${kind === 'me' ? ME.mono : st.champ.mono}</span>`;
+    // presentational: one-shot metal glint sweeping the seal as it settles
+    disc.insertAdjacentHTML('beforeend', '<i class="hep-disc-glint" aria-hidden="true"></i>');
+    // presentational: falling motion streak above the seal (fades on landing)
+    if (!REDUCE()) disc.insertAdjacentHTML('beforeend', '<i class="hep-disc-trail" aria-hidden="true"></i>');
     cell.appendChild(disc);
     if (kind === 'me' && who === 'me') { st.seals++; }
+    // presentational: dust puff + gate-plaque pop + tiny thud shake at landing
+    if (!REDUCE()) setTimeout(() => { fxLand(cell, kind, col, r); }, 300);
     setTimeout(() => {
       const result = checkWin(kind === 'me' ? 'me' : kind === 'op' ? 'op' : null);
       if (kind !== 'block' && result) { return finishWin(who, result); }
@@ -414,7 +468,10 @@ const Heptapylos = (() => {
     st.powers.burn--; st.phase = 'anim';
     document.getElementById('hep-grid').classList.remove('burnmode');
     const disc = document.querySelector(`.hep-cell[data-i="${i}"] .hep-disc`);
-    if (disc) disc.classList.add('removing');
+    if (disc) {
+      disc.classList.add('removing');
+      fxBurstAt(disc, { colors: ['#FFD9A0', '#E8A15A', '#D97B5C', '#9E3B2E'], count: 16, power: 5, life: 800 });
+    }
     banner(T('ΠΥΡ! Η σφραγίδα κάηκε', 'PYRE! The seal is burned'), 'var(--sym-terra-lt)');
     setTimeout(() => {
       const [r, c] = rc(i);
@@ -472,7 +529,35 @@ const Heptapylos = (() => {
     st.winner = result.who;
     result.line.forEach(i => { const d = document.querySelector(`.hep-cell[data-i="${i}"] .hep-disc`); if (d) d.classList.add('win'); });
     stopTimer();
-    setTimeout(() => end(result.who), 1100);
+    // ── presentational victory set-piece: wall-crack + rubble + seal stamp ──
+    // (the moment holds a beat longer than before so the fissure can arc and
+    //  the rubble can fall — outcome/scoring untouched, input stays locked)
+    const hold = REDUCE() ? 1400 : 2350;
+    fxCrack(result.line);
+    fxStamp(result.who === 'me' ? T('ΡΗΓΜΑ!', 'BREACH!') : T('ΟΙ ΠΥΛΕΣ ΚΡΑΤΟΥΝ', 'THE GATES HOLD'),
+            result.who === 'me' ? '' : 'op', hold - 90);
+    if (!REDUCE()) {
+      fxFlash(result.who === 'me' ? 'rgba(232,161,90,0.28)' : 'rgba(94,139,150,0.26)');
+      fxShake(document.querySelector('.hep-board'), 9, 500);
+      fxShake(document.getElementById('hep-wrap'), 4, 420);
+      // impact echo: the seal-stamp slams home ~a third of the way in
+      setTimeout(() => {
+        fxFlash(result.who === 'me' ? 'rgba(255,217,160,0.14)' : 'rgba(159,202,212,0.12)');
+        fxShake(document.querySelector('.hep-board'), 5, 300);
+      }, 330);
+      fxRays(result.line, result.who);
+      fxRubble(result.line, result.who);
+      const rubble = result.who === 'me'
+        ? ['#FFD9A0', '#E8A985', '#C4A448', '#8E8270', '#6B5D49']
+        : ['#9FCAD4', '#7FB0BC', '#8E8270', '#6B5D49'];
+      result.line.forEach((i, k) => {
+        setTimeout(() => {
+          const d = document.querySelector(`.hep-cell[data-i="${i}"]`);
+          fxBurstAt(d, { colors: rubble, count: 12, power: 6, life: 950 });
+        }, 120 + k * 90);
+      });
+    }
+    setTimeout(() => end(result.who), hold);
   }
 
   /* ───────── turn / banner ───────── */
@@ -484,6 +569,8 @@ const Heptapylos = (() => {
   function banner(txt, color) {
     const b = document.getElementById('hep-turn-banner');
     b.textContent = txt; b.style.color = color || 'var(--sym-stone)';
+    // kinetic re-entry (CSS keeps this inert under prefers-reduced-motion)
+    b.classList.remove('flip'); void b.offsetWidth; b.classList.add('flip');
   }
 
   /* ───────── YOUR turn: question ───────── */
@@ -496,6 +583,8 @@ const Heptapylos = (() => {
     document.getElementById('hep-qcount').textContent = T('ΕΡΩΤΗΣΗ ', 'QUESTION ') + st.qNum;
     renderStreak();
     document.getElementById('hep-qtext').textContent = QT(st.cur.q);
+    const card = document.querySelector('.hep-q-card');
+    if (card) { card.classList.remove('fresh'); void card.offsetWidth; card.classList.add('fresh'); }
     const fb = document.getElementById('hep-feedback'); fb.textContent = ''; fb.className = 'hep-feedback';
     const wrap = document.getElementById('hep-answers'); wrap.innerHTML = '';
     st.cur.a.forEach((opt, i) => {
@@ -534,6 +623,9 @@ const Heptapylos = (() => {
       fb.textContent = earned.length
         ? T('ΣΩΣΤΑ! Κέρδισες: ' + earned.join(' + '), 'CORRECT! Earned: ' + earned.join(' + '))
         : T('ΣΩΣΤΑ — διάλεξε πύλη και ρίξε', 'CORRECT — pick a gate and cast');
+      const okBtn = document.querySelectorAll('#hep-answers .hep-ans')[st.cur.c];
+      fxBurstAt(okBtn, { colors: ['#E3C766', '#F4D9B0', '#D97B5C'], count: 12, power: 4.5, life: 750 });
+      earned.forEach((name, k) => setTimeout(() => fxFloatAt(okBtn, '+' + name, '#E3C766'), 180 + k * 260));
       renderStreak(); renderPowerbar();
       st.dropsLeft = 1; st.armed = null;
       enterDrop();
@@ -543,6 +635,7 @@ const Heptapylos = (() => {
       fb.textContent = choice === -1
         ? T('Ο ΧΡΟΝΟΣ ΤΕΛΕΙΩΣΕ — ο αντίπαλος προελαύνει', 'TIME UP — the rival presses on')
         : T('ΛΑΘΟΣ — χάνεις τη ρίψη', 'WRONG — you forfeit the cast');
+      fxShake(document.querySelector('.hep-q-card'), 6, 320);
       renderPowerbar();
       setTimeout(opTurn, 850);
     }
@@ -621,6 +714,10 @@ const Heptapylos = (() => {
       const col = aiPick();
       banner(st.champ.name + T(' ρίχνει στην πύλη ', ' casts into gate ') + (col + 1), 'var(--hep-op)');
       dropInto(col, 'op', 'op');
+      // presentational: the chosen gate flares sea-glaze as the rival casts
+      // (set AFTER dropInto — its clearColHL would strip the class otherwise)
+      const pl = document.querySelectorAll('#hep-gates .hep-gate-no')[col];
+      if (pl) { pl.classList.add('op-cast'); setTimeout(() => pl.classList.remove('op-cast'), 950); }
     }, 950);
   }
 
@@ -686,6 +783,8 @@ const Heptapylos = (() => {
     s.innerHTML = st.streak > 0
       ? T('ΣΕΡΙ <b>', 'STREAK <b>') + st.streak + '</b>'
       : T('ΣΕΡΙ 0', 'STREAK 0');
+    // presentational: a 3+ streak smoulders like a caught torch
+    s.classList.toggle('hot', st.streak >= 3);
   }
 
   /* ───────── end ───────── */
@@ -698,6 +797,7 @@ const Heptapylos = (() => {
       title.textContent = T('ΤΟ ΤΕΙΧΟΣ ΕΠΕΣΕ', 'THE WALL IS BREACHED'); title.className = 'hep-end-title win';
       sub.textContent = T(`Παρέταξες ${NEED} σφραγίδες στη σειρά και ράγισες τις πύλες πριν την ${st.champ.name}.`,
         `You aligned ${NEED} seals in a row and breached the gates before ${st.champ.name}.`);
+      setTimeout(() => fxBurstAt(title, { colors: ['#E3C766', '#F4D9B0', '#E8A985', '#D97B5C'], count: 26, power: 8, life: 1200 }), 350);
     } else {
       title.textContent = T('ΟΙ ΠΥΛΕΣ ΑΝΤΕΞΑΝ', 'THE GATES HELD'); title.className = 'hep-end-title lose';
       sub.textContent = T(`Η ${st.champ.name} παρέταξε πρώτη ${NEED} στη σειρά. Οι Θήβες έμειναν αλώβητες.`,
@@ -716,19 +816,390 @@ const Heptapylos = (() => {
   function renderEndStats() {
     const acc = st.asked ? Math.round(st.correct / st.asked * 100) : 0;
     document.getElementById('hep-end-stats').innerHTML = `
-      <div class="hep-stat"><span class="hep-stat-val">${st.correct}/${st.asked}</span><span class="hep-stat-lbl">${T('ΣΩΣΤΑ', 'CORRECT')}</span></div>
-      <div class="hep-stat"><span class="hep-stat-val">${acc}%</span><span class="hep-stat-lbl">${T('ΕΥΣΤΟΧΙΑ', 'ACCURACY')}</span></div>
-      <div class="hep-stat"><span class="hep-stat-val">${st.seals}</span><span class="hep-stat-lbl">${T('ΣΦΡΑΓΙΔΕΣ', 'SEALS CAST')}</span></div>`;
+      <div class="hep-stat"><span class="hep-stat-val" id="hep-st-c">${st.correct}/${st.asked}</span><span class="hep-stat-lbl">${T('ΣΩΣΤΑ', 'CORRECT')}</span></div>
+      <div class="hep-stat"><span class="hep-stat-val" id="hep-st-a">${acc}%</span><span class="hep-stat-lbl">${T('ΕΥΣΤΟΧΙΑ', 'ACCURACY')}</span></div>
+      <div class="hep-stat"><span class="hep-stat-val" id="hep-st-s">${st.seals}</span><span class="hep-stat-lbl">${T('ΣΦΡΑΓΙΔΕΣ', 'SEALS CAST')}</span></div>`;
+    // presentational count-up (skipped under reduced motion — final values above stand)
+    fxCountUp(document.getElementById('hep-st-c'), st.correct, v => v + '/' + st.asked);
+    fxCountUp(document.getElementById('hep-st-a'), acc, v => v + '%');
+    fxCountUp(document.getElementById('hep-st-s'), st.seals, v => '' + v);
   }
 
   /* ───────── art ───────── */
   function crestSVG(cls) {
+    const u = 'hepcr-' + cls;   // unique gradient ids per placement
     return `<svg class="${cls}" viewBox="0 0 120 120" fill="none">
-      <defs><linearGradient id="hep-cr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E59A7E"/><stop offset="1" stop-color="#B7512F"/></linearGradient></defs>
-      <path d="M60 9l40 14v28c0 30-20 50-40 58-20-8-40-28-40-58V23z" fill="url(#hep-cr)" stroke="#5A2415" stroke-width="2.5"/>
-      <path d="M60 21l28 10v22c0 22-14 37-28 43-14-6-28-21-28-43V31z" fill="none" stroke="#F4D9B0" stroke-opacity="0.42" stroke-width="2"/>
-      <g fill="#F4D9B0"><circle cx="46" cy="52" r="5.5"/><circle cx="60" cy="52" r="5.5"/><circle cx="74" cy="52" r="5.5"/><circle cx="60" cy="68" r="5.5"/></g>
+      <defs>
+        <linearGradient id="${u}-br" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#E8A985"/><stop offset="0.5" stop-color="#C05535"/><stop offset="1" stop-color="#8C3A1E"/>
+        </linearGradient>
+        <linearGradient id="${u}-st" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4A4034"/><stop offset="1" stop-color="#28211A"/>
+        </linearGradient>
+      </defs>
+      <!-- bronze shield -->
+      <path d="M60 9l40 14v28c0 30-20 50-40 58-20-8-40-28-40-58V23z" fill="url(#${u}-br)" stroke="#5A2415" stroke-width="2.5"/>
+      <!-- carved stone field -->
+      <path d="M60 21l28 10v22c0 22-14 37-28 43-14-6-28-21-28-43V31z" fill="url(#${u}-st)" stroke="#F4D9B0" stroke-opacity="0.35" stroke-width="1.5"/>
+      <!-- seven merlons: the seven-gated wall crown -->
+      <g fill="#F4D9B0" fill-opacity="0.85">
+        <rect x="36" y="31" width="4" height="6" rx="0.8"/><rect x="43" y="30" width="4" height="7" rx="0.8"/>
+        <rect x="50" y="29" width="4" height="8" rx="0.8"/><rect x="58" y="28.5" width="4" height="8.5" rx="0.8"/>
+        <rect x="66" y="29" width="4" height="8" rx="0.8"/><rect x="73" y="30" width="4" height="7" rx="0.8"/>
+        <rect x="80" y="31" width="4" height="6" rx="0.8"/>
+      </g>
+      <!-- wall courses -->
+      <g stroke="#0A0907" stroke-opacity="0.4" stroke-width="1">
+        <path d="M33 44h54"/><path d="M33.5 53h53"/><path d="M35 62h50"/>
+      </g>
+      <g stroke="#F4D9B0" stroke-opacity="0.08" stroke-width="1">
+        <path d="M33 45h54"/><path d="M33.5 54h53"/><path d="M35 63h50"/>
+      </g>
+      <!-- central arch gate -->
+      <path d="M53 93.5v-9a7 7 0 0 1 14 0v9" fill="#12100C" stroke="#F4D9B0" stroke-opacity="0.4" stroke-width="1.5"/>
+      <!-- four seals rising in a diagonal: the winning line -->
+      <g stroke="#5A2415" stroke-width="1">
+        <circle cx="42" cy="68" r="5" fill="#C4A448"/>
+        <circle cx="51" cy="59" r="5" fill="#C4A448"/>
+        <circle cx="60" cy="50" r="5" fill="#E3C766"/>
+        <circle cx="69" cy="41" r="5" fill="#F4D9B0"/>
+      </g>
     </svg>`;
+  }
+
+  /* ═══════ presentational FX layer — visual only, zero gameplay impact ═══════
+     Self-contained (SymFX is not loaded on the heptapylos manifest path).
+     Sparks/floats use the Web Animations API; everything honors REDUCE(). */
+  function fxLayer() {
+    let l = document.getElementById('hep-fx-layer');
+    if (!l) { l = document.createElement('div'); l.id = 'hep-fx-layer'; document.body.appendChild(l); }
+    return l;
+  }
+  /* rising torch embers behind the screens */
+  function fxAmbient() {
+    const host = document.getElementById('hep-ambient');
+    if (!host || REDUCE()) return;
+    host.querySelectorAll('.hep-ember').forEach(e => e.remove());
+    for (let i = 0; i < (LITE ? 9 : 18); i++) {
+      const e = document.createElement('div');
+      e.className = 'hep-ember';
+      const sz = 2.5 + Math.random() * 4;
+      e.style.width = e.style.height = sz.toFixed(1) + 'px';
+      e.style.left = (Math.random() * 100).toFixed(2) + '%';
+      e.style.setProperty('--dx', ((Math.random() - 0.5) * 90).toFixed(0) + 'px');
+      e.style.setProperty('--glow', (0.4 + Math.random() * 0.5).toFixed(2));
+      e.style.animationDuration = (7 + Math.random() * 9).toFixed(1) + 's';
+      e.style.animationDelay = (-Math.random() * 16).toFixed(1) + 's';
+      host.appendChild(e);
+    }
+  }
+  /* depth parallax: night sky / distant Thebes drift gently against the cursor.
+     Listener lives on the overlay element itself (idle while the overlay is
+     hidden); one-shot rAF per frame, CSS transitions do the smoothing. */
+  function fxParallax() {
+    const ov = document.getElementById('hep-overlay');
+    if (!ov || ov._hepParallax) return;
+    ov._hepParallax = true;
+    let px = 0, py = 0, raf = 0;
+    ov.addEventListener('pointermove', (e) => {
+      if (REDUCE()) return;
+      px = e.clientX / (ov.clientWidth || 1) - 0.5;
+      py = e.clientY / (ov.clientHeight || 1) - 0.5;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        ov.style.setProperty('--hep-parx', px.toFixed(3));
+        ov.style.setProperty('--hep-pary', py.toFixed(3));
+      });
+    });
+  }
+  /* particle burst at page coords */
+  function fxBurst(x, y, opts) {
+    if (REDUCE()) return;
+    const o = Object.assign({ count: 12, colors: ['#E3C766', '#D97B5C', '#F4D9B0'], power: 5, life: 800 }, opts || {});
+    const layer = fxLayer();
+    const nP = LITE ? Math.max(4, Math.round(o.count * 0.6)) : o.count;
+    for (let i = 0; i < nP; i++) {
+      const p = document.createElement('div');
+      p.className = 'hep-spark';
+      const c = o.colors[(Math.random() * o.colors.length) | 0];
+      const s = 3 + Math.random() * 5;
+      p.style.width = p.style.height = s.toFixed(1) + 'px';
+      p.style.background = c;
+      p.style.boxShadow = '0 0 8px ' + c;
+      p.style.left = x + 'px'; p.style.top = y + 'px';
+      layer.appendChild(p);
+      const ang = Math.random() * Math.PI * 2;
+      const sp = o.power * (0.5 + Math.random());
+      const dx = Math.cos(ang) * sp * 22;
+      const dyUp = Math.sin(ang) * sp * 22 - 30;
+      const dur = o.life * (0.7 + Math.random() * 0.6);
+      p.animate([
+        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx * 0.7}px,${dyUp}px) scale(0.9)`, opacity: 1, offset: 0.4 },
+        { transform: `translate(${dx}px,${dyUp + 120}px) scale(0.3)`, opacity: 0 },
+      ], { duration: dur, easing: 'cubic-bezier(.25,.7,.4,1)', fill: 'forwards' });
+      setTimeout(() => p.remove(), dur + 60);
+    }
+  }
+  function fxBurstAt(el, opts) {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    fxBurst(r.left + r.width / 2, r.top + r.height / 2, opts);
+  }
+  /* floating "+POWER" text */
+  function fxFloatAt(el, txt, color) {
+    if (!el || REDUCE()) return;
+    const r = el.getBoundingClientRect();
+    const f = document.createElement('div');
+    f.className = 'hep-float';
+    f.textContent = txt;
+    f.style.left = (r.left + r.width / 2) + 'px';
+    f.style.top = (r.top) + 'px';
+    f.style.color = color || '#E3C766';
+    f.style.fontSize = '20px';
+    fxLayer().appendChild(f);
+    f.animate([
+      { transform: 'translate(-50%,0) scale(0.5)', opacity: 0 },
+      { transform: 'translate(-50%,-26px) scale(1.1)', opacity: 1, offset: 0.3 },
+      { transform: 'translate(-50%,-64px) scale(1)', opacity: 0 },
+    ], { duration: 1100, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+    setTimeout(() => f.remove(), 1150);
+  }
+  /* damped shake (Web Animations API) */
+  function fxShake(el, px, ms) {
+    if (!el || REDUCE()) return;
+    const kf = [{ transform: 'translate(0,0)' }];
+    const steps = 9;
+    for (let i = 0; i < steps; i++) {
+      const damp = 1 - i / steps;
+      kf.push({ transform: `translate(${((Math.random() - 0.5) * 2 * px * damp).toFixed(1)}px,${((Math.random() - 0.5) * 2 * px * damp).toFixed(1)}px)` });
+    }
+    kf.push({ transform: 'translate(0,0)' });
+    el.animate(kf, { duration: ms, easing: 'ease-out' });
+  }
+  /* quick full-screen tinted flash */
+  function fxFlash(color) {
+    if (REDUCE()) return;
+    const f = document.createElement('div');
+    f.className = 'hep-flashplate';
+    f.style.background = color;
+    fxLayer().appendChild(f);
+    f.animate([{ opacity: 0 }, { opacity: 1, offset: 0.15 }, { opacity: 0 }], { duration: 520, easing: 'ease-out' });
+    setTimeout(() => f.remove(), 560);
+  }
+  /* landing FX: dust puff at the hole, gate plaque pop, tiny thud shake */
+  function fxLand(cell, kind, col, row) {
+    if (!cell || REDUCE()) return;
+    const colors = kind === 'me' ? ['#FFC98A', '#E8A985', '#D97B5C']
+                 : kind === 'op' ? ['#9FCAD4', '#7FB0BC', '#CDE3E8']
+                 :                 ['#C7BBA4', '#8E8270', '#6B5D49'];
+    const r = cell.getBoundingClientRect();
+    fxBurst(r.left + r.width / 2, r.top + r.height * 0.82, { colors, count: 9, power: 3, life: 560 });
+    // warm torch-flare popping in the socket at impact
+    const flare = document.createElement('div');
+    flare.className = 'hep-flare';
+    cell.appendChild(flare);
+    flare.animate([
+      { opacity: 0, transform: 'scale(0.5)' },
+      { opacity: 1, transform: 'scale(1)', offset: 0.25 },
+      { opacity: 0, transform: 'scale(1.3)' },
+    ], { duration: 430, easing: 'ease-out', fill: 'forwards' });
+    setTimeout(() => flare.remove(), 470);
+    // impact shockwave ring in the hole
+    const ring = document.createElement('div');
+    ring.className = 'hep-ring';
+    ring.style.color = kind === 'me' ? '#E8A985' : kind === 'op' ? '#9FCAD4' : '#C7BBA4';
+    cell.appendChild(ring);
+    ring.animate([
+      { transform: 'scale(0.35)', opacity: 0.85 },
+      { transform: 'scale(1.5)', opacity: 0 },
+    ], { duration: 500, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+    setTimeout(() => ring.remove(), 540);
+    const plaque = document.querySelectorAll('#hep-gates .hep-gate-no')[col];
+    if (plaque) {
+      plaque.classList.remove('hit'); void plaque.offsetWidth; plaque.classList.add('hit');
+      setTimeout(() => plaque.classList.remove('hit'), 520);
+    }
+    // the gatepost torches answer the impact — flames surge for a beat
+    document.querySelectorAll('#hep-screen-game .hep-torch').forEach(t => {
+      t.classList.remove('surge'); void t.offsetWidth; t.classList.add('surge');
+      setTimeout(() => t.classList.remove('surge'), 640);
+    });
+    fxShake(document.querySelector('.hep-board'), Math.min(1.5 + row * 0.6, 4.5), 170);
+  }
+  /* victory wall-crack drawn along the winning line */
+  function fxCrack(line) {
+    const board = document.querySelector('.hep-board');
+    if (!board || !line || !line.length) return;
+    board.querySelectorAll('.hep-crack').forEach(el => el.remove());
+    const br = board.getBoundingClientRect();
+    const centers = line.map(i => {
+      const el = document.querySelector(`.hep-cell[data-i="${i}"]`);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return [r.left + r.width / 2 - br.left, r.top + r.height / 2 - br.top];
+    }).filter(Boolean);
+    if (centers.length < 2) return;
+    // extend past both ends, add jagged double-jitter between centers
+    const ext = (a, b, f) => [a[0] + (a[0] - b[0]) * f, a[1] + (a[1] - b[1]) * f];
+    const pts = [ext(centers[0], centers[1], 0.72)];
+    for (let i = 0; i < centers.length; i++) {
+      pts.push(centers[i]);
+      if (i < centers.length - 1) {
+        const dx = centers[i + 1][0] - centers[i][0], dy = centers[i + 1][1] - centers[i][1];
+        const len = Math.hypot(dx, dy) || 1;
+        for (const t of [0.34, 0.68]) {
+          const j = (Math.random() - 0.5) * 19;
+          pts.push([centers[i][0] + dx * t + (-dy / len) * j, centers[i][1] + dy * t + (dx / len) * j]);
+        }
+      }
+    }
+    pts.push(ext(centers[centers.length - 1], centers[centers.length - 2], 0.72));
+    const d = 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('class', 'hep-crack');
+    svg.setAttribute('viewBox', `0 0 ${br.width.toFixed(0)} ${br.height.toFixed(0)}`);
+    const under = document.createElementNS(svgNS, 'path');
+    under.setAttribute('d', d); under.setAttribute('class', 'crack-under'); under.setAttribute('stroke-width', '6');
+    const hot = document.createElementNS(svgNS, 'path');
+    hot.setAttribute('d', d); hot.setAttribute('class', 'crack-hot'); hot.setAttribute('stroke-width', '2.6');
+    // white-hot filament riding the centre of the fissure
+    const core = document.createElementNS(svgNS, 'path');
+    core.setAttribute('d', d); core.setAttribute('class', 'crack-core'); core.setAttribute('stroke-width', '1.1');
+    svg.appendChild(under); svg.appendChild(hot); svg.appendChild(core);
+    // forked lightning branches off the main fissure
+    const branches = [];
+    const nb = Math.min(5, Math.max(3, centers.length));
+    for (let b = 0; b < nb; b++) {
+      const k = 1 + ((Math.random() * (centers.length - 1)) | 0);
+      const [bx, by] = centers[Math.min(k, centers.length - 1)];
+      const ang = Math.random() * Math.PI * 2;
+      const blen = 22 + Math.random() * 34;
+      const mx = bx + Math.cos(ang) * blen * 0.55 + (Math.random() - 0.5) * 12;
+      const my = by + Math.sin(ang) * blen * 0.55 + (Math.random() - 0.5) * 12;
+      const ex = bx + Math.cos(ang) * blen, ey = by + Math.sin(ang) * blen;
+      let bd = `M${bx.toFixed(1)} ${by.toFixed(1)} L${mx.toFixed(1)} ${my.toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)}`;
+      if (Math.random() < 0.5) { // fork a splinter off the branch tip
+        const fa = ang + (Math.random() - 0.5) * 1.6, fl = 9 + Math.random() * 15;
+        bd += ` M${mx.toFixed(1)} ${my.toFixed(1)} L${(mx + Math.cos(fa) * fl).toFixed(1)} ${(my + Math.sin(fa) * fl).toFixed(1)}`;
+      }
+      const bp = document.createElementNS(svgNS, 'path');
+      bp.setAttribute('d', bd);
+      bp.setAttribute('class', 'crack-branch');
+      svg.appendChild(bp); branches.push(bp);
+    }
+    board.appendChild(svg);
+    if (!REDUCE()) {
+      [under, hot, core].concat(branches).forEach((p, k) => {
+        const len = p.getTotalLength();
+        const delay = k < 3 ? k * 55 : 260 + (k - 3) * 70;
+        p.style.strokeDasharray = String(len);
+        p.style.strokeDashoffset = String(len);
+        p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
+          { duration: 420, delay, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards' });
+        setTimeout(() => { p.style.strokeDashoffset = '0'; }, 420 + delay + 40);
+      });
+      // once fully drawn, the fissure keeps arcing like live lightning
+      setTimeout(() => svg.classList.add('lit'), 700);
+    }
+  }
+  /* golden ray burst erupting from the breach point */
+  function fxRays(line, who) {
+    if (REDUCE() || !line || !line.length) return;
+    const mid = line[(line.length / 2) | 0];
+    const el = document.querySelector(`.hep-cell[data-i="${mid}"]`);
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const d = document.createElement('div');
+    d.className = 'hep-rays' + (who === 'op' ? ' op' : '');
+    const sz = 520;
+    d.style.width = d.style.height = sz + 'px';
+    d.style.left = (r.left + r.width / 2 - sz / 2) + 'px';
+    d.style.top = (r.top + r.height / 2 - sz / 2) + 'px';
+    fxLayer().appendChild(d);
+    d.animate([
+      { opacity: 0, transform: 'scale(0.35) rotate(0deg)' },
+      { opacity: 0.95, transform: 'scale(0.9) rotate(8deg)', offset: 0.28 },
+      { opacity: 0, transform: 'scale(1.25) rotate(16deg)' },
+    ], { duration: 1250, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+    setTimeout(() => d.remove(), 1300);
+  }
+  /* stone shards + dust clouds raining off the cracked wall */
+  function fxRubble(line, who) {
+    if (REDUCE() || !line || !line.length) return;
+    const layer = fxLayer();
+    const stones = ['#6B5D49', '#8E8270', '#4A4034', '#57493A'];
+    const glints = who === 'op' ? ['#9FCAD4', '#CDE3E8'] : ['#E3C766', '#FFD9A0'];
+    line.forEach((i, k) => {
+      const el = document.querySelector(`.hep-cell[data-i="${i}"]`);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      // masonry dust billowing out of the fissure
+      const dust = document.createElement('div');
+      dust.className = 'hep-dustpuff';
+      const ds = 46 + Math.random() * 26;
+      dust.style.width = dust.style.height = ds.toFixed(0) + 'px';
+      dust.style.left = (r.left + r.width / 2 - ds / 2).toFixed(1) + 'px';
+      dust.style.top = (r.top + r.height / 2 - ds / 2).toFixed(1) + 'px';
+      layer.appendChild(dust);
+      dust.animate([
+        { transform: 'scale(0.5)', opacity: 0 },
+        { transform: 'scale(1)', opacity: 0.55, offset: 0.22 },
+        { transform: `scale(1.9) translate(${((Math.random() - 0.5) * 26).toFixed(0)}px,${(14 + Math.random() * 22).toFixed(0)}px)`, opacity: 0 },
+      ], { duration: 1250, delay: 90 + k * 80, easing: 'cubic-bezier(.25,.6,.4,1)', fill: 'forwards' });
+      setTimeout(() => dust.remove(), 1450 + k * 80);
+      const n = 6 + ((Math.random() * 3) | 0);
+      for (let j = 0; j < n; j++) {
+        const p = document.createElement('div');
+        p.className = 'hep-rubble';
+        const glint = Math.random() < 0.22;
+        const c = glint ? glints[(Math.random() * glints.length) | 0] : stones[(Math.random() * stones.length) | 0];
+        p.style.width = (3.5 + Math.random() * 5.5).toFixed(1) + 'px';
+        p.style.height = (3 + Math.random() * 5).toFixed(1) + 'px';
+        p.style.background = c;
+        p.style.boxShadow = glint ? '0 0 7px ' + c : 'inset 0 -1px 1px rgba(0,0,0,0.5)';
+        p.style.left = (r.left + r.width * (0.25 + Math.random() * 0.5)).toFixed(1) + 'px';
+        p.style.top = (r.top + r.height * (0.3 + Math.random() * 0.4)).toFixed(1) + 'px';
+        layer.appendChild(p);
+        const dx = (Math.random() - 0.5) * 58;
+        const fall = 90 + Math.random() * 160;
+        const rot = (Math.random() - 0.5) * 480;
+        const dur = 850 + Math.random() * 650;
+        const delay = 140 + k * 70 + Math.random() * 140;
+        p.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 0 },
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1, offset: 0.01 },
+          { transform: `translate(${(dx * 0.6).toFixed(1)}px,${(fall * 0.35).toFixed(1)}px) rotate(${(rot * 0.5).toFixed(0)}deg)`, opacity: 1, offset: 0.45 },
+          { transform: `translate(${dx.toFixed(1)}px,${fall.toFixed(1)}px) rotate(${rot.toFixed(0)}deg)`, opacity: 0 },
+        ], { duration: dur, delay, easing: 'cubic-bezier(.35,.1,.65,1)', fill: 'forwards' });
+        setTimeout(() => p.remove(), dur + delay + 80);
+      }
+    });
+  }
+  /* seal-stamp slammed over the board (auto-removes before the end screen) */
+  function fxStamp(txt, cls, life) {
+    const host = document.querySelector('.hep-board');
+    if (!host) return;
+    host.querySelectorAll('.hep-stamp').forEach(el => el.remove());
+    const s = document.createElement('div');
+    s.className = 'hep-stamp' + (cls ? ' ' + cls : '');
+    s.textContent = txt;
+    host.appendChild(s);
+    setTimeout(() => s.remove(), life || 1040);
+  }
+  /* eased count-up for end-screen stats */
+  function fxCountUp(el, target, fmt) {
+    if (!el) return;
+    if (REDUCE() || !target) { el.textContent = fmt(target); return; }
+    const t0 = performance.now(), dur = 850;
+    function step(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      el.textContent = fmt(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
   }
 
   return { open, close, _start, _pickChamp, _setOpt, _power, _toIntro, syncLang };

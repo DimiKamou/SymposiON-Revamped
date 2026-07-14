@@ -6,7 +6,7 @@
 html, body { height:100%; background:#05060a; overflow:hidden;
   font-family:'Cardo', Georgia, serif; -webkit-font-smoothing:antialiased; }
 
-.viewport { position:fixed; inset:0; display:grid; place-items:center; background:#05060a; }
+.viewport { position:fixed; inset:0; display:grid; place-items:center; place-content:center; background:#05060a; }
 .stage { width:1600px; height:900px; position:relative; transform-origin:center center;
   box-shadow:0 40px 120px rgba(0,0,0,.7); }
 .scene { position:absolute; inset:0; overflow:hidden; display:none; opacity:0; }
@@ -183,6 +183,13 @@ html, body { height:100%; background:#05060a; overflow:hidden;
   linear-gradient(180deg, #5E8C96 0%, #3E6276 24%, #284A5E 55%, #16303E 100%); }
 .siren-perch { position:absolute; transform-origin:bottom center; animation:sirenSway 3.4s ease-in-out infinite; }
 @keyframes sirenSway { 0%,100%{transform:translateY(0) rotate(-1.5deg);} 50%{transform:translateY(-4px) rotate(1.5deg);} }
+
+/* weak devices (html.lite set by the game engine): drop per-frame compositing
+   costs — grain blend layer and element blurs. Static look is preserved. */
+html.lite .grain { display:none; }
+html.lite .cloud, html.lite .sun, html.lite .sea-reflect { filter:none; }
+html.lite .colonnade.back { filter:brightness(.5); }   /* keep the darkening, drop only the blur */
+html.lite .switcher { backdrop-filter:none; background:rgba(12,9,6,.92); }
 
 /* reduced motion */
 @media (prefers-reduced-motion: reduce) {

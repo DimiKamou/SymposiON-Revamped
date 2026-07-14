@@ -23,6 +23,7 @@
   let S = null;            // game state
   let arena = null;        // TowArena instance
   let keyHandler = null;
+  const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // which overlay / wrap / default subject this run targets
   let OVERLAY_ID = 'tow-overlay';
@@ -105,11 +106,13 @@
       <div class="tow-l-head">
         <div class="tow-l-kicker">ΔΙΕΛΚΥΣΤΙΝΔΑ · REIMAGINED</div>
         <h1 class="tow-l-title">Η Μάχη του Σχοινιού</h1>
+        <div class="tow-l-rule" aria-hidden="true"><span></span><i>◆</i><span></span></div>
         <p class="tow-l-sub">Δύο ομάδες, ένα σχοινί. Όποια πατήσει <strong>πρώτη</strong> το κόκκινο κουμπί, απαντά πρώτη.</p>
       </div>
 
       <div class="tow-team-cards">
         ${teamCardHTML('A')}
+        <div class="tow-vs" aria-hidden="true">VS</div>
         ${teamCardHTML('B')}
       </div>
 
@@ -336,6 +339,10 @@
     setText('tow-qstem', q.q);
     setText('tow-qsub', q.sub || '');
 
+    // retrigger the question entrance animation
+    const qc = document.querySelector('#' + WRAP_ID + ' .tow-qcard');
+    if (qc) { qc.classList.remove('enter'); void qc.offsetWidth; qc.classList.add('enter'); }
+
     // options (disabled until claimed)
     const opts = document.getElementById('tow-opts');
     opts.innerHTML = '';
@@ -343,6 +350,7 @@
       const b = document.createElement('button');
       b.className = 'tow-opt';
       b.disabled = true;
+      b.style.setProperty('--i', i);
       b.innerHTML = `<span class="tow-opt-key">${i + 1}</span><span class="tow-opt-txt">${opt}</span>`;
       b.addEventListener('click', () => onAnswer(i, b));
       opts.appendChild(b);
@@ -362,12 +370,14 @@
     S.armT = performance.now();
     stage('⚡ BUZZ! — Ποια ομάδα ξέρει;', 'go');
     setPads('armed');
+    if (arena && arena.setArmed) arena.setArmed(true);   // knot ripples while the race is open
     startBuzzTimer(S.buzzSec, () => noBuzz());
   }
 
   function noBuzz() {
     if (S.phase !== 'armed' && S.phase !== 'steal') return;
     stopTimer();
+    if (arena && arena.setArmed) arena.setArmed(false);
     const q = S.questions[S.idx];
     revealCorrect(q.ans, -1);
     stage(`Κανείς δεν χτύπησε — η σωστή ήταν «${q.opts[q.ans]}»`, 'neutral');
@@ -419,6 +429,7 @@
     S.buzzMs = performance.now() - (S.armT || performance.now());
     const name = side === 'A' ? S.nameA : S.nameB;
     if (window.TowAudio) { window.TowAudio.buzz(side); window.TowAudio.claim(side); }
+    if (arena && arena.setArmed) arena.setArmed(false);
     if (arena) arena.triggerBuzz(side);
     stage(`${isSteal ? '🥷 Κλέψιμο! ' : '🔔 '}${name} απαντά!`, side === 'A' ? 'a' : 'b');
     setPads('claimed', side);
@@ -445,9 +456,10 @@
       const move = Math.round((8 + intensity * 14) * factor);
       applyPull(side, move);
       if (arena) arena.triggerPull(side, intensity);
+      pullPop(side, move);
       stage(`✓ Σωστό! ${side === 'A' ? S.nameA : S.nameB} τραβά +${move}`, side === 'A' ? 'a' : 'b');
       S.scoreA += side === 'A' ? 1 : 0; S.scoreB += side === 'B' ? 1 : 0;
-      updateScores();
+      updateScores(side);
       S.history.push({ rope: S.rope, result: 'correct' });
       if (checkWin()) return;
       setPads('off');
@@ -481,7 +493,9 @@
     stage(`🥷 ${name}: χτύπησε για κλέψιμο!`, S.stealer === 'A' ? 'a' : 'b');
     enableOptions(false);
     setPads('steal', S.stealer);
+    if (arena && arena.setArmed) arena.setArmed(true);   // steal window = race reopens
     startBuzzTimer(Math.max(5, S.buzzSec - 2), () => {
+      if (arena && arena.setArmed) arena.setArmed(false);
       const q = S.questions[S.idx];
       revealCorrect(q.ans, -1);
       stage(`Χάθηκε το κλέψιμο — το σχοινί μένει. Η σωστή: «${q.opts[q.ans]}»`, 'neutral');
@@ -646,14 +660,19 @@
     const wc = S.rope < 50 ? 'a' : S.rope > 50 ? 'b' : 'tie';
     const wrap = document.getElementById(WRAP_ID);
     wrap.innerHTML = `
-    <div class="tow-end">
-      <div class="tow-end-crown ${wc}">${winner ? '🏆' : '⚖'}</div>
+    <div class="tow-end win-${wc}">
+      <div class="tow-end-hero">
+        <div class="tow-end-rays" aria-hidden="true"></div>
+        ${laurelSVG()}
+        <div class="tow-end-crown ${wc}">${winner ? '🏆' : '⚖'}</div>
+      </div>
+      <div class="tow-end-kicker">ΤΕΛΟΣ ΑΓΩΝΑ</div>
       <h1 class="tow-end-title ${wc}">${winner ? winner + ' νικά!' : 'Ισοπαλία!'}</h1>
       <p class="tow-end-sub">${winner ? 'Το σχοινί πέρασε το κατώφλι.' : 'Ισόρροπη μάχη — κανείς δεν λύγισε.'}</p>
       <div class="tow-end-scores">
-        <div class="tow-end-score a"><span>${S.nameA}</span><b>${S.scoreA}</b></div>
-        <div class="tow-end-rope"><canvas id="tow-replay"></canvas></div>
-        <div class="tow-end-score b"><span>${S.nameB}</span><b>${S.scoreB}</b></div>
+        <div class="tow-end-score a"><span>${S.nameA}</span><b id="tow-end-sa">0</b></div>
+        <div class="tow-end-rope"><canvas id="tow-replay"></canvas><div class="tow-end-rope-cap">η πορεία του σχοινιού</div></div>
+        <div class="tow-end-score b"><span>${S.nameB}</span><b id="tow-end-sb">0</b></div>
       </div>
       <div class="tow-end-btns">
         <button class="tow-start-btn slim" id="tow-rematch">↻ Ρεβάνς</button>
@@ -662,7 +681,42 @@
     </div>`;
     document.getElementById('tow-rematch').addEventListener('click', () => { startGame(); });
     document.getElementById('tow-tolobby').addEventListener('click', renderLobby);
+    countUp('tow-end-sa', S.scoreA); countUp('tow-end-sb', S.scoreB);
     requestAnimationFrame(() => drawReplay('tow-replay', S.history));
+  }
+
+  // gold laurel wreath behind the trophy (procedural inline SVG)
+  function laurelSVG() {
+    const leaf = (x, y, ang, mir) =>
+      `<ellipse cx="${x}" cy="${y}" rx="11" ry="4" transform="rotate(${mir ? -ang : ang} ${x} ${y})"/>`;
+    const pts = [[74, 92, 18], [56, 82, 38], [43, 66, 58], [35, 47, 76], [33, 28, 88]];
+    let left = '', right = '';
+    pts.forEach(([x, y, a]) => { left += leaf(x, y, a, true); right += leaf(200 - x, y, a, false); });
+    return `
+    <svg class="tow-laurel" viewBox="0 0 200 110" aria-hidden="true">
+      <g fill="none" stroke="#C9A44A" stroke-width="2" opacity=".7">
+        <path d="M100 100 C 60 96, 32 70, 30 22"/>
+        <path d="M100 100 C 140 96, 168 70, 170 22"/>
+      </g>
+      <g fill="#C9A44A" opacity=".8">${left}${right}</g>
+      <g fill="#F0C878">
+        <circle cx="30" cy="18" r="3"/><circle cx="170" cy="18" r="3"/>
+      </g>
+    </svg>`;
+  }
+
+  // presentational score count-up on the end screen
+  function countUp(id, to) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (RM || !to) { el.textContent = to; return; }
+    const t0 = performance.now(), dur = 900;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+      if (p < 1 && S && S.screen === 'end') requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   function drawReplay(id, history) {
@@ -700,9 +754,33 @@
     if (!el) return;
     el.textContent = txt;
     el.className = 'tow-stage ' + (kind || '');
+    void el.offsetWidth;               // retrigger entrance pop
+    el.classList.add('pop');
   }
   function setText(id, t) { const e = document.getElementById(id); if (e) e.textContent = t; }
-  function updateScores() { setText('tow-sa', S.scoreA); setText('tow-sb', S.scoreB); }
+  function updateScores(scored) {
+    setText('tow-sa', S.scoreA); setText('tow-sb', S.scoreB);
+    if (!scored) return;
+    const val = document.getElementById(scored === 'A' ? 'tow-sa' : 'tow-sb');
+    if (val) { val.classList.remove('pop'); void val.offsetWidth; val.classList.add('pop'); }
+    const hud = document.getElementById(scored === 'A' ? 'tow-hud-a' : 'tow-hud-b');
+    if (hud) { hud.classList.remove('flash'); void hud.offsetWidth; hud.classList.add('flash'); }
+  }
+  // floating "+N" pull indicator over the arena (pure presentation)
+  function pullPop(side, move) {
+    const wrap = document.getElementById(WRAP_ID);
+    const box = wrap && wrap.querySelector('.tow-arena-box');
+    if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'tow-pull-pop ' + (side === 'A' ? 'a' : 'b');
+    el.textContent = (side === 'A' ? '⟵ +' : '+') + move + (side === 'B' ? ' ⟶' : '');
+    box.appendChild(el);
+    // team-colour wash + frame kick over the arena (pure presentation)
+    box.classList.remove('pull-a', 'pull-b');
+    void box.offsetWidth;
+    box.classList.add(side === 'A' ? 'pull-a' : 'pull-b');
+    setTimeout(() => { try { el.remove(); box.classList.remove('pull-a', 'pull-b'); } catch (_) {} }, 1400);
+  }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function timeout(fn, ms) { S._to = setTimeout(fn, ms); }
   // ── SymMix paideia-shape → TOW question adapter ──────────
