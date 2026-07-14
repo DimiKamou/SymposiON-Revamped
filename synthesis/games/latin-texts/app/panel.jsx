@@ -121,9 +121,13 @@
       if(p.direction==='A'||p.direction==='B') patch.dir=p.direction;
       if(p.startPart) patch.part=p.startPart;
       if(typeof p.syntaxDefault==='boolean') patch.showSyntax=p.syntaxDefault;
-      try{ if(localStorage.getItem('latinAdmin')==='1') patch.admin=true; }catch(e){}
+      try{ if(localStorage.getItem('latinAdmin')==='1' && this.isAdminAccount()) patch.admin=true; }catch(e){}
       if(Object.keys(patch).length) this.setState(patch);
       this.load();
+      // Auth may resolve after mount; re-render so the «Admin» edit toggle shows
+      // for the admin account only (window.symAllUnlocked on the parent shell).
+      this._adminChk=setInterval(()=>{ if(this.isAdminAccount()){ clearInterval(this._adminChk); this._adminChk=null; try{this.forceUpdate();}catch(e){} } }, 700);
+      setTimeout(()=>{ if(this._adminChk){ clearInterval(this._adminChk); this._adminChk=null; } }, 8000);
       document.addEventListener('keydown', this.onKey);
       document.addEventListener('focusout', this.onEditBlur);
       this._onResize=()=>this.drawAllArrows(); window.addEventListener('resize', this._onResize);
@@ -197,7 +201,10 @@
     textColorStyle(cols){ if(!cols||!cols.length) return {}; if(cols.length<2) return {color:cols[0]}; const seg=100/cols.length; const stops=cols.map((x,i)=>x+' '+(seg*i).toFixed(1)+'% '+(seg*(i+1)).toFixed(1)+'%').join(','); return {background:'linear-gradient(90deg,'+stops+')', WebkitBackgroundClip:'text', backgroundClip:'text', color:'transparent'}; }
 
     // ── ADMIN / EDITING ──
-    adminPin = '5384';
+    // Editing is gated to the SymposiON ADMIN ACCOUNT only (no PIN). The panel
+    // runs in a same-origin iframe, so it reads the parent shell's admin flag
+    // (window.symAllUnlocked() === isAdmin: bootstrap admin email or admin role).
+    isAdminAccount(){ try{ var w=(window.parent&&window.parent!==window)?window.parent:window; if(w&&typeof w.symAllUnlocked==='function') return !!w.symAllUnlocked(); }catch(e){} try{ if(window.top&&typeof window.top.symAllUnlocked==='function') return !!window.top.symAllUnlocked(); }catch(e){} return false; }
     assignIds(u){ let i=1; const walk=(arr)=>{ if(!arr) return; arr.forEach(t=>{ t._id=i++; if(t.kids) walk(t.kids); }); }; (u&&u.periods||[]).forEach(p=>walk(p.kids)); }
     _persist(u){ try{ localStorage.setItem('latin-unit-'+u.number, JSON.stringify(u)); }catch(e){} }
     editData(mut){ const u=JSON.parse(JSON.stringify(this.state.unit)); mut(u); this._persist(u); this.setState({unit:u}); }
@@ -205,7 +212,7 @@
     commitPath=(path,val)=>{ this.editData(u=>this.setByPath(u,path,val)); };
     onEditBlur=(e)=>{ if(!this.state.admin) return; const el=e.target; if(!el||!el.getAttribute) return; const p=el.getAttribute('data-edit'); if(!p) return; this.commitPath(p, (el.textContent||'').trim()); };
     editToken=(field,e)=>{ const id=this.state.editId; if(id==null) return; const val=(e&&e.target)?e.target.value:''; const u=JSON.parse(JSON.stringify(this.state.unit)); const walk=(arr)=>arr.forEach(t=>{ if(t._id===id) t[field]=val; if(t.kids) walk(t.kids); }); u.periods.forEach(p=>walk(p.kids)); this._persist(u); const pk={r:'rawR',to:'toRaw',g:'g',d:'d',note:'note',l:'l'}[field]; this.setState(st=>({unit:u, pop: pk? Object.assign({}, st.pop, {[pk]:val}) : st.pop})); };
-    toggleAdmin=()=>{ if(this.state.admin){ this.setState({admin:false, editId:null}); try{localStorage.removeItem('latinAdmin');}catch(e){} return; } const p=window.prompt('Κωδικός καθηγητή (admin):'); if(p===this.adminPin){ this.setState({admin:true}); try{localStorage.setItem('latinAdmin','1');}catch(e){} } else if(p!=null){ window.alert('Λάθος κωδικός.'); } };
+    toggleAdmin=()=>{ if(this.state.admin){ this.setState({admin:false, editId:null}); try{localStorage.removeItem('latinAdmin');}catch(e){} return; } if(!this.isAdminAccount()) return; this.setState({admin:true}); try{localStorage.setItem('latinAdmin','1');}catch(e){} };
     exportData=()=>{ const u=JSON.parse(JSON.stringify(this.state.unit)); const strip=(arr)=>{ if(!arr) return; arr.forEach(t=>{ delete t._id; if(t.kids) strip(t.kids); }); }; (u.periods||[]).forEach(p=>strip(p.kids)); const js='// '+(u.course||'')+' — Ενότητα '+u.number+'\nexport const UNIT = '+JSON.stringify(u,null,2)+';\n\nexport default UNIT;\n'; const blob=new Blob([js],{type:'text/javascript'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='unit'+u.number+'.js'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },120); };
     resetData=()=>{ if(!window.confirm('Επαναφορά αρχικών δεδομένων; Θα χαθούν οι αλλαγές σε αυτό το πρόγραμμα περιήγησης.')) return; try{ localStorage.removeItem('latin-unit-'+this.state.unit.number); }catch(e){} const U=JSON.parse(JSON.stringify(this._origUnit||this.state.unit)); this.assignIds(U); this.setState({unit:U, editId:null}); };
 
@@ -433,7 +440,7 @@
         onSearch:this.onSearch, clearSearch:this.clearSearch, query:s.query, doPrint:this.doPrint,
         hasHighlight:!!s.highlight, clearHighlight:this.clearHighlight,
         dark:s.dark, toggleDark:this.toggleDark, darkBtn:this.pillStyle(s.dark), darkLabel: s.dark?'☀ Φωτεινό':'☾ Σκούρο', roleLegend,
-        admin:s.admin, notAdmin:!s.admin, adminCE:s.admin, adminBtn:this.pillStyle(s.admin), adminLabel: s.admin?'🔓 Admin':'🔒 Admin', onToggleAdmin:this.toggleAdmin, doExport:this.exportData, doReset:this.resetData,
+        admin:s.admin, canAdmin:this.isAdminAccount(), notAdmin:!s.admin, adminCE:s.admin, adminBtn:this.pillStyle(s.admin), adminLabel: s.admin?'🔓 Admin':'🔒 Admin', onToggleAdmin:this.toggleAdmin, doExport:this.exportData, doReset:this.resetData,
         editL:(e)=>this.editToken('l',e), editR:(e)=>this.editToken('r',e), editTo:(e)=>this.editToken('to',e), editG:(e)=>this.editToken('g',e), editD:(e)=>this.editToken('d',e), editNote:(e)=>this.editToken('note',e),
         textView:this.buildText(), analysis:this.buildAnalysis(), legendActive,
         align, nouns, adjectives, comparatives, pronouns, verbs, sos, hasSos:sos.length>0, noSos:sos.length===0,
@@ -471,7 +478,7 @@
               {V.admin && <button onClick={V.doExport} title="Εξαγωγή δεδομένων ενότητας (.js)" className="lt-hova" style={s("display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:7px 13px;font-family:var(--font-ui);font-size:13px;font-weight:600")}>⭳ Εξαγωγή</button>}
               {V.admin && <button onClick={V.doReset} title="Επαναφορά αρχικών δεδομένων" className="lt-hova" style={s("cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:7px 11px;font-family:var(--font-ui);font-size:13px;font-weight:600")}>↺</button>}
               {V.admin && <button onClick={V.doPrint} title="Εκτύπωση / PDF" className="lt-hova" style={s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:7px 14px;font-family:var(--font-ui);font-size:13px;font-weight:600")}>⎙ PDF</button>}
-              <button onClick={V.onToggleAdmin} title="Λειτουργία καθηγητή (επεξεργασία)" style={V.adminBtn}>{V.adminLabel}</button>
+              {V.canAdmin && <button onClick={V.onToggleAdmin} title="Λειτουργία καθηγητή (επεξεργασία)" style={V.adminBtn}>{V.adminLabel}</button>}
             </div>
           </header>
 

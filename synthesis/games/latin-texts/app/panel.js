@@ -312,10 +312,14 @@
       if (p.startPart) patch.part = p.startPart;
       if (typeof p.syntaxDefault === 'boolean') patch.showSyntax = p.syntaxDefault;
       try {
-        if (localStorage.getItem('latinAdmin') === '1') patch.admin = true;
+        if (localStorage.getItem('latinAdmin') === '1' && this.isAdminAccount()) patch.admin = true;
       } catch (e) {}
       if (Object.keys(patch).length) this.setState(patch);
       this.load();
+      // Auth may resolve after mount; re-render so the «Admin» edit toggle shows
+      // for the admin account only (window.symAllUnlocked on the parent shell).
+      this._adminChk = setInterval(() => { if (this.isAdminAccount()) { clearInterval(this._adminChk); this._adminChk = null; try { this.forceUpdate(); } catch (e) {} } }, 700);
+      setTimeout(() => { if (this._adminChk) { clearInterval(this._adminChk); this._adminChk = null; } }, 8000);
       document.addEventListener('keydown', this.onKey);
       document.addEventListener('focusout', this.onEditBlur);
       this._onResize = () => this.drawAllArrows();
@@ -567,7 +571,9 @@
     }
 
     // ── ADMIN / EDITING ──
-    adminPin = '5384';
+    // Editing is gated to the SymposiON ADMIN ACCOUNT only (no PIN). Same-origin
+    // iframe → read the parent shell's admin flag (window.symAllUnlocked()).
+    isAdminAccount() { try { var w = (window.parent && window.parent !== window) ? window.parent : window; if (w && typeof w.symAllUnlocked === 'function') return !!w.symAllUnlocked(); } catch (e) {} try { if (window.top && typeof window.top.symAllUnlocked === 'function') return !!window.top.symAllUnlocked(); } catch (e) {} return false; }
     assignIds(u) {
       let i = 1;
       const walk = arr => {
@@ -650,17 +656,13 @@
         } catch (e) {}
         return;
       }
-      const p = window.prompt('Κωδικός καθηγητή (admin):');
-      if (p === this.adminPin) {
-        this.setState({
-          admin: true
-        });
-        try {
-          localStorage.setItem('latinAdmin', '1');
-        } catch (e) {}
-      } else if (p != null) {
-        window.alert('Λάθος κωδικός.');
-      }
+      if (!this.isAdminAccount()) return;
+      this.setState({
+        admin: true
+      });
+      try {
+        localStorage.setItem('latinAdmin', '1');
+      } catch (e) {}
     };
     exportData = () => {
       const u = JSON.parse(JSON.stringify(this.state.unit));
@@ -1808,6 +1810,7 @@
         darkLabel: s.dark ? '☀ Φωτεινό' : '☾ Σκούρο',
         roleLegend,
         admin: s.admin,
+        canAdmin: this.isAdminAccount(),
         notAdmin: !s.admin,
         adminCE: s.admin,
         adminBtn: this.pillStyle(s.admin),
@@ -1924,7 +1927,7 @@
         title: "\u0395\u03BA\u03C4\u03CD\u03C0\u03C9\u03C3\u03B7 / PDF",
         className: "lt-hova",
         style: s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:999px;padding:7px 14px;font-family:var(--font-ui);font-size:13px;font-weight:600")
-      }, "\u2399 PDF"), /*#__PURE__*/React.createElement("button", {
+      }, "\u2399 PDF"), V.canAdmin && /*#__PURE__*/React.createElement("button", {
         onClick: V.onToggleAdmin,
         title: "\u039B\u03B5\u03B9\u03C4\u03BF\u03C5\u03C1\u03B3\u03AF\u03B1 \u03BA\u03B1\u03B8\u03B7\u03B3\u03B7\u03C4\u03AE (\u03B5\u03C0\u03B5\u03BE\u03B5\u03C1\u03B3\u03B1\u03C3\u03AF\u03B1)",
         style: V.adminBtn
