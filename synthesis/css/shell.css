@@ -103,8 +103,12 @@ textarea:focus-visible,
 /* ── Theme picker popover ────────────────────────────────────────── */
 .hpop { position: relative; }
 .theme-menu {
-  position: absolute; top: calc(100% + 9px); right: 0;
-  width: max-content; max-width: min(1320px, 97vw); max-height: 90vh; overflow: auto;
+  /* Viewport-anchored (fixed), not button-anchored, so the wide theme gallery
+     can never run off the LEFT edge (its left column was getting clipped). The
+     `top` is set from the trigger button's position in js/app.js when it opens;
+     84px is the fallback for the deep-link (?menu=themes) open. */
+  position: fixed; top: 84px; right: 14px;
+  width: max-content; max-width: min(1100px, 94vw); max-height: calc(100vh - 100px); overflow: auto;
   background: #14161b; border: 1px solid #2a2e36; border-radius: 16px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.6); padding: 16px 18px; z-index: 9500;
   opacity: 0; transform: translateY(-6px) scale(.98); pointer-events: none;

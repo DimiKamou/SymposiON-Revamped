@@ -65,33 +65,55 @@
   }
   window.closeLatinText = closeLatinText;
 
-  function openLatinText(n, title) {
-    n = parseInt(n, 10) || 16;
-    title = title || UNITS[n] || ('Λατινικά · Ενότητα ' + n);
-    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+  // Options for the in-overlay unit navigator: Εισαγωγή + every published Ενότητα.
+  function _navOptions() {
+    var en = (window.SYM_LANG === 'en');
+    var o = '<option value="intro">' + (en ? 'Introduction' : 'Εισαγωγή') + '</option>';
+    Object.keys(UNITS).forEach(function (k) {
+      o += '<option value="' + k + '">' + (en ? 'Unit ' : 'Ενότητα ') + k + '</option>';
+    });
+    return o;
+  }
+
+  // Create the shared overlay ONCE: back button, title, and a unit-navigator
+  // <select> so the whole «Ανάλυση Κειμένων» is a SINGLE entry — you switch
+  // Ενότητα (and the Εισαγωγή) inside the overlay instead of one tile per unit.
+  function _ensureOverlay() {
     var ov = document.getElementById(OVID);
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = OVID;
-      ov.className = 'game-overlay';
-      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
-      ov.innerHTML =
-        '<div class="overlay-topbar">' +
-          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
-          '<span class="overlay-title"></span>' +
-          '<span style="width:64px;display:inline-block"></span>' +
-        '</div>' +
-        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
-          '<iframe title="" allow="fullscreen" ' +
-            'style="width:100%;height:100%;border:none;display:block;background:#e7e0cf"></iframe>' +
-        '</div>';
-      document.body.appendChild(ov);
-      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
-    }
+    if (ov) return ov;
+    ov = document.createElement('div');
+    ov.id = OVID;
+    ov.className = 'game-overlay';
+    var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+    ov.innerHTML =
+      '<div class="overlay-topbar">' +
+        '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+        '<span class="overlay-title"></span>' +
+        '<select class="lt-unit-nav overlay-back" aria-label="Ενότητα" ' +
+          'style="max-width:230px;cursor:pointer;font-weight:600">' + _navOptions() + '</select>' +
+      '</div>' +
+      '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+        '<iframe title="" allow="fullscreen" ' +
+          'style="width:100%;height:100%;border:none;display:block;background:#e7e0cf"></iframe>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    var nav = ov.querySelector('.lt-unit-nav');
+    if (nav) nav.addEventListener('change', function () {
+      if (this.value === 'intro') openLatinIntro();
+      else openLatinText(parseInt(this.value, 10));
+    });
+    return ov;
+  }
+
+  function _showFrame(src, title, navValue) {
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = _ensureOverlay();
     ov.querySelector('.overlay-title').textContent = title;
+    var nav = ov.querySelector('.lt-unit-nav'); if (nav && navValue != null) nav.value = String(navValue);
     var fr = ov.querySelector('iframe');
     fr.title = title;
-    fr.src = _appBase() + 'games/latin-texts/enotita.html?unit=' + n;
+    fr.src = src;
     fr.addEventListener('load', function _l() {
       if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
       fr.removeEventListener('load', _l);
@@ -100,7 +122,15 @@
     document.body.style.overflow = 'hidden';
     setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
   }
+
+  function openLatinText(n, title) {
+    n = parseInt(n, 10) || 16;
+    title = title || UNITS[n] || ('Λατινικά · Ενότητα ' + n);
+    _showFrame(_appBase() + 'games/latin-texts/enotita.html?unit=' + n, title, n);
+  }
   window.openLatinText = openLatinText;
+  // Single entry for the whole «Ανάλυση Κειμένων» (opens Ενότητα 16 + navigator).
+  window.openLatinTexts = function () { openLatinText(16); };
 
   // Per-unit openers (one global per published Ενότητα, à la openIliadaVoyage).
   Object.keys(UNITS).forEach(function (n) {
@@ -108,41 +138,10 @@
   });
   window.LATIN_TEXT_UNITS = UNITS;
 
-  // Εισαγωγή — standalone interactive introduction chapter (not a unit panel).
-  // Reuses the same overlay shell but loads eisagogi.html instead of enotita.html.
+  // Εισαγωγή — interactive introduction chapter (eisagogi.html), reachable from
+  // the unit navigator; loads in the same overlay shell.
   function openLatinIntro() {
-    var title = 'Λατινικά · Εισαγωγή στη Ρωμαϊκή Λογοτεχνία';
-    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
-    var ov = document.getElementById(OVID);
-    if (!ov) {
-      ov = document.createElement('div');
-      ov.id = OVID;
-      ov.className = 'game-overlay';
-      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
-      ov.innerHTML =
-        '<div class="overlay-topbar">' +
-          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
-          '<span class="overlay-title"></span>' +
-          '<span style="width:64px;display:inline-block"></span>' +
-        '</div>' +
-        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
-          '<iframe title="" allow="fullscreen" ' +
-            'style="width:100%;height:100%;border:none;display:block;background:#ecede7"></iframe>' +
-        '</div>';
-      document.body.appendChild(ov);
-      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
-    }
-    ov.querySelector('.overlay-title').textContent = title;
-    var fr = ov.querySelector('iframe');
-    fr.title = title;
-    fr.src = _appBase() + 'games/latin-texts/eisagogi.html';
-    fr.addEventListener('load', function _l() {
-      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
-      fr.removeEventListener('load', _l);
-    });
-    ov.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+    _showFrame(_appBase() + 'games/latin-texts/eisagogi.html', 'Λατινικά · Εισαγωγή στη Ρωμαϊκή Λογοτεχνία', 'intro');
   }
   window.openLatinIntro = openLatinIntro;
 })();

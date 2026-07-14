@@ -122,7 +122,7 @@
   function beginGame(openFn, label, explicitClose) {
     var closeName = resolveCloseName(openFn);
     if (closeName) wrapCloseName(closeName);
-    _game = { openFn: openFn, label: label || openFn || '', closeName: closeName, closeFn: explicitClose || null };
+    _game = { openFn: openFn, label: label || openFn || '', closeName: closeName, closeFn: explicitClose || null, noWarn: isStudyMode(openFn) };
     var s = ST();
     try {
       history.pushState(
@@ -142,22 +142,34 @@
     if (typeof fn === 'function') { try { fn(); } catch (_) {} }
   }
 
+  // Study / reading / analysis / experience modes have no in-progress run to
+  // lose, so they must NOT trigger the «Έξοδος από το παιχνίδι; Η πρόοδος θα
+  // χαθεί» exit warning — that belongs to real game modes only. Extend as needed.
+  var STUDY_MODES = {
+    openParallelLesson: 1, openGnwsto: 1, openAdidakto: 1, openSyntaktiko: 1,
+    openIstoria: 1, openLatinIntro: 1, openLatinTexts: 1, openLatinText: 1,
+    openHagiaSophia: 1, openConstantinople: 1, openKnossos: 1, openAcropolis: 1
+  };
+  function isStudyMode(fn) { return !!fn && (STUDY_MODES[fn] || fn.indexOf('openLatinText') === 0); }
+
   var EXIT_MSG = { gr: 'Έξοδος από το παιχνίδι; Η πρόοδος θα χαθεί.', en: 'Exit the game? Your progress will be lost.' };
 
   // ── Back / Forward ──
   function onPop(e) {
     // If a game is open, Back means "leave the game" → confirm first.
     if (_game) {
-      var ok = window.confirm(tr(EXIT_MSG));
-      if (!ok) {                              // stay: re-trap by re-pushing the game entry
-        var s = ST();
-        try {
-          history.pushState(
-            navState(s.screen, s.screenParam, { _game: true, openFn: _game.openFn }),
-            '', pathFor(s.screen, s.screenParam) + '/play'
-          );
-        } catch (_) {}
-        return;
+      if (!_game.noWarn) {                     // study/reading modes exit silently
+        var ok = window.confirm(tr(EXIT_MSG));
+        if (!ok) {                             // stay: re-trap by re-pushing the game entry
+          var s = ST();
+          try {
+            history.pushState(
+              navState(s.screen, s.screenParam, { _game: true, openFn: _game.openFn }),
+              '', pathFor(s.screen, s.screenParam) + '/play'
+            );
+          } catch (_) {}
+          return;
+        }
       }
       closeActiveGame();                       // fall through to restore the entry we landed on
     }
@@ -188,7 +200,7 @@
 
   // ── Exit warning on tab close / refresh during a game ──
   function onBeforeUnload(e) {
-    if (_game) { e.preventDefault(); e.returnValue = ''; return ''; }
+    if (_game && !_game.noWarn) { e.preventDefault(); e.returnValue = ''; return ''; }
   }
 
   // ── Wrap synLaunch so every real game launch registers a session ──
