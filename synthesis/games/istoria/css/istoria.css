@@ -326,6 +326,11 @@ body.istoria-body{
 .dir-agon .fchip{background:var(--paper2);}
 .dir-agon .fchip.on{color:#06140d;}
 .dir-agon .fchip.sm.on{color:var(--gold-lt);}
+.mt-fcat{display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding-left:2px;}
+.mt-flabel{font-family:var(--f-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-right:2px;}
+.fchip.xs{font-size:11px;padding:4px 10px;border-radius:7px;border-style:dashed;color:var(--ink-soft);}
+.fchip.xs.on{background:color-mix(in srgb,var(--gold) 20%,var(--paper));border-color:var(--gold);border-style:solid;color:var(--terra-dk);}
+.dir-agon .fchip.xs.on{color:var(--gold-lt);}
 
 .sk-q{background:var(--paper);border:1px solid var(--hair);border-top:3px solid var(--terra);border-radius:4px;padding:24px 28px;margin-top:22px;box-shadow:var(--shadow);}
 .dir-agon .sk-q{border-radius:14px;background:linear-gradient(170deg,var(--paper2),var(--paper));}
@@ -337,6 +342,9 @@ body.istoria-body{
 .sk-src{margin-top:14px;border-left:3px solid var(--gold-lt);background:var(--paper2);border-radius:0 4px 4px 0;padding:12px 16px;font-family:var(--f-quote);font-style:italic;font-size:16px;line-height:1.45;color:var(--ink-soft);}
 .sk-src b{font-family:var(--f-mono);font-style:normal;font-size:10px;letter-spacing:.14em;color:var(--terra-dk);text-transform:uppercase;display:block;margin-bottom:5px;}
 .dir-agon .sk-src b{color:var(--terra);}
+.sk-src + .sk-src{margin-top:10px;}
+.qcat{display:inline-block;margin-left:10px;padding:2px 9px;border-radius:20px;background:color-mix(in srgb,var(--gold) 18%,var(--paper));border:1px solid var(--gold-lt);font-family:var(--f-ui);font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--terra-dk);vertical-align:middle;text-transform:none;}
+.dir-agon .qcat{color:var(--gold-lt);background:color-mix(in srgb,var(--gold) 14%,var(--paper2));}
 
 .sk-ed{margin-top:18px;}
 .sk-ed textarea{width:100%;min-height:150px;resize:vertical;font-family:var(--f-serif);font-size:16px;line-height:1.6;color:var(--ink);background:var(--paper);border:1px solid var(--hair-strong);border-radius:4px;padding:16px 18px;outline:none;}

@@ -11,7 +11,8 @@
   const ICON = (n)=>`<span class="ico">${SYM.icon(n)}</span>`;
   const esc = (s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  let COURSE='g3', CUR=null, idx=0, sel=null, FU=null, FS=null;  // FU=unit label filter, FS=section id filter
+  let COURSE='g3', CUR=null, idx=0, sel=null, FU=null, FS=null, FC=null;  // FU=unit label, FS=section id, FC=category label
+  let CATLIST=[];  // categories in current scope (for index-based chip clicks)
 
   // method descriptors (id → meta + how its question card and inputs render)
   const METHODS = {
@@ -34,13 +35,15 @@
   // items carry `unit` (Greek label) + `sec`; filter the bank by the active scope
   function curArr(){
     let a = bank(CUR);
-    if(FU){ a = a.filter(x=>x && x.unit===FU); if(FS) a = a.filter(x=>x && x.sec===FS); }
+    if(FU){ a = a.filter(x=>x && x.unit===FU); if(FS) a = a.filter(x=>x && x.sec===FS); if(FC) a = a.filter(x=>x && x.cat===FC); }
     return a;
   }
+  // all sources of an item, normalised to [{ref,text}] — supports single `src` and multi `srcs`
+  function srcsOf(q){ return (q&&q.srcs&&q.srcs.length)?q.srcs : (q&&q.src?[q.src]:[]); }
   function unitId(label){ const u=(ISTORIA.getUnits(COURSE)||[]).find(x=>x.t===label); return u?u.id:null; }
 
   function open(id){
-    if(!bank(id).length) return; CUR=id; idx=0; sel=null; FU=null; FS=null;
+    if(!bank(id).length) return; CUR=id; idx=0; sel=null; FU=null; FS=null; FC=null;
     // scope to the hub's currently-selected chapter, if this bank has items there
     try{
       const us=ISTORIA.getUnits(COURSE), cu=window.HUB&&HUB.curUnit, cs=window.HUB&&HUB.curSec;
@@ -51,8 +54,9 @@
   }
   function show(scr){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $('#'+scr).classList.add('on'); window.scrollTo({top:0,behavior:'instant'}); }
   function pick(i){ idx=i; sel=null; render(); }
-  function setFU(u){ FU=u; FS=null; idx=0; sel=null; render(); }
-  function setFS(s){ FS=s; idx=0; sel=null; render(); }
+  function setFU(u){ FU=u; FS=null; FC=null; idx=0; sel=null; render(); }
+  function setFS(s){ FS=s; FC=null; idx=0; sel=null; render(); }
+  function setFC(i){ FC = (i<0 ? null : (CATLIST[i]||null)); idx=0; sel=null; render(); }
 
   // unit + sub-section filter chips (only when the bank spans >1 unit)
   function filterBar(){
@@ -70,7 +74,17 @@
           present.map(s=>`<button class="fchip sm ${FS===s.id?'on':''}" onclick="MT.setFS('${s.id}')">${esc(((s.part?s.part+' ':'')+(s.code?s.code+'.':'')).trim()||s.t)} <span class="fc-n">${full.filter(x=>x&&x.unit===FU&&x.sec===s.id).length}</span></button>`).join('')+`</div>`;
       }
     }
-    return `<div class="mt-filter"><div class="mt-funit">${uchips}</div>${schips}</div>`;
+    // theme (category) chips — third level, within the active unit(+chapter) scope
+    let cchips=''; CATLIST=[];
+    if(FU){
+      const scope=full.filter(x=>x&&x.unit===FU&&(!FS||x.sec===FS));
+      scope.forEach(x=>{ if(x.cat && !CATLIST.includes(x.cat)) CATLIST.push(x.cat); });
+      if(CATLIST.length>1){
+        cchips=`<div class="mt-fcat"><span class="mt-flabel">Θεματικές:</span><button class="fchip xs ${!FC?'on':''}" onclick="MT.setFC(-1)">Όλες</button>`+
+          CATLIST.map((c,i)=>`<button class="fchip xs ${FC===c?'on':''}" onclick="MT.setFC(${i})">${esc(c)} <span class="fc-n">${scope.filter(x=>x.cat===c).length}</span></button>`).join('')+`</div>`;
+      }
+    }
+    return `<div class="mt-filter"><div class="mt-funit">${uchips}</div>${schips}${cchips}</div>`;
   }
 
   function render(){
@@ -102,8 +116,10 @@
         <div class="qt" style="margin-top:14px;">${esc(q.prompt)}</div>`;
     if(CUR==='sl') return `<div class="qn">ΙΣΧΥΡΙΣΜΟΣ ${String(idx+1).padStart(2,'0')}</div><div class="qt">${esc(q.claim)}</div>`;
     // anaptyxi / pigi
-    const head = `<div class="qn">${esc(q.n||'ΕΡΩΤΗΣΗ '+String(idx+1).padStart(2,'0'))}</div>`;
-    const src  = q.src ? `<div class="sk-src"><b>Πηγή — ${esc(q.src.ref)}</b>${esc(q.src.text)}</div>` : '';
+    const cat  = q.cat ? `<span class="qcat">${esc(q.cat)}</span>` : '';
+    const head = `<div class="qn">${esc(q.n||'ΕΡΩΤΗΣΗ '+String(idx+1).padStart(2,'0'))}${cat}</div>`;
+    const ss   = srcsOf(q); const L=['Α','Β','Γ','Δ','Ε'];
+    const src  = ss.length ? ss.map((s,i)=>`<div class="sk-src"><b>${ss.length>1?'ΚΕΙΜΕΝΟ '+L[i]+' — ':'Πηγή — '}${esc(s.ref)}</b>${esc(s.text)}</div>`).join('') : '';
     return head + (CUR==='pigi'?src:'') + `<div class="qt" style="margin-top:14px;">${esc(q.q)}</div>` + (CUR==='anaptyxi'?src:'');
   }
 
@@ -156,7 +172,10 @@
       you=ans; opts={modelLabel:'Ενδεικτικός ορισμός'};
     } else if(CUR==='pigi' || CUR==='anaptyxi'){
       const ans=($('#mt-ans').value||'').trim(); if(ans.length<(CUR==='pigi'?10:8)){$('#mt-ans').focus();return;}
-      const rubric = q.src ? `Η ερώτηση απαιτεί ΣΥΝΔΥΑΣΜΟ της πηγής με τις ιστορικές γνώσεις. Στα «missed» επισήμανε ρητά αν ο μαθητής ΔΕΝ αξιοποίησε την πηγή. Η πηγή είναι: "${q.src.text}"` : '';
+      const ss=srcsOf(q); const L=['Α','Β','Γ','Δ','Ε'];
+      const multi=ss.length>1;
+      const srcText=ss.map((s,i)=>`${multi?'ΚΕΙΜΕΝΟ '+L[i]:'Πηγή'}: "${s.text}"`).join('\n');
+      const rubric = ss.length ? `Η ερώτηση απαιτεί ΣΥΝΔΥΑΣΜΟ ${multi?'ΟΛΩΝ των πηγών':'της πηγής'} με τις ιστορικές γνώσεις. Στα «missed» επισήμανε ρητά αν ο μαθητής ΔΕΝ αξιοποίησε ${multi?'κάποια από τις πηγές (ανάφερε ποια)':'την πηγή'}. ${multi?'Οι πηγές':'Η πηγή'}:\n${srcText}` : '';
       params={question:q.q, model:q.model, points:q.points, answer:ans, rubric};
       you=ans;
     } else if(CUR==='sl'){
@@ -189,5 +208,5 @@
 
   function init(course){ COURSE = course || (window.HUB && HUB.course) || 'g3'; }
 
-  window.MT = { init, open, pick, setFU, setFS, setSL, wc, reset, check, available, METHODS, ORDER };
+  window.MT = { init, open, pick, setFU, setFS, setFC, setSL, wc, reset, check, available, METHODS, ORDER };
 })();
