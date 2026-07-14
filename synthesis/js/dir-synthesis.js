@@ -825,48 +825,70 @@
     mq.appendChild(el('div',{class:'syn-mq__row'}, [ buildTrack('b') ]));
     home.appendChild(mq);
 
-    /* ENGINES */
-    const eng = el('section', { class:'syn-engines' });
-    eng.appendChild(el('div', { class:'syn-engines__hd' }, [
-      el('div', {}, [ el('span',{class:'syn-engines__no'},'//'), el('h2', { class:'syn-engines__ttl' }, L(STR.engines)) ]),
-      el('p', { class:'syn-engines__sub' }, L(STR.enginesSub)),
+    /* GAME CATALOGUE — styled like a subject panel: a teaser row of games with a
+       «Όλα τα παιχνίδια» see-more link into the full Game Panel (not all at once). */
+    const catAccent = '#C18A2C', liveAccent = '#C23A2E';
+    // Full playable catalogue = curated ENGINES + every Game-Panel engine (mirrors
+    // S.gamepanel's merge), deduped by launch fn / label.
+    const catalog = (function(){
+      const out = [], seen = {};
+      const keyOf = e => (e && e.launch && e.launch.fn) || (e && (e.en || e.gr)) || '';
+      (ctx.engines || []).forEach(e => { const k = keyOf(e); if (k && !seen[k]) { seen[k] = 1; out.push(e); } });
+      (window.GP_ENGINES || []).forEach(g => {
+        const fn = (window.SYN_LAUNCH_MAP && (SYN_LAUNCH_MAP[g.id] || SYN_LAUNCH_MAP[g.label])) || null;
+        const k = fn || ('label:' + g.label); if (seen[k]) return; seen[k] = 1;
+        out.push({ gr:g.label, en:g.subtitle || g.label, meta:{gr:g.subtitle || '', en:g.subtitle || ''}, illu:g.illu || null, launch: fn ? {fn} : undefined });
+      });
+      return out;
+    })();
+    const CAT_PREVIEW = 6;   // one teaser row; the rest live behind "see more"
+    // tile() expects a STRING meta (subject games have that); ENGINES/GP_ENGINES
+    // carry a {gr,en} object, so localise it into a tile-ready shape first.
+    const metaStr = m => (m && typeof m === 'object') ? L(m) : (m || '');
+    const mkTile = (e, accent, onclick) =>
+      tile({ gr:e.gr, en:e.en, illu:e.illu, soon:e.soon, launch:e.launch, meta:metaStr(e.meta) }, accent, onclick);
+    function launchCatalog(gm){
+      if (gm && gm.soon) return comingSoon(gm);
+      const fn = window.synResolveLaunch && synResolveLaunch(gm);
+      if (fn && window.synLaunch && window.SYN_GAMES && SYN_GAMES[fn])
+        return (window.symTileLaunch ? symTileLaunch(gm, {game:gm}) : synLaunch(fn, ...((gm.launch && gm.launch.args) || [])));
+      return symGo('gamepanel');
+    }
+    const cat = el('section', { class:'syn-subj has-accent', style:`--ca:${catAccent}` });
+    cat.appendChild(el('div', { class:'syn-subj__hd' }, [
+      el('span', { class:'syn-subj__no' }, '//'),
+      el('span', { class:'syn-subj__badge' }, [ el('span', { class:'syn-subj__illu', 'data-illu':'joystick' }) ]),
+      el('div', { class:'syn-subj__tx' }, [
+        el('h2', { class:'syn-subj__ttl' }, L({gr:'Κατάλογος Παιχνιδιών', en:'Games Catalogue'})),
+        el('p', { class:'syn-subj__sum' }, L(STR.enginesSub || {gr:'Ένα παιχνίδι, κάθε ύλη — οι μηχανές προσαρμόζονται στο μάθημα.', en:'One game, any material — the engines adapt to the lesson.'})),
+      ]),
+      el('a', { class:'syn-subj__all', href:'javascript:void 0', onclick:()=>symGo('gamepanel') },
+        [ L(STR.allGames), el('span', { class:'syn-subj__cnt' }, catalog.length) ]),
     ]));
-    const scroller = el('div', { class:'syn-engines__scroll' });
-    ctx.engines.forEach((e,i) => scroller.appendChild(el('a', {
-      class:'syn-eng has-accent', href:'javascript:void 0', style:`--ca:${ctx.classes[i % ctx.classes.length].accent}`, onclick:()=>symGo('gamepanel')
-    }, [
-      el('span', { class:'syn-eng__ban' }, [ el('span', { class:'syn-eng__illu', 'data-illu':e.illu }) ]),
-      el('span', { class:'syn-eng__nm' }, L(e)), el('span', { class:'syn-eng__mt' }, L(e.meta)),
-    ])));
-    eng.appendChild(scroller);
-    home.appendChild(eng);
-    // Gentle auto-advance so the engines band "transitions" on its own (like the
-    // subject marquee, which is pure CSS). Ping-pongs across the overflow; pauses
-    // on hover / touch / manual scroll and resumes after a short idle; slower
-    // under reduced-motion; self-stops once the node leaves the DOM.
-    (function(sc){
-      if(!sc) return;
-      sc.style.scrollSnapType = 'none';            // let it glide instead of snapping
-      // accumulate in a float — sub-pixel scrollLeft increments otherwise round to
-      // 0 and never move (so the slow reduced-motion speed still drifts visibly).
-      var speed = reduceMotion() ? 0.28 : 0.55, dir = 1, paused = false, idle = 0, raf = 0, pos = 0;
-      function hold(ms){ paused = true; clearTimeout(idle); idle = setTimeout(function(){ paused = false; }, ms); }
-      function loop(){
-        if(!document.body.contains(sc)){ cancelAnimationFrame(raf); return; }
-        var max = sc.scrollWidth - sc.clientWidth;
-        if(paused){ pos = sc.scrollLeft; }         // resync so it resumes where the user left off
-        else if(max > 4){
-          pos += speed * dir;
-          if(pos >= max){ pos = max; dir = -1; } else if(pos <= 0){ pos = 0; dir = 1; }
-          sc.scrollLeft = pos;
-        }
-        raf = requestAnimationFrame(loop);
-      }
-      sc.addEventListener('pointerenter', function(){ paused = true; clearTimeout(idle); }, { passive:true });
-      sc.addEventListener('pointerleave', function(){ hold(900); }, { passive:true });
-      ['wheel','touchstart','pointerdown'].forEach(function(ev){ sc.addEventListener(ev, function(){ hold(1600); }, { passive:true }); });
-      raf = requestAnimationFrame(loop);
-    })(scroller);
+    cat.appendChild(el('div', { class:'syn-subj__grid' }, catalog.slice(0, CAT_PREVIEW).map(gm => mkTile(gm, catAccent, ()=>launchCatalog(gm)))));
+    home.appendChild(cat);
+    if (window.injectIllus) injectIllus(cat);
+
+    /* LIVE — the three live/multiplayer products (user pick: Arena · Ἀγών · 1v1) */
+    const LIVE = [
+      { gr:'Ζωντανή Αρένα', en:'Live Arena', meta:{gr:'Όλη η τάξη ζωντανά · host / join', en:'The whole class, live'}, illu:'lightning-bolt',
+        go:()=>symGo('live') },
+      { gr:'Ο Ἀγών · PvP', en:'The Agon · PvP', meta:{gr:'Μονομαχίες μαθητών στην Αρένα', en:'Student duels in the Arena'}, illu:'crossed-spears',
+        go:()=>{ if (window.SymCurriculum && SymCurriculum.openForPvp) SymCurriculum.openForPvp(); else if (window.openPvPContentChooser) openPvPContentChooser(); else symGo('live'); } },
+      { gr:'Φιλική Μάχη · 1v1', en:'Friendly Battle · 1v1', meta:{gr:'Κάλεσε έναν φίλο και μονομαχήστε', en:'Invite a friend and duel'}, illu:'shield-spear',
+        go:()=>{ if (window.SymCurriculum && SymCurriculum.openForFriendlyBattle) SymCurriculum.openForFriendlyBattle(); else symGo('live'); } },
+    ];
+    const liveSec = el('section', { class:'syn-subj has-accent', style:`--ca:${liveAccent}` });
+    liveSec.appendChild(el('div', { class:'syn-subj__hd' }, [
+      el('span', { class:'syn-subj__no', html:'&#9889;' }),
+      el('div', { class:'syn-subj__tx' }, [
+        el('h2', { class:'syn-subj__ttl' }, L({gr:'Live · Ζωντανά', en:'Live'})),
+        el('p', { class:'syn-subj__sum' }, L({gr:'Παίξε live με την τάξη ή μονομάχησε σε πραγματικό χρόνο.', en:'Play live with your class, or duel in real time.'})),
+      ]),
+    ]));
+    liveSec.appendChild(el('div', { class:'syn-subj__grid' }, LIVE.map(o => mkTile(o, liveAccent, o.go))));
+    home.appendChild(liveSec);
+    if (window.injectIllus) injectIllus(liveSec);
 
     /* JOIN */
     home.appendChild(el('section', { class:'syn-join' }, [
