@@ -386,3 +386,4 @@
   .arv-vp-footer-btns{justify-content:stretch;}
   .arv-vp-confirm-btn{width:100%!important;}
 }
+@media(max-width:640px){.arv-dkey{min-height:44px;box-sizing:border-box;justify-content:center;}.arv-vkey{min-height:44px;min-width:40px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;}}

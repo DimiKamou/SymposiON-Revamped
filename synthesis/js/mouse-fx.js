@@ -115,8 +115,15 @@
     if (window.SymStore) SymStore.set('mousefx', kind);
   }
 
+  // Pointer-trail particles only ever spawn on mousemove, so on a touch-primary
+  // device (phone/tablet without a mouse) they never appear — skip the listener.
+  function isTouchPrimary() {
+    try { return matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fine)').matches; }
+    catch (_) { return false; }
+  }
+
   function init() {
-    if (rafOk) return; rafOk = true;
+    if (rafOk || isTouchPrimary()) return; rafOk = true;
     window.addEventListener('mousemove', onMove, { passive: true });
     const saved = (window.SymStore && SymStore.get('mousefx', 'none')) || 'none';
     set(saved);

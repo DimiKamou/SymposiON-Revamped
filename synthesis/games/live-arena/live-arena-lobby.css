@@ -154,6 +154,7 @@
   background: rgba(13,11,8,.55); padding: 5px 12px; border-radius: 999px; opacity: 0;
 }
 #la-host-lobby .la-lobby-banner.la-has-img:hover .la-banner-hint { opacity: 1; }
+@media (hover: none) { #la-host-lobby .la-lobby-banner.la-has-img .la-banner-hint { opacity: 1; } }
 
 /* Host identity */
 #la-host-lobby .la-host-id {

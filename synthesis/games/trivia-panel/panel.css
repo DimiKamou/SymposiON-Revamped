@@ -41,7 +41,7 @@
   box-shadow:0 30px 80px -30px rgba(33,26,16,.55), 0 2px 8px rgba(33,26,16,.1);
   font-family:var(--font-sans); font-weight:400;
 }
-@media (max-width:520px){ .ts-root { border-radius:0; min-height:100vh; } #trivia-panel-overlay .tp-scroll{ padding:0; } }
+@media (max-width:520px){ .ts-root { border-radius:0; min-height:100vh; min-height:100dvh; } #trivia-panel-overlay .tp-scroll{ padding:0; } }
 .ts-root *, .ts-root *::before, .ts-root *::after { box-sizing:border-box; }
 .ts-ornbg { position:absolute; top:-26px; right:-90px; color:var(--ink); opacity:.05; pointer-events:none; }
 .ts-ornbg svg { width:460px; height:340px; }

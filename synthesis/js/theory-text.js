@@ -84,8 +84,26 @@
         '<summary>Δες την απόδοση (νέα ελληνικά)</summary>' +
         '<div class="body" data-ref-body>' + (S.refText ? '«' + esc(S.refText) + '»' : '<span class="tr-cap">Φόρτωση…</span>') + '</div></details>';
     }
-    h += '<div class="tr-cap" style="margin-top:20px">Πέρνα πάνω από τις <span style="color:var(--terra)">υπογραμμισμένες</span> λέξεις για ερμηνεία</div></div>';
+    var _coarse = !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
+    h += '<div class="tr-cap" style="margin-top:20px">' + (_coarse ? 'Πάτα' : 'Πέρνα πάνω από') + ' τις <span style="color:var(--terra)">υπογραμμισμένες</span> λέξεις για ερμηνεία</div></div>';
     var wrap = elFrom(h);
+    // touch: phones have no hover — tap a glossed word to reveal its .pop
+    wrap.querySelectorAll('.trr-w.gloss').forEach(function (w) {
+      w.setAttribute('tabindex', '0');
+      w.setAttribute('role', 'button');
+      w.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var wasOpen = w.classList.contains('show');
+        wrap.querySelectorAll('.trr-w.show').forEach(function (o) { o.classList.remove('show'); });
+        if (!wasOpen) w.classList.add('show');
+      });
+      w.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); w.click(); }
+      });
+    });
+    wrap.addEventListener('click', function () {
+      wrap.querySelectorAll('.trr-w.show').forEach(function (o) { o.classList.remove('show'); });
+    });
     var det = wrap.querySelector('details.tt-ref');
     if (det) det.addEventListener('toggle', function () {
       if (det.open && !S.refText) {

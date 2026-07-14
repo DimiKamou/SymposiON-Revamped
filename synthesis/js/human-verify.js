@@ -94,6 +94,7 @@
 '.sym-hv-x{flex:0 0 auto;width:28px;height:28px;border:none;border-radius:8px;cursor:pointer;',
 '  background:transparent;color:var(--sym-ink,#1E1810);opacity:.5;font-size:17px;line-height:1;}',
 '.sym-hv-x:hover{opacity:1;background:color-mix(in srgb,var(--sym-ink,#1E1810) 8%,transparent);}',
+'@media (pointer:coarse){.sym-hv-x{position:relative;}.sym-hv-x::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;}}',
 '.sym-hv-sub{font-size:12px;opacity:.62;margin:0 0 14px;line-height:1.4;}',
 '.sym-hv-prompt{font-family:var(--syn-serif,var(--serif,"Alegreya",Georgia,serif));',
 '  font-size:21px;font-weight:600;margin:0 0 14px;text-align:center;line-height:1.3;}',

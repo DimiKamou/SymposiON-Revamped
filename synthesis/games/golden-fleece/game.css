@@ -79,7 +79,7 @@
   72%{transform:translate3d(-4px,2px,0);} 88%{transform:translate3d(3px,-1px,0);} 100%{transform:none;}
 }
 
-.gf-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
+.gf-screen { display:none; flex-direction:column; min-height:calc(100vh - 54px); min-height:calc(100dvh - 54px); padding:clamp(20px,4vw,40px); position:relative; z-index:1; }
 .gf-screen.active { display:flex; animation:gf-fade .4s ease; }
 @keyframes gf-fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
 

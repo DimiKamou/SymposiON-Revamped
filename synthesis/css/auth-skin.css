@@ -59,6 +59,10 @@
   transition: color .15s, border-color .15s, background .15s;
 }
 .auth-close-btn:hover { color: var(--fg); border-color: var(--line-bold); background: var(--sink); }
+@media (pointer: coarse) {
+  .auth-close-btn { position: relative; }
+  .auth-close-btn::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:44px; height:44px; }
+}
 
 /* ── Tabs ────────────────────────────────────────────────────────────── */
 .auth-tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--line-soft); }
@@ -78,6 +82,9 @@
 }
 .auth-tab:hover { color: var(--fg); }
 .auth-tab.active { color: var(--fg); border-color: var(--terra); }
+@media (pointer: coarse) {
+  .auth-tab { min-height: 44px; }
+}
 
 /* ── OAuth buttons ───────────────────────────────────────────────────── */
 .auth-oauth-row { display: flex; gap: 10px; margin-bottom: 16px; }
@@ -117,7 +124,8 @@
   border-radius: 11px;
   color: var(--fg);
   font-family: var(--sans, sans-serif);
-  font-size: 14px;
+  /* 16px min so iOS Safari does not auto-zoom the viewport on input focus. */
+  font-size: 16px;
   outline: none;
   transition: border-color .15s, box-shadow .15s;
 }

@@ -329,3 +329,4 @@
 .gpx-row,.gpx-railitem,.gpx-segbtn{font-family:'Montserrat',system-ui,sans-serif;}
 .lcard{box-shadow:0 18px 50px rgba(30,24,16,.16);
   box-shadow:0 18px 50px color-mix(in srgb,var(--sym-fg,#1E1810) 16%,transparent);}
+@media(max-width:640px){.lpoly-dkey{min-height:44px;box-sizing:border-box;justify-content:center;}.lpoly-vkey{min-height:44px;min-width:44px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;}}

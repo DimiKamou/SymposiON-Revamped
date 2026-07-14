@@ -23,6 +23,13 @@
 .ak-nav__lnk { font-family:var(--disp); font-weight:500; font-size:13px; letter-spacing:.12em; color:var(--fg-70); text-decoration:none; padding:3px 0; border-bottom:2px solid transparent; }
 .ak-nav__lnk:hover { color:var(--fg); border-color:var(--terra); }
 .ak-nav__act { display:flex; align-items:center; gap:11px; }
+/* mobile burger (revealed only at <=940 — see media query below) */
+.ak-burger { display:none; flex-direction:column; align-items:center; justify-content:center; gap:4px; width:44px; height:44px; margin-left:auto; padding:0; border:1px solid var(--line-bold); background:var(--card); cursor:pointer; flex:none; }
+.ak-burger:hover { border-color:var(--terra); }
+.ak-burger__b { display:block; width:18px; height:2px; background:var(--fg); transition:transform .22s ease, opacity .18s ease; }
+.ak-nav.is-open .ak-burger__b:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+.ak-nav.is-open .ak-burger__b:nth-child(2){ opacity:0; }
+.ak-nav.is-open .ak-burger__b:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
 .ak-live { display:inline-flex; align-items:center; gap:7px; background:none; border:1px solid var(--line-bold); color:var(--fg); font-family:var(--disp); font-weight:500; font-size:12px; letter-spacing:.1em; padding:7px 13px; cursor:pointer; }
 .ak-live__dot { width:7px; height:7px; background:var(--terra); animation:ak-blink 1.6s steps(1) infinite; }
 @keyframes ak-blink { 0%,60%{opacity:1;} 61%,100%{opacity:.25;} }
@@ -151,7 +158,10 @@
   .ak-hero { grid-template-columns:1fr; }
   .ak-hero__r { order:-1; }
   .ak-spec { width:min(100%,320px); }
-  .ak-nav__mid { display:none; }
+  .ak-burger { display:inline-flex; }
+  .ak-nav__mid { display:none; position:absolute; top:calc(100% + 5px); left:0; right:0; flex-direction:column; gap:0; flex:none; background:var(--card); border:2px solid var(--fg); z-index:60; }
+  .ak-nav.is-open .ak-nav__mid { display:flex; }
+  .ak-nav__lnk { padding:14px 18px; font-size:14px; border-bottom:1px solid var(--line); }
 }
 @media (max-width:560px){
   .ak-join__form { flex-direction:column; }
