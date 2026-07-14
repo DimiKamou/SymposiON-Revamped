@@ -109,7 +109,11 @@
       const cls = window.SYM.classById(g.sample.clsId);
       const subj = (window.SYM.SUBJECTS[g.sample.clsId] || []).find(s => s.id === g.sample.subjectId);
       const game = subj && (subj.games || []).find(x => slug(x.en || x.gr) === g.key);
-      if (cls && subj && game) { window.symGo('mode', { subject: subj, game, cls }); return; }
+      if (cls && subj && game) {
+        if (window.symTileLaunch) window.symTileLaunch(game, { subject: subj, game, cls });
+        else window.symGo('mode', { subject: subj, game, cls });
+        return;
+      }
     }
     window.symGo('gamepanel');
   }

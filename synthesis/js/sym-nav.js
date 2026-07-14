@@ -152,6 +152,15 @@
   };
   function isStudyMode(fn) { return !!fn && (STUDY_MODES[fn] || fn.indexOf('openLatinText') === 0); }
 
+  // "Direct-launch" openers = single-panel launches with NO Solo/Tug/Arena/
+  // Practice variants, so clicking their tile must open the panel straight away
+  // and never route through the game mode-select screen (screens.js S.mode).
+  // Superset of the study/reading panels above + the (timed) exam simulator —
+  // exam sim keeps its exit warning, so it lives here rather than in STUDY_MODES.
+  function isDirectLaunch(fn) { return !!fn && (isStudyMode(fn) || fn === 'openExamSim'); }
+  window.symIsStudyLaunch = isStudyMode;
+  window.symIsDirectLaunch = isDirectLaunch;
+
   var EXIT_MSG = { gr: 'Έξοδος από το παιχνίδι; Η πρόοδος θα χαθεί.', en: 'Exit the game? Your progress will be lost.' };
 
   // ── Back / Forward ──

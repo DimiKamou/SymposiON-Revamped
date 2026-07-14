@@ -770,7 +770,7 @@
           el('div', { class:'syn-subj__tx' }, [ el('h2', { class:'syn-subj__ttl' }, L(s)), el('p', { class:'syn-subj__sum' }, L(s.summary)) ]),
           el('a', { class:'syn-subj__all', href:'javascript:void 0', onclick:()=>symGo('subject', {subject:s, cls:ac}) }, [ L(STR.allGames), el('span', { class:'syn-subj__cnt' }, s.games.length) ]),
         ]));
-        block.appendChild(el('div', { class:'syn-subj__grid' }, s.games.map(gm => tile(gm, ac.accent, ()=>symGo('mode', {subject:s, game:gm, cls:ac})))));
+        block.appendChild(el('div', { class:'syn-subj__grid' }, s.games.map(gm => tile(gm, ac.accent, ()=> window.symTileLaunch ? window.symTileLaunch(gm, {subject:s, game:gm, cls:ac}) : symGo('mode', {subject:s, game:gm, cls:ac})))));
         wrap.appendChild(block);
       });
       if (window.injectIllus) injectIllus(wrap);

@@ -424,6 +424,17 @@
   /* ══ 2 · MODE SELECT ══ */
   S.mode = function(home, ctx){
     const { cls, subject, game, accent } = defaults(ctx);
+    // Safety net: reading / study panels (Latin texts, Γνωστό, Αδίδακτο, Ιστορία,
+    // 3D experiences, exam sim…) have no Solo/Tug/Arena/Practice variants — never
+    // show them this picker. If a caller still routed one here, sit the overlay
+    // over the subject page and launch the panel straight away.
+    const _dfn = window.synResolveLaunch && synResolveLaunch(game);
+    if (_dfn && window.symIsDirectLaunch && symIsDirectLaunch(_dfn) &&
+        window.SYN_GAMES && SYN_GAMES[_dfn] && window.synLaunch){
+      go('subject', { subject, cls });
+      synLaunch(_dfn, ...((game.launch && game.launch.args) || []));
+      return;
+    }
     const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
       title:L({gr:'Επίλεξε Λειτουργία',en:'Choose a mode'}), sub:L({gr:'Πώς θες να παίξεις απόψε;',en:'How do you want to play tonight?'}),
       actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(gName(game)),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
