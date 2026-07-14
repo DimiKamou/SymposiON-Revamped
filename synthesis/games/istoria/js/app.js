@@ -20,6 +20,9 @@
 
   function boot(){
     const course = ISTORIA.resolveCourse();
+    // Optional ?unit= scopes the hub to one exam theme (opened from a split tile).
+    let unit = null;
+    try { unit = new URLSearchParams(location.search).get('unit') || null; } catch(_){}
 
     // direction toggle icons
     $$('.dir-toggle [data-ic-atlas]').forEach(e=>e.innerHTML=SYM.icon('amphora'));
@@ -35,7 +38,7 @@
 
     if(window.MT) MT.init(course);   // AI methods must know the course before the hub renders its §Γ
     if(window.TT) TT.init(course);   // timed exams (§Δ)
-    HUB.init(course);
+    HUB.init(course, unit);
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);

@@ -23,6 +23,7 @@
 
   let COURSE = 'g3';
   let CUR_UNIT = null;
+  let SCOPED = false;   // true = opened scoped to a single exam theme (?unit=…)
   let CUR_SEC = null;   // null = «Όλη η ενότητα»; else a section id
   let READ_SEC = null;  // section shown inside the reading mode
   const idx = {};   // per-mode current index
@@ -45,7 +46,9 @@
 
   /* ── hub ──────────────────────────────────────────────────────────── */
   function renderHub(){
-    const us = units();
+    // When scoped to one exam theme, the unit rail shows only that theme (the
+    // whole panel is dedicated to it); otherwise show every unit to browse.
+    const us = SCOPED ? units().filter(u=>u.id===CUR_UNIT) : units();
     if (!CUR_UNIT && us.length) CUR_UNIT = us[0].id;
     $('#units').innerHTML = us.map(u=>`
       <button class="unit ${u.id===CUR_UNIT?'on':''}" onclick="HUB.pickUnit('${u.id}')">
@@ -333,8 +336,13 @@
   }
 
   /* ── boot ─────────────────────────────────────────────────────────── */
-  function init(course){
+  function init(course, unit){
     COURSE = course || ISTORIA.resolveCourse();
+    // Scope to a single exam theme when a valid ?unit= was passed.
+    if (unit) {
+      const us = ISTORIA.getUnits(COURSE) || [];
+      if (us.some(u=>u.id===unit)) { CUR_UNIT = unit; SCOPED = true; document.body.classList.add('unit-scoped'); }
+    }
     const meta = ISTORIA.getMeta(COURSE);
     const mast = $('#mast');
     if(mast){
