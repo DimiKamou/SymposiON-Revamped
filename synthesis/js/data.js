@@ -319,9 +319,7 @@ window.SYM = { STR, CLASSES, SUBJECTS, ENGINES, L };
    of grammar/theory games (verb tables, declensions, syntax). ── */
 const GRAMMAR = [
   { id:'gram-archaia', glyph:'scroll', accent:'#C18A2C', gr:'Αρχαία', en:'Ancient Greek',
-    blurb:{ gr:'Ρήματα και ονόματα', en:'Verbs and nouns' } },
-  { id:'gram-syntax',  glyph:'labyrinth', accent:'#8E6BB8', gr:'Συντακτικό', en:'Syntax',
-    blurb:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις', en:'Cases, participles and clauses' } },
+    blurb:{ gr:'Ρήματα, ονόματα και συντακτικό', en:'Verbs, nouns and syntax' } },
   { id:'gram-latin',   glyph:'column', accent:'#C96A45', gr:'Λατινικά', en:'Latin',
     blurb:{ gr:'Κλίσεις, ρήματα και θεωρία', en:'Declensions, verbs and theory' } },
   { id:'gram-neo',     glyph:'book',   accent:'#3E7E86', gr:'Έκθεση', en:'Composition',
@@ -352,12 +350,8 @@ Object.assign(SUBJECTS, {
               g('Επίθετα','Adjectives','Κλίση & συμφωνία','scroll',{fn:'openEpitheta'}),
               g('Παραθετικά','Adjective Degrees','10 επίπεδα','wreath',{fn:'openParatheta'}),
               g('Αντωνυμίες','Pronouns','Match · τύποι','amphora',{fn:'openAntonymies'}) ] },
-  ],
-  // ── Συντακτικό — standalone track (its own chip in the Γραμματική·Θεωρία row),
-  //    pulled out of gram-archaia so it stands alone like the Αρχαία grammar track. ──
-  'gram-syntax': [
-    { id:'gs-syntax', roman:'I', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
-      summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις — θεωρία και ασκήσεις.', en:'Cases, participles and subordinate clauses — theory and practice.' },
+    { id:'ga-syntax', roman:'III', illu:'labyrinth', gr:'Συντακτικό', en:'Syntax', sub:'Ancient Greek',
+      summary:{ gr:'Πτώσεις, μετοχές και δευτερεύουσες προτάσεις.', en:'Cases, participles and subordinate clauses.' },
       games: clone(ARXAIA_SYNTAX_GAMES) },
   ],
   'gram-latin': [
@@ -460,7 +454,7 @@ window.SYM.GRAMMAR = GRAMMAR;
 window.SYM.CLASS_GROUPS = [
   { id:'gym',  label:{ gr:'Γυμνάσιο', en:'Gymnasio' }, ids:['gym-a','gym-b','gym-c'] },
   { id:'lyk',  label:{ gr:'Λύκειο',   en:'Lykeio'   }, ids:['lyk-a','lyk-b','lyk-c'] },
-  { id:'gram', label:{ gr:'Γραμματική · Θεωρία', en:'Grammar · Theory' }, ids:['gram-archaia','gram-syntax','gram-latin','gram-neo'], grammar:true },
+  { id:'gram', label:{ gr:'Γραμματική · Θεωρία', en:'Grammar · Theory' }, ids:['gram-archaia','gram-latin','gram-neo'], grammar:true },
 ];
 // short labels for grouped grade chips (group header carries Γυμνάσιο/Λύκειο)
 CLASSES.forEach(c => { c.short = { 'gym-a':'Α΄','gym-b':'Β΄','gym-c':'Γ΄','lyk-a':'Α΄','lyk-b':'Β΄','lyk-c':'Γ΄' }[c.id] || L(c); });
