@@ -75,18 +75,6 @@
       tier: 'free'
     },
     {
-      id: 'myth-memory',
-      label: 'Mythology Memory',
-      subtitle: 'Ζεύγη Μυθολογίας',
-      icon: '🃏',
-      bg: 'linear-gradient(135deg,#160A22,#321658)',
-      desc: 'Βρες τα ζεύγη καρτών — αντιστοίχισε έννοιες, ήρωες και ορισμούς.',
-      tags: ['Memory', 'Solo'],
-      multiplayer: false,
-      tier: 'free',
-      allowedCategories: ['Ομηρική Ποίηση']
-    },
-    {
       id: 'phalanx',
       label: 'Φάλαγγα',
       subtitle: 'Phalanx Formation',
@@ -111,8 +99,8 @@
     },
     {
       id: 'tow',
-      label: 'Tug of War',
-      subtitle: 'Αγώνας Διελκυστίνδας',
+      label: 'Διελκυστίνδα',
+      subtitle: 'Αγώνας Διελκυστίνδας · Tug of War',
       icon: '⚔️',
       bg: 'linear-gradient(135deg,#1E0806,#440E08)',
       desc: 'Παιχνίδι διελκυστίνδας — απάντα σωστά για να σπρώξεις τον αντίπαλο!',
@@ -401,7 +389,7 @@
       sublabel: 'Memory · Flashcards',
       icon: '🃏',
       accent: '#5B3A8A',
-      ids: ['myth-memory', 'mnemosyne', 'mnemosyne-memory']
+      ids: ['mnemosyne', 'mnemosyne-memory']
     },
     {
       id: 'fortune',

@@ -303,8 +303,6 @@ const ENGINES = [
   { gr:'Οδύσσεια Arcade', en:'Odyssea Arcade', meta:{gr:'2D Arcade · Οδύσσεια',en:'2D Arcade · Odyssey'}, illu:'trireme' },
   { gr:'Agora Surfers', en:'Agora Surfers', meta:{gr:'Runner · Ιλιάδα / Οδύσσεια',en:'Runner · Iliad / Odyssey'}, illu:'runner' },
   { gr:'Rapid Fire', en:'Rapid Fire', meta:{gr:'Speed quiz · όλες οι ύλες',en:'Speed quiz · any material'}, illu:'lightning-bolt' },
-  { gr:'Mythology Memory', en:'Mythology Memory', meta:{gr:'Ζεύγη καρτών · Μυθολογία',en:'Card pairs · Mythology'}, illu:'cards' },
-  { gr:'Odyssey Journey 3D', en:'Odyssey Journey 3D', meta:{gr:'3D Adventure · Οδύσσεια',en:'3D Adventure · Odyssey'}, illu:'map' },
   { gr:'Χρονολόγιο', en:'Chronicle', meta:{gr:'Χρονική σειρά · γεγονότα',en:'Event ordering · timeline'}, illu:'timeline' },
   { gr:'Grammar Invaders', en:'Grammar Invaders', meta:{gr:'Action · Γραμματική',en:'Action · Grammar'}, illu:'invader' },
   { gr:'Φάλαγγα', en:'Phalanx', meta:{gr:'Strategy · turn-based',en:'Strategy · turn-based'}, illu:'shield-round' },

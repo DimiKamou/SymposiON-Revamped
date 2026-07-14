@@ -275,11 +275,8 @@
         window.__symEdit = !window.__symEdit; symRender();
       } }, [ glyph('quill','sc-editbtn__gl'), window.__symEdit?L({gr:'Τέλος',en:'Done'}):L({gr:'Επεξεργασία',en:'Edit'}) ]));
     }
-    const seg = el('div', { class:'sc-disp' });
-    [['grid','▦'],['list','≣'],['compact','▤'],['gallery','◳']].forEach(([v,ic])=> seg.appendChild(el('button', {
-      class:(ST().display===v?'active':''), title:v, onclick:()=>{ ST().display=v; symRender(); }
-    }, ic)));
-    bar.appendChild(seg);
+    // Display-mode switcher (grid / list / compact / gallery) removed per request —
+    // the panels always render in the default grid view now.
     return bar;
   }
   // editable text (admin) — persists
@@ -364,7 +361,7 @@
             isAdmin()&&window.__symEdit? el('span',{class:'sc-gcard__drag',html:'⠿'}):null ]),
           el('div',{class:'sc-gcard__b'},[ el('h3',{class:'sc-gcard__t'}, L(g)), el('p',{class:'sc-gcard__m'}, g.meta),
             el('div',{class:'sc-gcard__f'},[ el('span',{class:'sc-gcard__tags'},[pill(soon?L({gr:'Σύντομα',en:'Soon'}):L({gr:'Μόνος',en:'Solo'}),accent)]),
-              soon ? null : el('button',{class:'sc-gcard__eye', title:'Preview', onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu}); }, html:'&#128065;'}),
+              soon ? null : el('button',{class:'sc-gcard__eye', title:(typeof g.meta==='object'?L(g.meta):(g.meta||'Preview')), onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu, desc:(typeof g.meta==='object'?L(g.meta):(g.meta||''))}); }, html:'&#128065;'}),
               el('span',{class:'sc-gcard__play',html: soon ? '&#9679;' : '&#9654;'}) ]) ]),
         ]);
         grid.appendChild(card);
@@ -1149,7 +1146,7 @@
         el('span',{class:'sc-engc__ban'},[ glyph(e.illu || GP_ILLU[e.id] || 'amphora','sc-engc__illu') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
         el('span',{class:'sc-engc__tools'},[
-          el('button',{class:'sc-engc__eye', title:'Preview', onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu}); }, html:'&#128065;'}),
+          el('button',{class:'sc-engc__eye', title:(typeof e.meta==='object'?L(e.meta):(e.meta||'Preview')), onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu, desc:(typeof e.meta==='object'?L(e.meta):(e.meta||''))}); }, html:'&#128065;'}),
           (isAdmin()&&window.__symEdit)? el('span',{class:'sc-engc__drag',html:'⠿'}) : el('span',{class:'sc-engc__go',html:'&#9654;'}),
         ]),
       ]));

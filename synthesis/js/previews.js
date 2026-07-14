@@ -208,6 +208,8 @@
         E('button',{class:'pv-modal__x', onclick:close, html:'&times;'}),
       ]),
     ]));
+    // Short description of the game, shown under the title bar (opts.desc).
+    if (opts.desc) box.appendChild(E('div',{class:'pv-modal__desc'}, opts.desc));
     const frame = E('div',{class:'pv-frame'}, scene(type, opts));
     box.appendChild(frame);
     box.appendChild(E('div',{class:'pv-modal__cta'},[

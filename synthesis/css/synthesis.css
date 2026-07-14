@@ -258,6 +258,11 @@
 .syn-tile__mt { font-size:11px; font-weight:600; letter-spacing:.03em; color:var(--muted); text-transform:uppercase; }
 .syn-tile__play { position:absolute; right:11px; top:84px; display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:var(--ca); color:#fff; font-size:11px; padding-left:2px; box-shadow:0 6px 14px var(--ca-mid); transform:scale(.85); opacity:0; transition:.18s; }
 .syn-tile:hover .syn-tile__play { transform:scale(1); opacity:1; }
+/* preview (eye) button — top-right of the banner on every game tile */
+.syn-tile__eye { position:absolute; right:10px; top:10px; z-index:2; display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:color-mix(in srgb,var(--bg) 80%,transparent); border:1px solid var(--line); color:var(--muted); font-size:12px; cursor:pointer; opacity:0; transform:translateY(-3px); transition:.16s; backdrop-filter:blur(4px); }
+.syn-tile:hover .syn-tile__eye { opacity:1; transform:none; }
+.syn-tile__eye:hover { border-color:var(--ca-mid); color:var(--ca-ink); }
+@media (pointer:coarse){ .syn-tile__eye { opacity:1; transform:none; } }
 
 /* ── ENGINES ── */
 .syn-engines { padding:clamp(28px,4vw,50px) 0 clamp(18px,3vw,28px); }

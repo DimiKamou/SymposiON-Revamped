@@ -51,13 +51,28 @@
   }
   window.synComingSoon = comingSoon;
 
-  function tile(gm, accent, onclick) {
+  // Short description for a game's preview (localised meta/summary).
+  function tileDesc(gm){
+    const m = gm && (gm.meta != null ? gm.meta : gm.summary);
+    return (m && typeof m === 'object') ? L(m) : (m || '');
+  }
+  function tile(gm, accent, onclick, opts) {
+    opts = opts || {};
     const soon = !!(gm && gm.soon);
+    // Preview (eye) button on every non-soon game tile, unless the caller opts out
+    // (e.g. the Live products, which have no static mock). Opens SymPreview with a
+    // short description of the game.
+    const eye = (!soon && opts.preview !== false && window.SymPreview)
+      ? el('button', { class:'syn-tile__eye', 'aria-label':'Preview', title: tileDesc(gm) || L({gr:'Προεπισκόπηση',en:'Preview'}), html:'&#128065;',
+          onclick:(e)=>{ if(e){ e.preventDefault(); e.stopPropagation(); }
+            try { SymPreview.open(SymPreview.typeFor(gm), { title:L(gm), illu:gm.illu, desc: tileDesc(gm) }); } catch(_){} } })
+      : null;
     return el('a', { class:'syn-tile has-accent'+(soon?' syn-tile--soon':''), href:'javascript:void 0',
       style:`--ca:${accent};position:relative`,
       onclick: soon ? (e)=>{ if(e&&e.preventDefault) e.preventDefault(); comingSoon(gm); } : (onclick || null) }, [
       soon ? soonBadge() : null,
       el('span', { class:'syn-tile__ban' }, [ el('span', { class:'syn-tile__illu', 'data-illu':gm.illu }) ]),
+      eye,
       el('span', { class:'syn-tile__body' }, [
         // admin Game-Tags rename: show the overridden display name (launch key unchanged)
         el('span', { class:'syn-tile__nm' }, L((window.SymTags && SymTags.displayName) ? SymTags.displayName(gm) : gm)),
@@ -845,8 +860,8 @@
     // tile() expects a STRING meta (subject games have that); ENGINES/GP_ENGINES
     // carry a {gr,en} object, so localise it into a tile-ready shape first.
     const metaStr = m => (m && typeof m === 'object') ? L(m) : (m || '');
-    const mkTile = (e, accent, onclick) =>
-      tile({ gr:e.gr, en:e.en, illu:e.illu, soon:e.soon, launch:e.launch, meta:metaStr(e.meta) }, accent, onclick);
+    const mkTile = (e, accent, onclick, opts) =>
+      tile({ gr:e.gr, en:e.en, illu:e.illu, soon:e.soon, launch:e.launch, meta:metaStr(e.meta) }, accent, onclick, opts);
     function launchCatalog(gm){
       if (gm && gm.soon) return comingSoon(gm);
       const fn = window.synResolveLaunch && synResolveLaunch(gm);
@@ -886,7 +901,7 @@
         el('p', { class:'syn-subj__sum' }, L({gr:'Παίξε live με την τάξη ή μονομάχησε σε πραγματικό χρόνο.', en:'Play live with your class, or duel in real time.'})),
       ]),
     ]));
-    liveSec.appendChild(el('div', { class:'syn-subj__grid' }, LIVE.map(o => mkTile(o, liveAccent, o.go))));
+    liveSec.appendChild(el('div', { class:'syn-subj__grid' }, LIVE.map(o => mkTile(o, liveAccent, o.go, {preview:false}))));
     home.appendChild(liveSec);
     if (window.injectIllus) injectIllus(liveSec);
 
