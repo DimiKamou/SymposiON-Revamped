@@ -24,6 +24,9 @@ const Heptapylos = (() => {
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
   // presentation-only: honor prefers-reduced-motion for particles/shakes
   const REDUCE = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // cheap low-end / mobile heuristic — fewer ambient particles on weak devices
+  const LITE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   // Pick the language string from a question's `q`, tolerating {gr,en},
   // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
@@ -877,7 +880,7 @@ const Heptapylos = (() => {
     const host = document.getElementById('hep-ambient');
     if (!host || REDUCE()) return;
     host.querySelectorAll('.hep-ember').forEach(e => e.remove());
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < (LITE ? 9 : 18); i++) {
       const e = document.createElement('div');
       e.className = 'hep-ember';
       const sz = 2.5 + Math.random() * 4;
@@ -915,7 +918,8 @@ const Heptapylos = (() => {
     if (REDUCE()) return;
     const o = Object.assign({ count: 12, colors: ['#E3C766', '#D97B5C', '#F4D9B0'], power: 5, life: 800 }, opts || {});
     const layer = fxLayer();
-    for (let i = 0; i < o.count; i++) {
+    const nP = LITE ? Math.max(4, Math.round(o.count * 0.6)) : o.count;
+    for (let i = 0; i < nP; i++) {
       const p = document.createElement('div');
       p.className = 'hep-spark';
       const c = o.colors[(Math.random() * o.colors.length) | 0];

@@ -829,4 +829,9 @@
   .sf-match { grid-template-columns: 1fr auto 1fr; gap: 7px; }
   .sf-match-tile { font-size: .9rem; padding: 9px 10px; min-height: 48px; }
   .sf-order-tile { font-size: .98rem; }
+  /* the timer/intensity pair can't share a row at 375px — the third
+     intensity chip clipped past the right edge. Stack them. */
+  .sf-set-grid2 { grid-template-columns: 1fr; }
+  .sf-set-grid2 .sf-set-row { margin-bottom: 16px; }
+  .sf-seg button { min-height: 46px; }
 }

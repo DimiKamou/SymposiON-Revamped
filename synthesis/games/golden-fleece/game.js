@@ -49,13 +49,15 @@ const GoldenFleece = (() => {
   const RM = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; } };
 
   const GFX = (() => {
-    const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+    /* mid/low-end phone heuristic: smaller canvas backing store, fewer motes */
+    const LITE = matchMedia("(pointer:coarse)").matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
+    const DPR = () => Math.min(LITE ? 1.5 : 2, window.devicePixelRatio || 1);
 
     /* — ambient: Colchis ridges on the horizon, layered waves, gold motes — */
     let amb = null, ambc = null, ambRaf = 0, motes = null;
     function _seedMotes() {
       motes = [];
-      for (let i = 0; i < 46; i++) motes.push({
+      for (let i = 0; i < (LITE ? 22 : 46); i++) motes.push({
         fx: Math.random(), fy: Math.random(),
         s: 0.05 + Math.random() * 0.16, r: 0.6 + Math.random() * 1.5,
         tw: 0.6 + Math.random() * 1.8, ph: Math.random() * Math.PI * 2,
@@ -81,7 +83,10 @@ const GoldenFleece = (() => {
       c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
       const hor = h - 96;
       // a low moon over the Aegean — halo, disc, maria (the scene's light source)
-      const mnx = w * 0.82, mny = Math.max(58, h * 0.19), mnr = 23;
+      /* keep the moon in the top sky band: on tall/narrow (phone) wraps
+         h*0.19 would drop it behind the HUD chips and headings */
+      const mnx = w < 720 ? w * 0.86 : w * 0.82;
+      const mny = Math.min(w < 720 ? 120 : 175, Math.max(58, h * 0.19)), mnr = w < 720 ? 18 : 23;
       let mg = c.createRadialGradient(mnx, mny, mnr * 0.5, mnx, mny, mnr * 5.2);
       mg.addColorStop(0, 'rgba(214,235,238,0.15)'); mg.addColorStop(0.45, 'rgba(176,214,222,0.05)'); mg.addColorStop(1, 'rgba(176,214,222,0)');
       c.fillStyle = mg; c.beginPath(); c.arc(mnx, mny, mnr * 5.2, 0, 6.2832); c.fill();

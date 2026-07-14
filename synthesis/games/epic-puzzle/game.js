@@ -526,6 +526,15 @@ function _epReduced() {
   catch (_) { return false; }
 }
 
+// Low-power heuristic (mid/low-end phones): fewer dust motes + a lower DPR cap
+// for the ambient canvas. Presentation only — never touches puzzle content.
+function _epLite() {
+  try {
+    return (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+           window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
+  } catch (_) { return false; }
+}
+
 // Kinetic typography — staggered letter spans grouped in non-wrapping words.
 function _epKinetic(text) {
   let i = 0;
@@ -713,8 +722,9 @@ function _epAmbientStart() {
   if (!ctx) return;
   _epAmb.on = true;
 
+  const _lite = _epLite();
   function size() {
-    const d = Math.min(window.devicePixelRatio || 1, 2);
+    const d = Math.min(window.devicePixelRatio || 1, _lite ? 1.5 : 2);
     cv.width = Math.max(1, stage.clientWidth * d);
     cv.height = Math.max(1, stage.clientHeight * d);
     ctx.setTransform(d, 0, 0, d, 0, 0);
@@ -734,7 +744,8 @@ function _epAmbientStart() {
   _epAmb.parallax = parallax;
 
   if (!_epAmb.motes.length) {
-    for (let i = 0; i < 46; i++) {
+    const _moteN = _lite ? 24 : 46;
+    for (let i = 0; i < _moteN; i++) {
       _epAmb.motes.push({
         x: Math.random(), y: Math.random(),
         r: 0.5 + Math.random() * 1.5,

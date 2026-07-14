@@ -67,6 +67,12 @@ const Krypteia = (() => {
   let st = {};
   let timers = { game:null, bots:null, dx:null, anim:null };
   let cfg = { rivals:5, time:180 };
+  // weak-device heuristic (presentation only): thinner canvas backdrop and
+  // stilled loops on touch phones / narrow viewports / low memory
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   /* fire a cinematic-FX event; no-op if nothing is listening (standalone-safe) */
   function _fx(type, detail){ try{ window.dispatchEvent(new CustomEvent('kr:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){} }
@@ -100,7 +106,7 @@ const Krypteia = (() => {
     if (document.getElementById('kr-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'kr-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' kr-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeKrypteia()">\u2039 <span>' + T('\u03a0\u0399\u03a3\u03a9','BACK') + '</span></button>' +
@@ -677,10 +683,10 @@ const Krypteia = (() => {
     const R=Math.random;
     const S={ ctx, cv, reduce, raf:0, w:0, h:0,
       dpr:Math.min(1.5, window.devicePixelRatio||1),
-      stars:Array.from({length:110},()=>({x:R(),y:R()*0.60,r:0.6+R()*1.1,ph:R()*6.28,sp:0.4+R()*1.6,g:R()<0.22})),
-      glyphs:Array.from({length:11},()=>({x:R(),sp:9+R()*17,off:R()*900,fs:10+R()*5,n:6+((R()*9)|0),ch:Array.from({length:16},()=>GREEK[(R()*GREEK.length)|0])})),
+      stars:Array.from({length:LITE?55:110},()=>({x:R(),y:R()*0.60,r:0.6+R()*1.1,ph:R()*6.28,sp:0.4+R()*1.6,g:R()<0.22})),
+      glyphs:Array.from({length:LITE?5:11},()=>({x:R(),sp:9+R()*17,off:R()*900,fs:10+R()*5,n:6+((R()*9)|0),ch:Array.from({length:16},()=>GREEK[(R()*GREEK.length)|0])})),
       fires:[0.13,0.30,0.52,0.71,0.88].map(x=>({x:Math.min(0.96,Math.max(0.03,x+(R()-0.5)*0.05)),ph:R()*6.28,sp:2.2+R()*1.6,sc:0.8+R()*0.55})),
-      embers:Array.from({length:24},()=>({f:(R()*5)|0,sp:0.06+R()*0.09,dr:(R()-0.5)*36,r:0.9+R()*1.3,ph:R()})),
+      embers:Array.from({length:LITE?10:24},()=>({f:(R()*5)|0,sp:0.06+R()*0.09,dr:(R()-0.5)*36,r:0.9+R()*1.3,ph:R()})),
       farPts:_ridge(0.50,0.055,7,R), nearPts:_ridge(0.665,0.075,5,R) };
     bd=S;
     const frame=(now)=>{ if(bd!==S) return; _bdDraw(S, now); S.raf=requestAnimationFrame(frame); };

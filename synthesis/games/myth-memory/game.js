@@ -84,6 +84,9 @@ let _mm = {
 // Presentation-only: honour the user's reduced-motion preference.
 const _MM_REDUCE = (typeof window.matchMedia === 'function')
   ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+// Presentation-only: lighter ambient/spark budgets on weak or mobile devices.
+const _MM_LITE = ((typeof window.matchMedia === 'function' && matchMedia('(pointer:coarse)').matches)
+  || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4);
 
 // ── OPEN / CLOSE ──
 window.openMythMemory = function () {
@@ -422,7 +425,7 @@ function _mmTiltReset(el) {
 /* Gold spark burst at a fixed-viewport point. WAAPI so it works even if rAF throttles. */
 function _mmSparks(x, y, opts = {}) {
   if (_MM_REDUCE) return;
-  const n = opts.count || 16;
+  const n = Math.max(4, Math.round((opts.count || 16) * (_MM_LITE ? 0.5 : 1)));
   const palette = ['#F5DE9A', '#D9B45F', '#C98B3F', '#FFF3D6'];
   for (let i = 0; i < n; i++) {
     const p = document.createElement('div');
@@ -597,7 +600,7 @@ function _mmMotes() {
   const amb = document.getElementById('mm-ambient');
   if (!amb || amb.dataset.done || _MM_REDUCE) return;
   amb.dataset.done = '1';
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < (_MM_LITE ? 8 : 16); i++) {
     const m = document.createElement('span');
     m.className = 'mm-mote';
     m.style.left = (Math.random() * 100).toFixed(2) + '%';

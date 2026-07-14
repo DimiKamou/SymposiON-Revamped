@@ -9,6 +9,8 @@ window.HG_FX = (function () {
   const cx = () => window.innerWidth / 2;
   const rectOf = el => el && el.getBoundingClientRect();
   const tileEl = i => document.querySelector(`#hg-tiles .hg-tile[data-i="${i}"]`);
+  /* cheap heuristic for mid/low-end phones: thin the ambient layer there */
+  const LITE = matchMedia("(pointer:coarse)").matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
   let started = false;
 
   function start() {
@@ -17,8 +19,8 @@ window.HG_FX = (function () {
     SymFX.mount({
       accent: '#D97B5C', accent2: '#9E3B2E',
       glow: 'rgba(217,123,92,0.5)',
-      rain: false, particles: 'embers', fieldCount: 30,
-      scanlines: true, sweep: false, grain: true, vignette: true,
+      rain: false, particles: 'embers', fieldCount: LITE ? 14 : 30,
+      scanlines: !LITE, sweep: false, grain: !LITE, vignette: true,
       shakeSelector: '#hg-wrap',
     });
   }

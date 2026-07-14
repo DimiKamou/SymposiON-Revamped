@@ -612,6 +612,13 @@
 .er-leg-row.bad .er-leg-mark { color: var(--sym-terra-lt); }
 .er-end-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
+/* ── LITE devices (touch / narrow / low memory): JS toggles .er-lite —
+      the blended parallax haze and the heavy wing-shadow blur go, the
+      chase scene and all gameplay feedback stay ── */
+#er-overlay.er-lite .er-mist { display:none; }
+#er-overlay.er-lite .erfx-wing { filter:blur(3px) drop-shadow(0 0 14px rgba(158, 59, 46, .45)); }
+#er-overlay.er-lite .er-rays { animation:none; }
+
 /* ── reduced motion: quiet the ambience, keep the game readable ── */
 @media (prefers-reduced-motion: reduce) {
   #er-overlay .overlay-stage::before,

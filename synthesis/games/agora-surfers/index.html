@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+<!-- three.js comes from unpkg per open — open the connection immediately.
+     (The modulepreload links live AFTER the import map below: preloading a
+     module before the map registers can poison bare-specifier resolution.) -->
+<link rel="preconnect" href="https://unpkg.com" crossorigin/>
 <style>
   :root{
     --ink:#2B2218; --ink2:#5A4A36;
@@ -236,7 +240,8 @@
   .overlay.hidden{display:none}
   .ov-card{position:relative;width:94%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--paper);
     border-radius:22px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(40,30,15,.35);
-    padding:24px 30px 18px;text-align:center;animation:rise .4s ease}
+    padding:24px 30px 18px;text-align:center;animation:rise .4s ease;
+    touch-action:pan-y;-webkit-overflow-scrolling:touch}
   .ov-card::before{content:'';position:absolute;top:0;left:18%;right:18%;height:4px;border-radius:4px;
     background:linear-gradient(90deg,transparent,var(--gold),var(--terra),var(--gold),transparent)}
   @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
@@ -349,8 +354,43 @@
     #hud-score{font-size:30px}
     .q-opts{gap:6px} .q-opt{padding:8px} .q-text{font-size:16px}
     .stat-row{grid-template-columns:repeat(2,1fr)}
-    .ctrl-grid{grid-template-columns:1fr}
+    .ctrl-grid{grid-template-columns:1fr 1fr}
+    .ov-card{padding:18px 16px 14px}
+    .pu-legend{grid-template-columns:repeat(3,1fr)}
+    .hero-pick{grid-template-columns:1fr;gap:8px}
   }
+  /* portrait phones: quiz options stack — full-width tap targets beat three
+     cramped 110px columns (game.js sets the column count inline, hence !important) */
+  @media (max-width:560px) and (orientation:portrait){
+    .q-opts{grid-template-columns:1fr !important}
+    .q-opt{padding:9px 12px}
+  }
+  /* touch ergonomics — every control comfortably >= 44px */
+  @media (pointer:coarse){
+    .icon-btn{width:44px;height:44px}
+    .tb-back{padding:10px 14px}
+    .q-opt{min-height:44px;align-items:center}
+    .q-hint{display:none}          /* keyboard hint means nothing on touch */
+    .hero-opt{min-height:56px}
+  }
+  /* very narrow screens: tighten the HUD so score / chips / chase gauge
+     never collide across the top row */
+  @media (max-width:400px){
+    #hud-score{font-size:26px}
+    .chase-track{width:64px}
+    .chip{padding:5px 10px}
+    .chip .v{font-size:15px}
+    #chase .ti{font-size:10px}
+    .brand .sb{display:none}
+    #scorewrap{left:12px} #rightwrap{right:12px}
+  }
+  /* LITE devices (body.lite, set from QUALITY.weak): drop the fullscreen
+     blend layer and backdrop blurs — the two priciest DOM effects on
+     low-end phone GPUs. Visuals stay intact via solid fallbacks. */
+  body.lite #speedfx{display:none}
+  body.lite .pill,body.lite #chase{backdrop-filter:none;-webkit-backdrop-filter:none}
+  body.lite .overlay{backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:radial-gradient(ellipse at 50% 30%,rgba(255,250,235,0.88),rgba(186,214,236,0.93))}
 </style>
 <script type="importmap">
 { "imports": {
@@ -358,6 +398,20 @@
   "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
 }}
 </script>
+<!-- kick the heavy CDN module fetches off the moment the head parses,
+     instead of after main.js → game.js → post.js discover them -->
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/build/three.module.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/environments/RoomEnvironment.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/EffectComposer.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/RenderPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/UnrealBloomPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/ShaderPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/OutputPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/Pass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/MaskPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/CopyShader.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/LuminosityHighPassShader.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/OutputShader.js"/>
 </head>
 <body>
 <div id="stage" data-screen-label="Agora Surfers">

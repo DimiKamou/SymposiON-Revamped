@@ -40,6 +40,9 @@ const Moirai = (() => {
   };
 
   const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // cheap low-end / mobile heuristic — fewer ambient particles on weak devices
+  const LITE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   const ROUNDS = 10;
   const BASE   = 100;
@@ -983,7 +986,7 @@ ${ambientHTML()}
     const host = document.getElementById('mo-embers');
     if (!host || RM) return;
     let h='';
-    for (let i=0;i<26;i++){
+    for (let i=0;i<(LITE?12:26);i++){
       const s=(1.5+Math.random()*3).toFixed(1);
       h += `<span style="left:${(Math.random()*100).toFixed(1)}%;width:${s}px;height:${s}px;--o:${(0.25+Math.random()*0.5).toFixed(2)};--dr:${((Math.random()-0.5)*120)|0}px;animation-duration:${(7+Math.random()*10).toFixed(1)}s;animation-delay:${(-Math.random()*16).toFixed(1)}s"></span>`;
     }

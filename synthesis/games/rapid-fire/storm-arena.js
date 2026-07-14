@@ -38,13 +38,17 @@
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp01 = v => Math.max(0, Math.min(1, v));
   const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  // cheap low-end / mobile heuristic — trims particle density, DPR and bloom
+  // so mid-range phones hold their frame rate. Presentation only.
+  const LITE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   class StormArena {
     constructor(canvasId, opts) {
       this.cv = document.getElementById(canvasId);
       this.ctx = this.cv.getContext('2d');
       this.opts = opts || {};
-      this.W = 0; this.H = 0; this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.W = 0; this.H = 0; this.dpr = Math.min(window.devicePixelRatio || 1, LITE ? 1.5 : 2);
       this.t = 0; this.raf = null; this.last = 0;
 
       this.charge = 0; this.intensity = 0.45; this.overdrive = false;
@@ -111,7 +115,7 @@
     }
     _seedRain() {
       this.rain = [];
-      const n = Math.floor((this.W * this.H) / (this.rm ? 16000 : 4600));
+      const n = Math.floor((this.W * this.H) / (this.rm ? 16000 : LITE ? 7800 : 4600));
       for (let i = 0; i < n; i++) this.rain.push({
         x: Math.random() * this.W, y: Math.random() * this.H,
         len: rand(9, 22), spd: rand(620, 1050), z: rand(0.35, 1),
@@ -119,7 +123,7 @@
     }
     _seedStars() {
       this.stars = [];
-      const n = Math.floor((this.W * (this.seaTop || this.H * 0.6)) / (this.rm ? 22000 : 11000));
+      const n = Math.floor((this.W * (this.seaTop || this.H * 0.6)) / (this.rm ? 22000 : LITE ? 16000 : 11000));
       for (let i = 0; i < n; i++) this.stars.push({
         x: Math.random() * this.W, y: Math.random() * (this.seaTop || this.H * 0.6) * 0.86,
         r: rand(0.6, 1.7), a: rand(0.3, 0.85), ph: rand(0, 6.28), spd: rand(0.6, 2.2),
@@ -340,7 +344,7 @@
       // wind-blown embers — the storm's heat rises with the streak
       const streakN = Math.min(10, this.streak);
       let rate = 0.05 + streakN * 0.06 + this.charge * 0.4 + (this.overdrive ? 0.8 : 0) + this.intensity * 0.06;
-      if (this.rm) rate *= 0.3;
+      if (this.rm) rate *= 0.3; else if (LITE) rate *= 0.55;
       let spawn = rate > 1 && Math.random() < rate - 1 ? 2 : (Math.random() < rate ? 1 : 0);
       while (spawn-- > 0) {
         this.embers.push({
@@ -355,7 +359,8 @@
         e.y += e.vy * dt;
       });
       this.embers = this.embers.filter(e => e.life > 0 && e.y > -8);
-      if (this.embers.length > 130) this.embers.splice(0, this.embers.length - 130);
+      const emberCap = LITE ? 70 : 130;
+      if (this.embers.length > emberCap) this.embers.splice(0, this.embers.length - emberCap);
 
       // gold charge motes drift upward as the overdrive charge builds
       const sparkRate = this.charge * (this.rm ? 0.15 : 0.5) + (this.overdrive ? 0.3 : 0);
@@ -930,8 +935,10 @@
         ctx.strokeStyle = rgb(PAL.gold, ga * 0.4); ctx.lineWidth = glowW;
         ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
         ctx.save();   // hot core with a soft bloom (bolts are few + short-lived)
-        ctx.shadowColor = rgb(PAL.goldHi, Math.min(1, ga));
-        ctx.shadowBlur = 16;
+        if (!LITE) {  // shadow blur is costly on weak GPUs — LITE gets a plain hot core
+          ctx.shadowColor = rgb(PAL.goldHi, Math.min(1, ga));
+          ctx.shadowBlur = 16;
+        }
         ctx.strokeStyle = rgb(core, Math.min(1, ga + 0.2)); ctx.lineWidth = coreW;
         ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
         ctx.restore();

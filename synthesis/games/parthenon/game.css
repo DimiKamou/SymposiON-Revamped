@@ -381,6 +381,20 @@
   text-shadow:0 0 26px rgba(227,199,102,0.85), 0 2px 10px rgba(0,0,0,0.65);
 }
 
+/* ── Small screens: final board never wider than the phone ── */
+@media (max-width:420px){
+  .pn-final-board { min-width:0; width:100%; }
+}
+
+/* ── LITE devices (touch / narrow / low memory): cheaper compositing.
+      JS toggles .pn-lite — the blended sun shaft, glass sheen and slow
+      camera push-in stop; the scene itself is untouched. ── */
+#pn-overlay.pn-lite .pn-amb-shaft,
+#pn-overlay.pn-lite .pn-sheeng { display:none; }
+#pn-overlay.pn-lite .pn-temple { animation:none; }
+#pn-overlay.pn-lite .pn-stage::before { filter:none; }
+#pn-overlay.pn-lite .pn-rays { animation-duration:90s; }
+
 /* ── Reduced motion: keep the scene, drop the theatre ── */
 @media (prefers-reduced-motion: reduce){
   #pn-wrap *, #pn-wrap *::before, #pn-wrap *::after {

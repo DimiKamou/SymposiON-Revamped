@@ -404,6 +404,26 @@
 .mn-fb-ok { color:var(--sym-gold); text-shadow:0 0 12px rgba(227,199,102,0.35); }
 .mn-fb-bad { color:#E08577; text-shadow:0 0 12px rgba(158,59,46,0.3); }
 
+/* ── Small screens: keep the HUD row unclipped and the wall inside the
+      padding (375px phones) — tiles stay ≥ 64px, comfortably tappable ── */
+@media (max-width:520px){
+  .mn-top { flex-wrap:wrap; row-gap:4px; }
+  .mn-round { margin-left:auto; }
+  .mn-pairs-val { font-size:22px; }
+  .mn-pips { margin-left:8px; gap:5px; }
+  .mn-pips i { width:7px; height:7px; }
+  .mn-grid-wrap { padding:14px 12px 10px; }
+  .mn-grid { width:calc(100vw - 66px); }
+}
+
+/* ── LITE devices (touch / narrow / low memory): cheaper ambience.
+      The JS toggles .mn-lite on the overlay — blur radii shrink, the
+      sweeping sheen and idle shimmer stop; gameplay flips untouched. ── */
+#mn-overlay.mn-lite .mn-glow { filter:blur(46px); }
+#mn-overlay.mn-lite .mn-live .mn-tile:not(.up):not(.matched) .mn-back::after { animation:none; }
+#mn-overlay.mn-lite .mn-live .mn-tile:not(.up):not(.matched) .mn-back { animation:none; }
+#mn-overlay.mn-lite .mn-grid { transform:none; transition:none; }
+
 /* wide screens — wall and scroll of questions side by side */
 @media (min-width:1080px){
   #mn-screen-game.active {

@@ -31,6 +31,10 @@
 }
 #gf-overlay .overlay-topbar { background:rgba(7,10,12,0.92); border-bottom:1px solid rgba(94,139,150,0.22); }
 #gf-overlay .overlay-title { color:var(--gf-aegean-lt); text-shadow:0 0 16px rgba(94,139,150,0.4); font-family:var(--gf-display); letter-spacing:0.12em; }
+/* phones: the long title must not wrap into the back button */
+@media (max-width:560px) {
+  #gf-overlay .overlay-title { font-size:12px; letter-spacing:0.06em; white-space:nowrap; text-align:center; padding:0 6px; }
+}
 
 #gf-wrap {
   min-height:100%;

@@ -10,7 +10,9 @@ import { mesh, setEnv, gradTint } from './gfx.js';
 import { QUALITY } from './quality.js';
 
 export function initRenderer(stage) {
-  const renderer = new THREE.WebGLRenderer({ antialias: !QUALITY.weak, powerPreference: 'high-performance', preserveDrawingBuffer: true, stencil: false });
+  // preserveDrawingBuffer costs a full-frame copy per composite — nothing in
+  // the app reads the canvas back, so weak devices skip it (desktop keeps it).
+  const renderer = new THREE.WebGLRenderer({ antialias: !QUALITY.weak, powerPreference: 'high-performance', preserveDrawingBuffer: !QUALITY.weak, stencil: false });
   renderer.setPixelRatio(QUALITY.dpr);
   renderer.setSize(stage.clientWidth, stage.clientHeight);
   renderer.outputColorSpace = THREE.SRGBColorSpace;

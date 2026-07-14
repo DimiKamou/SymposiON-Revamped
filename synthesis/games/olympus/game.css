@@ -319,7 +319,7 @@
 
 /* ── Main column ── */
 .ao-main { width:100%; max-width:640px; }
-.ao-q-meta { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.ao-q-meta { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin-bottom:12px; }
 .ao-q-num { font-family:var(--sym-mono); font-size:11px; letter-spacing:3px; color:var(--sym-gold-lt); }
 .ao-q-line { flex:1; height:1px; background:linear-gradient(90deg, rgba(196,164,72,0.5), transparent); }
 .ao-glorybox {
@@ -452,7 +452,7 @@
 .ao-fb-hint { color:var(--sym-aegean-lt); text-shadow:0 0 12px rgba(127,176,188,0.5); animation:ao-fbin .4s cubic-bezier(.2,.8,.3,1); }
 
 /* ── Lifelines ── */
-.ao-lifelines { display:flex; gap:12px; justify-content:center; margin-top:20px; }
+.ao-lifelines { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:20px; }
 .ao-life {
   display:inline-flex; align-items:center; gap:9px; cursor:pointer;
   background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(0,0,0,0.18));
@@ -471,6 +471,8 @@
 .ao-life-ic { display:inline-flex; color:#D8BC72; filter:drop-shadow(0 0 4px rgba(227,199,102,0.35)); }
 .ao-life-ic svg { display:block; }
 .ao-life.spent { opacity:0.3; pointer-events:none; text-decoration:line-through; filter:grayscale(.7); }
+/* touch/narrow: keep lifeline pills at a comfortable ≥44px tap target (desktop unchanged) */
+@media (pointer:coarse), (max-width:560px){ .ao-life{ min-height:44px; padding-top:11px; padding-bottom:11px; } }
 
 /* ════════ OVERLAY-SCOPED FX LAYERS ════════ */
 /* storm veil: the sky turns on you (z above content, under flash) */
@@ -592,6 +594,16 @@
 @keyframes ao-rainshift { from{background-position:0 -60px, 0 0;} to{background-position:34px 80px, 0 0;} }
 @keyframes ao-halo { 0%,100%{opacity:.65; transform:scale(.96);} 50%{opacity:1; transform:scale(1.05);} }
 @keyframes ao-spin { to{transform:rotate(360deg);} }
+
+/* ════════ LITE devices (touch / narrow / low memory) ════════
+   JS toggles .ao-lite on the overlay: big blurred composites get much
+   cheaper (blur radius ≈ halved, banks dropped); the altitude-reactive
+   sky still reads, gameplay untouched. */
+#ao-overlay.ao-lite .ao-shafts i { filter:blur(7px); }
+#ao-overlay.ao-lite .ao-cloud { filter:blur(13px); }
+#ao-overlay.ao-lite .ao-bank { display:none; }
+#ao-overlay.ao-lite .ao-mist { filter:blur(5px); }
+#ao-overlay.ao-lite .ao-rg-far { filter:none; }
 
 /* ════════ reduced motion: still sky, instant states ════════ */
 @media (prefers-reduced-motion: reduce) {

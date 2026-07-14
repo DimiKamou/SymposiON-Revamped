@@ -195,8 +195,9 @@
   position: relative; border-radius: 13px; overflow: hidden; border: 1px solid var(--line); background: var(--ink);
   box-shadow: 0 14px 44px -18px rgba(0,0,0,.85), inset 0 0 0 1px rgba(240,200,120,.08);
   /* fit the whole battle (arena + question + pads) on one screen — the canvas
-     follows this box height (clamped 200–440 in tow-arena.js) */
+     follows this box height (clamped 120–440 in tow-arena.js) */
   height: clamp(200px, calc(100vh - 580px), 440px);
+  height: clamp(200px, calc(100dvh - 580px), 440px);
   flex: 0 0 auto;
 }
 #tow-arena { display: block; width: 100%; }
@@ -439,7 +440,8 @@
    arena, question, options AND both buzz pads all stay on one screen */
 @media (max-height: 900px) {
   .tow-game { padding: 8px 14px 10px; gap: 8px; }
-  .tow-arena-box { height: clamp(200px, calc(100vh - 470px), 440px); }
+  .tow-arena-box { height: clamp(200px, calc(100vh - 470px), 440px);
+                   height: clamp(200px, calc(100dvh - 470px), 440px); }
   .tow-score { padding: 4px 10px; }
   .tow-score-val { font-size: 1.3rem; }
   .tow-score-name { font-size: .68rem; }
@@ -457,15 +459,37 @@
   .tow-pad-key { top: 6px; }
 }
 
-/* phones / narrow: stack pads stay side-by-side (left vs right teams), shrink chrome */
+/* phones / narrow: stack pads stay side-by-side (left vs right teams), shrink chrome.
+   Priority on a phone: the BUZZ pads must share the screen with the question —
+   the arena gives up its height first (canvas follows, min 120px in tow-arena.js). */
 @media (max-width: 560px) {
   .tow-team-cards { gap: 10px; }
   .tow-vs { width: 32px; height: 32px; font-size: .62rem; }
   .tow-set-grid { grid-template-columns: 1fr; }
-  .tow-opts { grid-template-columns: 1fr; }
-  .tow-pad { min-height: 104px; }
-  .tow-pad-label { font-size: 1.7rem; }
-  .tow-qstem { font-size: 1.35rem; }
+  .tow-opts { grid-template-columns: 1fr; gap: 8px; }
+  .tow-game { padding: 6px 10px 10px; gap: 7px; }
+  .tow-hud { gap: 8px; }
+  .tow-score { padding: 3px 8px; }
+  .tow-score-val { font-size: 1.15rem; }
+  .tow-score-name { font-size: .62rem; }
+  .tow-qnum { font-size: .78rem; }
+  .tow-mode-pill { display: none; }
+  .tow-arena-box { height: clamp(120px, calc(100vh - 616px), 240px);
+                   height: clamp(120px, calc(100dvh - 616px), 240px); }
+  .tow-stage { min-height: 34px; padding: 6px 10px; font-size: .88rem; }
+  .tow-qcard { padding: 0 4px; }
+  .tow-qcard::after { display: none; }
+  .tow-qstem { font-size: clamp(1.05rem, 4.6vw, 1.3rem); }
+  .tow-qsub { font-size: .8rem; min-height: 0; margin-top: 1px; }
+  .tow-qsub:empty { display: none; }
+  .tow-opt { min-height: 44px; padding: 7px 11px; font-size: 1.02rem; }
+  .tow-opt-key { width: 24px; height: 24px; font-size: .72rem; }
+  .tow-pads { gap: 10px; }
+  .tow-pad { min-height: 84px; border-radius: 14px; }
+  .tow-pad-label { font-size: 1.35rem; }
+  .tow-pad-team { font-size: .68rem; }
+  .tow-pad-key { display: none; }
+  .tow-pad-state { bottom: 5px; font-size: .62rem; }
 }
 
 /* calm everything for prefers-reduced-motion */

@@ -11,16 +11,31 @@
 ════════════════════════════════════════════════════════════════ */
 
 function detect() {
+  // Debug/verification override: ?tier=low|mid|high in the URL, or
+  // window.__forceTier set before the modules load. Lets a LITE run be
+  // emulated on any machine; default detection is untouched otherwise.
+  let forced = '';
+  try {
+    forced = (window.__forceTier || new URLSearchParams(location.search).get('tier') || '')
+      .toString().toLowerCase();
+  } catch (e) { /* URL API unavailable — ignore */ }
+  if (forced !== 'low' && forced !== 'mid' && forced !== 'high') forced = '';
+
   const coarse = typeof matchMedia === 'function' && matchMedia('(pointer:coarse)').matches;
   const cores = navigator.hardwareConcurrency || 4;
-  const mem = navigator.deviceMemory || 4;
+  // deviceMemory is Chrome-only. Keep it undefined when unreported so
+  // Safari/Firefox desktops are neither demoted nor promoted by a default.
+  const memRaw = navigator.deviceMemory;
   const small = Math.min(screen.width || 1280, screen.height || 800) < 520;
   const mobile = coarse || small;
-  const weak = mobile || cores <= 4 || mem <= 3;
+  // ≤4 GB reported counts as weak — mid/low phones and old school laptops
+  // honestly report 4, and they cannot hold 60fps on the high pipeline.
+  let weak = mobile || cores <= 4 || (memRaw !== undefined && memRaw <= 4);
 
   // weak devices that still have muscle (modern 6–8 core phones) → mid;
   // genuinely weak hardware (4-core school laptops, old phones) → low.
-  const tier = !weak ? 'high' : ((cores >= 6 || mem >= 6) ? 'mid' : 'low');
+  let tier = !weak ? 'high' : ((cores >= 6 || (memRaw !== undefined && memRaw >= 6)) ? 'mid' : 'low');
+  if (forced) { tier = forced; weak = tier !== 'high'; }
 
   // Effective pixel ratio: cap hard on phones, and trim weak devices a touch
   // more so the pipeline stays at 60fps. Single knob for renderer + composer.

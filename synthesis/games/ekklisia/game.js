@@ -273,7 +273,7 @@ const Ekklisia = (() => {
       const out = st.attempted.includes(i);
       const buzzed = st.buzzed===i;
       const cls=['ek-buzzer']; if(out)cls.push('out'); if(buzzed)cls.push('buzzed'); if(st.phase==='armed'&&!out)cls.push('live');
-      return `<button class="${cls.join(' ')}" data-i="${i}" style="--c:${p.c};--bi:${i}" onclick="Ekklisia._buzz(${i})">
+      return `<button class="${cls.join(' ')}" data-i="${i}" style="--c:${p.c};--bi:${i}" onpointerdown="Ekklisia._buzz(${i})">
         <span class="ek-buzz-glow" aria-hidden="true"></span>
         <span class="ek-buzz-beam" aria-hidden="true"></span>
         <span class="ek-buzz-ring" aria-hidden="true"></span>

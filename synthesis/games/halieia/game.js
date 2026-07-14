@@ -163,6 +163,13 @@ const Halieia = (() => {
       <div class="al-reveal" id="al-reveal"></div>
     </div>
   </div>
+  <!-- phone-sized zone buttons: the in-scene plates render too small to read
+       on narrow screens, so these mirror them (same Halieia._cast targets) -->
+  <div class="al-zone-btns" id="al-zone-btns">
+    <button class="al-zone-btn" onclick="if(!document.getElementById('al-scene').classList.contains('al-disabled'))Halieia._cast(0)"><b id="al-zb0-lbl"></b><span id="al-zb0-hint"></span></button>
+    <button class="al-zone-btn" onclick="if(!document.getElementById('al-scene').classList.contains('al-disabled'))Halieia._cast(1)"><b id="al-zb1-lbl"></b><span id="al-zb1-hint"></span></button>
+    <button class="al-zone-btn al-zb-deep" onclick="if(!document.getElementById('al-scene').classList.contains('al-disabled'))Halieia._cast(2)"><b id="al-zb2-lbl"></b><span id="al-zb2-hint"></span></button>
+  </div>
 </div>
 
 <!-- END -->
@@ -409,6 +416,9 @@ const Halieia = (() => {
       const lbl=document.getElementById('al-z'+i+'-lbl'); const h=document.getElementById('al-z'+i+'-hint');
       if(lbl) lbl.textContent = z.nm[L()];
       if(h) h.textContent = z.hint[L()];
+      const bl=document.getElementById('al-zb'+i+'-lbl'); const bh=document.getElementById('al-zb'+i+'-hint');
+      if(bl) bl.textContent = z.nm[L()];
+      if(bh) bh.textContent = z.hint[L()];
     });
   }
   function resetCastBits() {

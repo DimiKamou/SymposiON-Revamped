@@ -385,8 +385,16 @@
 .ek-crowd.hush { opacity:.36; }
 
 .ek-buzzers { position:relative; z-index:1; display:flex; gap:clamp(10px,2vw,20px); flex-wrap:wrap; justify-content:center; padding-top:24px; }
+/* Mobile: with 5-6 tribes the buzzer grid would spill below the fold (the bottom row would be
+   clipped during a live buzz race). Flatten the pads and trim the surrounding padding so every
+   tribe's button stays fully on-screen and simultaneously tappable. Width (tap target) is kept. */
+@media (max-width:620px){
+  .ek-stagebot{ padding-top:10px; }
+  .ek-buzzers{ padding-top:8px; gap:8px 12px; }
+}
 .ek-buzzer {
   position:relative; width:clamp(110px,15vw,150px); aspect-ratio:1.22; cursor:pointer;
+  touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
   border-radius:50% / 44%;
   background:
@@ -396,6 +404,9 @@
   box-shadow:0 10px 26px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.09), inset 0 -12px 24px rgba(0,0,0,0.55);
   transition:transform .12s, box-shadow .2s, filter .2s;
 }
+/* Mobile: shave a little pad height (kept ≥40px tap target) so 5-6 tribes clear the fold
+   with margin to spare, even on shorter phones. Placed after the base rule to win the cascade. */
+@media (max-width:620px){ .ek-buzzer{ aspect-ratio:1.4; } }
 .ek-buzzer::before { /* incised seal ring */
   content:''; position:absolute; inset:7px; border-radius:inherit; pointer-events:none;
   border:1px dashed color-mix(in srgb, var(--c) 45%, transparent); opacity:.65;

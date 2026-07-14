@@ -14,6 +14,11 @@ let totalWaves=5;
 let bgActive=false, lastBgKey='';
 /* --- combat-feel state (visual only, no balance impact) --- */
 const RM=(typeof matchMedia!=='undefined') && matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* weak-device heuristic — presentation/perf only (fewer particles, lower canvas
+   backing resolution, no backdrop blurs via html.lite) */
+const LITE=((typeof matchMedia!=='undefined') && matchMedia('(pointer:coarse)').matches)
+  || window.innerWidth<720 || (navigator.deviceMemory||8)<=4;
+let RES=1;   // canvas backing-store scale (1 on desktop; DPR-capped on LITE)
 let hitstop=0;                 // frame-freeze on connect (seconds, real-time)
 let zoom=1;                    // camera punch-in factor (lerps back to 1)
 let ghosts=[];                 // afterimage snapshots of the hero
@@ -210,11 +215,11 @@ function damage(t,amt){ if(t.dead) return; t.hp-=amt; t.hurt=0.18;
   if(crit){ shake=Math.max(shake,9); spawnBurst(t.x,t.y-100,(t.x>player.x?1:-1),9,'#E8C96A'); }
   if(t.hp<=0) killEntity(t); }
 /* directional impact particles (cone opposite the hit) */
-function spawnBurst(x,y,dir,n,col){ if(RM) n=Math.ceil(n/2);
+function spawnBurst(x,y,dir,n,col){ if(RM||LITE) n=Math.ceil(n/2);
   for(let i=0;i<n;i++){ const a=(Math.random()-0.5)*1.4, sp=3+Math.random()*6;
     spawnFX('p', x, y, { vx:Math.cos(a)*sp*dir, vy:Math.sin(a)*sp-2.4, g:0.32,
       col:Math.random()<0.7?col:'#FFF3D8', r:1.4+Math.random()*2, max:0.34+Math.random()*0.22 }); } }
-function dust(x,y,n){ if(RM) n=Math.ceil(n/2);
+function dust(x,y,n){ if(RM||LITE) n=Math.ceil(n/2);
   for(let i=0;i<n;i++){ const a=Math.PI+(Math.random()-0.5)*2.4;
     spawnFX('p', x+(Math.random()-0.5)*16, y-2, { vx:Math.cos(a)*(0.6+Math.random()*1.6), vy:-(0.5+Math.random()*1.4), g:0.05,
       col:'rgba(190,160,120,.5)', r:2.5+Math.random()*3, max:0.4+Math.random()*0.25 }); } }
@@ -327,7 +332,7 @@ function update(dt){
         swing:player.swing, swingIdx:player.swingIdx, swingArm:player.swingArm,
         jumpY:player.jumpY, shoot:player.shoot, onGround:player.onGround, vy:player.vy,
         life:0, max:(ultTrail>0?0.30:0.22) });
-      if(ghosts.length>10) ghosts.shift(); } }
+      if(ghosts.length>(LITE?6:10)) ghosts.shift(); } }
   else ghostTimer=0.05;
   for(let i=ghosts.length-1;i>=0;i--){ ghosts[i].life+=dt; if(ghosts[i].life>=ghosts[i].max) ghosts.splice(i,1); }
   if(player.swing>0) player.swing=Math.max(0,player.swing-dt*3.2);
@@ -462,6 +467,7 @@ function updateFX(dt){ for(let i=fx.length-1;i>=0;i--){ const f=fx[i]; f.life+=d
 
 /* ---------- render ---------- */
 function render(){
+  ctx.setTransform(RES,0,0,RES,0,0);   // base backing-store scale (LITE devices render smaller)
   ctx.save();
   const shx=(Math.random()-.5)*shake, shy=(Math.random()-.5)*shake*0.7;
   if(bgActive){ ctx.clearRect(0,0,W,H); const mc=Math.max(1,WORLD_W-W), pxx=-(camX/mc)*60;
@@ -660,14 +666,43 @@ function frame(ts){ if(!last) last=ts; let dt=(ts-last)/1000; last=ts; if(dt>0.0
     pots:player.pots,mod:player.mod&&player.mod.name,enemies:enemies.length,boss:boss?Math.round(boss.hp):null,px:Math.round(player.x),camX:Math.round(camX)};
   requestAnimationFrame(frame);
 }
-function fit(){ const vp=document.querySelector('.viewport'); const s=Math.min(vp.clientWidth/W,vp.clientHeight/H); if(s>0&&isFinite(s)) document.querySelector('.stage').style.transform='scale('+s+')'; }
+function fit(){ const vp=document.querySelector('.viewport'); const s=Math.min(vp.clientWidth/W,vp.clientHeight/H);
+  if(!(s>0&&isFinite(s))) return;
+  document.querySelector('.stage').style.transform='scale('+s+')';
+  // --ovb: counter-scale for quiz/end cards on short (landscape-phone) screens,
+  // consumed only inside the max-height:560px media query — desktop unaffected.
+  let b=1;
+  if(window.innerHeight<560){ const eff=Math.min(1, window.innerWidth/760, window.innerHeight/430); b=Math.max(1, eff/s); }
+  document.documentElement.style.setProperty('--ovb', b.toFixed(3));
+  applyRes();
+}
+/* LITE: render the 1600×900 canvas into a smaller backing store (caps the
+   effective DPR at ~2) — same layout size, far fewer pixels per frame. */
+function applyRes(){
+  let r=1;
+  if(LITE){ const s=Math.min(window.innerWidth/W, window.innerHeight/H);
+    const dpr=Math.min(window.devicePixelRatio||1, 2);
+    r=Math.max(0.5, Math.min(1, s*dpr)); r=Math.round(r*20)/20; }
+  if(r!==RES && canvas){ RES=r; canvas.width=Math.round(W*r); canvas.height=Math.round(H*r); }
+}
 
 /* ---------- boot ---------- */
 function boot(){
   var _ib=document.getElementById('ia-boot');
   try {
   canvas=document.getElementById('game'); canvas.width=W; canvas.height=H; ctx=canvas.getContext('2d');
+  if(LITE) document.documentElement.classList.add('lite');   // CSS drops backdrop blurs etc.
   hud=document.getElementById('hud'); bindInput();
+  // portrait phones see the ΓΥΡΙΣΕ ΤΗ ΣΥΣΚΕΥΗ overlay — freeze combat underneath
+  // so the hero is not slaughtered while the player rotates the device.
+  try{
+    const pmq=matchMedia('(max-width:900px) and (orientation:portrait)');
+    const onOrient=()=>{ if(pmq.matches){ if(state==='play') setFreeze(true); }
+      else{ const po=document.getElementById('pauseOverlay');
+        if(state==='paused' && !helpOpen() && !(po&&po.classList.contains('show'))) setFreeze(false); } };
+    (pmq.addEventListener?pmq.addEventListener.bind(pmq):pmq.addListener.bind(pmq))('change',onOrient);
+    setTimeout(onOrient,0);   // after setup() below has started the run
+  }catch(e){}
   bindJoystick();
   vbtn(hud.querySelector('#btnJump'),jump);
   vbtn(hud.querySelector('#btnSword'),swordAttack);

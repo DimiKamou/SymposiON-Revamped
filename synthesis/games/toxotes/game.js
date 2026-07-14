@@ -25,6 +25,8 @@
 const TXP = (() => {
   const RM = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; } };
   let reduce = RM();
+  /* mid/low-end phone heuristic: smaller backing store + thinner particle budget */
+  const LITE = matchMedia("(pointer:coarse)").matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   /* dom / raf state */
   let range = null, bgC = null, fxC = null, bg = null, fx = null;
@@ -134,7 +136,7 @@ const TXP = (() => {
     const w = range.clientWidth, h = range.clientHeight;
     if (!w || !h) return;
     if (w === W && h === H && layers) return;
-    W = w; H = h; DPR = clamp(window.devicePixelRatio || 1, 1, 1.75);
+    W = w; H = h; DPR = clamp(window.devicePixelRatio || 1, 1, LITE ? 1.5 : 1.75);
     [bgC, fxC].forEach(c => { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); });
     bg.setTransform(DPR, 0, 0, DPR, 0, 0); fx.setTransform(DPR, 0, 0, DPR, 0, 0);
     buildScene();
@@ -396,7 +398,7 @@ const TXP = (() => {
     for (let i = streaks.length - 1; i >= 0; i--) { streaks[i].life -= dt; if (streaks[i].life <= 0) streaks.splice(i, 1); }
     for (let i = flashes.length - 1; i >= 0; i--) { flashes[i].t += dt; if (flashes[i].t >= flashes[i].dur) flashes.splice(i, 1); }
     /* embers rise from the warm ground while the volley burns */
-    if (!reduce && volleyMix > 0.5 && embers.length < 34) {
+    if (!reduce && volleyMix > 0.5 && embers.length < (LITE ? 16 : 34)) {
       emberAcc += dt * 9;
       while (emberAcc >= 1) {
         emberAcc -= 1;
@@ -1346,9 +1348,14 @@ const Toxotes = (() => {
     const lanes=shuffle([0,1,2,3]);
     const g=window.gsap;
     st.fallTweens=[];
+    // On narrow (mobile) ranges, pull the lanes inward so each amphora's
+    // answer label stays inside the frame instead of being clipped at the
+    // edges (the range is overflow:hidden). Desktop keeps the full spread.
+    const narrow=(range.clientWidth||range.getBoundingClientRect().width||360)<520;
     st.cur.a.forEach((opt,i)=>{
       const el=document.createElement('button'); el.className='tx-amphora falling';
-      const laneW=100/4, x=lanes[i]*laneW + 5 + Math.random()*(laneW-18);
+      const laneW=100/4; let x=lanes[i]*laneW + 5 + Math.random()*(laneW-18);
+      if (narrow) x=8+x*0.76;   // compress ~[5,87]% → ~[12,74]% so labels fit
       el.style.left=x.toFixed(1)+'%'; el.style.top='-18%';
       el.innerHTML = amphoraSVG('normal') + `<span class="tx-label"><b>${keys[i]}</b> ${opt}</span>`;
       el.dataset.idx=i;

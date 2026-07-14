@@ -8,6 +8,11 @@ window.KR_FX = (function () {
   const rectOf = el => el && el.getBoundingClientRect();
   const cx = () => window.innerWidth / 2;
   let started = false;
+  // weak-device heuristic (matches game.js): halve the ambient glyph rain
+  const LITE = (function () {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   /* ── tiny procedural WebAudio flourishes (no assets, gesture-gated) ──
      The context is created lazily inside event handlers that only ever run
@@ -112,7 +117,7 @@ window.KR_FX = (function () {
       accent: '#C4A448', accent2: '#D97B5C',
       rainColor: '#C9A14A', glow: 'rgba(196,164,72,0.55)',
       rainChars: 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ0123456789/\\<>=+·',
-      rainCount: 24, scanlines: true, sweep: true, grain: true, vignette: true,
+      rainCount: LITE ? 12 : 24, scanlines: true, sweep: !LITE, grain: !LITE, vignette: true,
       shakeSelector: '#kr-wrap',
     });
   }

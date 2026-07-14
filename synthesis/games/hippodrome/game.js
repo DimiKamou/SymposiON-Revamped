@@ -53,6 +53,12 @@ const Hippodrome = (() => {
   let _leadPrev = null;            // visual-only: last sole leader (overtake callouts)
   const _vTimers = new Set();      // visual-only: tracked timers, cleared on close
   const _reduce = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // weak-device heuristic (presentation only): thinner crowd, fewer motes,
+  // lower canvas DPR on touch phones / narrow viewports / low memory
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   function _fx(type, detail){ try{ window.dispatchEvent(new CustomEvent('hp:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){} }
   function _vT(fn, ms){ const id = setTimeout(()=>{ _vTimers.delete(id); fn(); }, ms); _vTimers.add(id); return id; }
@@ -89,7 +95,7 @@ const Hippodrome = (() => {
     if (document.getElementById('hp-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'hp-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' hp-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeHippodrome()">‹ <span>' + T('ΠΙΣΩ','BACK') + '</span></button>' +
@@ -173,7 +179,7 @@ const Hippodrome = (() => {
     const hues = ['#6E3A24','#7A5A2E','#46586A','#5C6B3F','#71412F','#665033','#3F5560','#82502C','#5A3A46'];
     let html = '';
     for (let row = 0; row < 2; row++) {
-      const n = row ? 30 : 24;
+      const n = LITE ? (row ? 18 : 14) : (row ? 30 : 24);
       for (let i = 0; i < n; i++) {
         const l   = (((i + (row ? 0.55 : 0.1)) / n) * 100 + (Math.random()*1.6 - 0.8)).toFixed(2);
         const h   = (row ? 16 + Math.random()*7 : 12 + Math.random()*5).toFixed(1);
@@ -205,7 +211,7 @@ const Hippodrome = (() => {
     const f = document.createElement('div');
     f.className = 'hp-dust-field'; f.setAttribute('aria-hidden','true');
     let html = '';
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < (LITE ? 6 : 16); i++) {
       const sz = (1.5 + Math.random()*2.5).toFixed(1);
       html += `<span class="hp-mote" style="left:${(Math.random()*100).toFixed(1)}%;width:${sz}px;height:${sz}px;animation-duration:${(9+Math.random()*13).toFixed(1)}s;animation-delay:${(-Math.random()*20).toFixed(1)}s;"></span>`;
     }
@@ -502,7 +508,7 @@ const Hippodrome = (() => {
     };
     _vfx = {
       cv, ctx: cv.getContext('2d'), ps: [], ems: [], raf: 0, t: 0, w: 0, h: 0,
-      dpr: Math.min(2, window.devicePixelRatio || 1),
+      dpr: Math.min(LITE ? 1.5 : 2, window.devicePixelRatio || 1),
       spr: { dust: mkSprite(214,158,112), pale: mkSprite(238,210,166) },
     };
     _vfx.onRes = () => _vfxSize();
@@ -523,7 +529,7 @@ const Hippodrome = (() => {
     return { x: r.left - cr.left + r.width * fx, y: r.top - cr.top + r.height * fy };
   }
   function _pDust(x, y, hot) {
-    if (_vfx.ps.length > 420) return;
+    if (_vfx.ps.length > (LITE ? 180 : 420)) return;
     const pale = Math.random() < 0.3;
     _vfx.ps.push({ t:'d', spr: pale ? 'pale' : 'dust',
       x: x + (Math.random()*8 - 4), y: y + (Math.random()*4 - 2),

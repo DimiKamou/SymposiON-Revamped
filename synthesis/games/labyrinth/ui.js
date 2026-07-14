@@ -666,7 +666,7 @@
   //  The pad lives inside #labyrinth-wrap (z under the menu/quiz/pause
   //  panes), shown only while playing. Door-near glow is mirrored from
   //  onHud() via pad.setButtonActive('door', …).
-  function wireTouch() {
+  function mountPad() {
     if (!window.SymTouch || pad) return;
     pad = SymTouch.mount({
       container: wrap,
@@ -690,6 +690,54 @@
         },
       ],
     });
+    // If a run is already underway when the pad finishes loading, reveal it.
+    if (pad && wrap && wrap.classList.contains('playing')) pad.show();
+  }
+
+  // Resolve the deployed .../games/shared/ URL from an already-loaded asset,
+  // so the lazy load works regardless of where the site is hosted.
+  function sharedBase() {
+    var urls = [];
+    document.querySelectorAll('script[src]').forEach(function (n) { urls.push(n.src); });
+    document.querySelectorAll('link[href]').forEach(function (n) { urls.push(n.href); });
+    for (var i = 0; i < urls.length; i++) {
+      var u = urls[i];
+      if (u && u.indexOf('/games/') !== -1) return u.replace(/\/games\/.*$/, '/games/shared/');
+    }
+    return 'games/shared/';
+  }
+
+  // The shared virtual gamepad (games/shared/touch-controls.*) is not listed in
+  // the canvas-arcade manifest, so revive it on demand for touch/coarse devices.
+  // Presentation/input only — nothing here touches maze or question loading.
+  function ensureTouchPad() {
+    if (window.SymTouch) { mountPad(); return; }
+    var base = sharedBase();
+    if (!document.getElementById('symtc-shared-css')) {
+      var link = document.createElement('link');
+      link.id = 'symtc-shared-css';
+      link.rel = 'stylesheet';
+      link.href = base + 'touch-controls.css';
+      document.head.appendChild(link);
+    }
+    var sc = document.getElementById('symtc-shared-js');
+    if (sc) { sc.addEventListener('load', mountPad); return; }
+    sc = document.createElement('script');
+    sc.id = 'symtc-shared-js';
+    sc.src = base + 'touch-controls.js';
+    sc.addEventListener('load', mountPad);
+    sc.addEventListener('error', function () {
+      console.warn('[labyrinth] shared touch-controls failed to load');
+    });
+    document.head.appendChild(sc);
+  }
+
+  function wireTouch() {
+    if (pad) return;
+    var coarse = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+                 ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (!coarse) return;                 // desktop: no pad, zero change
+    ensureTouchPad();
   }
 
   window.LabUI = {

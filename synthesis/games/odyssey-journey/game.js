@@ -27,6 +27,12 @@
 
   // Cinematic-layer state (all torn down in destroy)
   let REDUCED = false;
+  // Cheap heuristic for mid/low-end phones: dial back the heaviest GPU/CPU
+  // costs (shadows, antialias, DPR, ocean tessellation, star field) so the
+  // 3D chart stays smooth on coarse-pointer / low-memory devices. Desktop
+  // keeps the full cinematic path (LITE stays false there).
+  let LITE = false;
+  let normalsTick = 0;             // ocean-normals cadence counter (LITE)
   let skyMat = null;
   let oceanShader = null;       // injected ocean shader (uTime → crest glints)
   let hemiLight = null;         // hemisphere fill — mood-tinted per island
@@ -66,6 +72,7 @@
     currentLang = lang || 'gr';
     REDUCED = false;
     try { REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    try { LITE = matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; } catch (e) { LITE = false; }
     const _ov = document.getElementById('odyssey-journey-overlay');
     if (_ov) { _ov.style.display = 'flex'; _ov.classList.add('active'); }
     document.body.style.overflow = 'hidden';
@@ -303,10 +310,10 @@
     canvas.id = 'odyssey-canvas';
     gameWrap.appendChild(canvas);
 
-    renderer = new T.WebGLRenderer({ canvas, antialias: true });
+    renderer = new T.WebGLRenderer({ canvas, antialias: !LITE });
     renderer.setSize(gameWrap.clientWidth, gameWrap.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, LITE ? 1.5 : 2));
+    renderer.shadowMap.enabled = !LITE;
     renderer.shadowMap.type = T.PCFSoftShadowMap;
     renderer.setClearColor(0x050e1e);
     renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -444,7 +451,7 @@
     // stays a deep night blue instead of a washed-out carpet
     const moonLight = new T.DirectionalLight(0xc8ddf8, 0.6);
     moonLight.position.copy(moonMesh.position).normalize().multiplyScalar(80);
-    moonLight.castShadow = true;
+    moonLight.castShadow = !LITE;   // shadow pass is off entirely on LITE
     moonLight.shadow.mapSize.set(1024, 1024);
     Object.assign(moonLight.shadow.camera, { near: 0.1, far: 150, left: -40, right: 40, top: 40, bottom: -40 });
     scene.add(moonLight);
@@ -455,7 +462,7 @@
   // (the old version faded the whole field in lock-step).
   function buildStars() {
     const T = THREE;
-    const count = 1600;
+    const count = LITE ? 720 : 1600;
     const pos = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const phases = new Float32Array(count);
@@ -537,14 +544,15 @@
     const T = THREE;
     cloudSprites = [];
     const tex = cloudTexture();
-    for (let i = 0; i < 6; i++) {
+    const CLOUDS = LITE ? 3 : 6;
+    for (let i = 0; i < CLOUDS; i++) {
       const mat = new T.SpriteMaterial({
         map: tex, transparent: true, depthWrite: false,
         opacity: 0.20 + Math.random() * 0.10,
         color: new T.Color(0x2e4460),   // faint slate mist, not white puffs
       });
       const sp = new T.Sprite(mat);
-      const ang = (i / 6) * Math.PI * 2 + Math.random() * 0.8;
+      const ang = (i / CLOUDS) * Math.PI * 2 + Math.random() * 0.8;
       const rad = 66 + Math.random() * 14;
       sp.position.set(Math.cos(ang) * rad, 5 + Math.random() * 6, Math.sin(ang) * rad);
       sp.scale.set(24 + Math.random() * 12, 6 + Math.random() * 4, 1);
@@ -557,8 +565,9 @@
   // ── Ocean ──────────────────────────────────────────────────
   function buildOcean() {
     const T = THREE;
-    // denser grid → smoother, more filmic swells
-    const SEG = 96;
+    // denser grid → smoother, more filmic swells (thinned on LITE: the
+    // per-frame CPU wave displacement + normal recompute scale with SEG²)
+    const SEG = LITE ? 56 : 96;
     const geom = new T.PlaneGeometry(150, 150, SEG, SEG);
     geom.rotateX(-Math.PI / 2);
     oceanPositions = geom.attributes.position;
@@ -1486,7 +1495,10 @@
         oceanPositions.setY(i, y);
       }
       oceanPositions.needsUpdate = true;
-      oceanMesh.geometry.computeVertexNormals();
+      // computeVertexNormals is the single heaviest per-frame cost; on LITE
+      // recompute every other frame (the swell is slow enough that the lit
+      // sheen stays convincing). Desktop keeps per-frame normals.
+      if (!LITE || (normalsTick++ & 1) === 0) oceanMesh.geometry.computeVertexNormals();
     }
 
     // Sky / stars / sea-glints / paths / foam — shared clocks

@@ -34,6 +34,8 @@
 .kr-seg button { background:transparent; border:none; color:var(--sym-stone); font-family:var(--sym-mono); font-size:13px; padding:8px 16px; cursor:pointer; transition:background .15s,color .15s; }
 .kr-seg button + button { border-left:1px solid rgba(196,164,72,0.18); }
 .kr-seg button.on { background:var(--sym-gold); color:#1A130C; font-weight:700; }
+/* touch/narrow: give the setup segmented controls a ≥44px tap target (desktop unchanged) */
+@media (pointer:coarse), (max-width:560px){ .kr-seg button{ padding:15px 18px; } }
 
 .kr-seal-prompt { font-family:var(--sym-mono); font-size:11px; letter-spacing:3px; color:var(--sym-terra); text-transform:uppercase; margin-bottom:16px; }
 .kr-seal-cards { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; }
@@ -111,9 +113,10 @@
 .kr-fb-bad { color:var(--sym-blood); }
 
 /* ════════ Modal (operation / decrypt / result) ════════ */
-.kr-modal { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(6,4,2,0.78); backdrop-filter:blur(3px); }
+.kr-modal { position:absolute; inset:0; z-index:20; display:none; align-items:flex-start; justify-content:center; padding:20px; background:rgba(6,4,2,0.78); backdrop-filter:blur(3px); overflow-y:auto; }
 .kr-modal.show { display:flex; animation:kr-fade .25s ease; }
-.kr-modal-inner { width:100%; max-width:640px; text-align:center; }
+/* margin:auto = centred when it fits, scrollable when it does not (phones) */
+.kr-modal-inner { width:100%; max-width:640px; text-align:center; margin:auto; }
 
 .kr-op-head { font-family:var(--sym-display); font-size:clamp(20px,3.4vw,30px); letter-spacing:3px; color:var(--sym-gold); text-shadow:0 0 22px rgba(196,164,72,0.4); margin-bottom:4px; }
 .kr-op-sub { font-family:var(--sym-serif); font-style:italic; font-size:16px; color:var(--sym-stone); margin-bottom:26px; }
@@ -202,6 +205,31 @@
 .kr-victim-tag { display:inline-block; font-family:var(--sym-mono); font-size:9px; letter-spacing:1px; color:var(--sym-terra); border:1px solid rgba(217,123,92,0.4); border-radius:20px; padding:2px 8px; margin-left:8px; }
 
 .kr-coin { position:fixed; pointer-events:none; z-index:60; font-size:20px; }
+
+/* ── Phones: the roster becomes a compact two-column grid instead of a
+      270px-tall stack, so the riddle + answers stay near the fold ── */
+@media (max-width:760px){
+  .kr-board { padding:10px 12px; }
+  .kr-board-head { width:100%; }
+  #kr-board { display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; }
+  .kr-board-row { padding:5px 8px; gap:6px; }
+  .kr-br-seal { width:20px; height:20px; font-size:9.5px; }
+  .kr-br-name { font-size:12.5px; }
+  .kr-br-gold { font-size:11px; }
+}
+/* decrypt + tablets sized for a 375px screen: an 8-letter scytale keeps
+   to one strap row (slots are display-only); the tap tiles stay ≥ 44px */
+@media (max-width:480px){
+  .kr-dx-slots { gap:5px; }
+  .kr-dx-slot { width:30px; height:42px; font-size:18px; }
+  .kr-dx-tile { width:44px; height:52px; font-size:21px; }
+  .kr-scytale { padding:20px 12px; }
+  .kr-scy-rod { height:40px; }
+  .kr-tablets { gap:14px; }
+  .kr-tablet { width:146px; height:190px; }
+  .kr-tablet-icon { font-size:36px; }
+  .kr-final { min-width:0; width:min(330px, 100%); }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ΚΡΥΠΤΕΙΑ — IN-GAME PLAY-SCENE RESTYLE (round 2)
@@ -698,6 +726,13 @@ body:has(#kr-overlay.active) .fx-combo { z-index:1049; }
 .krx-dash .krx-cape { fill:#0D0716; opacity:.88; }
 .krx-dash .krx-glint { fill:#E3C766; filter:drop-shadow(0 0 6px rgba(227,199,102,0.9)); }
 .krx-dash .krx-streak { stroke:rgba(227,199,102,0.4); stroke-width:2; fill:none; stroke-linecap:round; }
+
+/* ── LITE devices (touch / narrow / low memory): JS toggles .kr-lite —
+      looping sheens/edge-flows stop, the ember keeps a slower flick;
+      canvas backdrop already thins itself in game.js ── */
+#kr-overlay.kr-lite .kr-tablet-front::after { animation:none; }
+#kr-overlay.kr-lite .kr-q-card::before { animation:none; }
+#kr-overlay.kr-lite .kr-cord-ember { animation-duration:.9s; }
 
 /* ── reduced motion: settle everything, keep it readable ── */
 @media (prefers-reduced-motion: reduce) {

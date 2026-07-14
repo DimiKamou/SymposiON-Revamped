@@ -118,11 +118,17 @@ window.INVADERS_THEME_LABELS = {
 const CFG = {
   COLS: 6, ROWS: 5,
   ENEMY_W: 50, ENEMY_H: 32, ENEMY_GAP_X: 22, ENEMY_GAP_Y: 60, ENEMY_TOP: 118,
+  SPRITE_S: 1,               // responsive sprite scale (set by _fitMetrics)
   PLAYER_W: 42, PLAYER_H: 30, PLAYER_SPEED: 300,
   BULLET_SPEED: 520, FIRE_COOLDOWN: 400,
   STARS: 90, SHAKE_FRAMES: 14, SHAKE_MAG: 5,
   BASE_SPD: 50, DROP_AMOUNT: 24, DESCENT_SPD: 8,
 };
+// Design-time fleet metrics. _fitMetrics() scales the live CFG values so the
+// six-column fleet always fits narrow (phone) canvases with room to march.
+// Speeds scale with the same factor: the whole world shrinks uniformly, so
+// the game itself (words, selection, rules) is untouched.
+const CFG_BASE = { ENEMY_W: 50, ENEMY_GAP_X: 22, ENEMY_GAP_Y: 60, ENEMY_TOP: 118, BASE_SPD: 50, DROP_AMOUNT: 24, DESCENT_SPD: 8 };
 
 /* ─────────────────────────────────────────────────────────────
    § 2  UTILITIES
@@ -135,6 +141,9 @@ const easeOutBack = (t) => { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1,
 // Honour the OS "reduce motion" preference for the big ambient loops.
 const _rmq = (typeof window.matchMedia === 'function') ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 const REDUCED = () => !!(_rmq && _rmq.matches);
+// Cheap heuristic for weak / mobile devices — lightens ambient FX only.
+const LITE = (typeof window.matchMedia === 'function' && matchMedia('(pointer:coarse)').matches)
+  || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) { const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]]; }
@@ -572,6 +581,8 @@ class Enemy {
     const th = T(), cx = this.x, cy = this.y, S = 40;
     const wrong = this.wrongHit > 0;
     ctx.save();
+    const ss = CFG.SPRITE_S || 1;
+    if (ss !== 1) { ctx.translate(cx, cy); ctx.scale(ss, ss); ctx.translate(-cx, -cy); }
     if (wrong) { ctx.globalAlpha = (this._frame & 2) ? 1 : 0.35; }
     if (th.enemyStyle === 'constellation') drawConstellation(ctx, cx, cy, S, th, this.isFront, this.word);
     else if (th.enemyStyle === 'blackfigure') drawBlackFigure(ctx, cx, cy, S, th, this.isFront, this.word, this._frame);
@@ -588,7 +599,7 @@ class Enemy {
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     if (th.enemyStyle !== 'blackfigure') { ctx.shadowColor = '#000'; ctx.shadowBlur = 6; }
     ctx.fillStyle = this.isFront ? th.word : th.wordIdle;
-    ctx.fillText((this.word || '').normalize('NFC'), cx, cy + CFG.ENEMY_H / 2 + 4);
+    ctx.fillText((this.word || '').normalize('NFC'), cx, cy + CFG.ENEMY_H / 2 + 4 + (CFG.SPRITE_S < 1 ? (this.wordDy || 0) : 0));
     ctx.restore();
   }
 }
@@ -714,10 +725,23 @@ class Game {
     this.best = 0;              // persistent high score (presentation only)
     try { this.best = parseInt(localStorage.getItem('invadersBest') || '0', 10) || 0; } catch (_) {}
     this.newBest = false;
-    this.enemyDir = 1; this.enemyMult = 1;
+    this.enemyDir = 1; this.enemyMult = 1; this._dropCd = 0;
     this._kd = this._onKeyDown.bind(this); this._ku = this._onKeyUp.bind(this); this._rz = this._onResize.bind(this);
     window.addEventListener('keydown', this._kd); window.addEventListener('keyup', this._ku); window.addEventListener('resize', this._rz);
     this._bindTouch(); this._onResize(); this._initLevel();
+    // re-measure when the wrap itself changes size (touch bar appearing,
+    // mobile browser chrome collapsing, rotation) — window resize alone misses these
+    if (typeof ResizeObserver === 'function') {
+      const wrapEl = document.getElementById('invaders-wrap');
+      if (wrapEl) {
+        this._roPend = false;
+        this._ro = new ResizeObserver(() => {
+          if (this._roPend) return; this._roPend = true;
+          requestAnimationFrame(() => { this._roPend = false; this._onResize(); });
+        });
+        this._ro.observe(wrapEl);
+      }
+    }
     this.rafId = requestAnimationFrame(ts => this._loop(ts));
   }
 
@@ -735,22 +759,60 @@ class Game {
     bar.addEventListener('touchcancel', this._touchCancel);
     bar.addEventListener('mousedown', this._touchDown); bar.addEventListener('mouseup', this._touchUp);
     this._touchBar = bar;
+    // tap anywhere on the play field to restart after game over (touch parity with Enter)
+    this._cvTap = () => {
+      if (this.state === 'gameover') { this.score = 0; this.lives = 3; this.levelIndex = 0; this.enemyMult = 1; this._initLevel(); }
+    };
+    this.canvas.addEventListener('pointerdown', this._cvTap);
   }
 
   _onResize() {
     const wrap = document.getElementById('invaders-wrap'); if (!wrap) return;
     const r = wrap.getBoundingClientRect();
+    const oldW = this.canvas.width;
     this.canvas.width = Math.floor(r.width) || window.innerWidth;
     this.canvas.height = Math.floor(r.height) || (window.innerHeight - 60);
-    this.stars = Array.from({ length: CFG.STARS }, () => new Star(this.canvas.width, this.canvas.height));
-    this.motes = Array.from({ length: 42 }, () => new Mote(this.canvas.width, this.canvas.height));
-    this.nebulae = [
+    this._fitMetrics();
+    // keep the fleet on-screen when the canvas width changes (rotate / resize)
+    if (oldW && oldW !== this.canvas.width && this.enemies && this.enemies.length) {
+      const k = this.canvas.width / oldW;
+      this.enemies.forEach(e => { e.x *= k; });
+    }
+    this.stars = Array.from({ length: LITE ? Math.round(CFG.STARS * 0.45) : CFG.STARS }, () => new Star(this.canvas.width, this.canvas.height));
+    this.motes = Array.from({ length: LITE ? 16 : 42 }, () => new Mote(this.canvas.width, this.canvas.height));
+    this.nebulae = LITE ? [
+      new Nebula(this.canvas.width, this.canvas.height, 'rgba(80,130,170,A)'),
+    ] : [
       new Nebula(this.canvas.width, this.canvas.height, 'rgba(80,130,170,A)'),
       new Nebula(this.canvas.width, this.canvas.height, 'rgba(150,110,190,A)'),
       new Nebula(this.canvas.width, this.canvas.height, 'rgba(196,164,72,A)'),
     ];
     this.shooters = [new ShootingStar(this.canvas.width, this.canvas.height)];
     if (this.player) { this.player.x = this.canvas.width / 2; this.player.y = this.canvas.height - 60; }
+  }
+
+  /* Scale fleet geometry (and speeds, uniformly) so the COLS×ROWS fleet
+     always fits the canvas with real marching room on phones. */
+  _fitMetrics() {
+    const W = this.canvas.width || 1, H = this.canvas.height || 1;
+    const design = CFG_BASE.ENEMY_W * CFG.COLS + CFG_BASE.ENEMY_GAP_X * (CFG.COLS - 1);
+    // leave at least ~100px (or 26% of W) of travel room for the march
+    const room = Math.max(100, W * 0.26);
+    const s = clamp((W - room) / design, 0.55, 1);
+    CFG.ENEMY_W = Math.round(CFG_BASE.ENEMY_W * s);
+    CFG.ENEMY_GAP_X = Math.round(CFG_BASE.ENEMY_GAP_X * s);
+    CFG.SPRITE_S = s >= 1 ? 1 : Math.max(0.62, s * 1.05);
+    // world speeds shrink with the world; descent eases a bit more because
+    // narrow screens force far more frequent edge-drops than wide ones
+    CFG.BASE_SPD = CFG_BASE.BASE_SPD * s;
+    CFG.DROP_AMOUNT = CFG_BASE.DROP_AMOUNT * s;
+    CFG.DESCENT_SPD = CFG_BASE.DESCENT_SPD * s * s;
+    const vSpan = CFG_BASE.ENEMY_TOP + (CFG.ROWS - 1) * CFG_BASE.ENEMY_GAP_Y;
+    const vs = clamp((H * 0.52) / vSpan, 0.6, 1);
+    CFG.ENEMY_GAP_Y = Math.round(CFG_BASE.ENEMY_GAP_Y * vs);
+    CFG.ENEMY_TOP = Math.round(CFG_BASE.ENEMY_TOP * Math.max(vs, 0.8));
+    // never spawn the fleet under the question panel (taller on narrow screens)
+    CFG.ENEMY_TOP = Math.max(CFG.ENEMY_TOP, W < 560 ? 104 : 86);
   }
 
   _activeDB() {
@@ -769,7 +831,9 @@ class Game {
       const rowEntries = shuffle([...entries]);
       for (let c = 0; c < cols; c++) {
         const { word, label } = rowEntries[c % rowEntries.length];
-        this.enemies.push(new Enemy(startX + c * (CFG.ENEMY_W + CFG.ENEMY_GAP_X), CFG.ENEMY_TOP + r * CFG.ENEMY_GAP_Y, r, word, label, randInt(0, 15)));
+        const en = new Enemy(startX + c * (CFG.ENEMY_W + CFG.ENEMY_GAP_X), CFG.ENEMY_TOP + r * CFG.ENEMY_GAP_Y, r, word, label, randInt(0, 15));
+        en.wordDy = (c % 2) ? 11 : 0;   // stagger labels on narrow screens so neighbours never collide
+        this.enemies.push(en);
       }
     }
     this.player = new Player(W / 2, H - 60);
@@ -850,7 +914,11 @@ class Game {
     const speed = CFG.BASE_SPD * this.enemyMult;
     let minX = Infinity, maxX = -Infinity;
     alive.forEach(e => { minX = Math.min(minX, e.x - CFG.ENEMY_W / 2); maxX = Math.max(maxX, e.x + CFG.ENEMY_W / 2); });
-    if ((this.enemyDir === 1 && maxX >= W - 8) || (this.enemyDir === -1 && minX <= 8)) { this.enemyDir *= -1; alive.forEach(e => { e.y += CFG.DROP_AMOUNT; }); }
+    if (this._dropCd > 0) this._dropCd -= dt;
+    if (((this.enemyDir === 1 && maxX >= W - 8) || (this.enemyDir === -1 && minX <= 8)) && this._dropCd <= 0) {
+      this.enemyDir *= -1; this._dropCd = 0.3;   // cooldown: one drop per edge hit, never a per-frame cascade
+      alive.forEach(e => { e.y += CFG.DROP_AMOUNT; });
+    }
     const descent = CFG.DESCENT_SPD * this.enemyMult;
     alive.forEach(e => { e.x += speed * this.enemyDir * dt; e.y += descent * dt; });
     outer:
@@ -918,7 +986,7 @@ class Game {
     const th = T(); const palette = ok ? th.spark : th.sparkBad;
     const shard = th.enemyStyle === 'blackfigure' || th.enemyStyle === 'pixel';   // square debris for ink & pixel art
     const glowTheme = th.enemyStyle !== 'blackfigure';   // ink debris shouldn't glow
-    const n = (ok ? 14 : 10) + randInt(0, 5);
+    const n = Math.round(((ok ? 14 : 10) + randInt(0, 5)) * (LITE ? 0.55 : 1));
     // main debris burst
     for (let i = 0; i < n; i++) this.particles.push(new Particle(x, y, palette[i % palette.length], shard, { spd: rand(0.7, 1.3) }));
     // fast bright energy sparks (additive) — the "juice" layer
@@ -1084,7 +1152,7 @@ class Game {
       for (let x = 0; x < W + unit; x += unit) { ctx.beginPath(); ctx.moveTo(x + 1, 19); ctx.lineTo(x + 1, 3); ctx.lineTo(x + 15, 3); ctx.lineTo(x + 15, 15); ctx.lineTo(x + 7, 15); ctx.lineTo(x + 7, 9); ctx.lineTo(x + 11, 9); ctx.stroke(); }
       ctx.restore();
     };
-    draw(74, false);            // below the question panel
+    draw((this._panelH || 68) + 6, false);   // below the question panel
     draw(H - 4, true);          // bottom
     ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(18, H - 48); ctx.lineTo(W - 18, H - 48); ctx.stroke();
@@ -1101,20 +1169,35 @@ class Game {
     const db = this._activeDB();
     const level = db[this.levelIndex % db.length];
     const label = (this.currentTargetLabel || '—').normalize('NFC');
-    const panelH = 68;
+    const narrow = W < 560;                    // phones: stack rows so nothing collides
+    const panelH = narrow ? 86 : 68;
+    this._panelH = panelH;
     ctx.save();
     ctx.fillStyle = th.panelBg; ctx.fillRect(0, 0, W, panelH);
     ctx.strokeStyle = th.panelLine; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, panelH); ctx.lineTo(W, panelH); ctx.stroke();
     ctx.font = '500 11px "Oswald","Alegreya",sans-serif'; ctx.fillStyle = th.panelKey; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.fillText(`ΕΠΙΠΕΔΟ ${this.levelIndex + 1}`, 14, 10);
-    ctx.font = '12px "Alegreya",serif'; ctx.fillStyle = th.panelTitle; ctx.fillText(level.title.normalize('NFC'), 14, 26);
-    ctx.font = '500 12px "Oswald","Alegreya",sans-serif'; ctx.fillStyle = th.prompt; ctx.textAlign = 'center'; ctx.fillText('Πυροβόλησε:', W / 2, 8);
+    ctx.fillText(`ΕΠΙΠΕΔΟ ${this.levelIndex + 1}`, 14, narrow ? 8 : 10);
+    if (narrow) {
+      // centred, width-clipped level title on its own row
+      ctx.font = '12px "Alegreya",serif'; ctx.fillStyle = th.panelTitle; ctx.textAlign = 'center';
+      let t = level.title.normalize('NFC');
+      if (ctx.measureText(t).width > W - 28) {
+        while (t.length > 4 && ctx.measureText(t + '…').width > W - 28) t = t.slice(0, -1);
+        t += '…';
+      }
+      ctx.fillText(t, W / 2, 24);
+      ctx.font = '500 11px "Oswald","Alegreya",sans-serif'; ctx.fillStyle = th.prompt;
+      ctx.fillText('Πυροβόλησε:', W / 2, 42);
+    } else {
+      ctx.font = '12px "Alegreya",serif'; ctx.fillStyle = th.panelTitle; ctx.fillText(level.title.normalize('NFC'), 14, 26);
+      ctx.font = '500 12px "Oswald","Alegreya",sans-serif'; ctx.fillStyle = th.prompt; ctx.textAlign = 'center'; ctx.fillText('Πυροβόλησε:', W / 2, 8);
+    }
     const pulse = 0.84 + Math.sin(this.questionPulse) * 0.16;
     const appear = REDUCED() ? 1 : easeOutBack(clamp(this.questionPulse / 0.9, 0, 1));   // pop-in on new question
     ctx.save();
     ctx.globalAlpha = pulse * Math.min(1, appear + 0.2);
-    ctx.translate(W / 2, 30); ctx.scale(appear, appear);
-    ctx.font = `600 ${Math.min(28, W * 0.055)}px "Alegreya","Noto Serif",serif`; ctx.fillStyle = th.label;
+    ctx.translate(W / 2, narrow ? 60 : 30); ctx.scale(appear, appear);
+    ctx.font = `600 ${narrow ? 22 : Math.min(28, W * 0.055)}px "Alegreya","Noto Serif",serif`; ctx.fillStyle = th.label;
     ctx.shadowColor = th.labelGlow; ctx.shadowBlur = 14; ctx.textAlign = 'center';
     ctx.fillText(label, 0, 0);
     ctx.restore();
@@ -1217,6 +1300,8 @@ class Game {
       this._touchBar.removeEventListener('touchstart', this._touchDown); this._touchBar.removeEventListener('touchend', this._touchUp);
       this._touchBar.removeEventListener('touchcancel', this._touchCancel); this._touchBar.removeEventListener('mousedown', this._touchDown); this._touchBar.removeEventListener('mouseup', this._touchUp);
     }
+    if (this._cvTap) this.canvas.removeEventListener('pointerdown', this._cvTap);
+    if (this._ro) { this._ro.disconnect(); this._ro = null; }
   }
 }
 

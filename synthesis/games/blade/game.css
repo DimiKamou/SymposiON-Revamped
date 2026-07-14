@@ -15,6 +15,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* ── Game screen ── */
@@ -164,7 +167,7 @@
 #blade-prompt-main {
   display: block;
   font-family: 'Cinzel', serif;
-  font-size: clamp(0.72rem, 1.9vw, 0.98rem);
+  font-size: clamp(0.75rem, 1.9vw, 0.98rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--sym-gold, #c9a44a);
@@ -211,6 +214,7 @@
 #blade-back-game {
   position: absolute;
   bottom: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 25;
@@ -237,6 +241,7 @@
 #blade-mute {
   position: absolute;
   bottom: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   right: 12px;
   z-index: 26;
   width: 38px;
@@ -255,6 +260,28 @@
 #blade-mute:hover {
   border-color: var(--sym-gold, #c9a44a);
   transform: scale(1.08);
+}
+
+/* ── Touch devices / narrow screens: comfortable tap targets ── */
+@media (pointer: coarse), (max-width: 640px) {
+  .blade-share-btn { padding: 12px 22px; font-size: 0.82rem; }
+  #blade-back-game { padding: 12px 24px; font-size: 0.82rem; }
+  #blade-mute      { width: 44px; height: 44px; }
+}
+
+/* ── Narrow screens: HUD fits without overlap ── */
+@media (max-width: 640px) {
+  #blade-hud { padding: 8px 8px 6px; }
+  #blade-lives      { min-width: 54px; gap: 2px; padding-top: 5px; }
+  #blade-score-wrap { min-width: 54px; }
+  .blade-heart { font-size: 1.15rem; }
+  #blade-score { font-size: 1.15rem; }
+  #blade-prompt {
+    max-width: none;
+    margin: 0 0.35rem;
+    padding: 6px 10px 8px;
+  }
+  #blade-prompt-main { letter-spacing: 0.04em; }
 }
 
 /* ── Reduced motion ── */

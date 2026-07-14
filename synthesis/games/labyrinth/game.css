@@ -551,6 +551,17 @@
    (games/shared/touch-controls.css · .symtc-*), mounted into
    #labyrinth-wrap by labyrinth/ui.js. Themed via --symtc-accent. */
 
+/* The shared pad disables itself in portrait (it assumes landscape play and
+   shows a rotate prompt). This dungeon-crawler plays fine in portrait — the
+   fog-of-war camera follows the player — so keep the pad live there. Scoped
+   to #labyrinth-wrap only; the shared component is untouched for other games. */
+@media (orientation: portrait) {
+  #labyrinth-wrap .symtc-root.symtc-visible .symtc-zone-left,
+  #labyrinth-wrap .symtc-root.symtc-visible .symtc-joy,
+  #labyrinth-wrap .symtc-root.symtc-visible .symtc-btn { pointer-events: auto; }
+  #labyrinth-wrap .symtc-root.symtc-visible .symtc-rotate-hint { display: none; }
+}
+
 /* ─── Shared frame chrome (overlay top bar + stage) ──────────────
    The #labyrinth-overlay markup in index.html is unchanged; these
    rules style its frame bar (glyph + titles + ← Έξοδος) and the stage

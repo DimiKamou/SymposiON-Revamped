@@ -110,6 +110,20 @@ var _digRMQ = (typeof window !== 'undefined' && window.matchMedia)
   ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 function _digRM() { return !!(_digRMQ && _digRMQ.matches); }
 
+/* Low-power heuristic (mid/low-end phones): thin out the particle field so
+   the trowel-dust canvas stays smooth. Presentation only — dig/scan logic and
+   the artifact grid are untouched. Cached once (pointer class won't change). */
+var _digLiteV = null;
+function _digLite() {
+  if (_digLiteV === null) {
+    try {
+      _digLiteV = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+                  window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
+    } catch (_) { _digLiteV = false; }
+  }
+  return _digLiteV;
+}
+
 /* ══════════════════════════════════════════
    PUBLIC API
 ══════════════════════════════════════════ */
@@ -951,7 +965,7 @@ function _digInitDustCanvas() {
 }
 
 function _digPushPt(p) {
-  if (_digDustPts.length > 260) return; // hard cap
+  if (_digDustPts.length > (_digLite() ? 120 : 260)) return; // hard cap (lighter on weak GPUs)
   _digDustPts.push(p);
 }
 
@@ -1110,7 +1124,7 @@ function _digStartDust() {
     if (_digRM()) return;
     const cnv = document.getElementById('dg-dust-cnv');
     if (!cnv) return;
-    if (Math.random() <= 0.16) {
+    if (Math.random() <= (_digLite() ? 0.09 : 0.16)) {
       const warm = Math.random() < 0.4;
       _digPushPt({
         type: 'mote',
@@ -1125,7 +1139,7 @@ function _digStartDust() {
       });
     }
     _digAmbientTrickle();
-    _digAmbientMoths();
+    if (!_digLite()) _digAmbientMoths();   // skip the lantern moths on weak GPUs
   };
   _digDustLoop(addAmbient);
 }

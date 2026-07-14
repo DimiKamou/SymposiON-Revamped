@@ -24,6 +24,16 @@ const BLADE_REDUCED = (function(){
   catch (e) { return false; }
 })();
 
+// Cheap low-end-device heuristic: coarse pointer (phones/tablets), narrow
+// viewport or little RAM → fewer particles, no canvas shadows, capped DPR.
+const BLADE_LITE = (function(){
+  try {
+    return (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+           window.innerWidth < 720 ||
+           (navigator.deviceMemory || 8) <= 4;
+  } catch (e) { return false; }
+})();
+
 // ── Bundled fallback paradigms (verbatim rows from ousiastika/data.js
 //    and paratheta/game.js) so the game ALWAYS opens with real content,
 //    even before the full databases are lazy-loaded. ──────────────────
@@ -605,7 +615,7 @@ class BladeGame {
     const r = p ? p.getBoundingClientRect() : { width: 0, height: 0 };
     this.W = r.width  || window.innerWidth;
     this.H = r.height || window.innerHeight;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = Math.min(window.devicePixelRatio || 1, BLADE_LITE ? 1.5 : 2);
     this.canvas.width  = Math.round(this.W * this.dpr);
     this.canvas.height = Math.round(this.H * this.dpr);
     this.canvas.style.width  = this.W + 'px';
@@ -752,7 +762,8 @@ class BladeGame {
   _seedAmbient() {
     this.ambient = [];
     if (BLADE_REDUCED) return;
-    for (let i = 0; i < 9; i++)                      // embers rising from braziers
+    const nEmber = BLADE_LITE ? 5 : 9, nPetal = BLADE_LITE ? 4 : 8;
+    for (let i = 0; i < nEmber; i++)                 // embers rising from braziers
       this.ambient.push({
         type: 'ember',
         x: (Math.random() < 0.5 ? 0.075 : 0.925) * this.W + (Math.random() - 0.5) * 30,
@@ -760,7 +771,7 @@ class BladeGame {
         vx: (Math.random() - 0.5) * 0.14, vy: -(0.18 + Math.random() * 0.3),
         r: 1 + Math.random() * 1.8, phase: Math.random() * 9
       });
-    for (let i = 0; i < 8; i++)                      // drifting petals
+    for (let i = 0; i < nPetal; i++)                 // drifting petals
       this.ambient.push({
         type: 'petal',
         x: Math.random() * this.W, y: Math.random() * this.H,
@@ -796,7 +807,9 @@ class BladeGame {
     this.pts.push({ x, y, t: now });
     if (this.pts.length > 16) this.pts.shift();
 
-    const fast = this.bladeV > 0.28;
+    // finger swipes ramp the velocity EMA from zero — give coarse pointers a
+    // slightly lower ignition gate so short mobile flicks register
+    const fast = this.bladeV > (BLADE_LITE ? 0.24 : 0.28);
     if (fast && this.bladeV > 0.85) BladeSfx.whoosh(this.bladeV);
     if (last && fast) {
       if (this.scene === 'game' && this.running && !this.gameOver)
@@ -805,7 +818,7 @@ class BladeGame {
         this._checkUiSlice(last.x, last.y, x, y);
     }
     // blade tip sparkles
-    if (fast && !BLADE_REDUCED && this.parts.length < 300 && Math.random() < 0.5)
+    if (fast && !BLADE_REDUCED && this.parts.length < (BLADE_LITE ? 140 : 300) && Math.random() < (BLADE_LITE ? 0.3 : 0.5))
       this.parts.push({ type: 'dot', x, y, vx: (Math.random() - 0.5) * 1.4, vy: (Math.random() - 0.5) * 1.4,
                         ay: 0.02, life: 0.5, decay: 0.06, r: 0.8 + Math.random() * 1.2, c: '#ffe9b0' });
   }
@@ -894,7 +907,8 @@ class BladeGame {
         life: 1
       });
     }
-    if (this.shards.length > 26) this.shards.splice(0, this.shards.length - 26);
+    const shMax = BLADE_LITE ? 14 : 26;
+    if (this.shards.length > shMax) this.shards.splice(0, this.shards.length - shMax);
     // juice sprays perpendicular to the cut (both sides), like a real melon
     const juice = tk.sprite.juice;
     const alt = tk.sprite.pottery ? '#8a5a30' : '#e88a96';
@@ -911,7 +925,7 @@ class BladeGame {
       x: tk.x, y: tk.y, rot: Math.random() * Math.PI * 2,
       a: 0.5, decay: 0.0013, s: 1
     });
-    if (this.decals.length > 12) this.decals.shift();
+    if (this.decals.length > (BLADE_LITE ? 8 : 12)) this.decals.shift();
     // slice flash line
     this.rings.push({ x: tk.x, y: tk.y, r0: 2, r1: tk.r * 1.3, t0: this.now, dur: 200, c: 'rgba(255,248,225,0.8)', lw: 2 });
     BladeSfx.slice();
@@ -1006,7 +1020,8 @@ class BladeGame {
 
   // ── Particles ────────────────────────────────────────────
   _burst(px, py, c1, c2, n, type, bx, by) {
-    if (this.parts.length > 340) return;
+    if (this.parts.length > (BLADE_LITE ? 190 : 340)) return;
+    if (BLADE_LITE) n = Math.max(3, Math.round(n * 0.55));
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = 1.2 + Math.random() * 5.4;
@@ -1654,7 +1669,8 @@ class BladeGame {
     if (tk.dismiss) ctx.globalAlpha = Math.max(0, tk.alpha);
     ctx.translate(tk.x, tk.y);
     ctx.rotate(tk.ang);
-    if (tk.special) {
+    if (tk.special && !BLADE_LITE) {
+      // (sprite already carries a painted halo — the live shadow is desktop garnish)
       const gl = 0.5 + 0.5 * Math.sin(t * 0.008);
       ctx.shadowColor = 'rgba(246,214,120,' + (0.5 + gl * 0.4).toFixed(2) + ')';
       ctx.shadowBlur = 22 + gl * 14;
@@ -1794,11 +1810,11 @@ class BladeGame {
       ctx.font = '700 ' + Math.max(13, Math.min(16, this.W * 0.013)) + 'px "Cinzel", serif';
       ctx.fillStyle = '#c9a44a';
       ctx.fillText(it.title, it.x, ty);
-      ctx.font = Math.max(10, Math.min(12, this.W * 0.010)) + 'px "Noto Serif", serif';
+      ctx.font = '12px "Noto Serif", serif';
       ctx.fillStyle = 'rgba(232,216,160,0.55)';
       ctx.fillText(it.hint, it.x, ty + 22);
       if (it.best) {
-        ctx.font = '700 ' + Math.max(10, Math.min(12, this.W * 0.010)) + 'px "Cinzel", serif';
+        ctx.font = '700 12px "Cinzel", serif';
         ctx.fillStyle = 'rgba(201,164,74,0.6)';
         ctx.fillText('Καλύτερος: ' + it.best, it.x, ty + 40);
       }

@@ -42,6 +42,10 @@
 
   // prefers-reduced-motion: calm the ambient theatrics, keep state changes readable
   const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // cheap low-end / mobile heuristic — fewer ambient particles, smaller crowd,
+  // lower DPR so mid-range phones keep their frame rate. Presentation only.
+  const LITE = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    || window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
 
   function lerp(a, b, t) { return a + (b - a) * t; }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
@@ -256,13 +260,15 @@
     _resize() {
       const p = this.canvas.parentElement;
       const W = p.clientWidth || 760;
-      const H = Math.max(200, Math.min(440, p.clientHeight || 340));
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // min 120 (not 200): on phones the CSS shrinks the arena box so the buzz
+      // pads share the screen — the canvas must follow instead of overflowing.
+      const H = Math.max(120, Math.min(440, p.clientHeight || 340));
+      const dpr = Math.min(window.devicePixelRatio || 1, LITE ? 1.5 : 2);
       this.canvas.width = W * dpr; this.canvas.height = H * dpr;
       this.canvas.style.width = W + 'px'; this.canvas.style.height = H + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       this.W = W; this.H = H;
-      this.motes = []; const n = Math.round(W / (RM ? 70 : 24));
+      this.motes = []; const n = Math.round(W / (RM ? 70 : LITE ? 42 : 24));
       for (let i = 0; i < n; i++) this.motes.push(new Mote(W, H));
       this._buildStatic(W, H);
       this._buildCrowd(W, H);
@@ -280,7 +286,7 @@
       }
       const gy = H * 0.78;
       this.speck = [];
-      const np = Math.round(W / 6);
+      const np = Math.round(W / (LITE ? 10 : 6));
       for (let i = 0; i < np; i++) {
         this.speck.push({
           x: rnd(i, 6) * W, y: gy + 3 + rnd(i, 7) * (H * 0.955 - gy - 4),
@@ -310,10 +316,11 @@
     // amphitheatre crowd: three stone tiers of spectators, some with pennants
     _buildCrowd(W, H) {
       this.crowd = [];
+      const cd = LITE ? 1.6 : 1;   // thinner crowd on weak devices
       const tiers = [
-        { y: H * 0.272, r: 2.3, n: Math.max(12, Math.round(W / 26)), a: 0.34 },
-        { y: H * 0.356, r: 3.0, n: Math.max(10, Math.round(W / 21)), a: 0.46 },
-        { y: H * 0.452, r: 3.7, n: Math.max(8, Math.round(W / 17)), a: 0.60 },
+        { y: H * 0.272, r: 2.3, n: Math.max(12, Math.round(W / (26 * cd))), a: 0.34 },
+        { y: H * 0.356, r: 3.0, n: Math.max(10, Math.round(W / (21 * cd))), a: 0.46 },
+        { y: H * 0.452, r: 3.7, n: Math.max(8, Math.round(W / (17 * cd))), a: 0.60 },
       ];
       tiers.forEach((t, ti) => {
         for (let i = 0; i < t.n; i++) {
@@ -406,7 +413,7 @@
       for (const m of this.motes) { m.x += m.vx; m.y += m.vy; if (m.y < -6) m.reset(this.W, this.H, false); }
 
       // embers rising from the fire points
-      if (!RM && this.embers.length < 46) {
+      if (!RM && this.embers.length < (LITE ? 22 : 46)) {
         for (const fp of this._firePoints()) {
           if (Math.random() < 0.09 * dt) this.embers.push(new Ember(fp.x, fp.y));
         }
@@ -1436,9 +1443,10 @@
 
       // dark outline pass → body pass → braid ticks → top highlight
       this._stroke(all, 'rgba(8,5,2,0.55)', 8.6);
-      if (heatT > 0.5) { ctx.save(); ctx.shadowColor = `rgba(232,80,16,${((heatT - 0.5) * 0.8).toFixed(2)})`; ctx.shadowBlur = 5 + heatT * 12; }
+      const ropeGlow = heatT > 0.5 && !LITE;   // shadow blur is costly on weak GPUs
+      if (ropeGlow) { ctx.save(); ctx.shadowColor = `rgba(232,80,16,${((heatT - 0.5) * 0.8).toFixed(2)})`; ctx.shadowBlur = 5 + heatT * 12; }
       this._stroke(all, grad, 6.4);
-      if (heatT > 0.5) ctx.restore();
+      if (ropeGlow) ctx.restore();
 
       ctx.lineWidth = 1.2; ctx.lineCap = 'round';
       for (let i = 2; i < all.length - 2; i += 2) {

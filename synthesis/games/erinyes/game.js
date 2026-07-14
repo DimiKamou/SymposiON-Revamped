@@ -39,6 +39,12 @@ const Erinyes = (() => {
   };
 
   const TILES = 12, FP0 = 6, PP0 = 2, MAXR = 16;
+  // weak-device heuristic (presentation only): slower ambient emitters and
+  // fewer particles on touch phones / narrow viewports / low memory
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
   const FURY_NAMES = ['ΑΛΗΚΤΩ', 'ΤΙΣΙΦΟΝΗ', 'ΜΕΓΑΙΡΑ'];        // the three Furies
   const RIVAL_NAMES = ['ΟΡΕΣΤΗΣ', 'ΑΛΚΜΑΙΩΝ', 'ΕΥΜΕΝΗΣ', 'ΚΛΥΤΟΣ'];
 
@@ -68,7 +74,7 @@ const Erinyes = (() => {
     if (document.getElementById('er-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'er-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' er-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeErinyes()">\u2039 <span>' + T('\u03a0\u0399\u03a3\u03a9', 'BACK') + '</span></button>' +
@@ -653,7 +659,7 @@ const Erinyes = (() => {
     /* ── ambient ── */
     function ember() {
       if (!ovOn() || document.hidden) return;
-      const box = layer('erfx-embers'); if (!box || box.childElementCount > 15) return;
+      const box = layer('erfx-embers'); if (!box || box.childElementCount > (LITE ? 7 : 15)) return;
       const d = document.createElement('div'); d.className = 'fx-ember';
       const s = 2 + Math.random() * 3.2, warm = Math.random() < .8;
       d.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;width:' + s.toFixed(1) + 'px;height:' + s.toFixed(1) + 'px;' +
@@ -695,7 +701,7 @@ const Erinyes = (() => {
       o = o || {};
       const vx = o.vx || [-70, 70], vy = o.vy || [-130, -20], sz = o.size || [2, 4.6], lf = o.life || [.55, 1.1];
       for (let i = 0; i < n; i++) {
-        if (parts.length > 90) break;
+        if (parts.length > (LITE ? 45 : 90)) break;
         const el = document.createElement('div'); el.className = 'erfx-spark';
         const s = rr(sz[0], sz[1]), c = colors[(Math.random() * colors.length) | 0];
         const px = x + rr(-4, 4), py = y + rr(-4, 4);
@@ -845,8 +851,8 @@ const Erinyes = (() => {
     function start() {
       buildLayers();
       if (RM()) return;                       // static veil only — no timers
-      if (!emberT) emberT = setInterval(ember, 430);
-      if (!trailT) trailT = setInterval(trail, 400);
+      if (!emberT) emberT = setInterval(ember, LITE ? 900 : 430);
+      if (!trailT) trailT = setInterval(trail, LITE ? 800 : 400);
       if (!wingT) wingT = setTimeout(wingLoop, 5000 + Math.random() * 6000);
     }
     function stop() {

@@ -77,7 +77,9 @@
     linear-gradient(180deg, #060B15 0%, #0B1620 42%, #122129 72%, #0E1712 100%);
   border:1px solid rgba(150,170,185,0.18);
   box-shadow:0 18px 50px rgba(0,0,0,0.5), inset 0 0 90px rgba(0,0,0,0.35);
-  touch-action:manipulation;
+  /* none (not manipulation): touch drag across the grove must aim the bow
+     via pointermove instead of panning the page */
+  touch-action:none;
 }
 #tx-bg-canvas, #tx-fx-canvas {
   position:absolute; inset:0; width:100%; height:100%;
@@ -163,6 +165,13 @@
 .tx-ans.correct .tx-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
 .tx-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
 .tx-ans.wrong .tx-ans-key { border-color:var(--sym-blood); color:#E08577; }
+
+/* Mobile: narrow the flying-amphora answer labels so they wrap tightly and
+   stay inside the (overflow:hidden) range instead of being clipped at the
+   screen edges. Pairs with the JS lane-inset on narrow ranges. */
+@media (max-width:560px){
+  .tx-label { max-width:118px; font-size:12px; padding:4px 9px; margin-top:5px; }
+}
 
 /* ── End ── */
 #tx-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }

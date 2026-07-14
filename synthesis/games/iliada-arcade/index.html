@@ -12,7 +12,10 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sans-serif;-webkit-user-select:none;user-select:none;}
 :root{--slip:#17110C;--terra:#C8542B;--terraLt:#DD7A45;--clay:#E2A867;--bone:#ECDAB4;--gold:#E8C96A;--ok:#9DB46A;--bad:#D2452E;--fog:#6E5C44;--boneDim:#A99572;--line:rgba(200,84,43,.30);}
-.viewport{position:fixed;inset:0;display:grid;place-items:center;background:#05060a;}
+/* place-CONTENT (not just -items) — the lone grid track is sized by the 1600px
+   stage, so place-items alone leaves the stage anchored top-left and the play
+   field gets pushed off the bottom-right on any window narrower than 1600px. */
+.viewport{position:fixed;inset:0;display:grid;place-items:center;place-content:center;background:#05060a;}
 .stage{width:1600px;height:900px;position:relative;transform-origin:center center;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.7);}
 #game{position:absolute;inset:0;width:1600px;height:900px;display:block;z-index:2;}
 #bgScene{position:absolute;inset:0;z-index:0;transform-origin:center center;}
@@ -191,10 +194,11 @@ html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sa
 .sys-btn:hover{border-color:var(--gold);color:var(--gold);}
 .sys-btn.muted{color:var(--fog);border-color:rgba(110,92,68,.5);text-decoration:line-through;}
 
-/* overlays (help / pause) */
-.overlay{position:fixed;inset:0;z-index:80;background:rgba(8,5,3,.86);backdrop-filter:blur(6px);display:none;place-items:center;padding:24px;}
-.overlay.show{display:grid;}
-.oc-inner{max-width:640px;width:100%;text-align:center;background:linear-gradient(180deg,rgba(36,25,16,.96),rgba(20,13,7,.96));border:1.5px solid var(--terra);border-radius:14px;padding:30px 34px;box-shadow:0 30px 90px rgba(0,0,0,.6);}
+/* overlays (help / pause) — flex + margin:auto so tall cards SCROLL on short
+   phone screens instead of clipping the ΑΡΧΙΣΤΕ button off both ends. */
+.overlay{position:fixed;inset:0;z-index:80;background:rgba(8,5,3,.86);backdrop-filter:blur(6px);display:none;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.overlay.show{display:flex;}
+.oc-inner{max-width:640px;width:100%;margin:auto;text-align:center;background:linear-gradient(180deg,rgba(36,25,16,.96),rgba(20,13,7,.96));border:1.5px solid var(--terra);border-radius:14px;padding:30px 34px;box-shadow:0 30px 90px rgba(0,0,0,.6);}
 .oc-title{font-family:'Anton',sans-serif;font-size:40px;letter-spacing:2px;color:var(--gold);}
 .oc-sub{font-family:'Cardo',serif;font-style:italic;font-size:17px;color:var(--boneDim);margin-top:6px;}
 .oc-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:22px 0 6px;text-align:left;}
@@ -222,6 +226,81 @@ html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sa
 /* end-card extras */
 .end-record{font-family:'Anton',sans-serif;font-size:15px;letter-spacing:2px;color:var(--gold);margin-top:14px;display:none;animation:ultpulse 1s infinite;}
 .end-record.show{display:block;}
+
+/* ── COMPACT: landscape phones (short viewports). The 1600×900 stage shrinks to
+   ~0.42×, so HUD text and touch targets are enlarged IN STAGE UNITS to stay
+   ≥40px / legible on screen. Desktop (≥560px tall) is untouched.
+   NOTE: must stay LAST in this stylesheet — same specificity as the base rules,
+   so source order is what lets these win. ── */
+@media (max-height:560px){
+  .kbd{display:none;}
+  /* settings bar → single left-aligned scrollable row that clears the HUD */
+  .topbar{flex-direction:row;align-items:center;gap:6px;left:10px;right:auto;top:10px;transform:none;
+    max-width:calc(100vw - 160px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .topbar::-webkit-scrollbar{display:none;}
+  .camp-row,.rhap-bar,.wave-row{flex:0 0 auto;}
+  .camp-btn,.diff-btn{min-height:40px;}
+  .rhap-btn{width:40px;height:40px;}
+  .wave-btn{width:40px;height:40px;}
+  .sys-row{top:10px;right:10px;}
+  .sys-btn{width:44px;height:44px;}
+  /* HUD drops below the fixed chrome and scales up */
+  .hero-hud{top:150px;left:24px;}
+  .portrait{width:84px;height:84px;font-size:44px;}
+  .hero-meta{min-width:300px;}
+  .hero-name{font-size:26px;letter-spacing:2.5px;}
+  .bar-wrap{height:24px;margin-top:6px;}
+  .bar-num{font-size:16px;}
+  .row2{gap:12px;margin-top:9px;}
+  .ult-tag{font-size:14px;}
+  .ult-bar{width:160px;height:12px;}
+  .ammo span{font-size:20px;}
+  .score-hud{top:150px;right:24px;}
+  .stat .k{font-size:15px;}
+  .stat .v{font-size:42px;}
+  .combo{font-size:24px;}
+  .boss-bar{top:150px;max-width:40%;}
+  .boss-bar .nm{font-size:30px;}
+  .boss-bar .nm small{font-size:16px;}
+  .boss-track{height:22px;}
+  .mod-chip{top:264px;left:24px;max-width:300px;}
+  .mod-chip .mt{font-size:16px;}
+  .mod-chip .md{font-size:15px;}
+  .toast{top:280px;font-size:44px;}
+  /* touch controls: every button ≥ ~104 stage px ⇒ ≥ ~44px on screen */
+  .joy{width:180px;height:180px;left:40px;bottom:40px;}
+  .joy-knob{width:80px;height:80px;font-size:32px;}
+  .btn-sword{width:128px;height:128px;right:36px;bottom:60px;}
+  .btn-sword .ic{font-size:44px;}
+  .btn-block{width:104px;height:104px;right:176px;bottom:28px;}
+  .btn-block .ic{font-size:34px;}
+  .btn-ranged{width:104px;height:104px;right:176px;bottom:148px;}
+  .btn-ranged .ic{font-size:30px;}
+  .btn-jump{width:104px;height:104px;right:296px;bottom:56px;}
+  .btn-jump .ic{font-size:32px;}
+  .btn-ult{width:110px;height:110px;right:416px;bottom:118px;}
+  .btn-ult .ic{font-size:36px;}
+  .ctrl .lbl{font-size:14px;}
+  .btn-ult .lbl{font-size:12px;}
+  .ctrl .kk{display:none;}
+  .pots{bottom:30px;gap:26px;}
+  .pot{width:100px;height:100px;border-radius:18px;}
+  .pot .ic{font-size:36px;}
+  .pot .ct{width:30px;height:30px;font-size:16px;}
+  .pot .ky{display:none;}
+  /* quiz & end card: counter-scale (engine sets --ovb from the stage scale) so
+     answers land ≥44px tall and ≥14px text on a phone */
+  .quiz-card,.end-inner{transform:scale(var(--ovb,1));transform-origin:center center;}
+  .oc-inner{padding:22px 20px;}
+  .oc-grid{gap:8px;}
+}
+@media (max-width:640px){ .oc-grid{grid-template-columns:1fr;} }
+
+/* ── LITE devices (engine adds html.lite): drop the continuous compositing
+   costs — backdrop blurs are the big one on low-end phones. ── */
+html.lite .camp-row,html.lite .rhap-bar,html.lite .wave-row,html.lite .sys-btn{backdrop-filter:none;background:rgba(12,9,6,.92);}
+html.lite .quiz,html.lite .endcard,html.lite .overlay{backdrop-filter:none;}
+html.lite .stage{box-shadow:none;}
 </style>
 </head>
 <body>

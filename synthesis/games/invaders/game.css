@@ -285,6 +285,40 @@
   .inv-title { letter-spacing: 0.2em; text-indent: 0.2em; }
 }
 
+/* ── Phone topbar: drop the absolute-centred marquee title so the three
+      controls (back · theme · score) share one clean row without overlap ── */
+@media (max-width: 640px) {
+  .inv-title-wrap { display: none; }
+  .inv-topbar { gap: 8px; padding: 9px 10px; }
+  .inv-back, .inv-theme-btn { font-size: 0.72rem; padding: 8px 10px; letter-spacing: 0.06em; }
+  .inv-theme-btn { max-width: 108px; overflow: hidden; text-overflow: ellipsis; }
+  .inv-right { gap: 8px; min-width: 0; flex: 1; justify-content: flex-end; }
+  .inv-scorechip, #invaders-score-display {
+    min-width: 0; flex-shrink: 1; overflow: hidden;
+    font-size: 0.72rem; padding: 7px 9px;
+  }
+  .inv-scorechip .inv-hud-lbl { display: none; }
+  .inv-scorechip .inv-hud-sep { margin: 0 5px; }
+}
+
+/* Lighter CRT dressing on coarse-pointer (mobile) GPUs: keep the scanlines,
+   drop the per-pixel RGB grille and the rolling refresh band. */
+@media (pointer: coarse) {
+  .inv-scanlines {
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.0) 0px,
+        rgba(0,0,0,0.0) 2px,
+        rgba(0,0,0,0.14) 3px,
+        rgba(0,0,0,0.14) 3px);
+    mix-blend-mode: normal;
+    opacity: 0.4;
+  }
+  .inv-scanlines::after { display: none; }
+  .inv-vignette { box-shadow: inset 0 0 40px rgba(0,0,0,0.5); }
+}
+
 /* last in file so it wins the cascade over the animated rule above */
 @media (prefers-reduced-motion: reduce) {
   .inv-t-fire-btn { animation: none; }

@@ -38,6 +38,12 @@ const Mnemosyne = (() => {
   const RIVALS = ['ΕΥΤΕΡΠΗ','ΚΑΛΛΙΟΠΗ','ΚΛΕΙΩ'];
 
   const REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // weak-device heuristic (presentation only): fewer/cheaper ambient FX on
+  // touch phones, narrow viewports and low-memory hardware
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   let st = {};
 
@@ -66,7 +72,7 @@ const Mnemosyne = (() => {
     if (document.getElementById('mn-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'mn-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' mn-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeMnemosyne()">‹ <span>' + T('ΠΙΣΩ','BACK') + '</span></button>' +
@@ -264,7 +270,7 @@ const Mnemosyne = (() => {
 
   /* the wall leans gently toward the pointer — layered depth, nothing more */
   function _tiltInit(){
-    if (REDUCE) return;
+    if (REDUCE || LITE) return; /* pointless under a finger; saves rAF churn */
     const wrap=document.getElementById('mn-gridwrap'), grid=document.getElementById('mn-grid');
     if (!wrap || !grid || wrap._mnTilt) return;
     wrap._mnTilt=true;
@@ -369,7 +375,7 @@ const Mnemosyne = (() => {
       const el=_tileEl(id); if (!el) return;
       const r=el.getBoundingClientRect();
       const cx=r.left+r.width/2, cy=r.top+r.height/2;
-      for (let i=0;i<4;i++){
+      for (let i=0;i<(LITE?2:4);i++){
         const sp=document.createElement('i');
         sp.className='mn-spark';
         sp.style.left=cx+'px'; sp.style.top=cy+'px';
@@ -593,13 +599,13 @@ const Mnemosyne = (() => {
       seed();
     }
     function seed(){
-      glyphs=Array.from({length: Math.round(Math.min(22, w/60))}, ()=>({
+      glyphs=Array.from({length: Math.round(Math.min(LITE?10:22, w/(LITE?90:60)))}, ()=>({
         x:Math.random()*w, y:h*(0.12+Math.random()*0.8),
         v:6+Math.random()*16, s:11+Math.random()*15,
         ch:CH[(Math.random()*CH.length)|0],
         ph:Math.random()*Math.PI*2, o:0.05+Math.random()*0.1,
       }));
-      motes=Array.from({length:10}, ()=>({
+      motes=Array.from({length:LITE?5:10}, ()=>({
         x:Math.random()*w, y:h*(0.1+Math.random()*0.85),
         v:3+Math.random()*8, r:0.8+Math.random()*1.7,
         ph:Math.random()*Math.PI*2,

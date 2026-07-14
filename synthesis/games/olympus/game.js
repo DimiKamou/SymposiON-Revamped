@@ -20,6 +20,12 @@ const Olympus = (() => {
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
   const RMQ = (window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null);
   const RM = () => !!(RMQ && RMQ.matches);
+  // weak-device heuristic (presentation only): thinner star field, fewer
+  // clouds/motes and cheaper blurs on phones and low-memory hardware
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   // Pick the language string from a question's `q`, tolerating {gr,en},
   // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
@@ -185,7 +191,7 @@ const Olympus = (() => {
     if (document.getElementById('ao-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'ao-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' ao-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeOlympus()">‹ <span>' + T('ΠΙΣΩ','BACK') + '</span></button>' +
@@ -286,7 +292,7 @@ const Olympus = (() => {
     const stars = document.getElementById('ao-stars');
     if (stars) {
       const sh = [];
-      for (let i = 0; i < 72; i++) {
+      for (let i = 0; i < (LITE ? 40 : 72); i++) {
         const tint = Math.random() < 0.2 ? '227,199,102' : (Math.random() < 0.12 ? '127,176,188' : '240,235,224');
         sh.push(`${(Math.random()*100).toFixed(1)}vw ${(Math.random()*72).toFixed(1)}vh 0 ${(Math.random()<0.22?1:0)}px rgba(${tint},${(0.2+Math.random()*0.6).toFixed(2)})`);
       }
@@ -294,7 +300,7 @@ const Olympus = (() => {
     }
     const cl = document.getElementById('ao-clouds');
     if (cl) {
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < (LITE ? 4 : 9); i++) {
         const c = document.createElement('i'); c.className='ao-cloud';
         const w = 220 + Math.random()*340;
         c.style.width = w.toFixed(0)+'px';
@@ -310,7 +316,7 @@ const Olympus = (() => {
     buildRange();
     const mo = document.getElementById('ao-motes');
     if (mo && !RM()) {
-      for (let i = 0; i < 22; i++) {
+      for (let i = 0; i < (LITE ? 9 : 22); i++) {
         const m = document.createElement('i'); m.className='ao-mote';
         const s = 1.8 + Math.random()*2;
         m.style.width = m.style.height = s.toFixed(1)+'px';
@@ -608,6 +614,7 @@ const Olympus = (() => {
   function sparksAt(el, o) {
     const host=_host(); if (!host || !el || RM()) return;
     o = Object.assign({ count:16, colors:['#E3C766','#F0EBE0','#C4A448'], power:8, size:5, life:900 }, o||{});
+    if (LITE) o.count = Math.ceil(o.count/2);
     const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
     const cx=r.left+r.width/2-hr.left, cy=r.top+r.height/2-hr.top;
     for (let i=0;i<o.count;i++){
@@ -785,7 +792,7 @@ const Olympus = (() => {
   function goldRain() {
     const host=_host(); if (!host || RM()) return;
     const hr=host.getBoundingClientRect();
-    for (let i=0;i<34;i++){
+    for (let i=0;i<(LITE?16:34);i++){
       const p=document.createElement('i'); p.className='ao-spark';
       const s=2.5+Math.random()*3.6;
       p.style.width=p.style.height=s.toFixed(1)+'px';

@@ -46,6 +46,12 @@ const Parthenon = (() => {
     try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
     catch (_) { return false; }
   })();
+  // weak-device heuristic (presentation only): fewer motes/particles and
+  // cheaper blends on touch phones, narrow viewports, low-memory hardware
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
 
   // each building costs (cols + 2) pieces: columns, then architrave, then pediment
   const B = {
@@ -87,7 +93,7 @@ const Parthenon = (() => {
     if (document.getElementById('pn-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'pn-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' pn-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
         '<button class="overlay-back" onclick="closeParthenon()">‹ <span>' + T('ΠΙΣΩ','BACK') + '</span></button>' +
@@ -762,7 +768,7 @@ ${ambientHTML()}
   }
   function ambientHTML(){
     let motes='';
-    if (!REDUCE) for(let i=0;i<14;i++){
+    if (!REDUCE) for(let i=0;i<(LITE?6:14);i++){
       const sz=(1.5+Math.random()*2.2).toFixed(1);
       motes+=`<i class="pn-mote" style="left:${(Math.random()*100).toFixed(1)}%;width:${sz}px;height:${sz}px;animation-duration:${(12+Math.random()*14).toFixed(1)}s;animation-delay:${(-Math.random()*20).toFixed(1)}s;--drift:${((Math.random()-.5)*120).toFixed(0)}px"></i>`;
     }
@@ -806,7 +812,8 @@ ${ambientHTML()}
     if(REDUCE) return;
     const ov=document.getElementById('pn-overlay'); if(!ov) return;
     o=Object.assign({count:14,colors:['#E7DCC2','#C9BCA0','#B7A887'],spark:false,power:8,life:900,size:6,spread:Math.PI*1.5},o||{});
-    for(let i=0;i<o.count;i++){
+    const n = LITE ? Math.ceil(o.count/2) : o.count;
+    for(let i=0;i<n;i++){
       const p=document.createElement('i'); p.className='pn-p'+(o.spark?' spark':'');
       const c=o.colors[(Math.random()*o.colors.length)|0];
       const sz=o.size*(0.55+Math.random()*0.9);

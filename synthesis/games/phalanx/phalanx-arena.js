@@ -43,6 +43,17 @@
 
   const RM = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)')) || { matches: false };
 
+  // Low-power heuristic (mid/low-end phones): cap the render buffer at 1.5×
+  // instead of 2× so this full-screen 60 fps battle scene stays smooth.
+  // Presentation only — battle logic and question flow are untouched.
+  const LITE = (function () {
+    try {
+      return (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+             window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
+    } catch (_) { return false; }
+  })();
+  const DPR_CAP = LITE ? 1.5 : 2;
+
   function lerp(a, b, t) { return a + (b - a) * t; }
   function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
   // deterministic per-tile randomness (wear, cracks, glint offsets)
@@ -249,7 +260,7 @@
     _resize() {
       const p = this.canvas.parentElement;
       const W = p.clientWidth || 600, H = p.clientHeight || 600;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
       this.canvas.width = W * dpr; this.canvas.height = H * dpr;
       this.canvas.style.width = W + 'px'; this.canvas.style.height = H + 'px';
       this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -715,7 +726,7 @@
     _paintBoardLayer() {
       const W = this.W, H = this.H;
       if (!W || !H) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
       const cv = document.createElement('canvas');
       cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(H * dpr));
       const ctx = cv.getContext('2d');

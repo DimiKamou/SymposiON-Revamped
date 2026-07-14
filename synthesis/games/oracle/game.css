@@ -527,7 +527,15 @@
 }
 .or-stake-head::after { transform:scaleX(-1); }
 .or-stake-opts { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-@media (max-width:520px){ .or-stake-opts{grid-template-columns:1fr;} }
+/* Mobile: keep the three stakes as a compact single row (not a tall stack) so that,
+   once staked, the revealed answers stay above the fold instead of being pushed off-screen. */
+@media (max-width:520px){
+  .or-stake-opts{ grid-template-columns:repeat(3,1fr); gap:8px; }
+  .or-stake{ margin-bottom:10px; }
+  .or-stake-btn{ padding:9px 5px; touch-action:manipulation; }
+  .or-stake-lbl{ font-size:12px; letter-spacing:.3px; }
+  .or-stake-amt{ font-size:13px; }
+}
 .or-stake-btn {
   position:relative; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;
   background:
@@ -595,7 +603,9 @@
 
 /* ══ Answers ══ */
 .or-answers { display:grid; grid-template-columns:1fr 1fr; gap:13px; transition:opacity .3s, filter .3s; }
-@media (max-width:600px){ .or-answers{grid-template-columns:1fr;} }
+/* Mobile: 2-col answers (matches desktop) so all four choices fit above the fold under the
+   compact stakes row instead of forcing a long scroll during the timed answer phase. */
+@media (max-width:600px){ .or-answers{ grid-template-columns:1fr 1fr; gap:10px; } .or-ans{ touch-action:manipulation; } }
 .or-answers.locked { opacity:0.25; pointer-events:none; filter:blur(2px) saturate(.6); }
 .or-ans {
   position:relative; display:flex; align-items:center; gap:13px; text-align:left; overflow:hidden;

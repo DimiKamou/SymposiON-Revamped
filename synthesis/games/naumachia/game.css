@@ -1408,23 +1408,32 @@
 .nau-flappy-slot { margin-top: 8px; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
+/* On phones, stack the two boards vertically (they can't sit side-by-side
+   under ~640 px) and shrink the cell so the full 10-wide grid + axis labels
+   + chart frame always fit the viewport — the old fixed 34 px clipped the
+   rightmost column on 375-wide phones. Capped at 34 px for comfortable taps
+   on roomier phones. Layout/size only; grid logic is untouched. */
 @media (max-width: 640px) {
-  #naumachia-overlay { --nc: 30px; }
-  .nau-boards-wrap   { gap: 16px; }
+  #naumachia-overlay { --nc: min(34px, calc((100vw - 66px) / 10)); }
+  .nau-boards-wrap   { flex-direction: column; gap: 20px; align-items: center; }
   .nau-place-body    { flex-direction: column; align-items: center; }
   .nau-dock          { width: 100%; max-width: 340px; }
 }
 
-/* On phones, stack boards vertically so cells stay ≥ 34 px (touch-friendly). */
 @media (max-width: 520px) {
-  #naumachia-overlay { --nc: 34px; }
-  .nau-boards-wrap {
-    flex-direction: column;
-    gap: 22px;
-    align-items: center;
-  }
   .nau-q-modal { padding: 20px 16px 18px; }
   .nau-sea-chart { opacity: 0.1; }
+}
+
+/* Low-power trim on touch / coarse-pointer GPUs: keep the scene's character
+   but drop its most expensive continuous layers — the two screen-blend water
+   caustics per board and the faintest drifting trireme. The static depth
+   vignette and the rest of the scene remain; motion is already fully stilled
+   under prefers-reduced-motion. Presentation only. */
+@media (pointer: coarse) {
+  .nau-grid-water::before,
+  .nau-grid-water::after { display: none; }
+  .nau-sea-ships .nau-trireme.s3 { display: none; }
 }
 
 /* ── Reduced motion — still the still waters ─────────────────── */
