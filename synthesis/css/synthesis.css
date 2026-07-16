@@ -263,6 +263,14 @@
 .syn-tile:hover .syn-tile__eye { opacity:1; transform:none; }
 .syn-tile__eye:hover { border-color:var(--ca-mid); color:var(--ca-ink); }
 @media (pointer:coarse){ .syn-tile__eye { opacity:1; transform:none; } }
+/* ── auto-cycling band dots (Games Catalogue / Live) ── */
+.syn-cdots { display:flex; justify-content:center; gap:8px; margin-top:18px; }
+.syn-cdot { width:8px; height:8px; padding:0; border:0; border-radius:999px; cursor:pointer; background:var(--line-bold,rgba(120,110,90,.35)); opacity:.5; transition:width .2s, opacity .2s, background .2s; }
+.syn-cdot:hover { opacity:.85; }
+.syn-cdot.on { width:22px; opacity:1; background:var(--ca,var(--terra)); }
+/* live spotlight — the auto-advancing "active" product */
+.syn-tile--spot { border-color:var(--ca); box-shadow:0 0 0 2px var(--ca) inset, 0 18px 34px var(--ca-mid); }
+.syn-tile--spot .syn-tile__play { opacity:1; transform:scale(1); }
 
 /* ── ENGINES ── */
 .syn-engines { padding:clamp(28px,4vw,50px) 0 clamp(18px,3vw,28px); }

@@ -869,6 +869,28 @@
         return (window.symTileLaunch ? symTileLaunch(gm, {game:gm}) : synLaunch(fn, ...((gm.launch && gm.launch.args) || [])));
       return symGo('gamepanel');
     }
+    // Shared auto-cycler — mirrors startClassRotation so the catalogue/live bands
+    // "change" like the grade chips: fire onTick every `interval` ms while home is
+    // showing, pause on hover, stop when the section leaves the DOM / we navigate
+    // away. Reduced-motion → no cycling (sections stay on the first page).
+    function cycleEvery(section, timerKey, interval, onTick){
+      if (reduce) return;
+      clearInterval(window[timerKey]);
+      window[timerKey] = setInterval(()=>{
+        if (STATE.screen!=='home' || STATE.direction!=='synthesis' || !document.body.contains(section)){ clearInterval(window[timerKey]); return; }
+        if (section.matches(':hover')) return;   // let the reader linger
+        onTick();
+      }, interval);
+    }
+    function dotRow(n, onPick){
+      const row = el('div', { class:'syn-cdots' });
+      for (let k=0;k<n;k++) row.appendChild(el('button', { class:'syn-cdot', 'aria-label':String(k+1), onclick:((i)=>()=>onPick(i))(k) }));
+      return row;
+    }
+    const setDots = (row, cur)=> row && row.querySelectorAll('.syn-cdot').forEach((d,k)=>d.classList.toggle('on', k===cur));
+
+    /* ── GAME CATALOGUE — a teaser panel that auto-pages through the whole
+       catalogue (6 at a time), sliding to the next page every ~6s. ── */
     const cat = el('section', { class:'syn-subj has-accent', style:`--ca:${catAccent}` });
     cat.appendChild(el('div', { class:'syn-subj__hd' }, [
       el('span', { class:'syn-subj__no' }, '//'),
@@ -880,11 +902,30 @@
       el('a', { class:'syn-subj__all', href:'javascript:void 0', onclick:()=>symGo('gamepanel') },
         [ L(STR.allGames), el('span', { class:'syn-subj__cnt' }, catalog.length) ]),
     ]));
-    cat.appendChild(el('div', { class:'syn-subj__grid' }, catalog.slice(0, CAT_PREVIEW).map(gm => mkTile(gm, catAccent, ()=>launchCatalog(gm)))));
+    const catTiles = catalog.map(gm => mkTile(gm, catAccent, ()=>launchCatalog(gm)));
+    const catPages = [];
+    for (let i=0;i<catTiles.length;i+=CAT_PREVIEW) catPages.push(catTiles.slice(i, i+CAT_PREVIEW));
+    const catGrid = el('div', { class:'syn-subj__grid' });
+    const catDots = catPages.length>1 ? dotRow(catPages.length, (i)=>paintCat(i, true)) : null;
+    let catCur = 0;
+    function paintCat(p, animate){
+      catCur = ((p % catPages.length)+catPages.length)%catPages.length;
+      catGrid.innerHTML='';
+      catPages[catCur].forEach(n=>catGrid.appendChild(n));
+      if (window.injectIllus) injectIllus(catGrid);
+      if (animate && window.gsap && !reduce) gsap.fromTo(catGrid.children, {x:26, autoAlpha:0}, {x:0, autoAlpha:1, duration:.5, stagger:.05, ease:'power2.out', clearProps:'opacity,visibility,transform'});
+      setDots(catDots, catCur);
+    }
+    cat.appendChild(catGrid);
+    if (catDots) cat.appendChild(catDots);
+    paintCat(0, false);
     home.appendChild(cat);
     if (window.injectIllus) injectIllus(cat);
+    cycleEvery(cat, '__symCatRotate', 6000, ()=>paintCat(catCur+1, true));
 
-    /* LIVE — the three live/multiplayer products (user pick: Arena · Ἀγών · 1v1) */
+    /* ── LIVE — the three live/multiplayer products (user pick: Arena · Ἀγών · 1v1).
+       All three stay on screen; a spotlight advances across them every ~6s so the
+       band visibly "changes" like the grade chips. ── */
     const LIVE = [
       { gr:'Ζωντανή Αρένα', en:'Live Arena', meta:{gr:'Όλη η τάξη ζωντανά · host / join', en:'The whole class, live'}, illu:'lightning-bolt',
         go:()=>symGo('live') },
@@ -901,9 +942,22 @@
         el('p', { class:'syn-subj__sum' }, L({gr:'Παίξε live με την τάξη ή μονομάχησε σε πραγματικό χρόνο.', en:'Play live with your class, or duel in real time.'})),
       ]),
     ]));
-    liveSec.appendChild(el('div', { class:'syn-subj__grid' }, LIVE.map(o => mkTile(o, liveAccent, o.go, {preview:false}))));
+    const liveTiles = LIVE.map(o => mkTile(o, liveAccent, o.go, {preview:false}));
+    const liveGrid = el('div', { class:'syn-subj__grid' }, liveTiles);
+    const liveDots = liveTiles.length>1 ? dotRow(liveTiles.length, (i)=>spotLive(i, true)) : null;
+    let liveCur = 0;
+    function spotLive(i, animate){
+      liveCur = ((i % liveTiles.length)+liveTiles.length)%liveTiles.length;
+      liveTiles.forEach((t,k)=> t.classList.toggle('syn-tile--spot', k===liveCur));
+      if (animate && window.gsap && !reduce) gsap.fromTo(liveTiles[liveCur], {x:22, autoAlpha:.55}, {x:0, autoAlpha:1, duration:.5, ease:'power2.out', clearProps:'opacity,visibility,transform'});
+      setDots(liveDots, liveCur);
+    }
+    liveSec.appendChild(liveGrid);
+    if (liveDots) liveSec.appendChild(liveDots);
     home.appendChild(liveSec);
     if (window.injectIllus) injectIllus(liveSec);
+    spotLive(0, false);
+    cycleEvery(liveSec, '__symLiveRotate', 6000, ()=>spotLive(liveCur+1, true));
 
     /* JOIN */
     home.appendChild(el('section', { class:'syn-join' }, [
