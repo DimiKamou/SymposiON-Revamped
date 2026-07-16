@@ -407,6 +407,11 @@
           } }, classes.map(c => el('option', { selected: c === klass ? 'selected' : null }, c))
             .concat([ el('option', { value:'__new' }, '＋ ' + L({gr:'Νέα τάξη…',en:'New class…'})) ])),
         ]),
+        el('button', { class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>{
+            if (window.ExamAgent && typeof window.ExamAgent.open === 'function') window.ExamAgent.open({ klass });
+            else alert(L({gr:'Ο AI βοηθός θεμάτων δεν φορτώθηκε.',en:'Exam agent not loaded.'}));
+          } },
+          [ '✨ ', L({gr:'Δημιουργία Θεμάτων (AI)',en:'Generate θέματα (AI)'}) ]),
         el('button', { class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>launchTriviaPanel() },
           [ '✚ ', L({gr:'Δημιουργία Trivia',en:'Create Trivia'}) ]),
         el('button', { class:'sc-cta sc-cta--solid sc-cta--sm', onclick:()=>openWizard(klass, ()=>go('anathesi', { tab:'assign', klass })) },

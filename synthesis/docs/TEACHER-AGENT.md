@@ -85,13 +85,33 @@ function** directly → generate → assign → auto-grade closes the loop.
 
 ## 6. Build increments
 
-1. **Calibrate the brain** (now, in chat) — run real examples, lock the
-   per-subject methodology + marking into the Methodology Log.
-2. **Backend** — `generateExam` + validation/save + `examContent` schema.
-3. **UI** — ANATHESI generation panel + review/edit + publish + attach.
-4. **Ingestion** — PDF (Storage) & Drive; then vision for scanned banks.
-5. **Scale** — once methodology is stable, fan out to generate whole papers
-   (per-θέμα in parallel) and batch-expand existing banks.
+1. **Calibrate the brain** — ✅ done for Έκθεση ΘΕΜΑ 1 (Β΄ Λυκείου Τράπεζα).
+2. **Backend** — ✅ `generateExam` + `adminSaveExamContent` (validated + audited)
+   in `functions/index.js`; `exam` content model in `examContent/{id}`.
+3. **UI** — ✅ `js/exam-agent.js` panel + "✨ Δημιουργία Θεμάτων (AI)" button in
+   the ANATHESI console (`js/anathesi.js`); review/edit/select → save draft.
+4. **Ingestion** — ⏳ PDF (Storage) & Drive; then vision for scanned banks.
+5. **Publish/attach** — ⏳ approve a draft → publish → attach to an assignment.
+6. **Scale & subjects** — ⏳ Αρχαία/Λογοτεχνία pipelines; fan out whole papers.
+
+### Deploy & try it (teacher)
+
+1. **Key** (already set for `gradeAnswer`): `functions/.env` → `ANTHROPIC_KEY=sk-ant-…`.
+2. **Deploy** the two new functions + hosting:
+   ```bash
+   cd synthesis
+   firebase deploy --only functions:generateExam,functions:adminSaveExamContent,hosting
+   ```
+3. *(optional)* Seed the live θεωρία so the agent uses your exact wording:
+   Firestore → `config/ekthesi-theory` doc, field **`text`** = your θεωρία
+   (else it falls back to the standard θεωρία baked into the function).
+4. In the app: **Κονσόλα Καθηγητή → Ανάθεση → ✨ Δημιουργία Θεμάτων (AI)** →
+   paste ΚΕΙΜΕΝΟ 1 → *Δημιουργία ΘΕΜΑ 1* → review/edit → *Αποθήκευση ως πρόχειρο*.
+
+> Access: `generateExam`/`adminSaveExamContent` require the admin account or the
+> `content` role (RBAC via `requireRole`). Drafts also save to local SymStore as
+> a fallback, so the panel works even before the functions are deployed (it just
+> can't call the model until then).
 
 ## 7. Methodology Log
 
