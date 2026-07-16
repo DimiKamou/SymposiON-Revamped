@@ -1243,3 +1243,96 @@ exports.adminSaveExamContent = functions.https.onCall(async (data, context) => {
   await writeAudit(context, 'exam.content.save', contentId, { themata: content.themata.length, status });
   return { ok: true, id: contentId };
 });
+
+
+// ============================================================
+//  ingestExamSource  (callable — ADMIN / content role)
+//  Upload a Τράπεζα Θεμάτων / Πανελλήνιες exam file (PDF or image)
+//  and extract its structured content, so the teacher doesn't paste.
+//  The file is sent to Claude NATIVELY (document/image content block) —
+//  it reads both digital text and scanned pages (vision).
+//
+//  Input:  { fileData:<base64>, mediaType:'application/pdf'|'image/png'|…, filename? }
+//  Output: { profile, grade, text1:{title,text}, text2:{title,text}, existingThemata:[…] }
+//
+//  Callable payload limit ~10MB → keep files ≲ 6MB (client-guarded too).
+// ============================================================
+function buildIngestPrompt() {
+  return `Σου δίνεται ένα αρχείο εξέτασης «Νεοελληνική Γλώσσα & Λογοτεχνία» (Τράπεζα Θεμάτων ή Πανελλήνιες). Εξήγαγε ΠΙΣΤΑ το περιεχόμενό του — ΜΗΝ εφευρίσκεις τίποτα.
+
+Επίστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς markdown, χωρίς σχόλια, με ΑΚΡΙΒΩΣ αυτή τη μορφή:
+{"profile":"trapeza|panellinies|unknown","grade":"<π.χ. Β΄ Λυκείου, ή unknown>","text1":{"title":"<τίτλος Κειμένου 1 ή \\"\\">","text":"<ΠΛΗΡΕΣ Κείμενο 1 — το μη λογοτεχνικό>"},"text2":{"title":"","text":"<Κείμενο 2 — το λογοτεχνικό, αν υπάρχει, αλλιώς \\"\\">"},"existingThemata":[{"code":"<π.χ. ΘΕΜΑ 1 · 1ο υποερώτημα>","prompt":"<η εκφώνηση όπως ακριβώς είναι>","marks":<αριθμός μονάδων ή null>}]}`;
+}
+
+function parseIngestJSON(raw) {
+  let s = String(raw || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  const r = JSON.parse(s);
+  const clean = o => ({ title: String((o && o.title) || ''), text: String((o && o.text) || '') });
+  const themata = Array.isArray(r.existingThemata) ? r.existingThemata.map(t => ({
+    code:   String((t && t.code) || ''),
+    prompt: String((t && t.prompt) || ''),
+    marks:  (t && t.marks != null && isFinite(parseInt(t.marks, 10))) ? parseInt(t.marks, 10) : null,
+  })).filter(t => t.prompt) : [];
+  return {
+    profile: String(r.profile || 'unknown'),
+    grade:   String(r.grade || ''),
+    text1:   clean(r.text1),
+    text2:   clean(r.text2),
+    existingThemata: themata,
+  };
+}
+
+exports.ingestExamSource = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) throw new functions.https.HttpsError('failed-precondition', 'generator-unconfigured');
+
+  const p = data || {};
+  const b64 = typeof p.fileData === 'string' ? p.fileData.replace(/^data:[^;]+;base64,/, '') : '';
+  const mediaType = String(p.mediaType || 'application/pdf');
+  if (!b64 || b64.length < 50) {
+    throw new functions.https.HttpsError('invalid-argument', 'fileData (base64) required.');
+  }
+  if (b64.length > 9_500_000) {   // ~7MB binary — keep under the callable payload cap
+    throw new functions.https.HttpsError('invalid-argument', 'file too large (max ~6MB).');
+  }
+
+  const isImg = /^image\//.test(mediaType);
+  const docBlock = isImg
+    ? { type: 'image',    source: { type: 'base64', media_type: mediaType,        data: b64 } }
+    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } };
+
+  try {
+    const resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: [docBlock, { type: 'text', text: buildIngestPrompt() }] }],
+      }),
+    });
+    if (!resp.ok) {
+      console.error('[ingestExamSource] upstream', resp.status, await resp.text().catch(() => ''));
+      throw new functions.https.HttpsError('unavailable', 'ingest-upstream');
+    }
+    const body = await resp.json();
+    const text = (body.content || []).map(bl => bl.text || '').join('').trim();
+    const parsed = parseIngestJSON(text);
+    await writeAudit(context, 'exam.ingest', mediaType, {
+      chars: (parsed.text1.text || '').length, themata: parsed.existingThemata.length,
+    });
+    return parsed;
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    console.error('[ingestExamSource] failed', err);
+    throw new functions.https.HttpsError('internal', 'ingest-failed');
+  }
+});

@@ -38,7 +38,8 @@
     stage.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('in'));
 
-    const state = { subject: 'ekthesi', profile: 'trapeza', title: '', text: '', perSlot: 3, results: null, sel: {}, busy: false };
+    const state = { subject: 'ekthesi', profile: 'trapeza', title: '', text: '', text2: null,
+      existingThemata: [], ingestNote: '', perSlot: 3, results: null, sel: {}, busy: false };
 
     paintForm();
 
@@ -77,6 +78,17 @@
 
       pane.appendChild(field(L({ gr: 'Μορφή εξέτασης', en: 'Exam profile' }), prof));
       pane.appendChild(field(L({ gr: 'Τίτλος', en: 'Title' }), titleI));
+      // upload PDF / image → agent extracts ΚΕΙΜΕΝΟ 1 + existing θέματα
+      const fileIn = el('input', { type: 'file', accept: '.pdf,image/*', style: 'display:none' });
+      fileIn.addEventListener('change', () => { const f = fileIn.files && fileIn.files[0]; if (f) ingest(f); });
+      const upBtn = el('button', { class: 'sc-cta sc-cta--ghost sc-cta--sm', type: 'button', onclick: () => fileIn.click() },
+        ['📄 ', L({ gr: 'Ανέβασμα PDF / εικόνας', en: 'Upload PDF / image' })]);
+      pane.appendChild(el('div', { class: 'ea-uprow' }, [
+        upBtn, fileIn,
+        el('span', { class: 'ea-upor' }, L({ gr: 'ή επικόλλησε παρακάτω', en: 'or paste below' })),
+        state.ingestNote ? el('span', { class: 'ea-upnote' }, state.ingestNote) : null,
+      ]));
+
       pane.appendChild(el('label', { class: 'an-field' }, [el('span', {}, L({ gr: 'Κείμενο 1', en: 'Text 1' })), ta]));
       pane.appendChild(field(L({ gr: 'Εναλλακτικές ανά υποερώτημα', en: 'Alternatives per slot' }), per));
       pane.appendChild(el('div', { class: 'ea-note' }, L({
@@ -133,13 +145,55 @@
       return L({ gr: 'Σφάλμα δημιουργίας: ', en: 'Generation error: ' }) + ((e && (e.message || e.details)) || 'unknown');
     }
 
-    function paintBusy() {
+    function paintBusy(msg) {
       box.innerHTML = '';
-      box.appendChild(header('✨ ' + L({ gr: 'Δημιουργία…', en: 'Generating…' })));
+      box.appendChild(header('✨ ' + L({ gr: 'Επεξεργασία…', en: 'Working…' })));
       box.appendChild(el('div', { class: 'an-wiz__pane ea-busy' }, [
         el('div', { class: 'ea-spinner' }),
-        el('div', {}, L({ gr: 'Ο agent αναλύει το κείμενο και συντάσσει το ΘΕΜΑ 1… (~15–30 δευτ.)', en: 'The agent is drafting ΘΕΜΑ 1… (~15–30s)' })),
+        el('div', {}, msg || L({ gr: 'Ο agent αναλύει το κείμενο και συντάσσει το ΘΕΜΑ 1… (~15–30 δευτ.)', en: 'The agent is drafting ΘΕΜΑ 1… (~15–30s)' })),
       ]));
+    }
+
+    /* ── ingest an uploaded PDF/image → extract ΚΕΙΜΕΝΟ 1 (+ existing θέματα) ── */
+    async function ingest(file) {
+      if (state.busy) return;
+      if (file.size > 6 * 1024 * 1024) {
+        alert(L({ gr: 'Το αρχείο είναι πολύ μεγάλο (μέγιστο ~6MB). Δοκίμασε να το συμπιέσεις ή να επικολλήσεις το κείμενο.', en: 'File too large (max ~6MB).' }));
+        return;
+      }
+      const fn = callable('ingestExamSource');
+      if (!fn) { alert(L({ gr: 'Χρειάζεται σύνδεση με Firebase (Functions).', en: 'Firebase Functions required.' })); return; }
+      state.busy = true; paintBusy(L({ gr: 'Ανάγνωση & εξαγωγή από το αρχείο… (~15–30 δευτ.)', en: 'Reading & extracting from the file… (~15–30s)' }));
+      try {
+        const b64 = await readFileB64(file);
+        const res = await fn({ fileData: b64, mediaType: file.type || 'application/pdf', filename: file.name || '' });
+        const out = (res && res.data) || {};
+        state.busy = false;
+        state.text  = (out.text1 && out.text1.text)  || state.text;
+        state.title = (out.text1 && out.text1.title) || state.title;
+        state.text2 = out.text2 || null;
+        state.existingThemata = Array.isArray(out.existingThemata) ? out.existingThemata : [];
+        if (out.profile && out.profile !== 'unknown') state.profile = out.profile;
+        const n = state.existingThemata.length;
+        state.ingestNote = (L({ gr: '✓ Εξήχθη Κείμενο 1', en: '✓ Extracted Text 1' })) + (n ? ' (+' + n + ' ' + L({ gr: 'υπάρχοντα θέματα', en: 'existing θέματα' }) + ')' : '');
+        if (!state.text || state.text.trim().length < 40) {
+          alert(L({ gr: 'Δεν εντοπίστηκε Κείμενο 1 στο αρχείο. Δοκίμασε άλλο αρχείο ή επικόλλησε το κείμενο.', en: 'No Text 1 found — try another file or paste it.' }));
+        }
+        paintForm();
+      } catch (e) {
+        state.busy = false;
+        alert(friendlyErr(e));
+        paintForm();
+      }
+    }
+
+    function readFileB64(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => { const s = String(r.result || ''); const i = s.indexOf(','); resolve(i >= 0 ? s.slice(i + 1) : s); };
+        r.onerror = () => reject(r.error || new Error('read failed'));
+        r.readAsDataURL(file);
+      });
     }
 
     /* ── STEP 2 · review, edit, select ── */
@@ -190,7 +244,8 @@
       const id  = 'ekthesi-' + Date.now();
       const doc = {
         schema: 'exam', subject: state.subject, profile: state.profile,
-        source: { title: state.title || '', text: state.text },
+        source: { title: state.title || '', text: state.text, text2: state.text2 || null },
+        existingThemata: state.existingThemata || [],
         themata: chosen, status: 'draft', created: Date.now(),
       };
       // 1) always persist locally (works offline / in the sandbox)
@@ -226,6 +281,9 @@
         background:rgba(255,255,255,.75); color:inherit; resize:vertical; }
       .ea-num{ max-width:90px; }
       .ea-note{ font-size:.86em; opacity:.75; margin:.5em 0 1em; line-height:1.45; }
+      .ea-uprow{ display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:2px 0 6px; }
+      .ea-upor{ font-size:.85em; opacity:.6; }
+      .ea-upnote{ font-size:.85em; font-weight:600; color:#2e7d5b; }
       .ea-busy{ display:flex; flex-direction:column; align-items:center; gap:16px; padding:40px 20px; text-align:center; }
       .ea-spinner{ width:34px; height:34px; border-radius:50%; border:3px solid rgba(0,0,0,.15);
         border-top-color:var(--ca,#2F6F8E); animation:ea-spin .8s linear infinite; }

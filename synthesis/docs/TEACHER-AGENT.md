@@ -90,7 +90,10 @@ function** directly → generate → assign → auto-grade closes the loop.
    in `functions/index.js`; `exam` content model in `examContent/{id}`.
 3. **UI** — ✅ `js/exam-agent.js` panel + "✨ Δημιουργία Θεμάτων (AI)" button in
    the ANATHESI console (`js/anathesi.js`); review/edit/select → save draft.
-4. **Ingestion** — ⏳ PDF (Storage) & Drive; then vision for scanned banks.
+4. **Ingestion** — ✅ PDF/image upload → native model extraction (digital text
+   *and* scanned pages via vision, no client-side PDF lib) via `ingestExamSource`;
+   auto-fills ΚΕΙΜΕΝΟ 1 + captures existing θέματα. ⏳ Google Drive (needs
+   app-side OAuth — deferred).
 5. **Publish/attach** — ⏳ approve a draft → publish → attach to an assignment.
 6. **Scale & subjects** — ⏳ Αρχαία/Λογοτεχνία pipelines; fan out whole papers.
 
@@ -100,7 +103,7 @@ function** directly → generate → assign → auto-grade closes the loop.
 2. **Deploy** the two new functions + hosting:
    ```bash
    cd synthesis
-   firebase deploy --only functions:generateExam,functions:adminSaveExamContent,hosting
+   firebase deploy --only functions:generateExam,functions:adminSaveExamContent,functions:ingestExamSource,hosting
    ```
 3. *(optional)* Seed the live θεωρία so the agent uses your exact wording:
    Firestore → `config/ekthesi-theory` doc, field **`text`** = your θεωρία
