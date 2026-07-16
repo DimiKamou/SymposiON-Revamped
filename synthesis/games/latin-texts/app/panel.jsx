@@ -228,7 +228,7 @@
     buildPracticeSteps(){
       const u=this.state.unit; const steps=[]; if(!u||!u.periods) return steps;
       const isV=t=>/^Ρήμα/.test(t.r||''), isS=t=>/^Υποκείμεν/.test(t.r||''), isO=t=>/^Αντικείμεν/.test(t.r||''), isC=t=>((t.r||'').trim()==='Σύνδεσμος');
-      const push=(t,kind,cl,ids)=>steps.push({id:t._id, l:t.l, role:t.r, kind, label:cl.label||'', clauseIds:ids});
+      const push=(t,kind,cl,ids)=>steps.push({id:t._id, l:t.l, role:t.r, to:t.to||'', g:t.g||'', note:t.note||'', d:t.d||'', kind, label:cl.label||'', clauseIds:ids});
       const visit=(cl)=>{
         const ws=cl.kids.filter(t=>!t.kids && !t.plain && t.r);
         const ids=ws.map(t=>t._id);
@@ -890,6 +890,16 @@
                     {step.kind==='find'
                       ? (pr.pickedRight ? <span>Το ρήμα είναι «{pr.picked}».</span> : <span>«{pr.picked}» είναι: {pr.pickedRole||'—'} · Το ρήμα είναι «{step.l}».</span>)
                       : <span>«{step.l}» — {step.role}</span>}
+                  </div>
+                  <div style={s("margin-top:9px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--panel2)")}>
+                    <div style={s("font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px")}>Ανάλυση</div>
+                    <div style={s("display:flex;align-items:baseline;gap:8px;flex-wrap:wrap")}>
+                      <span style={s("font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:16px;color:var(--accent)")}>{step.l}</span>
+                      <span style={s("font-family:var(--font-ui);font-size:13.5px;font-weight:700;color:var(--fg)")}>{step.role}{step.to? ' '+step.to : ''}</span>
+                    </div>
+                    {step.g && <div style={s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:4px")}>{step.g}</div>}
+                    {step.d && <div style={s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:2px")}>{step.d}</div>}
+                    {step.note && <div style={s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--fg);margin-top:5px;padding-left:9px;border-left:2px solid var(--accent)")}>{step.note}</div>}
                   </div>
                   <button onClick={V.practiceNext} style={s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);margin-top:10px")}>Συνέχεια →</button>
                 </div>

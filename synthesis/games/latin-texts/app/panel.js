@@ -1,4 +1,4 @@
-/* AUTO-GENERATED from panel.jsx by app/build.md steps — do not edit directly. */
+/* AUTO-GENERATED from panel.jsx — do not edit. */
 /* ============================================================================
  *  SymposiON — Λατινικά · Κείμενα (Latin Text Analysis Panel)
  *  Self-contained React 18 component (compiled at runtime by @babel/standalone,
@@ -787,6 +787,10 @@
         id: t._id,
         l: t.l,
         role: t.r,
+        to: t.to || '',
+        g: t.g || '',
+        note: t.note || '',
+        d: t.d || '',
         kind,
         label: cl.label || '',
         clauseIds: ids
@@ -2510,7 +2514,23 @@
           style: Object.assign(s("font-family:var(--font-ui);font-size:14px;font-weight:600;line-height:1.5;border-radius:9px;padding:9px 12px;color:var(--fg)"), {
             background: pr.pickedRight ? 'color-mix(in oklab, oklch(0.6 0.15 150) 16%, var(--panel2))' : 'color-mix(in oklab, oklch(0.6 0.19 25) 14%, var(--panel2))'
           })
-        }, pr.pickedRight ? '✓ Σωστά! ' : '✗ Λάθος. ', step.kind === 'find' ? pr.pickedRight ? /*#__PURE__*/React.createElement("span", null, "\u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", pr.picked, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", pr.picked, "\xBB \u03B5\u03AF\u03BD\u03B1\u03B9: ", pr.pickedRole || '—', " \xB7 \u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", step.l, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", step.l, "\xBB \u2014 ", step.role)), /*#__PURE__*/React.createElement("button", {
+        }, pr.pickedRight ? '✓ Σωστά! ' : '✗ Λάθος. ', step.kind === 'find' ? pr.pickedRight ? /*#__PURE__*/React.createElement("span", null, "\u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", pr.picked, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", pr.picked, "\xBB \u03B5\u03AF\u03BD\u03B1\u03B9: ", pr.pickedRole || '—', " \xB7 \u03A4\u03BF \u03C1\u03AE\u03BC\u03B1 \u03B5\u03AF\u03BD\u03B1\u03B9 \xAB", step.l, "\xBB.") : /*#__PURE__*/React.createElement("span", null, "\xAB", step.l, "\xBB \u2014 ", step.role)), /*#__PURE__*/React.createElement("div", {
+          style: s("margin-top:9px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--panel2)")
+        }, /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px")
+        }, "\u0391\u03BD\u03AC\u03BB\u03C5\u03C3\u03B7"), /*#__PURE__*/React.createElement("div", {
+          style: s("display:flex;align-items:baseline;gap:8px;flex-wrap:wrap")
+        }, /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-latin);font-style:italic;font-weight:700;font-size:16px;color:var(--accent)")
+        }, step.l), /*#__PURE__*/React.createElement("span", {
+          style: s("font-family:var(--font-ui);font-size:13.5px;font-weight:700;color:var(--fg)")
+        }, step.role, step.to ? ' ' + step.to : '')), step.g && /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:4px")
+        }, step.g), step.d && /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:2px")
+        }, step.d), step.note && /*#__PURE__*/React.createElement("div", {
+          style: s("font-family:var(--font-ui);font-size:12.5px;line-height:1.5;color:var(--fg);margin-top:5px;padding-left:9px;border-left:2px solid var(--accent)")
+        }, step.note)), /*#__PURE__*/React.createElement("button", {
           onClick: V.practiceNext,
           style: s("display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;font-weight:700;padding:8px 18px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);margin-top:10px")
         }, "\u03A3\u03C5\u03BD\u03AD\u03C7\u03B5\u03B9\u03B1 \u2192")), pr.phase === 'done' && /*#__PURE__*/React.createElement("div", {
