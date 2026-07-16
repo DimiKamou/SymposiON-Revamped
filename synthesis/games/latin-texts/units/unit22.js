@@ -8,188 +8,166 @@ export const UNIT = {
   // ── ΜΕΡΟΣ 1: ΚΕΙΜΕΝΟ + ΣΥΝΤΑΞΗ ────────────────────────────────────────────
   periods: [
     { n: 1, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'Imitemur', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. — αποθετικό ρ.', d:'imitor, imitatus sum, imitari (αποθ. 1) — μιμούμαι', note:'Προτρεπτική υποτακτική. Εννοούμενο υποκ.: nos.' },
-        { l:'nostros', r:'Επιθετικός προσδ.', to:'στα Brutos, Camillos, Decios, Curios, Fabricios, Scipiones', g:'αιτ. πληθ., αρσ. — κτητική αντων. α΄ προσ. (πολλοί κτήτορες)', d:'noster, nostra, nostrum — ο δικός μας' },
-        { l:'Brutos', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Brutus, -i (αρσ. β΄, μόνο ενικ.) — ο Βρούτος', a:',' },
-        { l:'Camillos', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Camillus, -i (αρσ. β΄, μόνο ενικ.) — ο Κάμιλλος', a:',' },
-        { l:'Decios', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Decius, -ii/-i (αρσ. β΄, μόνο ενικ.) — ο Δέκιος', a:',' },
-        { l:'Curios', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Curius, -ii/-i (αρσ. β΄, μόνο ενικ.) — ο Κούριος', a:',' },
-        { l:'Fabricios', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Fabricius, -ii/-i (αρσ. β΄, μόνο ενικ.) — ο Φαβρίκιος', a:',' },
-        { l:'Scipiones', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ.', d:'Scipio, -onis (αρσ. γ΄, μόνο ενικ.) — ο Σκιπίωνας', a:',' },
-        { l:'innumerabiles', r:'Επιθετικός προσδ.', to:'στο alios', g:'αιτ. πληθ., αρσ. — τριτόκλ. επίθ.', d:'innumerabilis, -is, -e — αμέτρητος', note:'Δεν έχει παραθετικά λόγω σημασίας.' },
-        { l:'alios', r:'Αντικείμενο', to:'στο Imitemur', g:'αιτ. πληθ., αρσ. — αόριστη επιθ. αντων. (αντωνυμικό επίθετο)', d:'alius, alia, aliud — άλλος, -η, -ο', a:',' },
-        { type:'sub', key:'anaforiki', label:'Αναφορική', note:'Δευτ. αναφορική επιθετική προσδιοριστική, ως επιθ. προσδ. στα Brutos, Camillos, Decios, Curios, Fabricios, Scipiones (και alios). Εισάγεται με την αναφ. αντων. qui· εκφέρεται με οριστική (stabiliverunt), γιατί δηλώνει το πραγματικό.', kids:[
-          { l:'qui', r:'Υποκείμενο', to:'στο stabiliverunt', g:'ονομ. πληθ., αρσ. — αναφ. αντων.', d:'qui, quae, quod — ο οποίος, -α, -ο' },
-          { l:'stabiliverunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. παρακ. ενεργ.', d:'stabilio, stabilivi, stabilitum, stabilire (4) — στερεώνω' },
-          { l:'hanc', r:'Επιθετικός προσδ.', to:'στο rem publicam', g:'αιτ. ενικ., θηλ. — δεικτική αντων.', d:'hic, haec, hoc — αυτός, -ή, -ό' },
-          { l:'rem', r:'Αντικείμενο', to:'στο stabiliverunt', g:'αιτ. ενικ., θηλ.', d:'res, rei (θηλ. ε΄) — το πράγμα· res publica = η πολιτεία' },
-          { l:'publicam', r:'Επιθετικός προσδ.', to:'στο rem', g:'αιτ. ενικ., θηλ. — δευτερόκλ. επίθ.', d:'publicus, -a, -um — δημόσιος', a:';', note:'Δεν έχει παραθετικά λόγω σημασίας. res publica = η πολιτεία.' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Εκφέρεται με προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'Imitemur', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. — αποθετικό', d:'imitor, imitatus sum, (imitatum), imitari (1, αποθετικό) — μιμούμαι' },
+        { l:'nostros', r:'Επιθετικός προσδ.', to:'στα Brutos, Camillos, Decios, Curios, Fabricios, Scipiones', g:'αιτ. πληθ., αρσ. — κτητική αντων. α΄ προσ. (πολλοί κτήτορες)', d:'noster, nostra, nostrum — δικός μας' },
+        { l:'Brutos', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Brutus, -i (αρσ. β΄) — ο Βρούτος' },
+        { l:'Camillos', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Camillus, -i (αρσ. β΄) — ο Κάμιλλος' },
+        { l:'Decios', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Decius, -ii/-i (αρσ. β΄) — ο Δέκιος', note:'Ως υπερδισύλλαβο σε -ius σχηματίζει γεν. ενικ. σε -ii και -i, κλητ. ενικ. σε -i.' },
+        { l:'Curios', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Curius, -ii/-i (αρσ. β΄) — ο Κούριος' },
+        { l:'Fabricios', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Fabricius, -ii/-i (αρσ. β΄) — ο Φαβρίκιος' },
+        { l:'Scipiones', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ.', d:'Scipio, Scipionis (αρσ. γ΄) — ο Σκιπίωνας', a:',' },
+        { l:'innumerabiles', r:'Επιθετικός προσδ.', to:'στο alios', g:'αιτ. πληθ., αρσ. — επίθ. γ΄ κλ. (δικατάληκτο)', d:'innumerabilis, -is, -e — αμέτρητος', note:'Δεν σχηματίζει παραθετικά, γιατί δηλώνει κάτι απόλυτο.' },
+        { l:'alios', r:'Αντικείμενο', to:'στο imitemur', g:'αιτ. πληθ., αρσ. — αόριστη αντων. / αντωνυμικό επίθ.', d:'alius, alia, aliud — άλλος', note:'Αντωνυμικό επίθετο: γεν. ενικ. σε -ius, δοτ. ενικ. σε -i και στα τρία γένη.' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική', note:'Δευτ. αναφορική προσδιοριστική πρόταση, στους όρους Brutos, Camillos, Decios, Curios, Fabricios, Scipiones, alios. Εισάγεται με την αναφορική αντων. qui και εκφέρεται με οριστική (stabiliverunt), γιατί εκφράζει το πραγματικό· δηλώνει το προτερόχρονο.', kids:[
+          { l:'qui', r:'Υποκείμενο', to:'στο stabiliverunt', g:'ονομ. πληθ., αρσ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'hanc', r:'Επιθετικός προσδ.', to:'στο rem publicam', g:'αιτ. ενικ., θηλ. — δεικτική αντων.', d:'hic, haec, hoc — αυτός, αυτή, αυτό' },
+          { l:'rem', r:'Αντικείμενο', to:'στο stabiliverunt', g:'αιτ. ενικ.', d:'res, rei (θηλ. ε΄) — το πράγμα· res publica = η πολιτεία', note:'Η συνεκφορά res publica κλίνεται μόνο στον ενικό.' },
+          { l:'publicam', r:'Επιθετικός προσδ.', to:'στο rem', g:'αιτ. ενικ., θηλ. — επίθ. β΄ κλ.', d:'publicus, -a, -um — δημόσιος', note:'Δεν σχηματίζει παραθετικά, γιατί δηλώνει κάτι απόλυτο.' },
+          { l:'stabiliverunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. παρακειμένου ενεργ. φωνής', d:'stabilio, stabilivi, stabilitum, stabilire (4) — στεριώνω', a:';' }
         ]}
       ]}
     ]},
 
     { n: 2, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'quos', r:'Αντικείμενο', to:'στο repono', g:'αιτ. πληθ., αρσ. — αναφ. αντων.', d:'qui, quae, quod — ο οποίος, -α, -ο', note:'Αναφορική σύνδεση: εισάγει κύρια πρόταση (= et eos), δεν σχηματίζει δευτερεύουσα.' },
-        { l:'equidem', r:'Επιρρ. προσδ. του τρόπου', to:'στο repono', g:'βεβαιωτικό επίρρημα (ego + quidem)', d:'equidem — (εγώ) βέβαια' },
-        { l:'repono', r:'Ρήμα', g:'α΄ ενικ. οριστ. ενεστ. ενεργ.', d:'repono, reposui, repositum, reponere (3) — τοποθετώ', note:'Εννοούμενο υποκ.: ego.' },
-        { l:'in deorum immortalium coetu', k:'coetus', r:'Εμπρόθετος επιρρ. προσδ. τόπου (μεταφορικά)', to:'στο repono', g:'in (πρόθ. + αφαιρ.) + coetu (αφαιρ. ενικ., αρσ.)', d:'in — σε· coetus, -us (αρσ. δ΄) — η συνάθροιση («η χορεία»)', note:'deorum: γεν. υποκειμενική στο coetu (και γεν. διαιρετική στο numero). immortalium: επιθ. προσδ. στο deorum (δεν έχει παραθετικά λόγω σημασίας).' },
-        { l:'ac', r:'Σύνδεσμος', g:'συμπλεκτικός σύνδεσμος', d:'ac — και' },
-        { l:'numero', r:'Εμπρόθετος επιρρ. προσδ. τόπου (μεταφορικά)', to:'στο repono', g:'αφαιρ. ενικ., αρσ. (με εννοούμενη την πρόθ. in)', d:'numerus, -i (αρσ. β΄) — ο αριθμός', a:'.' }
+      { type:'main', key:'kyria', label:'Κύρια (κρίσης)', note:'Κύρια πρόταση κρίσης. Η αναφορική αντων. quos, μετά από ισχυρό σημείο στίξης, ισοδυναμεί με δεικτική (quos = eos) και εισάγει κύρια πρόταση. Εννοούμενο υποκείμενο: ego.', kids:[
+        { l:'quos', r:'Αντικείμενο', to:'στο repono', g:'αιτ. πληθ., αρσ. — αναφορική αντων. (= eos)', d:'qui, quae, quod — ο οποίος· quos = eos', note:'Μετά από ισχυρό σημείο στίξης η αναφορική ισοδυναμεί με δεικτική.' },
+        { l:'equidem', r:'Επιρρ. προσδ. του τρόπου', to:'στο repono', g:'τροπικό βεβαιωτικό επίρρημα', d:'equidem — (εγώ) βέβαια' },
+        { l:'in', r:'Πρόθεση (εμπρόθετος τόπου)', to:'στο repono', g:'πρόθεση + αφαιρ.', d:'in — σε, ανάμεσα' },
+        { l:'deorum', r:'Γενική υποκειμενική / περιεχομένου', to:'στο coetu / στο numero', g:'γεν. πληθ.', d:'deus, -i (αρσ. β΄) — ο θεός', note:'Κατ’ άλλους γενική διαιρετική στο numero. Ανώμαλη κλίση (dei/dii/di κ.λπ.).' },
+        { l:'immortalium', r:'Επιθετικός προσδ.', to:'στο deorum', g:'γεν. πληθ., αρσ. — επίθ. γ΄ κλ. (δικατάληκτο)', d:'immortalis, -is, -e — αθάνατος', note:'Δεν σχηματίζει παραθετικά, γιατί δηλώνει κάτι απόλυτο.' },
+        { l:'coetu', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (μεταξύ)', to:'στο repono', g:'αφαιρ. ενικ.', d:'coetus, -us (αρσ. δ΄, < cum + eo) — η συγκέντρωση, η συνάθροιση' },
+        { l:'ac', r:'Σύνδεσμος', g:'συμπλεκτικός (παρατακτικός) σύνδεσμος', d:'ac — και' },
+        { l:'numero', r:'Εμπρόθετος επιρρ. προσδ. του τόπου (μεταξύ)', to:'στο repono', g:'αφαιρ. ενικ.', d:'numerus, -i (αρσ. β΄) — ο αριθμός' },
+        { l:'repono', r:'Ρήμα', g:'α΄ ενικ. οριστ. ενεστ. ενεργ. φωνής', d:'repono, reposui, repositum, reponere (3, < re + pono) — τοποθετώ', a:'.' }
       ]}
     ]},
 
     { n: 3, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'Amemus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ.', d:'amo, amavi, amatum, amare (1) — αγαπώ', note:'Προτρεπτική υποτακτική. Εννοούμενο υποκ.: nos.' },
-        { l:'patriam', r:'Αντικείμενο', to:'στο Amemus', g:'αιτ. ενικ., θηλ.', d:'patria, -ae (θηλ. α΄) — η πατρίδα', a:',' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Εκφέρεται με προτρεπτική υποτακτική. Οι τρεις προτάσεις (3) χωρίζονται με κόμμα (ασύνδετο σχήμα). Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'Amemus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'amo, amavi, amatum, amare (1) — αγαπώ' },
+        { l:'patriam', r:'Αντικείμενο', to:'στο amemus', g:'αιτ. ενικ.', d:'patria, -ae (θηλ. α΄) — η πατρίδα', a:',' }
+      ]},
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'pareamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'pareo, parui, paritum, parere (2) — υπακούω' },
+        { l:'senatui', r:'Αντικείμενο', to:'στο pareamus', g:'δοτ. ενικ.', d:'senatus, -us (αρσ. δ΄) — η Σύγκλητος', note:'Δοτ. ενικ. σε -ui και -u· ως περιληπτικό όνομα δεν σχηματίζει πληθυντικό.', a:',' }
+      ]},
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'consulamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'consulo, consului, consultum, consulere (3) — φροντίζω για' },
+        { l:'bonis', r:'Δοτική προσωπική χαριστική', to:'στο consulamus', g:'δοτ. πληθ., αρσ. — ουσιαστικοπ. επίθ. β΄ κλ.', d:'boni, -orum (αρσ. β΄) — οι καλοί πολίτες', note:'Ουσιαστικοποιημένο αρσενικό του επιθέτου bonus, -a, -um· σχηματίζει μόνο πληθυντικό.', a:';' }
       ]}
     ]},
 
     { n: 4, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'pareamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. (+ δοτ.)', d:'pareo, parui, paritum, parere (2) — υπακούω', note:'Προτρεπτική υποτακτική. Το pareo συντάσσεται με δοτική.' },
-        { l:'senatui', r:'Αντικείμενο', to:'στο pareamus', g:'δοτ. ενικ., αρσ.', d:'senatus, -us (αρσ. δ΄, μόνο ενικ.) — η Σύγκλητος', a:',' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'praesentes', r:'Επιθετικός προσδ. (επιθετοποιημένη μετοχή)', to:'στο fructus', g:'αιτ. πληθ., αρσ. — μτχ. ενεστ. (praesens) του praesum', d:'praesum, praefui, praeesse (< prae + sum) — είμαι παρών· praesens = τωρινός, παρών', note:'Ως επιθετική σχηματίζει αφαιρ. ενικ. σε -i· γεν. πληθ. σε -ium.' },
+        { l:'fructus', r:'Αντικείμενο', to:'στο neglegamus', g:'αιτ. πληθ.', d:'fructus, -us (αρσ. δ΄) — ο καρπός, η ωφέλεια, το κέρδος' },
+        { l:'neglegamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'neglego (και negligo), neglexi, neglectum, neglegere (3, < nec + lego) — αδιαφορώ για', a:',' }
+      ]},
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'posteritatis', r:'Γενική κτητική (ή υποκειμενική)', to:'στο gloriae', g:'γεν. ενικ.', d:'posteritas, posteritatis (θηλ. γ΄) — το μέλλον, οι μεταγενέστεροι', note:'Δεν σχηματίζει πληθυντικό, γιατί δηλώνει αφηρημένη έννοια.' },
+        { l:'gloriae', r:'Αντικείμενο', to:'στο serviamus', g:'δοτ. ενικ.', d:'gloria, -ae (θηλ. α΄) — η δόξα' },
+        { l:'serviamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'servio, servivi (servii), servitum, servire (4) — υπηρετώ', a:';' }
       ]}
     ]},
 
     { n: 5, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'consulamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ.', d:'consulo, consului, consultum, consulere (3) — φροντίζω', note:'Προτρεπτική υποτακτική. consulo + δοτ. = φροντίζω για.' },
-        { l:'bonis', r:'Δοτική προσωπική χαριστική', to:'στο consulamus', g:'δοτ. πληθ., αρσ. — δευτερόκλ. επίθ. (ως ουσ.)', d:'bonus, -a, -um — καλός· ως ουσ. boni, -orum — οι καλοί πολίτες', a:';' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'id', r:'Υποκείμενο (ειδικού απαρεμφάτου)', to:'στο esse', g:'αιτ. ενικ., ουδ. — δεικτική (ως επαναληπτική) αντων.', d:'is, ea, id — αυτός, αυτή, αυτό' },
+        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο putemus (ετεροπροσωπία)', g:'απαρέμφατο ενεστ.', d:'sum, fui, esse — είμαι' },
+        { l:'optimum', r:'Κατηγορούμενο', to:'στο id (μέσω του esse)', g:'αιτ. ενικ., ουδ. — επίθ. β΄ κλ. (υπερθ. του bonus)', d:'optimus, -a, -um — άριστος· υπερθετικός βαθμός του bonus, -a, -um' },
+        { l:'putemus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'puto, putavi, putatum, putare (1) — νομίζω, θεωρώ', a:',' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική', note:'Δευτ. αναφορική προσδιοριστική πρόταση, στον όρο id της κύριας. Εισάγεται με την αναφορική αντων. quod και εκφέρεται με οριστική (est), γιατί εκφράζει το πραγματικό· αναφέρεται στο παρόν.', kids:[
+          { l:'quod', r:'Υποκείμενο', to:'στο est', g:'ονομ. ενικ., ουδ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'est', r:'Ρήμα (συνδετικό)', g:'γ΄ ενικ. οριστ. ενεστ.', d:'sum, fui, esse — είμαι' },
+          { l:'rectissimum', r:'Κατηγορούμενο', to:'στο quod (μέσω του est)', g:'ονομ. ενικ., ουδ. — επίθ. β΄ κλ. (υπερθ. του rectus)', d:'rectissimus, -a, -um — ο πιο σωστός· υπερθετικός βαθμός του rectus, -a, -um', a:';' }
+        ]}
       ]}
     ]},
 
     { n: 6, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'neglegamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ.', d:'neglego / negligo, neglexi, neglectum, neglegere (3) — αδιαφορώ', note:'Προτρεπτική υποτακτική.' },
-        { l:'praesentes', r:'Επιθετική μετοχή / επιθ. προσδ.', to:'στο fructus', g:'αιτ. πληθ., αρσ. — μτχ. ενεστ.', d:'praesum, praefui, —, praeesse — είμαι μπροστά, προηγούμαι· praesens — παρών, εφήμερος', note:'Επιθετική μετοχή με υποκ. fructus, ως επιθ. προσδ. στο fructus.' },
-        { l:'fructus', r:'Αντικείμενο', to:'στο neglegamus', g:'αιτ. πληθ., αρσ.', d:'fructus, -us (αρσ. δ΄) — η ωφέλεια, το κέρδος', a:',' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'speremus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής', d:'spero, speravi, speratum, sperare (1) — ελπίζω' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική (ουσιαστική)', note:'Δευτ. αναφορική ουσιαστική πρόταση· λειτουργεί ως αντικείμενο στο ρήμα speremus της κύριας. Εισάγεται με την αναφορική αντων. quae και εκφέρεται με οριστική (volumus), γιατί εκφράζει το πραγματικό· αναφέρεται στο παρόν.', kids:[
+          { l:'quae', r:'Αντικείμενο', to:'στο volumus', g:'αιτ. πληθ., ουδ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'volumus', r:'Ρήμα', g:'α΄ πληθ. οριστ. ενεστ. — ανώμαλο', d:'volo, volui, velle — θέλω', a:',' }
+        ]}
+      ]},
+      { l:'sed', r:'Σύνδεσμος', g:'αντιθετικός (παρατακτικός) σύνδεσμος', d:'sed — αλλά', note:'Συνδέει αντιθετικά τις δύο κύριες προτάσεις (speremus / feramus).', conn:true },
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας, συνδεόμενη παρατακτικά αντιθετικά (sed) με την προηγούμενη. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'feramus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. φωνής — ανώμαλο', d:'fero, tuli, latum, ferre — υπομένω, φέρω' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική (ουσιαστική)', note:'Δευτ. αναφορική ουσιαστική πρόταση· λειτουργεί ως αντικείμενο στο ρήμα feramus της κύριας. Εισάγεται με την αναφορική αντων. quod και εκφέρεται με οριστική (acciderit), γιατί εκφράζει το πραγματικό· αναφέρεται στο μέλλον.', kids:[
+          { l:'quod', r:'Υποκείμενο', to:'στο acciderit', g:'ονομ. ενικ., ουδ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'acciderit', r:'Ρήμα', g:'γ΄ ενικ. οριστ. συντελ. μέλλοντα ενεργ. φωνής', d:'accido, accidi, accidere (3, < ad + cado) — πέφτω· απρόσ. accidit = συμβαίνει', a:';' }
+        ]}
       ]}
     ]},
 
     { n: 7, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'serviamus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. (+ δοτ.)', d:'servio, servivi, servitum, servire (4) — υπηρετώ', note:'Προτρεπτική υποτακτική. servio + δοτ.' },
-        { l:'gloriae', r:'Αντικείμενο', to:'στο serviamus', g:'δοτ. ενικ., θηλ.', d:'gloria, -ae (θηλ. α΄) — η δόξα' },
-        { l:'posteritatis', r:'Γενική κτητική', to:'στο gloriae', g:'γεν. ενικ., θηλ.', d:'posteritas, posteritatis (θηλ. γ΄, μόνο ενικ.) — το μέλλον, οι μεταγενέστεροι', a:';' }
-      ]}
-    ]},
-
-    { n: 8, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'putemus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ.', d:'puto, putavi, putatum, putare (1) — νομίζω, θεωρώ', note:'Προτρεπτική υποτακτική.' },
-        { l:'id', r:'Υποκείμενο ειδ. απαρεμφάτου', to:'στο esse (ετεροπροσωπία)', g:'αιτ. ενικ., ουδ. — δεικτ. (επαναληπτική) αντων.', d:'is, ea, id — αυτός, -ή, -ό', a:',' },
-        { type:'sub', key:'anaforiki', label:'Αναφορική', note:'Δευτ. αναφορική επιθετική προσδιοριστική, ως επεξήγηση στο id. Εισάγεται με το quod· εκφέρεται με οριστική ενεστ. (est), γιατί δηλώνει το πραγματικό.', kids:[
-          { l:'quod', r:'Υποκείμενο', to:'στο est', g:'ονομ. ενικ., ουδ. — αναφ. αντων.', d:'qui, quae, quod — ο οποίος, -α, -ο' },
-          { l:'est', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ.', d:'sum, fui, —, esse — είμαι, υπάρχω' },
-          { l:'rectissimum', r:'Κατηγορούμενο', to:'στο quod (μέσω του est)', g:'ονομ. ενικ., ουδ. — δευτερόκλ. επίθ. (υπερθ.)', d:'rectissimus, -a, -um — ο πιο σωστός (υπερθ. του rectus, -a, -um)', a:',' }
-        ]},
-        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο putemus', g:'απαρ. ενεστ.', d:'sum, fui, —, esse — είμαι', note:'Ειδικό απαρέμφατο με υποκ. id (ετεροπροσωπία).' },
-        { l:'optimum', r:'Κατηγορούμενο', to:'στο id (μέσω του esse)', g:'αιτ. ενικ., ουδ. — δευτερόκλ. επίθ. (υπερθ.)', d:'optimus, -a, -um — άριστος (υπερθ. του bonus, -a, -um)', a:';' }
-      ]}
-    ]},
-
-    { n: 9, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'speremus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ.', d:'spero, speravi, speratum, sperare (1) — ελπίζω', note:'Προτρεπτική υποτακτική. Αντικ. του είναι η αναφ. πρόταση quae volumus.' },
-        { type:'sub', key:'anaforiki', label:'Αναφορική (ουσιαστική)', note:'Δευτ. αναφορική ουσιαστική, ως αντικείμενο στο speremus. Εισάγεται με το quae· εκφέρεται με οριστική ενεστ. (volumus), γιατί δηλώνει το πραγματικό.', kids:[
-          { l:'quae', r:'Αντικείμενο', to:'στο volumus', g:'αιτ. πληθ., ουδ. — αναφ. αντων.', d:'qui, quae, quod — ο οποίος, -α, -ο' },
-          { l:'volumus', r:'Ρήμα', g:'α΄ πληθ. οριστ. ενεστ. — ανώμαλο', d:'volo, volui, —, velle — θέλω', a:',', note:'Εννοούμενο υποκ.: nos.' }
-        ]}
-      ]}
-    ]},
-
-    { n: 10, kids: [
-      { l:'sed', r:'Σύνδεσμος', g:'αντιθετικός (παρατακτικός) σύνδεσμος', d:'sed — αλλά', conn:true },
-      { type:'main', key:'kyria', label:'Κύρια', note:'Εννοούμενο υποκ.: nos.', kids:[
-        { l:'feramus', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. ενεργ. — ανώμαλο', d:'fero, tuli, latum, ferre — υπομένω, φέρω', note:'Προτρεπτική υποτακτική. Αντικ. του είναι η αναφ. πρόταση quod acciderit.' },
-        { type:'sub', key:'anaforiki', label:'Αναφορική (ουσιαστική)', note:'Δευτ. αναφορική ουσιαστική, ως αντικείμενο στο feramus. Εισάγεται με το quod· εκφέρεται με οριστική συντ. μέλλ. (acciderit), γιατί δηλώνει το πραγματικό.', kids:[
-          { l:'quod', r:'Υποκείμενο', to:'στο acciderit', g:'ονομ. ενικ., ουδ. — αναφ. αντων.', d:'qui, quae, quod — ο οποίος, -α, -ο' },
-          { l:'acciderit', r:'Ρήμα', g:'γ΄ ενικ. οριστ. συντ. μέλλ. ενεργ. — απρόσωπο', d:'accidit, accidit, —, accidere (3, ad+cado) — συμβαίνει', a:';' }
-        ]}
-      ]}
-    ]},
-
-    { n: 11, kids: [
-      { type:'main', key:'kyria', label:'Κύρια', kids:[
-        { l:'denique', r:'Επιρρ. προσδ. του χρόνου', to:'στο arbitremur', g:'χρονικό επίρρημα', d:'denique — τέλος' },
-        { l:'arbitremur', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. — αποθετικό ρ.', d:'arbitror, arbitratus sum, arbitrari (αποθ. 1) — νομίζω, πιστεύω', note:'Προτρεπτική υποτακτική. Εννοούμενο υποκ.: nos.' },
-        { l:'corpus', r:'Υποκείμενο ειδ. απαρεμφάτου', to:'στο esse (ετεροπροσωπία)', g:'αιτ. ενικ., ουδ.', d:'corpus, corporis (ουδ. γ΄) — το σώμα' },
-        { l:'fortium', r:'Επιθετικός προσδ.', to:'στο virorum', g:'γεν. πληθ., αρσ. — τριτόκλ. επίθ.', d:'fortis, -is, -e — γενναίος, δυνατός' },
-        { l:'virorum', r:'Γενική κτητική', to:'στο corpus', g:'γεν. πληθ., αρσ.', d:'vir, viri (αρσ. β΄) — ο άντρας' },
-        { l:'magnorumque', r:'Επιθετικός προσδ.', to:'στο hominum', g:'γεν. πληθ., αρσ. — δευτερόκλ. επίθ. (+ εγκλιτ. -que)', d:'magnus, -a, -um — μεγάλος· -que — και', note:'Το εγκλιτικό -que (συμπλεκτικός) συνδέει τα virorum και hominum.' },
-        { l:'hominum', r:'Γενική κτητική', to:'στο corpus', g:'γεν. πληθ., αρσ.', d:'homo, hominis (αρσ./θηλ. γ΄) — ο άνθρωπος' },
-        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο arbitremur', g:'απαρ. ενεστ.', d:'sum, fui, —, esse — είμαι', note:'Ειδικό απαρέμφατο με υποκ. corpus (ετεροπροσωπία).' },
-        { l:'mortale', r:'Κατηγορούμενο', to:'στο corpus (μέσω του esse)', g:'αιτ. ενικ., ουδ. — τριτόκλ. επίθ.', d:'mortalis, -is, -e — θνητός', a:',', note:'Δεν έχει παραθετικά λόγω σημασίας.' },
-        { l:'animi', r:'Γενική υποκειμενική', to:'στο motus', g:'γεν. ενικ., αρσ.', d:'animus, -i (αρσ. β΄) — η ψυχή, το πνεύμα' },
-        { l:'vero', r:'Σύνδεσμος', g:'αντιθετικός σύνδεσμος (μετά τη λέξη)', d:'vero — όμως', note:'Παρατακτικός αντιθετικός· τίθεται πάντοτε ως δεύτερη λέξη (δεν αρχίζει πρόταση).' },
-        { l:'motus', r:'Υποκείμενο ειδ. απαρεμφάτου', to:'στο esse (ετεροπροσωπία)', g:'αιτ. πληθ., αρσ.', d:'motus, -us (αρσ. δ΄) — η κίνηση· animi motus = οι πνευματικές δραστηριότητες' },
-        { l:'et', r:'Σύνδεσμος', g:'συμπλεκτικός σύνδεσμος', d:'et — και' },
-        { l:'gloriam', r:'Υποκείμενο ειδ. απαρεμφάτου', to:'στο esse (ετεροπροσωπία)', g:'αιτ. ενικ., θηλ.', d:'gloria, -ae (θηλ. α΄) — η δόξα' },
-        { l:'virtutis', r:'Γενική κτητική', to:'στο gloriam', g:'γεν. ενικ., θηλ.', d:'virtus, virtutis (θηλ. γ΄) — η ανδρεία' },
-        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο arbitremur', g:'απαρ. ενεστ.', d:'sum, fui, —, esse — είμαι', note:'Ειδικό απαρέμφατο με υποκ. motus και gloriam (ετεροπροσωπία).' },
-        { l:'sempiternam', r:'Κατηγορούμενο', to:'στα motus, gloriam (μέσω του esse)', g:'αιτ. ενικ., θηλ. — δευτερόκλ. επίθ.', d:'sempiternus, -a, -um — αιώνιος', a:'.', note:'Δεν έχει παραθετικά λόγω σημασίας.' }
+      { type:'main', key:'kyria', label:'Κύρια (επιθυμίας)', note:'Κύρια πρόταση επιθυμίας. Προτρεπτική υποτακτική. Εννοούμενο υποκείμενο: nos.', kids:[
+        { l:'arbitremur', r:'Ρήμα', g:'α΄ πληθ. υποτ. ενεστ. — αποθετικό', d:'arbitror, arbitratus sum, (arbitratum), arbitrari (1, αποθετικό) — πιστεύω, νομίζω' },
+        { l:'denique', r:'Επιρρ. προσδ. του χρόνου', to:'στο arbitremur', g:'χρονικό επίρρημα', d:'denique — τέλος, επιτέλους' },
+        { l:'corpus', r:'Υποκείμενο (ειδικού απαρεμφάτου)', to:'στο esse (1)', g:'αιτ. ενικ., ουδ.', d:'corpus, corporis (ουδ. γ΄) — το σώμα' },
+        { l:'virorum', r:'Γενική κτητική', to:'στο corpus', g:'γεν. πληθ.', d:'vir, viri (αρσ. β΄) — ο άνδρας' },
+        { l:'fortium', r:'Επιθετικός προσδ.', to:'στο virorum', g:'γεν. πληθ., αρσ. — επίθ. γ΄ κλ. (δικατάληκτο)', d:'fortis, -is, -e — γενναίος, δυνατός' },
+        { l:'magnorum', r:'Επιθετικός προσδ.', to:'στο hominum', g:'γεν. πληθ., αρσ. — επίθ. β΄ κλ.', d:'magnus, -a, -um — μεγάλος' },
+        { l:'-que', r:'Σύνδεσμος', g:'συμπλεκτικός (παρατακτικός) σύνδεσμος — εγκλιτικός', d:'-que — και' },
+        { l:'hominum', r:'Γενική κτητική', to:'στο corpus', g:'γεν. πληθ.', d:'homo, hominis (αρσ. γ΄) — ο άνθρωπος' },
+        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο arbitremur (ετεροπροσωπία)', g:'απαρέμφατο ενεστ.', d:'sum, fui, esse — είμαι', note:'esse (1): υποκείμενο corpus, κατηγορούμενο mortale.' },
+        { l:'mortale', r:'Κατηγορούμενο', to:'στο corpus (μέσω του esse 1)', g:'αιτ. ενικ., ουδ. — επίθ. γ΄ κλ. (δικατάληκτο)', d:'mortalis, -is, -e — θνητός', note:'Δεν σχηματίζει παραθετικά, γιατί δηλώνει κάτι απόλυτο.', a:',' },
+        { l:'animi', r:'Γενική υποκειμενική', to:'στο motus', g:'γεν. ενικ.', d:'animus, -i (αρσ. β΄) — η ψυχή· animi motus = οι δυνάμεις της ψυχής' },
+        { l:'vero', r:'Σύνδεσμος', g:'αντιθετικός (παρατακτικός) σύνδεσμος', d:'vero — όμως' },
+        { l:'motus', r:'Υποκείμενο (ειδικού απαρεμφάτου)', to:'στο esse (2)', g:'αιτ. πληθ.', d:'motus, -us (αρσ. δ΄) — η κίνηση· animi motus = οι δυνάμεις/πνευματικές δραστηριότητες της ψυχής' },
+        { l:'et', r:'Σύνδεσμος', g:'συμπλεκτικός (παρατακτικός) σύνδεσμος', d:'et — και' },
+        { l:'virtutis', r:'Γενική κτητική (ή υποκειμενική)', to:'στο gloriam', g:'γεν. ενικ.', d:'virtus, virtutis (θηλ. γ΄) — η ανδρεία, η αρετή' },
+        { l:'gloriam', r:'Υποκείμενο (ειδικού απαρεμφάτου)', to:'στο esse (2)', g:'αιτ. ενικ.', d:'gloria, -ae (θηλ. α΄) — η δόξα' },
+        { l:'sempiternam', r:'Κατηγορούμενο', to:'στα motus, gloriam (μέσω του esse 2)', g:'αιτ. ενικ., θηλ. — επίθ. β΄ κλ.', d:'sempiternus, -a, -um — αιώνιος', note:'Το κατηγορούμενο συμφωνεί στο γένος με το πλησιέστερο υποκείμενο (gloriam). Δεν σχηματίζει παραθετικά (απόλυτη έννοια).' },
+        { l:'esse', r:'Αντικείμενο (ειδικό απαρέμφατο)', to:'στο arbitremur (ετεροπροσωπία)', g:'απαρέμφατο ενεστ.', d:'sum, fui, esse — είμαι', note:'esse (2): υποκείμενα motus, gloriam, κατηγορούμενο sempiternam.', a:'.' }
       ]}
     ]}
   ],
 
   // ── ΜΕΡΟΣ 2: ΜΕΤΑΦΡΑΣΗ ΣΕ ΑΝΤΙΣΤΟΙΧΙΣΗ ────────────────────────────────────
   alignment: [
-    { la:"Imitemur nostros Brutos,", el:"Ας μιμούμαστε τους δικούς μας Βρούτους," },
-    { la:"Camillos, Decios, Curios, Fabricios, Scipiones,", el:"Κάμιλλους, Δέκιους, Κούριους, Φαβρίκιους, Σκιπίωνες," },
-    { la:"innumerabiles alios,", el:"(και) αμέτρητους άλλους," },
-    { la:"qui stabiliverunt hanc rem publicam;", el:"οι οποίοι στερέωσαν αυτή την πολιτεία·" },
-    { la:"quos equidem repono", el:"σε αυτούς βέβαια εγώ δίνω μια θέση" },
-    { la:"in deorum immortalium coetu ac numero.", el:"ανάμεσα στους αθάνατους θεούς." },
-    { la:"Amemus patriam,", el:"Ας αγαπάμε την πατρίδα," },
-    { la:"pareamus senatui,", el:"ας υπακούουμε στη Σύγκλητο," },
-    { la:"consulamus bonis;", el:"ας φροντίζουμε για τους καλούς πολίτες·" },
-    { la:"neglegamus praesentes fructus,", el:"ας αδιαφορούμε για τα εφήμερα κέρδη," },
-    { la:"serviamus gloriae posteritatis;", el:"ας υπηρετούμε τη δόξα του μέλλοντος·" },
-    { la:"putemus id,", el:"ας θεωρούμε ότι αυτό" },
-    { la:"quod est rectissimum,", el:"που είναι το σωστότερο" },
-    { la:"esse optimum;", el:"είναι και το καλύτερο·" },
-    { la:"speremus quae volumus,", el:"ας ελπίζουμε αυτά που επιθυμούμε," },
-    { la:"sed feramus quod acciderit;", el:"αλλά ας υπομένουμε αυτό που θα έχει συμβεί·" },
-    { la:"denique arbitremur", el:"τέλος, ας θεωρούμε" },
-    { la:"corpus fortium virorum", el:"ότι το σώμα των γενναίων ανδρών" },
-    { la:"magnorumque hominum esse mortale,", el:"και των μεγάλων ανθρώπων είναι θνητό," },
-    { la:"animi vero motus", el:"αλλά οι πνευματικές δραστηριότητες" },
-    { la:"et gloriam virtutis esse sempiternam.", el:"και η δόξα της ανδρείας είναι αιώνια." }
+    { n:1, la:"Imitemur nostros Brutos, Camillos, Decios, Curios, Fabricios, Scipiones, innumerabiles alios qui hanc rem publicam stabiliverunt;", el:"Ας μιμούμαστε τους δικούς μας Βρούτους, Καμίλλους, Δεκίους, Κουρίους, Φαβρικίους, Σκιπίωνες, τους αμέτρητους άλλους, οι οποίοι στερέωσαν αυτήν την πολιτεία·" },
+    { n:2, la:"quos equidem in deorum immortalium coetu ac numero repono.", el:"αυτούς εγώ βέβαια τοποθετώ ανάμεσα στους αθάνατους θεούς." },
+    { n:3, la:"Amemus patriam, pareamus senatui, consulamus bonis;", el:"Ας αγαπάμε την πατρίδα, ας υπακούουμε στη Σύγκλητο, ας φροντίζουμε για τους καλούς πολίτες·" },
+    { n:4, la:"praesentes fructus neglegamus, posteritatis gloriae serviamus;", el:"ας αδιαφορούμε για τα τωρινά κέρδη, ας υπηρετούμε τη δόξα του μέλλοντος·" },
+    { n:5, la:"id esse optimum putemus, quod est rectissimum;", el:"ας θεωρούμε ότι είναι άριστο αυτό, που είναι το πιο σωστό·" },
+    { n:6, la:"speremus quae volumus, sed feramus quod acciderit;", el:"ας ελπίζουμε αυτά που θέλουμε, αλλά ας υπομένουμε ό,τι θα έχει συμβεί·" },
+    { n:7, la:"arbitremur denique corpus virorum fortium magnorumque hominum esse mortale, animi vero motus et virtutis gloriam sempiternam esse.", el:"ας πιστεύουμε, τέλος, ότι το σώμα των γενναίων ανδρών και των μεγάλων ανθρώπων είναι θνητό, οι δυνάμεις όμως της ψυχής και η δόξα της αρετής είναι αιώνια." }
   ],
 
   // ── ΜΕΡΟΣ 3: ΟΥΣΙΑΣΤΙΚΑ & ΕΠΙΘΕΤΑ (κατά κλίση & γένος) ────────────────────
   nouns: [
     { kl:"Α΄ κλίση", groups:[
       { gender:"Θηλυκά", items:[
-        { form:"gloria, -ae" },
-        { form:"patria, -ae" }
+        { form:"patria, -ae" },
+        { form:"gloria, -ae" }
       ]}
     ]},
     { kl:"Β΄ κλίση", groups:[
       { gender:"Αρσενικά", items:[
-        { form:"animus, -i" },
-        { form:"boni, -orum", note:"δεν έχει ενικό" },
-        { form:"Brutus, -i", note:"δεν έχει πληθυντικό" },
-        { form:"Camillus, -i", note:"δεν έχει πληθυντικό" },
-        { form:"Curius, -ii (-i)", note:"δεν έχει πληθυντικό" },
-        { form:"Decius, -ii (-i)", note:"δεν έχει πληθυντικό" },
-        { form:"deus, -i" },
-        { form:"Fabricius, -ii (-i)", note:"δεν έχει πληθυντικό" },
+        { form:"Brutus, -i" },
+        { form:"Camillus, -i" },
+        { form:"Decius, -ii/-i" },
+        { form:"Curius, -ii/-i" },
+        { form:"Fabricius, -ii/-i" },
+        { form:"deus, -i", note:"ανώμαλη κλίση" },
         { form:"numerus, -i" },
-        { form:"vir, viri" }
+        { form:"boni, -orum", note:"μόνο πληθ." },
+        { form:"vir, viri" },
+        { form:"animus, -i" }
       ]}
     ]},
     { kl:"Γ΄ κλίση", groups:[
       { gender:"Αρσενικά", items:[
-        { form:"homo, -inis" },
-        { form:"Scipio, -onis", note:"δεν έχει πληθυντικό" }
+        { form:"Scipio, Scipionis" },
+        { form:"homo, hominis" }
       ]},
       { gender:"Θηλυκά", items:[
-        { form:"posteritas, posteritatis", note:"δεν έχει πληθυντικό" },
-        { form:"virtus, virtutis" }
+        { form:"posteritas, posteritatis", note:"δεν έχει πληθ." },
+        { form:"virtus, virtutis", note:"γεν. πληθ. -um/-ium" }
       ]},
       { gender:"Ουδέτερα", items:[
         { form:"corpus, corporis" }
@@ -198,96 +176,175 @@ export const UNIT = {
     { kl:"Δ΄ κλίση", groups:[
       { gender:"Αρσενικά", items:[
         { form:"coetus, -us" },
-        { form:"senatus, -us", note:"δεν έχει πληθυντικό" },
+        { form:"senatus, -us", note:"δεν έχει πληθ." },
         { form:"fructus, -us" },
         { form:"motus, -us" }
       ]}
     ]},
     { kl:"Ε΄ κλίση", groups:[
-      { gender:"Θηλυκά", items:[ { form:"res, rei" } ] }
+      { gender:"Θηλυκά", items:[
+        { form:"res, rei" }
+      ]}
+    ]},
+    { kl:"Σύνθετο ουσιαστικό", groups:[
+      { gender:"Θηλυκά", items:[
+        { form:"res publica, rei publicae", note:"μόνο ενικ." }
+      ]}
     ]}
   ],
 
   adjectives: [
     { kl:"Β΄ κλίση", items:[
+      { form:"publicus, -a, -um" },
       { form:"bonus, -a, -um" },
-      { form:"magnus, -a, -um" },
-      { form:"publicus, -a, -um", note:"δεν έχει παραθετικά λόγω σημασίας" },
       { form:"rectus, -a, -um" },
-      { form:"sempiternus, -a, -um", note:"δεν έχει παραθετικά λόγω σημασίας" }
+      { form:"magnus, -a, -um" },
+      { form:"sempiternus, -a, -um" }
     ]},
     { kl:"Γ΄ κλίση", items:[
+      { form:"innumerabilis, -is, -e" },
+      { form:"immortalis, -is, -e" },
       { form:"fortis, -is, -e" },
-      { form:"immortalis, -is, -e", note:"δεν έχει παραθετικά λόγω σημασίας" },
-      { form:"innumerabilis, -is, -e", note:"δεν έχει παραθετικά λόγω σημασίας" },
-      { form:"mortalis, -is, -e", note:"δεν έχει παραθετικά λόγω σημασίας" }
+      { form:"mortalis, -is, -e" }
     ]}
   ],
 
   // ── ΜΕΡΟΣ 4: ΠΑΡΑΘΕΤΙΚΑ ΕΠΙΘΕΤΩΝ (κατά κλίση) ─────────────────────────────
   comparatives: [
     { kl:"Β΄ κλίση", rows:[
-      { pos:"bonus, -a, -um", comp:"melior, -ior, -ius", sup:"optimus, -a, -um" },
-      { pos:"magnus, -a, -um", comp:"maior, -ior, -ius", sup:"maximus, -a, -um" },
-      { pos:"publicus, -a, -um", comp:"—", sup:"—", note:"λόγω σημασίας" },
-      { pos:"rectus, -a, -um", comp:"rectior, -ior, -ius", sup:"rectissimus, -a, -um" },
-      { pos:"sempiternus, -a, -um", comp:"—", sup:"—", note:"λόγω σημασίας" }
+      { pos:"publicus, -a, -um", comp:"—", sup:"—" },
+      { pos:"bonus, -a, -um (bene)", comp:"melior, -ior, -ius (melius)", sup:"optimus, -a, -um (optime)" },
+      { pos:"rectus, -a, -um (recte)", comp:"rectior, -ior, -ius (rectius)", sup:"rectissimus, -a, -um (rectissime)" },
+      { pos:"magnus, -a, -um (magnopere)", comp:"maior, -ior, -ius (magis)", sup:"maximus, -a, -um (maxime)" },
+      { pos:"sempiternus, -a, -um", comp:"—", sup:"—" }
     ]},
     { kl:"Γ΄ κλίση", rows:[
-      { pos:"fortis, -is, -e", comp:"fortior, -ior, -ius", sup:"fortissimus, -a, -um" },
-      { pos:"immortalis, -is, -e", comp:"—", sup:"—", note:"λόγω σημασίας" },
-      { pos:"innumerabilis, -is, -e", comp:"—", sup:"—", note:"λόγω σημασίας" },
-      { pos:"mortalis, -is, -e", comp:"—", sup:"—", note:"λόγω σημασίας" }
+      { pos:"innumerabilis, -is, -e", comp:"—", sup:"—" },
+      { pos:"immortalis, -is, -e", comp:"—", sup:"—" },
+      { pos:"fortis, -is, -e (fortiter)", comp:"fortior, -ior, -ius (fortius)", sup:"fortissimus, -a, -um (fortissime)" },
+      { pos:"mortalis, -is, -e", comp:"—", sup:"—" }
     ]}
   ],
 
   // ── ΜΕΡΟΣ 5: ΑΝΤΩΝΥΜΙΕΣ ───────────────────────────────────────────────────
   pronouns: [
-    { form:"alius, alia, aliud", kind:"Αόριστη", extra:"ή αντωνυμικό επίθετο" },
-    { form:"hic, haec, hoc", kind:"Δεικτική" },
-    { form:"is, ea, id", kind:"Δεικτική", extra:"ως επαναληπτική" },
     { form:"noster, nostra, nostrum", kind:"Κτητική", extra:"α΄ προσ., πολλοί κτήτορες" },
-    { form:"qui, quae, quod", kind:"Αναφορική" }
+    { form:"alius, alia, aliud", kind:"Αόριστη", extra:"αντωνυμικό επίθ.· γεν. -ius, δοτ. -i" },
+    { form:"qui, quae, quod", kind:"Αναφορική", extra:"" },
+    { form:"hic, haec, hoc", kind:"Δεικτική", extra:"" },
+    { form:"is, ea, id", kind:"Δεικτική", extra:"ως επαναληπτική" }
   ],
 
   // ── ΜΕΡΟΣ 6: ΑΡΧΙΚΟΙ ΧΡΟΝΟΙ ΡΗΜΑΤΩΝ (κατά συζυγία) ────────────────────────
   verbs: [
     { syz:"Α΄ συζυγία", rows:[
+      { pres:"imitor", perf:"imitatus sum", sup:"(imitatum)", inf:"imitari", note:"αποθετικό" },
       { pres:"amo", perf:"amavi", sup:"amatum", inf:"amare", note:"" },
       { pres:"puto", perf:"putavi", sup:"putatum", inf:"putare", note:"" },
       { pres:"spero", perf:"speravi", sup:"speratum", inf:"sperare", note:"" },
-      { pres:"arbitror", perf:"arbitratus sum", sup:"—", inf:"arbitrari", note:"αποθετικό" },
-      { pres:"imitor", perf:"imitatus sum", sup:"—", inf:"imitari", note:"αποθετικό" }
+      { pres:"arbitror", perf:"arbitratus sum", sup:"(arbitratum)", inf:"arbitrari", note:"αποθετικό" }
     ]},
     { syz:"Β΄ συζυγία", rows:[
-      { pres:"pareo", perf:"parui", sup:"paritum", inf:"parere", note:"+ δοτ." }
+      { pres:"pareo", perf:"parui", sup:"paritum", inf:"parere", note:"" }
     ]},
     { syz:"Γ΄ συζυγία", rows:[
-      { pres:"accidit", perf:"accidit", sup:"—", inf:"accidere", note:"απρόσωπο (ad+cado)" },
+      { pres:"repono", perf:"reposui", sup:"repositum", inf:"reponere", note:"< re + pono" },
       { pres:"consulo", perf:"consului", sup:"consultum", inf:"consulere", note:"" },
-      { pres:"neglego / negligo", perf:"neglexi", sup:"neglectum", inf:"neglegere / negligere", note:"" },
-      { pres:"repono", perf:"reposui", sup:"repositum", inf:"reponere", note:"" }
+      { pres:"neglego", perf:"neglexi", sup:"neglectum", inf:"neglegere", note:"και negligo / negligere· < nec + lego" },
+      { pres:"accido", perf:"accidi", sup:"—", inf:"accidere", note:"< ad + cado" }
     ]},
     { syz:"Δ΄ συζυγία", rows:[
       { pres:"stabilio", perf:"stabilivi", sup:"stabilitum", inf:"stabilire", note:"" },
-      { pres:"servio", perf:"servivi", sup:"servitum", inf:"servire", note:"" }
+      { pres:"servio", perf:"servivi (servii)", sup:"servitum", inf:"servire", note:"" }
     ]},
-    { syz:"ΑΝΩΜΑΛΑ", rows:[
-      { pres:"sum", perf:"fui", sup:"—", inf:"esse", note:"βοηθητικό" },
-      { pres:"praesum", perf:"praefui", sup:"—", inf:"praeesse", note:"σύνθετο του sum" },
-      { pres:"fero", perf:"tuli", sup:"latum", inf:"ferre", note:"ανώμαλο" },
-      { pres:"volo", perf:"volui", sup:"—", inf:"velle", note:"ανώμαλο" }
+    { syz:"Ανώμαλα", rows:[
+      { pres:"sum", perf:"fui", sup:"—", inf:"esse", note:"βοηθητικό — είμαι" },
+      { pres:"praesum", perf:"praefui", sup:"—", inf:"praeesse", note:"< prae + sum" },
+      { pres:"volo", perf:"volui", sup:"—", inf:"velle", note:"θέλω" },
+      { pres:"fero", perf:"tuli", sup:"latum", inf:"ferre", note:"φέρω, υπομένω" }
     ]}
   ],
 
-  // ── ΜΕΡΟΣ 7: SOS — ΠΑΓΙΔΕΣ ────────────────────────────────────────────────
+  // ── ΜΕΡΟΣ 7: SOS — ΠΑΓΙΔΕΣ & ΠΑΡΑΤΗΡΗΣΕΙΣ ─────────────────────────────────
   sos: [
-    { tag:"Έγκλιση", title:"Προτρεπτική υποτακτική", body:"Όλα τα ρήματα των κύριων προτάσεων (Imitemur, Amemus, pareamus, consulamus, neglegamus, serviamus, putemus, speremus, feramus, arbitremur) είναι υποτακτική ενεστώτα με προτρεπτική σημασία («ας…») — εξ ου και ο τίτλος «Προτροπές»." },
-    { tag:"Αντωνυμία", title:"quos: αναφορική σύνδεση", body:"Το quos (πρόταση 3) δεν εισάγει δευτερεύουσα· είναι αναφορική σύνδεση (= et eos) στην αρχή κύριας πρότασης. Αντίθετα τα qui / quod / quae (προτ. 2, 10, 12, 14) εισάγουν πραγματικές δευτ. αναφορικές προτάσεις." },
-    { tag:"Σύνταξη", title:"Ρήματα με δοτική", body:"Τα pareo και servio συντάσσονται με δοτική ως αντικείμενο (senatui, gloriae), ενώ στο consulamus bonis το bonis είναι δοτική προσωπική χαριστική — προσοχή να μη θεωρηθεί αφαιρετική." },
-    { tag:"Απαρέμφατο", title:"Ετεροπροσωπία στα ειδικά απαρέμφατα", body:"Τα ειδικά απαρέμφατα esse (putemus / arbitremur) έχουν υποκείμενα διαφορετικά από το υποκ. του ρήματος εξάρτησης: id, corpus, motus-gloriam. Πρόκειται για ετεροπροσωπία." },
-    { tag:"Παραθετικά", title:"Έλλειψη λόγω σημασίας", body:"Δεν σχηματίζουν παραθετικά (λόγω σημασίας): innumerabilis, immortalis, mortalis, sempiternus, publicus." },
-    { tag:"Σύνδεσμος", title:"vero: εγκλιτική θέση", body:"Το vero (αντιθετικός σύνδεσμος) δεν μπαίνει ποτέ στην αρχή της πρότασης· τίθεται πάντοτε ως δεύτερη λέξη: animi vero motus…" }
+    { tag:"Σύνταξη", title:"quos = eos: κύρια πρόταση", body:"Η αναφορική αντωνυμία quos, όταν βρίσκεται στην αρχή περιόδου και μετά από ισχυρό σημείο στίξης, ισοδυναμεί με δεικτική (quos = eos) και εισάγει κύρια (και όχι δευτερεύουσα αναφορική) πρόταση, εφόσον δεν υπάρχει άλλη κύρια." },
+    { tag:"Έγκλιση", title:"Προτρεπτική υποτακτική", body:"Όλες οι κύριες προτάσεις είναι προτάσεις επιθυμίας που εκφέρονται με προτρεπτική υποτακτική (α΄ πληθ. ενεστώτα): imitemur, amemus, pareamus, consulamus, neglegamus, serviamus, putemus, speremus, feramus, arbitremur = «ας…»." },
+    { tag:"Ρήμα", title:"imitor, arbitror: αποθετικά", body:"Τα imitor (imitari, 1) και arbitror (arbitrari, 1) είναι αποθετικά: κλίνονται στην παθητική φωνή αλλά έχουν ενεργητική σημασία και διατηρούν 6 τύπους από την ενεργητική φωνή (μτχ. ενεστ., υποτ./απαρ./μτχ. μέλλοντα, γερούνδιο, σουπίνο)." },
+    { tag:"Ουσιαστικό", title:"res publica: σύνθετο ουσιαστικό", body:"Η res publica είναι σύνθετο ουσιαστικό όπου κλίνονται και τα δύο μέρη (rem publicam, rei publicae)· χρησιμοποιείται μόνο στον ενικό αριθμό." },
+    { tag:"Μετοχή", title:"praesens: επιθετοποιημένη μετοχή", body:"Το praesentes είναι μετοχή ενεστώτα του praesum (< prae + sum) που λειτουργεί ως επιθετικός προσδιορισμός στο fructus (δηλώνει το σύγχρονο). Ως επιθετική σχηματίζει την αφαιρετική ενικού σε -i (και όχι σε -e)." },
+    { tag:"Κατηγορούμενο", title:"sempiternam: συμφωνία με το πλησιέστερο", body:"Στο esse (2) υποκείμενα είναι δύο (motus, gloriam)· το κατηγορούμενο sempiternam τίθεται σε θηλυκό γένος, γιατί συμφωνεί με το πλησιέστερο υποκείμενο (gloriam)." }
+  ],
+
+  transforms: [
+    { id:"Α", label:"Ανάλυση μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"praesentes fructus neglegamus", to:"fructus, qui praesunt, neglegamus… (qui + οριστική ενεστ.)", note:"επιθετική μετοχή στο fructus· εξάρτηση από αρκτικό χρόνο: neglegamus" }
+    ]},
+    { id:"Β", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"qui hanc rem publicam stabiliverunt", to:"a quibus haec res publica stabilita est" },
+      { from:"quos equidem in deorum immortalium coetu ac numero repono", to:"qui (= ei) quidem in deorum immortalium coetu ac numero a me reponuntur" },
+      { from:"Amemus patriam, pareamus senatui, consulamus bonis", to:"Patria a nobis ametur, senatus pareatur, boni consulantur" },
+      { from:"posteritatis gloriae serviamus", to:"posteritatis gloria a nobis serviatur" },
+      { from:"id esse optimum putemus", to:"id esse optimum a nobis putetur" }
+    ]},
+    { id:"Γ", label:"Μετατροπή του κειμένου σε πλάγιο λόγο", items:[
+      { from:"Imitemur nostros Brutos … alios, qui hanc rem publicam stabiliverunt", to:"Cicero monet (αρκτ. χρ.) / monuit (ιστορ. χρ.) Romanos ut imitentur / imitarentur suos Brutos … alios, qui illam rem publicam stabiliverint / stabilivissent· ή imitari suos Brutos…", note:"moneo, adhortor + βουλητική πρόταση (ut…) ή τελικό απαρέμφατο" },
+      { from:"quos equidem in deorum … numero repono", to:"Cicero dicit (αρκτ. χρ.) / dixit (ιστορ. χρ.) se quidem eos in deorum … numero reponere" },
+      { from:"Amemus patriam, pareamus senatui, consulamus bonis", to:"Cicero adhortatur / adhortabatur Romanos: ut ament / amarent…, (ut) pareant / parerent…, (ut) consulant / consulerent…· ή amare…, parere…, consulere…" },
+      { from:"praesentes fructus neglegamus, posteritatis gloriae serviamus", to:"(ut) … neglegant / neglegerent, (ut) … serviant / servirent· ή … neglegere, … servire" },
+      { from:"id esse optimum putemus, quod est rectissimum", to:"(ut) … putent / putarent, quod sit / esset…· ή id … putare, quod…" },
+      { from:"speremus quae volumus, sed feramus quod acciderit", to:"(ut) sperent / sperarent quae velint / vellent, sed (ut) ferant / ferrent quod acciderit (υποτ. παρακ.) / accidisset· ή sperare quae…, sed ferre quod…" },
+      { from:"arbitremur denique corpus … esse mortale …", to:"(ut) arbitrentur / arbitrarentur … ή arbitrari…" }
+    ]},
+    { id:"Δ", label:"Μετατροπή του πλαγίου λόγου σε ευθύ", items:[
+      { from:"… ; id esse optimum putemus, …", to:"… ; id est optimum, …" },
+      { from:"… ; arbitremur denique corpus virorum fortium magnorumque hominum esse mortale, animi vero motus et virtutis gloriam sempiternam esse", to:"corpus (ονομ.) virorum fortium magnorumque hominum est mortale (ονομ.), animi vero motus (ονομ.) et virtutis gloria sempiterna est" }
+    ]}
+  ],
+
+  etymology: [
+    { la:"imitemur", el:"(γαλλ.) imiter // ιμιτασιόν (< imitation, γαλλ.)." },
+    { la:"Brutos", el:"Βρούτος." },
+    { la:"Camillos", el:"Κάμιλλος // (γαλλ.) Camille." },
+    { la:"Curios", el:"Κούριος." },
+    { la:"Fabricios", el:"Φαμπρίκιος." },
+    { la:"Scipiones", el:"Σκιπίωνας." },
+    { la:"innumerabiles, numero", el:"νούμερο (< ιταλ.) // (γαλλ.) numéral (= αριθμός, ψηφίο)." },
+    { la:"alios", el:"άλλος, άλλη, άλλο." },
+    { la:"rem", el:"ρεαλισμός (< γαλλ.) // (αγγλ.) real (= πραγματικός)." },
+    { la:"publicam", el:"(γαλλ.) publique (= δημόσιος)." },
+    { la:"rem publicam", el:"ρεπουμπλικανός, ρεπουμπλικανισμός // ρεπούμπλικα (= είδος ανδρικού καπέλου) (< ιταλ.)." },
+    { la:"stabiliverunt", el:"ίστημι, στάση // (γαλλ.) stable (= σταθερός), stabilité (= σταθερότητα)." },
+    { la:"deorum", el:"Ζεύς, (γενική) Διός." },
+    { la:"immortalium, mortale", el:"βροτός // (γαλλ.) mort (= νεκρός) // (αγγλ.) mortal (= θνητός)." },
+    { la:"coetu (< cum + eo)", el:"είμι." },
+    { la:"repono", el:"(γαλλ.) positionner (= τοποθετώ) // position (= θέση)." },
+    { la:"amemus", el:"αμόρε (< ιταλ.) // (γαλλ.) amour." },
+    { la:"patriam", el:"πατρίς, πατήρ· πατέρας." },
+    { la:"pareamus", el:"(γαλλ.) parent (= γονέας)." },
+    { la:"senatui", el:"(αγγλ.) senator (= γερουσιαστής), senior (= ηλικιωμένος)." },
+    { la:"consulamus", el:"(γαλλ.) consulter (= συμβουλεύω) // (αγγλ.) consultant (= σύμβουλος)." },
+    { la:"bonis", el:"μπονα-μάς [< ιταλ. bona mano (= καλό χέρι)], μπουνάτσα (< βενετ.) (= καλοκαιρία), μπόνους." },
+    { la:"prae-sentes, esse, est / fructus", el:"είμί // fructus → φρούτο (< ιταλ.) // (γαλλ.) fruit (= φρούτο)." },
+    { la:"neglegamus", el:"(αγγλ.) neglect (= παραμέληση) // (γαλλ.) négligence." },
+    { la:"posteritatis", el:"(γαλλ.) postérité (= απόγονοι) // (αγγλ.) posterior (= μεταγενέστερος) // (ισπαν.) posteridad (= αιωνιότητα)." },
+    { la:"gloriae, gloriam", el:"(αγγλ.) glory, (γαλλ.) gloire." },
+    { la:"serviamus", el:"(γαλλ.) servir." },
+    { la:"optimum", el:"(γαλλ.) optimal // οπτιμισμός (< γαλλ.)." },
+    { la:"putemus", el:"(αγγλ.) dis-putation (= συζήτηση, λογομαχία), putative (= υποτιθέμενος)." },
+    { la:"rectissimum", el:"(γαλλ.) cor-rect (= σωστό)." },
+    { la:"speremus", el:"(γαλλ.) espérer (= ελπίζω), espoir (= ελπίδα) // Σπεράντζα." },
+    { la:"volumus", el:"βούλομαι // (αγγλ.) volunteer (= εθελοντής)." },
+    { la:"feramus", el:"φέρω, διαφορά, φορέας, φορείο // (αγγλ.) trans-fer (= μεταφορά)." },
+    { la:"acciderit", el:"(γαλλ.) accident (= ατύχημα)." },
+    { la:"arbitremur", el:"(γαλλ.) arbitre (= διαιτητής, κριτής), arbitrer (= διαιτητεύω)." },
+    { la:"corpus", el:"κόρπους (= σώμα κειμένων)." },
+    { la:"virorum, virtutis", el:"βιρτουόζος (< ιταλ. virtuoso)." },
+    { la:"fortium", el:"(γαλλ.) fort (= σωματική δύναμη) // (ισπαν.) fortaleza (= φρούριο)." },
+    { la:"magnorum", el:"μέγας // (αγγλ.) magnific (= μεγαλοπρεπής) // (γαλλ.) magnificence (= μεγαλοπρέπεια)." },
+    { la:"hominum", el:"ουμανισμός (< γαλλ.)." },
+    { la:"animi", el:"ανιμισμός (< γαλλ.) / άνεμος." },
+    { la:"motus", el:"μοτέρ (< γαλλ.) // μοτίβο (επαναλαμβανόμενο στοιχείο μουσικού θέματος) [< ιταλ. motivo (= κίνητρο)] // (αγγλ.) motion (= κίνηση)." },
+    { la:"sempiternam", el:"(ισπαν.) siempre (= πάντα)." }
   ]
 };
 
