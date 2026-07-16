@@ -87,6 +87,18 @@
     return `<div class="mt-filter"><div class="mt-funit">${uchips}</div>${schips}${cchips}</div>`;
   }
 
+  // πηγή-only toolbar: random pick (single or combined, within scope) + AI source generator
+  function pigiTools(){
+    if(CUR!=='pigi') return '';
+    const n=curArr().length;
+    return `<div class="mt-tools">
+      <button class="mt-tool" onclick="MT.rnd()" ${n<=1?'disabled':''}>${ICON('owl')} Τυχαία πηγή</button>
+      ${window.AIGEN?`<button class="mt-tool ai" onclick="AIGEN.open()">${ICON('scroll')} Φτιάξε πηγή με AI</button>`:''}
+    </div>`;
+  }
+  // jump to a random item in the current scope (respects unit/chapter/theme filters)
+  function rnd(){ const a=curArr(); if(a.length<=1){ pick(0); return; } let i; do{ i=Math.floor(Math.random()*a.length); }while(i===idx); pick(i); }
+
   function render(){
     const m=METHODS[CUR]; const arr=curArr(); if(idx>=arr.length) idx=0;
     const q=arr[idx];
@@ -95,6 +107,7 @@
       <div class="topbar"><button class="back" onclick="HUB.goHub()">← Κατάλογος</button>
         <span class="crumb">ΓΡΑΠΤΗ ΕΞΑΣΚΗΣΗ &nbsp;/&nbsp; <b>${esc(m.title)}</b></span></div>
       ${filterBar()}
+      ${pigiTools()}
       <div class="sk-top">
         <div class="sk-badge">${ICON(m.badge)}</div>
         <div><h1>${esc(m.title)}</h1><div class="ds">${esc(m.ds)}</div></div>
@@ -208,5 +221,5 @@
 
   function init(course){ COURSE = course || (window.HUB && HUB.course) || 'g3'; }
 
-  window.MT = { init, open, pick, setFU, setFS, setFC, setSL, wc, reset, check, available, METHODS, ORDER };
+  window.MT = { init, open, pick, rnd, setFU, setFS, setFC, setSL, wc, reset, check, available, METHODS, ORDER };
 })();

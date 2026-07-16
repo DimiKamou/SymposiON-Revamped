@@ -24,6 +24,10 @@
         "function": "gradeAnswer"
       },
       {
+        "source": "/api/generateSource",
+        "function": "generateSource"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

@@ -1055,3 +1055,104 @@ exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
     res.status(502).json({ error: 'grader-failed' });
   }
 });
+
+
+// ============================================================
+//  AI SOURCE GENERATOR — student-driven practice source
+//
+//  POST /api/generateSource
+//    { unit, theme?, struggle, subject?, context:{ theory, sources:[{ref,text}] } }
+//   → { title, source, question, model, points[], disclaimer }
+//
+//  Builds a DIDACTIC RECONSTRUCTION (a synthetic exam-style παράθεμα)
+//  grounded STRICTLY in the theory + authentic sources the client passes
+//  in. It is NOT attributed to any real author/work (no fabricated
+//  citations) and is always returned with an explicit AI-generated
+//  disclaimer. Same key/model plumbing as the grader; on any failure
+//  responds non-2xx so the client shows a graceful message.
+// ============================================================
+const AI_SOURCE_DISCLAIMER = '⚠ Πηγή δημιουργημένη από AI — ΔΕΝ είναι αυθεντικό ιστορικό ντοκουμέντο. Πρόκειται για διδακτική ανασύνθεση, βασισμένη στο σχολικό βιβλίο και στις πηγές της ενότητας, αποκλειστικά για εξάσκηση. Μην την αναφέρετε ως πραγματική πηγή.';
+
+function buildSourceGenPrompt(p) {
+  const subject = (typeof p.subject === 'string' && p.subject.trim()) ? p.subject.trim() : 'Ιστορίας Προσανατολισμού Γ΄ Λυκείου';
+  const unit    = String(p.unit || '').trim() || 'Ιστορία';
+  const theme   = String(p.theme || '').trim();
+  const strug   = String(p.struggle || '').trim().slice(0, 800);
+  const ctx     = p.context || {};
+  const theory  = String(ctx.theory || '').slice(0, 5000);
+  const sources = (Array.isArray(ctx.sources) ? ctx.sources : []).slice(0, 6)
+    .map((s, i) => `[Πηγή αναφοράς ${i + 1}] ${String(s.ref || '').slice(0,180)}\n${String(s.text || '').slice(0, 900)}`).join('\n\n');
+  return `Είσαι έμπειρος φιλόλογος-ιστορικός και δημιουργός εκπαιδευτικού υλικού ${subject}.
+
+Ο μαθητής δυσκολεύεται στην ενότητα «${unit}»${theme ? `, ειδικά στη θεματική «${theme}»` : ''}. Το περιγράφει ως εξής: "${strug}".
+
+Δημιούργησε ΜΙΑ άσκηση «Επεξεργασία Πηγής», προσαρμοσμένη σε αυτή τη δυσκολία, με βάση ΑΥΣΤΗΡΑ και ΜΟΝΟ το παρακάτω υλικό.
+
+ΘΕΩΡΙΑ (σχολικό βιβλίο):
+${theory || '(δεν δόθηκε — στηρίξου στις πηγές αναφοράς)'}
+
+ΑΥΘΕΝΤΙΚΕΣ ΠΗΓΕΣ ΑΝΑΦΟΡΑΣ ΤΗΣ ΕΝΟΤΗΤΑΣ:
+${sources || '(καμία)'}
+
+ΑΥΣΤΗΡΟΙ ΚΑΝΟΝΕΣ:
+1. Το «source» είναι ΔΙΔΑΚΤΙΚΗ ΑΝΑΣΥΝΘΕΣΗ σε ύφος ιστορικής μελέτης/κειμένου εποχής — ΙΣΤΟΡΙΚΑ ΑΚΡΙΒΗΣ, θεμελιωμένη ΑΠΟΚΛΕΙΣΤΙΚΑ στο παραπάνω υλικό. ΜΗΝ προσθέσεις γεγονότα, πρόσωπα, χρονολογίες ή αριθμούς που ΔΕΝ προκύπτουν από αυτό.
+2. ΜΗΝ αποδώσεις το κείμενο σε πραγματικό συγγραφέα, έργο ή σελίδα. ΚΑΜΙΑ παραπομπή, ΚΑΝΕΝΑ όνομα ιστορικού. Είναι κατασκευασμένο κείμενο για εξάσκηση.
+3. Έκταση ~90-160 λέξεις, γ΄ πρόσωπο, δόκιμο ιστορικό ύφος.
+4. Πρόσθεσε: μία εξεταστική ερώτηση (τύπου «Αξιοποιώντας την πηγή και τις ιστορικές σας γνώσεις…»), ενδεικτική απάντηση (σύνθεση βιβλίου + πηγής, δομή Πρόλογος/Κορμός/Επίλογος), και 4-6 λέξεις-κλειδιά.
+
+Επίστρεψε ΜΟΝΟ έγκυρο JSON χωρίς markdown:
+{"title":"<σύντομος τίτλος θέματος>","source":"<το κατασκευασμένο παράθεμα>","question":"<η ερώτηση>","model":"<ενδεικτική απάντηση>","points":["<λέξη-κλειδί>"]}`;
+}
+
+function parseSourceGenJSON(raw) {
+  let s = String(raw || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  const r = JSON.parse(s);
+  return {
+    title:    String(r.title || '').slice(0, 160),
+    source:   String(r.source || ''),
+    question: String(r.question || ''),
+    model:    String(r.model || ''),
+    points:   Array.isArray(r.points) ? r.points.map(String).slice(0, 8) : [],
+    disclaimer: AI_SOURCE_DISCLAIMER,
+  };
+}
+
+exports.generateSource = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  if (req.method !== 'POST')    { res.status(405).json({ error: 'POST only' }); return; }
+
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) { res.status(503).json({ error: 'generator-unconfigured' }); return; }
+
+  const p = req.body || {};
+  if (typeof p.struggle !== 'string' || p.struggle.trim().length < 3) {
+    res.status(400).json({ error: 'struggle required' }); return;
+  }
+
+  try {
+    const resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: buildSourceGenPrompt(p) }],
+      }),
+    });
+    if (!resp.ok) {
+      console.error('[generateSource] upstream', resp.status, await resp.text().catch(() => ''));
+      res.status(502).json({ error: 'generator-upstream' }); return;
+    }
+    const data = await resp.json();
+    const text = (data.content || []).map(b => b.text || '').join('').trim();
+    res.status(200).json(parseSourceGenJSON(text));
+  } catch (err) {
+    console.error('[generateSource] failed', err);
+    res.status(502).json({ error: 'generator-failed' });
+  }
+});

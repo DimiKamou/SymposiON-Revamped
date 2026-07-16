@@ -72,5 +72,26 @@
       <div class="sk-note">${r.demo?'⚠ Λειτουργία επίδειξης (offline): αξιολόγηση με τοπικό αλγόριθμο. Στο ζωντανό περιβάλλον τη βαθμολόγηση κάνει ο AI βοηθός.':'Αξιολόγηση από τον AI βοηθό · σημασιολογική σύγκριση.'}</div>`;
   }
 
-  window.SK = { grade, reviewHTML, scoreColor, icon:(n)=>SYM.icon(n), endpoint:'/api/gradeAnswer' };
+  // ── AI source generator ────────────────────────────────────────────
+  // p: { unit, theme?, struggle, subject?, context:{ theory, sources:[{ref,text}] } }
+  // → { title, source, question, model, points[], disclaimer }  |  { error }
+  async function generateSource(p){
+    try{
+      const resp = await fetch(SK.genEndpoint, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          unit:p.unit||'', theme:p.theme||'', struggle:p.struggle||'',
+          subject:p.subject||'', context:p.context||{},
+        }),
+      });
+      if(resp.ok){
+        const r = await resp.json();
+        if(r && r.source){ return r; }
+      }
+      return { error: (resp.status===503?'unconfigured':'upstream') };
+    }catch(e){ return { error:'offline' }; }
+  }
+
+  window.SK = { grade, generateSource, reviewHTML, scoreColor, icon:(n)=>SYM.icon(n),
+    endpoint:'/api/gradeAnswer', genEndpoint:'/api/generateSource' };
 })();
