@@ -606,7 +606,7 @@ function nextQuizQuestion(){
   const opts=el.querySelector('.quiz-opts'); opts.innerHTML='';
   q.o.forEach((o,i)=>{ const d=document.createElement('div'); d.className='quiz-opt';
     d.innerHTML=`<span class="k">${['Α','Β','Γ','Δ'][i]}</span><span class="o">${o}</span>`;
-    d.addEventListener('click',()=>answerQuiz(i)); opts.appendChild(d); });
+    d.addEventListener('pointerdown',e=>{ e.preventDefault(); answerQuiz(i); }); opts.appendChild(d); });
   const idx = quizTotal - quizQueue.length;
   el.querySelector('.quiz-prog').textContent='ΕΡΩΤΗΣΗ '+idx+'/'+quizTotal+' · ΚΥΜΑ '+(wave+1)+'/'+totalWaves+' ΤΕΛΕΙΩΣΕ';
   const bar=el.querySelector('#quizTimerBar'); if(bar){ bar.style.transition='none'; bar.style.width='100%'; }
