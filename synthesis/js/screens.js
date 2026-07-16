@@ -219,12 +219,15 @@
     openOlympus:     { mode:'sym', closeFn:'closeOlympus' },
     openHippodrome:  { mode:'sym', closeFn:'closeHippodrome' },
     openErinyes:     { mode:'sym', closeFn:'closeErinyes' },
-    openLabyrinth:   { mode:'config' }
-    // NOTE: invaders / myth-memory / epic-puzzle are self-contained arcades with
-    // their own built-in pack menus — they do NOT read the injected SYM_QUESTIONS
-    // bank, so routing them through the "Διάλεξε ύλη" picker would silently discard
-    // the user's selection (a false promise). Omit them → S.level falls through to
-    // the honest direct-launch card. Re-add only once each grows a bank adapter.
+    openLabyrinth:   { mode:'config' },
+    // Iliada/Odyssea Arcade now HAVE a bank adapter: the picked bank is forwarded
+    // into their iframe via localStorage (mode 'arcade', see injectBankAndLaunch),
+    // and the Game-Panel launch runs in endless mode. So they reach the picker.
+    openIliadaArcade:  { mode:'arcade', campaign:'iliada',   endless:true },
+    openOdysseaArcade: { mode:'arcade', campaign:'odysseia', endless:true }
+    // NOTE: invaders / myth-memory / epic-puzzle stay self-contained arcades with
+    // their own built-in pack menus — they do NOT read injected content, so they
+    // are omitted → S.level falls through to the honest direct-launch card.
   };
   // Resolve the injection descriptor for an openFn: a real SymMix entry wins,
   // else the panel default above. Returns null for engines we know nothing about
@@ -1006,6 +1009,18 @@
 
     wrap.appendChild(bar);
     body.appendChild(wrap);
+    // "Play a friend" — the same QR share-and-compare surface the level-bank picker
+    // exposes, so the content-picker menu offers Start OR share-vs-friend.
+    if (window.showQR){
+      body.appendChild(el('button',{class:'lv-sharebtn', onclick:()=>{ try{ window.showQR(L(gName(game)), { game: fn }); }catch(_){} }},[
+        glyph('grid-blocks','lv-sharebtn__gl'),
+        el('span',{class:'lv-sharebtn__b'},[
+          el('span',{class:'lv-sharebtn__t'}, L({gr:'Παίξε με φίλο',en:'Play a friend'})),
+          el('span',{class:'lv-sharebtn__d'}, L({gr:'Μοιράσου το QR — ίδια ύλη, συγκρίνετε σκορ',en:'Share the QR — same content, compare scores'})),
+        ]),
+        el('span',{class:'lv-sharebtn__qr',html:'&#9783;'}),
+      ]));
+    }
     paintTags(); paintList(); updateBar();
 
     // Merge Firestore published packs (config/datasets + custom_games), then refresh.
@@ -1030,6 +1045,13 @@
     inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
     return Promise.resolve().then(function(){
       qs = qs || [];
+      if (inj.mode === 'arcade'){
+        // The arcade is a same-origin IFRAME. Hand the picked bank + endless flag
+        // to its opener (arcade-launch.js), which maps the bank to the arcade's
+        // {q,o,a} shape, seeds it into localStorage, and opens the run in endless
+        // mode. Does NOT touch window.SYM_QUESTIONS (no in-page engine to feed).
+        return window.synLaunch ? window.synLaunch(fn, { questions: qs, campaign: inj.campaign, endless: inj.endless !== false, title: title }) : null;
+      }
       if (inj.mode === 'config'){
         // Engine takes a config arg (Agora Surfers reads config.questions).
         return window.synLaunch ? window.synLaunch(fn, { questions: qs, title: title }) : null;
