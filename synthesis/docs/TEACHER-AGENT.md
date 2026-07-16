@@ -138,20 +138,18 @@ authors. **Primary job of the agent: explore the given κείμενα and _enric
 - Explicit word-limits; μονάδες split inside multi-part υποερωτήματα.
 - Every answer **text-grounded** (παράδειγμα / γλωσσικές επιλογές / παραπομπή σε παράγραφο).
 
-**⏸ ON HOLD — awaiting the app's θεωρία έκθεσης (authoritative source).**
-The teacher reviewed the first enriched ΘΕΜΑ 1 (text: «Δημιουργικότητα»):
-most υποερωτήματα OK; **title analysis** and **τρόποι ανάπτυξης** were "a bit
-off" because the agent used generic definitions. These MUST be re-grounded on
-the θεωρία έκθεσης the teacher is building in SymposiON. That theory is NOT in
-the repo (the "Έκφραση · Έκθεση" subject in `data.js:151` is placeholder tiles;
-`INTEGRATION-SPEC.md:229` confirms Νεοελληνική Γλώσσα topics are
-revamp-only placeholders) — it lives in **Firestore** (authored via the theory
-system). This session has no Firebase credentials, so access = the teacher
-provides it (paste / commit to `materials/ekthesi/theory/` / Google Drive /
-give the Firestore path for the deployed function to read live).
+**▶ RESUMED — grounded on `materials/ekthesi/theory/THEORIA-EKTHESIS.md`.**
+The teacher confirmed the app's θεωρία έκθεσης is essentially complete and gave
+the go-ahead. Since this session can't read the live Firestore θεωρία, the agent
+is grounded on the **standard-curriculum θεωρία** (the same framework), written
+to `materials/ekthesi/theory/THEORIA-EKTHESIS.md`. The teacher can paste the
+app's exact wording into that file anytime and it overrides. The two flagged
+items — **ανάλυση τίτλου** and **τρόποι ανάπτυξης** — are now re-grounded on §6
+and §1 of that theory.
 
-**Still to confirm (after θεωρία access):**
-- [ ] Re-ground **ανάλυση τίτλου** + **τρόποι ανάπτυξης** on the app's θεωρία.
+**Still to confirm:**
+- [x] Re-ground **ανάλυση τίτλου** (§6) + **τρόποι ανάπτυξης** (§1) on the θεωρία.
+- [ ] Swap in SymposiON's exact θεωρία wording where it differs from the standard.
 - [ ] Model-answer depth + exact rubric split for auto-grading.
 - [ ] Any Πανελλήνιες-profile version (this calibration is Τράπεζα, Β΄ Λυκείου).
 - [ ] Preferred difficulty and how many alternatives per slot to offer.

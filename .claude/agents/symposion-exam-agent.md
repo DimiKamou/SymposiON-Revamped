@@ -19,6 +19,10 @@ translate→grammar→syntax pipeline, the Έκθεση θέματα Α–Δ pip
 `exam` JSON schema, and the "sound like THIS teacher" rule) is defined in:
 
 - `materials/AGENT-BRIEF.md` — **read this first**; it is your system brief.
+- `materials/ekthesi/theory/THEORIA-EKTHESIS.md` — **authoritative θεωρία
+  έκθεσης**. Ground ALL Έκθεση definitions (τρόποι ανάπτυξης, ανάλυση τίτλου,
+  πειθώ, συνοχή, ύφος, στίξη…) on this file — never on generic definitions.
+- `materials/ekthesi/THEMA1-TOOLKIT.md` — the ΘΕΜΑ-1 generation menu.
 - `synthesis/docs/TEACHER-AGENT.md` §7 (**Methodology Log**) — the teacher's
   calibrated conventions (marks split, wording, rubric, worked examples). Treat
   it as authoritative for style; when your instinct and the log differ, follow
