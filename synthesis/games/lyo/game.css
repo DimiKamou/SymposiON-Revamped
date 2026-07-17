@@ -101,6 +101,11 @@
 .ltimer-caut{color:#f39c12!important;}
 /* question box */
 .lqbox{background:var(--gg-sunk);border:1px solid var(--gg-line);border-radius:8px;padding:16px 20px;margin-bottom:20px;}
+/* MIX mode — small badge naming this question's style (Πολλαπλή/Συμπλήρωση/Ολόκληρος). */
+.gram-mixchip{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:3px 11px 3px 8px;border-radius:999px;
+  font-family:'Alegreya Sans','Alegreya',sans-serif;font-weight:800;font-size:0.72rem;letter-spacing:0.04em;text-transform:uppercase;
+  color:var(--gg-acc-dk);background:color-mix(in srgb,var(--gg-acc) 12%,transparent);border:1px solid color-mix(in srgb,var(--gg-acc) 32%,transparent);}
+.gram-mixchip svg{width:14px;height:14px;}
 .lqbox .lq-main{font-size:1.05rem;line-height:1.5;margin-bottom:8px;color:var(--gg-ink);font-family:'Noto Serif',serif;}
 .lqbox .lq-main em{color:var(--gg-acc);font-style:normal;font-weight:700;font-family:'Noto Serif',serif;letter-spacing:0.02em;}
 .lq-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin-top:6px;}

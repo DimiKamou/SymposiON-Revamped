@@ -172,6 +172,10 @@ function gramRunGame(cfg){
   const {prefix,G,keysFn,stemFn,qtFn,filter,mode,lives,timer,wrapId}=cfg;
   const _gameId    = cfg.gameId    || prefix;   // unique game identifier for mistake logging
   const _subjectId = cfg.subjectId || 'archaia'; // subject area (default: Ancient Greek)
+  // MIX: each question draws a random style from GRAM_MIX_POOL (mc/fi/fw). The
+  // game loop below uses `curMode` (recomputed per question) in place of `mode`.
+  const isMix=(mode==='mix');
+  let curMode=isMix?GRAM_MIX_POOL[0]:mode;
 
   // Match mode: start matching screen and bail out of normal game loop
   if(mode==='match'){
@@ -322,9 +326,17 @@ function gramRunGame(cfg){
   const nextQ=()=>{
     state.curr=genQ();if(!state.curr){end();return;}
     state.answering=false;
-    const qel=$(prefix+'-q');if(qel)qel.innerHTML=state.curr.qt;
+    // MIX: pick this question's style, then flip the mc/fi areas to match.
+    if(isMix){
+      curMode=GRAM_MIX_POOL[Math.floor(Math.random()*GRAM_MIX_POOL.length)];
+      const mcA=$(prefix+'-mc-area'),fiA=$(prefix+'-fi-area');
+      if(mcA)mcA.style.display=curMode==='mc'?'':'none';
+      if(fiA){(curMode==='fi'||curMode==='fw')?fiA.classList.add('active'):fiA.classList.remove('active');}
+    }
+    const qel=$(prefix+'-q');
+    if(qel)qel.innerHTML=(isMix?`<div class="gram-mixchip">${_gramModeIcon(curMode)} ${GRAM_MIX_LABELS[curMode]||''}</div>`:'')+state.curr.qt;
     const fb=$(prefix+'-fb');if(fb){fb.textContent='';fb.className='lfeedback';}
-    if(mode==='mc'){
+    if(curMode==='mc'){
       const grid=$(prefix+'-opts');if(!grid)return;grid.innerHTML='';
       state.curr.opts.forEach(opt=>{
         const b=document.createElement('button');b.className='lopt-btn';b.textContent=opt;
@@ -332,19 +344,19 @@ function gramRunGame(cfg){
       });
     }else{
       // Both fi and fw use the FI area — fw overrides fi_ends/fi_correct with full-word versions
-      if(mode==='fw'){
+      if(curMode==='fw'){
         state.curr.fi_ends    = state.curr.fw_ends;
         state.curr.fi_correct = state.curr.fw_correct;
       }
       const stemEl=$(prefix+'-stem');
       if(stemEl){
-        if(mode==='fw'){stemEl.style.display='none';}
+        if(curMode==='fw'){stemEl.style.display='none';}
         else{stemEl.style.display='';stemEl.textContent=state.curr.stem||'—';}
       }
       const inp=$(prefix+'-fi-input');
       if(inp){
         inp.value='';inp.disabled=false;inp.className='';
-        if(mode==='fw'){
+        if(curMode==='fw'){
           inp.style.borderRadius='8px';inp.style.minWidth='220px';inp.placeholder='Γράψε ολόκληρο τον τύπο';
         } else {
           inp.style.borderRadius='';inp.style.minWidth='';inp.placeholder='κατάληξη';
@@ -424,10 +436,10 @@ function gramRunGame(cfg){
   const settBack=$(prefix+'-sett-back');
   if(settBack)settBack.onclick=goLevels;
 
-  // Show game area
+  // Show game area (per-question flips happen in nextQ for MIX)
   const mcArea=$(prefix+'-mc-area'),fiArea=$(prefix+'-fi-area');
-  if(mcArea)mcArea.style.display=mode==='mc'?'':'none';
-  if(fiArea){(mode==='fi'||mode==='fw')?fiArea.classList.add('active'):fiArea.classList.remove('active');}
+  if(mcArea)mcArea.style.display=curMode==='mc'?'':'none';
+  if(fiArea){(curMode==='fi'||curMode==='fw')?fiArea.classList.add('active'):fiArea.classList.remove('active');}
 
   show(prefix+'-screen-game');
   hud();
@@ -598,7 +610,12 @@ const GRAM_STD_MODES=[
   {id:'fw',    icon:'📝',  label:'Ολόκληρος Τύπος',       hint:'Γράψε ολόκληρη τη λέξη'},
   {id:'match', icon:'🔗',  label:'Αντιστοίχιση',           hint:'Αντίστοιχισε τύπο με μορφή'},
   {id:'chrono',icon:'⏱️',  label:'Χρονική Αντικατάσταση', hint:'Δίνεται ένας χρόνος — συμπλήρωσε τους υπόλοιπους'},
+  {id:'mix',   icon:'🎲', label:'MIX — Ανάμεικτο',       hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
 ];
+// The single-question styles MIX rotates between (match/chrono are whole-board /
+// whole-paradigm activities, so they stay their own dedicated modes).
+const GRAM_MIX_POOL=['mc','fi','fw'];
+const GRAM_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού',fw:'Ολόκληρος Τύπος'};
 // SVG mode icons (no emoji) keyed by mode id; falls back to the supplied glyph.
 function _gramModeIcon(id,glyph){
   const s='<svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">';
@@ -609,6 +626,7 @@ function _gramModeIcon(id,glyph){
     case 'match':  return s+'<path d="M6.5 6.5L9.5 9.5"/><path d="M5.5 4.2L4 5.7a2.4 2.4 0 003.4 3.4l1.1-1.1"/><path d="M10.5 11.8L12 10.3a2.4 2.4 0 00-3.4-3.4L7.5 8"/></svg>';
     case 'chrono': return s+'<circle cx="8" cy="9" r="5"/><path d="M8 6.5V9l2 1.5M6 1.7h4"/></svg>';
     case 'arcade': return s+'<rect x="1.5" y="5" width="13" height="7.5" rx="3.2"/><path d="M4.6 8.75h2M5.6 7.75v2"/><circle cx="10.4" cy="8" r=".6" fill="currentColor"/><circle cx="11.6" cy="9.4" r=".6" fill="currentColor"/></svg>';
+    case 'mix':    return s+'<rect x="2.5" y="2.5" width="11" height="11" rx="2.6"/><circle cx="5.6" cy="5.6" r=".9" fill="currentColor"/><circle cx="10.4" cy="5.6" r=".9" fill="currentColor"/><circle cx="8" cy="8" r=".9" fill="currentColor"/><circle cx="5.6" cy="10.4" r=".9" fill="currentColor"/><circle cx="10.4" cy="10.4" r=".9" fill="currentColor"/></svg>';
     default:       return glyph||'';
   }
 }
@@ -1043,7 +1061,7 @@ function gramSetMode(prefix,mode){
   const qb=document.getElementById(`${prefix}-sett-qr`);
   if(qb&&_gramCurrentLvlId[prefix]){
     qb.style.opacity='1';qb.style.pointerEvents='auto';
-    const modeNames={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού',fw:'Ολόκληρος Τύπος',match:'Αντιστοίχιση',chrono:'Χρονική Αντικατάσταση'};
+    const modeNames={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού',fw:'Ολόκληρος Τύπος',match:'Αντιστοίχιση',chrono:'Χρονική Αντικατάσταση',mix:'MIX — Ανάμεικτο'};
     const titleEl=document.getElementById(`${prefix}-sett-title`);
     const title=titleEl?titleEl.textContent:'Παιχνίδι';
     qb.onclick=()=>showQR(`${title} — ${modeNames[mode]||mode}`,{nav:'game',id:prefix,level:_gramCurrentLvlId[prefix],mode});

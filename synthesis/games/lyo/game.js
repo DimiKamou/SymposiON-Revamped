@@ -87,6 +87,11 @@ function lyoBuild() {
         <span>Χρονική Αντικατάσταση</span>
         <span class="lm-hint">Δίνεται ένας χρόνος — συμπλήρωσε τους υπόλοιπους</span>
       </div>
+      <div class="lmode-btn" id="lyo-mode-mix" onclick="lyoSelMode('mix')">
+        <span class="lm-icon">🎲</span>
+        <span>MIX — Ανάμεικτο</span>
+        <span class="lm-hint">Τυχαίο στυλ σε κάθε ερώτηση</span>
+      </div>
     </div>
     <div class="lsett-row">
       <div class="lfield"><label>Χρόνος</label>
@@ -497,6 +502,11 @@ const LYO_LVL=[
 let lyoState={filter:null,lives:3,score:0,timer:90,timerRemaining:90,timerInterval:null,activeKeys:[],answering:false,pendingTimeout:null,lastMood:null,lastVoice:null,lastForm:null,mistakes:[]};
 let lyoCurrentQ=null;
 let lyoGameMode=null;
+// MIX rotates a fresh style per question among these (match/chrono are whole-
+// board / whole-paradigm and stay their own modes). lyoCurMode = this question's.
+const LYO_MIX_POOL=['mc','fi','fw'];
+const LYO_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού',fw:'Ολόκληρος Τύπος'};
+let lyoCurMode=null;
 let lyoCurrentLevelId=null;
 
 // ── HELPERS ──
@@ -592,7 +602,7 @@ function lyoSelLvl(lvl){
   document.getElementById('lyo-sett-title').textContent=`Επίπεδο ${lvl.id}`;
   document.getElementById('lyo-sett-back').onclick=lyoGoLevels;
   // reset mode buttons
-  ['mc','fi','fw','match','chrono'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.remove('selected'));
+  ['mc','fi','fw','match','chrono','mix'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.remove('selected'));
   // reset launch + QR buttons
   const lb=document.getElementById('lyo-launch-btn');if(lb){lb.style.opacity='.5';lb.style.pointerEvents='none';}
   const qb=document.getElementById('lyo-sett-qr');if(qb){qb.style.opacity='0.38';qb.style.pointerEvents='none';}
@@ -601,14 +611,14 @@ function lyoSelLvl(lvl){
 
 function lyoSelMode(m){
   lyoGameMode=m;
-  ['mc','fi','fw','match','chrono'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.toggle('selected',m===x));
+  ['mc','fi','fw','match','chrono','mix'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.toggle('selected',m===x));
   const btn=document.getElementById('lyo-launch-btn');
   if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';}
   // Enable config-specific QR share when a level is selected
   const qb=document.getElementById('lyo-sett-qr');
   if(qb&&lyoCurrentLevelId){
     qb.style.opacity='1';qb.style.pointerEvents='auto';
-    const modeNames={'mc':'Πολλαπλή Επιλογή','fi':'Συμπλήρωση Κενού','fw':'Ολόκληρος Τύπος','match':'Αντιστοίχιση','chrono':'Χρονική Αντικατάσταση'};
+    const modeNames={'mc':'Πολλαπλή Επιλογή','fi':'Συμπλήρωση Κενού','fw':'Ολόκληρος Τύπος','match':'Αντιστοίχιση','chrono':'Χρονική Αντικατάσταση','mix':'MIX — Ανάμεικτο'};
     qb.onclick=()=>showQR(`Λύω — Επίπεδο ${lyoCurrentLevelId} — ${modeNames[m]||m}`,{nav:'game',id:'lyo',level:lyoCurrentLevelId,mode:m});
   }
 }
@@ -641,7 +651,7 @@ function lyoStartCustom(){
   lyoState.filter={voices,moods:[...em],tenses:t,forms};
   lyoCurrentLevelId=null;
   lyoGameMode=null;
-  ['mc','fi','fw','match','chrono'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.remove('selected'));
+  ['mc','fi','fw','match','chrono','mix'].forEach(x=>document.getElementById('lyo-mode-'+x)?.classList.remove('selected'));
   const lb=document.getElementById('lyo-launch-btn');if(lb){lb.style.opacity='.5';lb.style.pointerEvents='none';}
   const qb=document.getElementById('lyo-sett-qr');if(qb){qb.style.opacity='0.38';qb.style.pointerEvents='none';}
   document.getElementById('lyo-sett-title').textContent="Προσαρμοσμένο";
@@ -678,11 +688,12 @@ function lyoLaunch(){
     lyoChronoNextQ();
     return;
   }
-  // show/hide mc vs fi/fw
+  // show/hide mc vs fi/fw (MIX flips these per question inside lyoNextQ)
+  lyoCurMode = lyoGameMode==='mix' ? LYO_MIX_POOL[0] : lyoGameMode;
   const mcArea=document.getElementById('lyo-mc-area');
   const fiArea=document.getElementById('lyo-fi-area');
-  if(mcArea)mcArea.style.display=lyoGameMode==='mc'?'':'none';
-  if(fiArea){(lyoGameMode==='fi'||lyoGameMode==='fw')?fiArea.classList.add('active'):fiArea.classList.remove('active');}
+  if(mcArea)mcArea.style.display=lyoCurMode==='mc'?'':'none';
+  if(fiArea){(lyoCurMode==='fi'||lyoCurMode==='fw')?fiArea.classList.add('active'):fiArea.classList.remove('active');}
   // wire enter key
   const inp=document.getElementById('lyo-fi-input');
   if(inp)inp.onkeydown=e=>{if(e.key==='Enter')lyoSubmitFI();};
@@ -698,26 +709,34 @@ function lyoHUD(){
 }
 function lyoNextQ(){
   lyoCurrentQ=lyoGenQ(lyoState.activeKeys);if(!lyoCurrentQ){lyoEnd();return;}lyoState.answering=false;
-  const qel=document.getElementById('lyo-q');if(qel)qel.innerHTML=lyoCurrentQ.qt;
+  // MIX: fresh style each question, then flip the mc/fi areas to match.
+  if(lyoGameMode==='mix'){
+    lyoCurMode=LYO_MIX_POOL[Math.floor(Math.random()*LYO_MIX_POOL.length)];
+    const mcA=document.getElementById('lyo-mc-area'),fiA=document.getElementById('lyo-fi-area');
+    if(mcA)mcA.style.display=lyoCurMode==='mc'?'':'none';
+    if(fiA){(lyoCurMode==='fi'||lyoCurMode==='fw')?fiA.classList.add('active'):fiA.classList.remove('active');}
+  } else { lyoCurMode=lyoGameMode; }
+  const qel=document.getElementById('lyo-q');
+  if(qel)qel.innerHTML=(lyoGameMode==='mix'?`<div class="gram-mixchip">🎲 ${LYO_MIX_LABELS[lyoCurMode]||''}</div>`:'')+lyoCurrentQ.qt;
   const fb=document.getElementById('lyo-fb');if(fb){fb.textContent='';fb.className='lfeedback';}
-  if(lyoGameMode==='mc'){
+  if(lyoCurMode==='mc'){
     const grid=document.getElementById('lyo-opts');if(!grid)return;grid.innerHTML='';
     lyoCurrentQ.opts.forEach(opt=>{const btn=document.createElement('button');btn.className='lopt-btn';btn.textContent=opt;btn.onclick=()=>lyoAnswer(opt);grid.appendChild(btn);});
   }else{
     // fw: override fi_endings with full-word versions
-    if(lyoGameMode==='fw'){
+    if(lyoCurMode==='fw'){
       lyoCurrentQ.fi_endings=lyoCurrentQ.fw_ends;
       lyoCurrentQ.fi_correct=lyoCurrentQ.fw_correct;
     }
     const stemEl=document.getElementById('lyo-stem');
     if(stemEl){
-      if(lyoGameMode==='fw'){stemEl.style.display='none';}
+      if(lyoCurMode==='fw'){stemEl.style.display='none';}
       else{stemEl.style.display='';stemEl.textContent=lyoCurrentQ.stem;}
     }
     const inp=document.getElementById('lyo-fi-input');
     if(inp){
       inp.value='';inp.disabled=false;inp.className='';
-      if(lyoGameMode==='fw'){
+      if(lyoCurMode==='fw'){
         inp.style.borderRadius='8px';inp.style.minWidth='220px';inp.placeholder='Γράψε ολόκληρο τον τύπο';
       }else{
         inp.style.borderRadius='';inp.style.minWidth='';inp.placeholder='κατάληξη';
@@ -751,9 +770,9 @@ function lyoSubmitFI(){
   const fb=document.getElementById('lyo-fb');
   if(ok){lyoState.score++;if(fb){fb.textContent='✓ Σωστό!';fb.className='lfeedback lok';}}
   else{
-    const lbl=lyoGameMode==='fw'?'σωστός τύπος':'σωστή κατάληξη';
+    const lbl=lyoCurMode==='fw'?'σωστός τύπος':'σωστή κατάληξη';
     if(fb){fb.innerHTML=`✗ Λάθος — ${lbl}: <strong>${lyoCurrentQ.fi_correct}</strong>`;fb.className='lfeedback lerr';}
-    lyoState.mistakes.push({qt:lyoCurrentQ.qt,typed,correct:lyoCurrentQ.fi_correct,stem:lyoGameMode==='fw'?'':lyoCurrentQ.stem});
+    lyoState.mistakes.push({qt:lyoCurrentQ.qt,typed,correct:lyoCurrentQ.fi_correct,stem:lyoCurMode==='fw'?'':lyoCurrentQ.stem});
     if(typeof logStudentMistake==='function')logStudentMistake('lyo','archaia','verbs-lyo',{q:lyoCurrentQ.qt,a:lyoCurrentQ.fi_correct},typed);
     const _m=lyoCurrentQ._wrongMetaMap?.[typed];if(window.GE_CERBERUS_QUEUE&&_m)window.GE_CERBERUS_QUEUE.push({gameId:'lyo',subjectId:'ancient-greek',qt:lyoCurrentQ.qt,chosen:typed,correct:lyoCurrentQ.fi_correct,error_metadata:_m,ts:Date.now()});
     if(lyoState.lives!==Infinity){lyoState.lives--;lyoHUD();if(lyoState.lives<=0){lyoState.pendingTimeout=setTimeout(()=>lyoEnd(),1400);return;}}
