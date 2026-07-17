@@ -168,17 +168,23 @@
     // If a game is open, Back means "leave the game" → confirm first.
     if (_game) {
       if (!_game.noWarn) {                     // study/reading modes exit silently
-        var ok = window.confirm(tr(EXIT_MSG));
-        if (!ok) {                             // stay: re-trap by re-pushing the game entry
-          var s = ST();
-          try {
-            history.pushState(
-              navState(s.screen, s.screenParam, { _game: true, openFn: _game.openFn }),
-              '', pathFor(s.screen, s.screenParam) + '/play'
-            );
-          } catch (_) {}
-          return;
+        // Back already popped the /play entry. Re-trap it immediately so the game
+        // stays put, then ask via the in-app modal (async) instead of a blocking
+        // window.confirm. Leaving pops the re-trapped entry; staying keeps it.
+        var s = ST(), g = _game;
+        try {
+          history.pushState(
+            navState(s.screen, s.screenParam, { _game: true, openFn: g.openFn }),
+            '', pathFor(s.screen, s.screenParam) + '/play'
+          );
+        } catch (_) {}
+        var doLeave = function () { closeActiveGame(); try { history.back(); } catch (_) {} };
+        if (typeof window.showLeaveWarning === 'function') {
+          window.showLeaveWarning({ onLeave: doLeave });   // onStay: no-op (already re-trapped)
+        } else if (window.confirm(tr(EXIT_MSG))) {
+          doLeave();
         }
+        return;
       }
       closeActiveGame();                       // fall through to restore the entry we landed on
     }
