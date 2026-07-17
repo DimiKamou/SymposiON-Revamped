@@ -197,6 +197,7 @@ const ENGINES = [
   { gr:'Ναυμαχία', en:'Naumachia', meta:{gr:'Naval · PvP',en:'Naval · PvP'}, illu:'trident' },
   { gr:'Λαβύρινθος', en:'Labyrinth', meta:{gr:'Maze · Μυθολογία',en:'Maze · Mythology'}, illu:'labyrinth' },
   { gr:'Συμπόσιον', en:'Symposion', meta:{gr:'Επιτραπέζιο · 2–8 παίκτες',en:'Board game · 2–8 players'}, illu:'amphora' },
+  { gr:'Unity', en:'Unity', meta:{gr:'Unity WebGL · μηχανή 3D',en:'Unity WebGL · 3D engine'}, illu:'joystick', launch:{fn:'openUnity'} },
 ];
 
 window.SYM = { STR, CLASSES, SUBJECTS, ENGINES, L };
