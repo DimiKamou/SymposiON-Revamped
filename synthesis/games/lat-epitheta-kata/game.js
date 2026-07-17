@@ -51,6 +51,7 @@ function _latekBuild() {
         <select id="latek-sel-ans" style="padding:8px 6px;background:#241e16;border:1px solid #3d3020;border-radius:8px;color:#e8dcc8;font-size:.8rem;cursor:pointer;font-family:inherit;">
           <option value="fi" selected>Συμπλήρωση</option>
           <option value="mc">Πολλαπλή επιλογή</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <div style="display:none;">
@@ -177,6 +178,7 @@ function latekOpenSettings(){
     modes:[
       {id:'fi', label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'mc', label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από επιλογές'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     extras:[{ selId:'latek-sel-ex', label:'Άσκηση', options:[['klisi','Κλίση επιθέτων'],['paratheta','Παραθετικά']], default:'klisi' }],
     onLaunch: latekLaunch, onClose: closeLatEpithetaKata });
@@ -255,6 +257,12 @@ function latekNext() {
   _latekState.answering = false;
   const fb = document.getElementById('latek-fb');
   if (fb) { fb.textContent = ''; fb.className = 'lfeedback'; }
+  // MIX: pick this question's style (mc/fi), flip the answer areas + build the badge.
+  _latekState.curAns = (_latekState.ansMode === 'mix') ? (Math.random() < 0.5 ? 'mc' : 'fi') : _latekState.ansMode;
+  document.getElementById('latek-mc-area').style.display = _latekState.curAns === 'mc' ? 'grid' : 'none';
+  document.getElementById('latek-fi-area').style.display = _latekState.curAns === 'fi' ? 'block' : 'none';
+  _latekState._chip = (_latekState.ansMode === 'mix')
+    ? `<div class="gram-mixchip">🎲 ${_latekState.curAns === 'mc' ? 'Πολλαπλή Επιλογή' : 'Συμπλήρωση Κενού'}</div>` : '';
   if (_latekState.exMode === 'paratheta') _latekNextParatheta();
   else _latekNextKlisi();
 }
@@ -276,9 +284,9 @@ function _latekNextKlisi() {
 
   const qt = `<div class="lq-main" style="font-size:1.15rem;text-align:center;margin-bottom:8px;"><em>${a.l}</em> <span style="color:#8a7a60;font-size:.8em;">${a.m}</span></div>`
     + `<div class="lq-tags"><span class="lq-tag voice">${LATEK_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span><span class="lq-tag mood">${GENL[g]}</span></div>`;
-  document.getElementById('latek-q').innerHTML = qt;
+  document.getElementById('latek-q').innerHTML = _latekState._chip + qt;
 
-  if (_latekState.ansMode === 'mc') {
+  if (_latekState.curAns === 'mc') {
     // candidates: same case, other genders/number of same adj + same slot of other adjs
     const cands = [];
     GEN.forEach(gg => { cands.push(a.decl[gg].s[cIdx], a.decl[gg].p[cIdx]); });
@@ -306,9 +314,9 @@ function _latekNextParatheta() {
   const qt = `<div class="lq-main" style="font-size:1.15rem;text-align:center;margin-bottom:8px;">Θετικός: <em>${a.l}</em> <span style="color:#8a7a60;font-size:.8em;">${a.m}</span></div>`
     + `<div class="lq-tags"><span class="lq-tag voice">${_LATEK_DEG_LBL[which]}</span><span class="lq-tag tense">ονομ. αρσ. εν.</span></div>`
     + `<div style="text-align:center;font-size:.72rem;color:#8a7a60;margin-top:4px;">(γράψε «—» αν δεν σχηματίζεται)</div>`;
-  document.getElementById('latek-q').innerHTML = qt;
+  document.getElementById('latek-q').innerHTML = _latekState._chip + qt;
 
-  if (_latekState.ansMode === 'mc') {
+  if (_latekState.curAns === 'mc') {
     const cands = ['—'];
     _latekShuffle(st.adjs.filter(x => x !== a)).forEach(x => { cands.push(x[which]); });
     // a plausible "regularly-formed" trap when the answer is «—» or irregular
@@ -340,9 +348,9 @@ function _latekNextParDecl(gradable) {
   const qt = `<div class="lq-main" style="font-size:1.1rem;text-align:center;margin-bottom:6px;">${_LATEK_DEG_LBL[deg]} του <em>${a.l}</em></div>`
     + `<div style="text-align:center;font-size:1rem;color:#c9a44a;margin-bottom:6px;">${_latekShow1(degNom)}</div>`
     + `<div class="lq-tags"><span class="lq-tag voice">${LATEK_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span><span class="lq-tag mood">${GENL[g]}</span><span class="lq-tag gender">${_LATEK_DEG_LBL[deg]}</span></div>`;
-  document.getElementById('latek-q').innerHTML = qt;
+  document.getElementById('latek-q').innerHTML = _latekState._chip + qt;
 
-  if (_latekState.ansMode === 'mc') {
+  if (_latekState.curAns === 'mc') {
     const cands = [];
     GEN.forEach(gg => { cands.push(paradigm[gg].s[cIdx], paradigm[gg].p[cIdx]); });
     GEN.forEach(gg => { cands.push((isSg?paradigm[gg].s:paradigm[gg].p)[cIdx]); });

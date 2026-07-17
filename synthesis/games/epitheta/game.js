@@ -25,6 +25,10 @@ function _eptFilterAdj(subs) {
 // ── STATE ──
 let _eptState = null;
 let _eptMode  = 'mc';
+// MIX: random single-question style per question (this game offers mc + fi).
+const EPT_MIX_POOL=['mc','fi'];
+const EPT_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _eptCurMode='mc';
 let _eptLastSelIds = [];
 
 // ── OPEN / CLOSE ──
@@ -77,6 +81,7 @@ function _eptBuild() {
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="ept-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="eptOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -168,6 +173,7 @@ function eptOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix',   label:'MIX — Ανάμεικτο',  hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: eptLaunch, onClose: closeEpitheta });
 }
@@ -295,9 +301,13 @@ function eptNext() {
     `<span class="lq-tag gender">${genderLabel}</span>` +
     `<span class="lq-tag mood" style="font-size:.72rem;">${subLabel}</span>` +
     `</div>`;
-  document.getElementById('ept-q').innerHTML = qt;
+  _eptCurMode = (_eptMode==='mix') ? EPT_MIX_POOL[Math.floor(Math.random()*EPT_MIX_POOL.length)] : _eptMode;
+  document.getElementById('ept-mc-area').style.display=_eptCurMode==='mc'?'grid':'none';
+  document.getElementById('ept-fi-area').style.display=_eptCurMode==='fi'?'block':'none';
+  const _mixChip = (_eptMode==='mix') ? `<div class="gram-mixchip">🎲 ${EPT_MIX_LABELS[_eptCurMode]||''}</div>` : '';
+  document.getElementById('ept-q').innerHTML = _mixChip + qt;
 
-  if (_eptMode === 'mc') {
+  if (_eptCurMode === 'mc') {
     const grid = document.getElementById('ept-mc-area'); grid.innerHTML = '';
     _eptGenOptions(adj, gk, isSg, cIdx, ans).forEach(opt => {
       const b = document.createElement('button'); b.className = 'lopt-btn'; b.textContent = opt;

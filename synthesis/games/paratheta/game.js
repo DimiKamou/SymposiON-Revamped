@@ -66,6 +66,11 @@ function parBuild() {
         <span>Αντιστοίχιση</span>
         <span class="lm-hint">Αντίστοιχισε τύπο με μορφή</span>
       </div>
+      <div class="lmode-btn" id="par-mode-mix" onclick="parSelMode('mix')">
+        <span class="lm-icon">🎲</span>
+        <span>MIX — Ανάμεικτο</span>
+        <span class="lm-hint">Τυχαίο στυλ σε κάθε ερώτηση</span>
+      </div>
     </div>
     <div class="lsett-row">
       <div class="lfield"><label>Χρόνος</label>
@@ -351,6 +356,10 @@ const PAR_LVL = [
 let parState = {filter:null, lives:3, score:0, timer:90, timerRemaining:90, timerInterval:null, activeKeys:[], answering:false, pendingTimeout:null, lastPositive:null, lastDegree:null, lastCategory:null, mistakes:[]};
 let parCurrentQ = null;
 let parGameMode = null;
+// MIX rotates a fresh style per question among these (match stays its own mode).
+const PAR_MIX_POOL = ['mc','fi','fw'];
+const PAR_MIX_LABELS = {mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού',fw:'Ολόκληρος Τύπος'};
+let parCurMode = null;
 let parCurrentLevelId = null;
 
 // ── helpers ──
@@ -422,7 +431,7 @@ function parSelLvl(lvl) {
   document.getElementById('par-sett-title').textContent = `Επίπεδο ${lvl.id}`;
   document.getElementById('par-sett-back').onclick = parGoLevels;
   // reset mode buttons
-  ['mc','fi','fw','match'].forEach(x => document.getElementById('par-mode-'+x)?.classList.remove('selected'));
+  ['mc','fi','fw','match','mix'].forEach(x => document.getElementById('par-mode-'+x)?.classList.remove('selected'));
   // reset launch + QR buttons
   const lb = document.getElementById('par-launch-btn'); if(lb){lb.style.opacity='.5';lb.style.pointerEvents='none';}
   const qb = document.getElementById('par-sett-qr'); if(qb){qb.style.opacity='0.38';qb.style.pointerEvents='none';}
@@ -431,7 +440,7 @@ function parSelLvl(lvl) {
 
 function parSelMode(m) {
   parGameMode = m;
-  ['mc','fi','fw','match'].forEach(x => document.getElementById('par-mode-'+x)?.classList.toggle('selected', m === x));
+  ['mc','fi','fw','match','mix'].forEach(x => document.getElementById('par-mode-'+x)?.classList.toggle('selected', m === x));
   const btn = document.getElementById('par-launch-btn');
   if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
   // Enable config-specific QR share
@@ -469,10 +478,12 @@ function parLaunch() {
   parState.activeKeys = parKeys(parState.filter);
   if (!parState.activeKeys.length) { alert('Δεν βρέθηκαν ερωτήσεις.'); return; }
 
+  // MIX flips these per question inside parNextQ.
+  parCurMode = parGameMode === 'mix' ? PAR_MIX_POOL[0] : parGameMode;
   const mcArea = document.getElementById('par-mc-area');
   const fiArea = document.getElementById('par-fi-area');
-  if (mcArea) mcArea.style.display = parGameMode === 'mc' ? '' : 'none';
-  if (fiArea) { (parGameMode === 'fi' || parGameMode === 'fw') ? fiArea.classList.add('active') : fiArea.classList.remove('active'); }
+  if (mcArea) mcArea.style.display = parCurMode === 'mc' ? '' : 'none';
+  if (fiArea) { (parCurMode === 'fi' || parCurMode === 'fw') ? fiArea.classList.add('active') : fiArea.classList.remove('active'); }
 
   const inp = document.getElementById('par-fi-input');
   if (inp) inp.onkeydown = e => { if (e.key === 'Enter') parSubmitFI(); };
@@ -505,11 +516,18 @@ function parNextQ() {
   parCurrentQ = parGenQ(parState.activeKeys);
   if (!parCurrentQ) { parEnd(); return; }
   parState.answering = false;
+  // MIX: fresh style each question, flip the mc/fi areas to match.
+  if (parGameMode === 'mix') {
+    parCurMode = PAR_MIX_POOL[Math.floor(Math.random() * PAR_MIX_POOL.length)];
+    const mcA = document.getElementById('par-mc-area'), fiA = document.getElementById('par-fi-area');
+    if (mcA) mcA.style.display = parCurMode === 'mc' ? '' : 'none';
+    if (fiA) { (parCurMode === 'fi' || parCurMode === 'fw') ? fiA.classList.add('active') : fiA.classList.remove('active'); }
+  } else { parCurMode = parGameMode; }
 
-  const qel = document.getElementById('par-q'); if (qel) qel.innerHTML = parCurrentQ.qt;
+  const qel = document.getElementById('par-q'); if (qel) qel.innerHTML = (parGameMode === 'mix' ? `<div class="gram-mixchip">🎲 ${PAR_MIX_LABELS[parCurMode] || ''}</div>` : '') + parCurrentQ.qt;
   const fb  = document.getElementById('par-fb'); if (fb) { fb.textContent = ''; fb.className = 'lfeedback'; }
 
-  if (parGameMode === 'mc') {
+  if (parCurMode === 'mc') {
     const grid = document.getElementById('par-opts'); if (!grid) return;
     grid.innerHTML = '';
     parCurrentQ.opts.forEach(opt => {
@@ -520,13 +538,13 @@ function parNextQ() {
     });
   } else {
     // fw mode: override fi_endings with full-word versions
-    if (parGameMode === 'fw') {
+    if (parCurMode === 'fw') {
       parCurrentQ.fi_endings = parCurrentQ.fw_ends;
       parCurrentQ.fi_correct = parCurrentQ.fw_correct;
     }
     const stemEl = document.getElementById('par-stem');
     const inp    = document.getElementById('par-fi-input');
-    const hideStem = parGameMode === 'fw' || parCurrentQ.stem === '';
+    const hideStem = parCurMode === 'fw' || parCurrentQ.stem === '';
     if (stemEl) { stemEl.style.display = hideStem ? 'none' : ''; if (!hideStem) stemEl.textContent = parCurrentQ.stem; }
     if (inp) {
       inp.style.borderRadius = hideStem ? '8px' : '';
@@ -571,7 +589,7 @@ function parSubmitFI() {
   else {
     const allCorrect = parCurrentQ.fi_endings.join(' / ');
     if (fb) { fb.innerHTML = `✗ Λάθος — σωστό: <strong>${allCorrect}</strong>`; fb.className = 'lfeedback lerr'; }
-    parState.mistakes.push({ qt: parCurrentQ.qt, typed, correct: allCorrect, stem: (parGameMode === 'fw' ? '' : parCurrentQ.stem) });
+    parState.mistakes.push({ qt: parCurrentQ.qt, typed, correct: allCorrect, stem: (parCurMode === 'fw' ? '' : parCurrentQ.stem) });
     if(typeof logStudentMistake==='function') logStudentMistake('par','paratheta',parGameMode,{q:parCurrentQ.qt,a:allCorrect},typed);
     if (parState.lives !== Infinity) { parState.lives--; parHUD(); if (parState.lives <= 0) { parState.pendingTimeout = setTimeout(() => parEnd(), 1400); return; } }
   }

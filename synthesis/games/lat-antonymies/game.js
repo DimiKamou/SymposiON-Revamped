@@ -13,6 +13,9 @@ function closeLatAntonymies() {
 }
 
 let _latpMode = 'mc', _latpState = null, _latpLastSelIds = [];
+const LATP_MIX_POOL=['mc','fi'];
+const LATP_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _latpCurMode='mc';
 
 function _latpBuild() {
   document.getElementById('latp-wrap').innerHTML = `
@@ -38,6 +41,7 @@ function _latpBuild() {
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="latp-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="latpOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -149,6 +153,7 @@ function latpOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: latpLaunch, onClose: closeLatAntonymies });
 }
@@ -229,8 +234,12 @@ function latpNext() {
   _latpState.curr = { p, isSg, cIdx, ans };
   const gLbl = _LATP_GEND_LBL[p.t] || p.t;
   const qt = `<div class="lq-main" style="font-size:1.1rem;text-align:center;margin-bottom:8px;"><em>${p.l}</em></div><div class="lq-tags"><span class="lq-tag voice">${LAT_P_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span>${gLbl?`<span class="lq-tag gender">${gLbl}</span>`:''}</div>`;
-  document.getElementById('latp-q').innerHTML = qt;
-  if (_latpMode==='mc') {
+  _latpCurMode = (_latpMode==='mix') ? LATP_MIX_POOL[Math.floor(Math.random()*LATP_MIX_POOL.length)] : _latpMode;
+  document.getElementById('latp-mc-area').style.display=_latpCurMode==='mc'?'grid':'none';
+  document.getElementById('latp-fi-area').style.display=_latpCurMode==='fi'?'block':'none';
+  const _mixChip = (_latpMode==='mix') ? `<div class="gram-mixchip">🎲 ${LATP_MIX_LABELS[_latpCurMode]||''}</div>` : '';
+  document.getElementById('latp-q').innerHTML = _mixChip + qt;
+  if (_latpCurMode==='mc') {
     const grid = document.getElementById('latp-mc-area'); grid.innerHTML = '';
     _latpGenOpts(p,isSg,cIdx,ans).forEach(opt => {
       const b = document.createElement('button'); b.className='lopt-btn'; b.textContent=opt;

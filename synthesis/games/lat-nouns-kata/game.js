@@ -14,6 +14,9 @@ function closeLatNounsKata() {
 }
 
 let _latnkMode = 'mc', _latnkState = null, _latnkLastTexts = [];
+const LATNK_MIX_POOL=['mc','fi'];
+const LATNK_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _latnkCurMode='mc';
 
 // ── helpers for variant cells ────────────────────────────────────────────────
 function _latnkForms(cell) {            // → array of attested forms (no '-')
@@ -66,6 +69,7 @@ function _latnkBuild() {
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <div id="latnk-sel-info" style="font-size:.78rem;color:#8a7a60;margin-bottom:8px;text-align:center;"></div>
@@ -157,6 +161,7 @@ function latnkOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: latnkLaunch, onClose: closeLatNounsKata });
 }
@@ -261,8 +266,12 @@ function latnkNext() {
   if (!forms.length) { return; }
   _latnkState.curr = { n, isSg, cIdx, forms, primary:forms[0] };
   const qt = `<div class="lq-main" style="font-size:1.15rem;text-align:center;margin-bottom:8px;"><em>${n.l}</em></div><div class="lq-sub" style="text-align:center;color:#8a7a60;font-size:.8rem;margin-bottom:8px;">${n.m||''}</div><div class="lq-tags"><span class="lq-tag voice">${LATNK_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span><span class="lq-tag mood">${_LATNK_DECL(n)}</span><span class="lq-tag gender">${LATNK_GEND[n.t]||n.t}</span></div>`;
-  document.getElementById('latnk-q').innerHTML = qt;
-  if (_latnkMode==='mc') {
+  _latnkCurMode = (_latnkMode==='mix') ? LATNK_MIX_POOL[Math.floor(Math.random()*LATNK_MIX_POOL.length)] : _latnkMode;
+  document.getElementById('latnk-mc-area').style.display=_latnkCurMode==='mc'?'grid':'none';
+  document.getElementById('latnk-fi-area').style.display=_latnkCurMode==='fi'?'block':'none';
+  const _mixChip = (_latnkMode==='mix') ? `<div class="gram-mixchip">🎲 ${LATNK_MIX_LABELS[_latnkCurMode]||''}</div>` : '';
+  document.getElementById('latnk-q').innerHTML = _mixChip + qt;
+  if (_latnkCurMode==='mc') {
     const grid = document.getElementById('latnk-mc-area'); grid.innerHTML = '';
     _latnkGenOpts(n,isSg,cIdx,forms[0]).forEach(opt => {
       const b = document.createElement('button'); b.className='lopt-btn'; b.textContent=opt;

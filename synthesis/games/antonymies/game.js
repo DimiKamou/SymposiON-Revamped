@@ -79,6 +79,9 @@ function _antFilterEntries(subs) {
 
 // ── State ─────────────────────────────────────────────────────
 let _antMode = 'mc';
+const ANT_MIX_POOL=['mc','fi'];
+const ANT_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _antCurMode='mc';
 let _antState = null;
 let _antLastSelIds = [];
 
@@ -112,6 +115,7 @@ function _antBuild() {
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
           <option value="transl">🌐 Μεταφραστικό</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="ant-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="antOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -243,6 +247,7 @@ function antOpenSettings(){
       {id:'fi',     label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match',  label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
       {id:'transl', label:'Μεταφραστικό',     hint:'Βρες την αρχαία λέξη'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: antLaunch, onClose: closeAntonymies });
 }
@@ -376,6 +381,9 @@ function antNext() {
   }
 
   // Standard modes
+  _antCurMode = (_antMode==='mix') ? ANT_MIX_POOL[Math.floor(Math.random()*ANT_MIX_POOL.length)] : _antMode;
+  document.getElementById('ant-mc-area').style.display = _antCurMode === 'mc' ? 'grid' : 'none';
+  document.getElementById('ant-fi-area').style.display  = _antCurMode === 'fi'  ? 'block' : 'none';
   const e = _antState.active[Math.floor(Math.random() * _antState.active.length)];
   _antState.curr = { entry: e };
   const isEn   = siteLang === 'en';
@@ -386,6 +394,7 @@ function antNext() {
   const genLbl  = e.genos || '';
 
   document.getElementById('ant-q').innerHTML =
+    (_antMode==='mix' ? `<div class="gram-mixchip">🎲 ${ANT_MIX_LABELS[_antCurMode]||''}</div>` : '') +
     `<div class="lq-main" style="font-size:1.25rem;text-align:center;margin-bottom:8px;"><em>${e.lemma}</em></div>` +
     `<div class="lq-tags">` +
     `<span class="lq-tag voice">${caseLbl}</span>` +
@@ -394,7 +403,7 @@ function antNext() {
     `<span class="lq-tag person">${typeL}</span>` +
     `</div>`;
 
-  if (_antState.mode === 'mc') {
+  if (_antCurMode === 'mc') {
     const grid = document.getElementById('ant-mc-area'); grid.innerHTML = '';
     _antGenOptions(e).forEach(opt => {
       const b = document.createElement('button'); b.className = 'lopt-btn'; b.textContent = opt;
