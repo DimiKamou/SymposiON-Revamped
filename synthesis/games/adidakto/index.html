@@ -6,7 +6,7 @@
 <title>SymposiON · Αδίδακτο Κείμενο</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <style>
   .theme-alabaster{
     --sym-bg-dark:#F7F3EA; --sym-bg-panel:#FFFFFF; --sym-ink:#1E1810;
@@ -147,6 +147,36 @@
     .picker{max-width:none;flex:1 1 100%;}
     .wrap{padding:22px 16px 64px;}
   }
+
+  /* ── Author index (landing menu) — «slide list of the creators» ── */
+  .menu{max-width:1080px;margin:0 auto;padding:30px 34px 80px;}
+  .menu-h{margin-bottom:12px;}
+  .menu-h .eyebrow{font-family:var(--disp);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--terra);}
+  .menu-h h1{font-family:var(--serif);font-size:32px;font-weight:700;line-height:1.05;margin-top:6px;}
+  .menu-h p{font-size:14px;color:var(--fg-70);margin-top:9px;max-width:660px;line-height:1.6;}
+  .authors{display:flex;flex-direction:column;gap:16px;margin-top:26px;}
+  .author-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 26px;transition:border-color .18s;}
+  .author-card:hover{border-color:var(--line-bold);}
+  .author-card .arow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .author-card .aname{font-family:var(--serif);font-size:23px;font-weight:700;color:var(--fg);}
+  .author-card .ameta{font-family:var(--disp);font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);}
+  .author-card .acount{margin-left:auto;font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);}
+  .works{display:flex;flex-direction:column;margin-top:14px;}
+  .work{display:flex;align-items:center;gap:14px;padding:14px 4px;border-top:1px solid var(--line-soft);cursor:pointer;
+    transition:padding-left .14s;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:inherit;font:inherit;}
+  .work:hover{padding-left:11px;}
+  .work .wt{font-family:var(--greek);font-size:19px;color:var(--fg);}
+  .work .wg{font-family:var(--sans);font-size:12px;color:var(--muted);}
+  .work .wsp{flex:1;}
+  .work .wd{font-family:var(--disp);font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--gold);
+    background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 26%,transparent);border-radius:7px;padding:4px 9px;white-space:nowrap;}
+  .work .warr{color:var(--terra);font-size:20px;opacity:0;transition:opacity .14s;}
+  .work:hover .warr{opacity:1;}
+  .backbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--disp);font-size:11px;letter-spacing:.8px;text-transform:uppercase;
+    font-weight:600;color:var(--fg-70);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer;transition:.15s;}
+  .backbtn:hover{border-color:var(--line-bold);color:var(--terra);}
+  .backbtn svg{width:14px;height:14px;}
+  @media(max-width:560px){ .menu{padding:24px 16px 64px;} .author-card{padding:18px 18px;} }
 </style>
 </head>
 <body class="theme-alabaster">
@@ -158,14 +188,28 @@
 <header class="bar">
   <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="square">
     <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/></svg>
-  <span class="brand">Symposi<b>ON</b></span>
+  <span class="brand" id="brand" style="cursor:pointer" title="Ανθολόγιο Αδιδάκτων">Symposi<b>ON</b></span>
   <span class="bar-sub">Αδίδακτο</span>
+  <button class="backbtn" id="backToMenu" style="margin-left:6px;display:none" title="Πίσω στο Ανθολόγιο">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>Ανθολόγιο</button>
   <span class="spacer"></span>
-  <select class="picker" id="picker" aria-label="Επιλογή κειμένου"></select>
-  <span class="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock">00:00</span></span>
+  <span id="readerCtl" style="display:none;align-items:center;gap:18px">
+    <select class="picker" id="picker" aria-label="Επιλογή κειμένου"></select>
+    <span class="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock">00:00</span></span>
+  </span>
 </header>
 
-<div class="wrap">
+<!-- Landing: author slide-list (creators as headings, texts as subheads) -->
+<div class="menu" id="menu" style="display:none">
+  <div class="menu-h">
+    <div class="eyebrow">Αδίδακτο κείμενο · Ανθολόγιο</div>
+    <h1>Οι συγγραφείς</h1>
+    <p>Διάλεξε δημιουργό και κείμενο. Κάθε κείμενο ανοίγει σε δική του σελίδα με πλήρη ανάλυση, μετάφραση περίοδο-περίοδο, λεξιλόγιο και ασκήσεις εξέτασης.</p>
+  </div>
+  <div class="authors" id="authors"></div>
+</div>
+
+<div class="wrap" id="reader" style="display:none">
   <div class="head">
     <div class="ht">
       <div class="eyebrow">Αδίδακτο κείμενο · Εξάσκηση</div>
@@ -220,18 +264,96 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^α-ωa-z]/g,'');
 const DIFFMAP={1:'Εύκολη',2:'Εύκολη',3:'Μεσαία',4:'Πανελλήνιες',5:'Πολύ δύσκολη'};
 const CORPUS=(window.AdidaktoCorpus?AdidaktoCorpus.load():(window.CORPUS_BASE||[]));
+var curGL={};   // glossary of the text currently shown (read by the one-time click handlers)
 
 const params=new URLSearchParams(location.search);
-let curId=params.get('id');
-function pick(){ return CORPUS.filter(e=>String(e.id)===String(curId))[0] || CORPUS[0]; }
+
+/* ── author-index router: menu ⇄ text · deep-linkable · own history ── */
+const AUTHOR_ORDER=['Λυσίας','Ξενοφῶν','Πλάτων','Ἰσοκράτης','Δημοσθένης','Θουκυδίδης'];
+const AUTHOR_SLUG={'Λυσίας':'lysias','Ξενοφῶν':'xenophon','Πλάτων':'plato','Ἰσοκράτης':'isokrates','Δημοσθένης':'demosthenes','Θουκυδίδης':'thucydides'};
+const AUTHOR_META={'Λυσίας':'Ρήτορας · δικανικός λόγος','Ξενοφῶν':'Ιστορικός & φιλόσοφος','Πλάτων':'Φιλόσοφος · σωκρατικοί διάλογοι','Ἰσοκράτης':'Ρήτορας · παραίνεση','Δημοσθένης':'Ρήτορας · πολιτικός λόγος','Θουκυδίδης':'Ιστορικός'};
+const slugToAuthor={}; Object.keys(AUTHOR_SLUG).forEach(a=>slugToAuthor[AUTHOR_SLUG[a]]=a);
+const textSlug=e=>(String(e.id).split('-').slice(1).join('-'))||String(e.id);
+const worksOf=author=>CORPUS.filter(e=>e.author===author);
+
 const sel=document.getElementById('picker');
 sel.innerHTML=CORPUS.map(e=>`<option value="${esc(e.id)}">${esc(e.author)} — ${esc(e.work)}</option>`).join('');
-const entry=pick();
-if(entry) sel.value=String(entry.id);
-sel.onchange=()=>{ location.search='?id='+encodeURIComponent(sel.value); };
+sel.onchange=()=>navText(sel.value);
 
-if(!entry){ document.querySelector('.wrap').innerHTML='<p style="padding:40px;color:var(--muted)">Δεν βρέθηκαν κείμενα στο ανθολόγιο.</p>'; }
-else render(entry);
+// resolve an entry from ?id / ?author[&text] / ?route=author[/text]; null → menu
+function resolveFromParams(p){
+  if(p.get('id')){ const e=CORPUS.filter(x=>String(x.id)===p.get('id'))[0]; if(e) return e; }
+  let author=null,text=null; const route=p.get('route');
+  if(route){ const seg=route.split('/'); author=seg[0]; text=seg[1]||null; }
+  else { author=p.get('author'); text=p.get('text'); }
+  if(author){
+    const a=slugToAuthor[author]||(AUTHOR_SLUG[author]?author:null);
+    if(a){ const ws=worksOf(a); if(!ws.length) return null;
+      if(text){ const e=ws.filter(x=>textSlug(x)===text)[0]; if(e) return e; }
+      return ws[0]; }
+  }
+  return null;
+}
+// shell route: author with 1 work → 'author'; else 'author/textslug'
+function routeFor(e){ const s=AUTHOR_SLUG[e.author]||''; return worksOf(e.author).length>1 ? s+'/'+textSlug(e) : s; }
+function postRoute(slug){ try{ (window.parent||window).postMessage({type:'adidakto:route',slug:slug||''},'*'); }catch(_){} }
+
+function showMenu(){
+  document.getElementById('menu').style.display='block';
+  document.getElementById('reader').style.display='none';
+  document.getElementById('readerCtl').style.display='none';
+  document.getElementById('backToMenu').style.display='none';
+  window.scrollTo(0,0);
+}
+function showReader(e){
+  document.getElementById('menu').style.display='none';
+  document.getElementById('reader').style.display='block';
+  document.getElementById('readerCtl').style.display='inline-flex';
+  document.getElementById('backToMenu').style.display='inline-flex';
+  sel.value=String(e.id); render(e); window.scrollTo(0,0);
+}
+function applyEntry(e){ if(e){ showReader(e); postRoute(routeFor(e)); } else { showMenu(); postRoute(''); } }
+
+function navText(id){ const e=CORPUS.filter(x=>String(x.id)===String(id))[0]; if(!e) return;
+  try{ history.pushState({id:e.id},'', 'index.html?id='+encodeURIComponent(e.id)); }catch(_){}
+  applyEntry(e); }
+function navMenu(){ try{ history.pushState({menu:1},'', 'index.html'); }catch(_){} applyEntry(null); }
+
+window.addEventListener('popstate',ev=>{
+  const st=ev.state;
+  if(st&&st.id){ const e=CORPUS.filter(x=>String(x.id)===String(st.id))[0]; applyEntry(e||null); }
+  else applyEntry(null);
+});
+document.getElementById('brand').onclick=navMenu;
+document.getElementById('backToMenu').onclick=navMenu;
+
+// build the author slide-list (creators as headings, texts as subheads)
+(function buildMenu(){
+  const seen={},order=[];
+  AUTHOR_ORDER.forEach(a=>{ if(worksOf(a).length){ order.push(a); seen[a]=1; } });
+  CORPUS.forEach(e=>{ if(!seen[e.author]){ order.push(e.author); seen[e.author]=1; } });
+  document.getElementById('authors').innerHTML=order.map(a=>{
+    const ws=worksOf(a);
+    const rows=ws.map(e=>`<button class="work" data-id="${esc(e.id)}">
+        <span class="wt">${esc(e.work)}</span><span class="wg">${esc(e.genre||'')}</span>
+        <span class="wsp"></span><span class="wd">${esc(DIFFMAP[e.diff]||'—')}</span><span class="warr">→</span></button>`).join('');
+    return `<div class="author-card"><div class="arow">
+        <span class="aname">${esc(a)}</span><span class="ameta">${esc(AUTHOR_META[a]||'')}</span>
+        <span class="acount">${ws.length} ${ws.length===1?'κείμενο':'κείμενα'}</span></div>
+      <div class="works">${rows}</div></div>`;
+  }).join('');
+  document.getElementById('authors').addEventListener('click',ev=>{
+    const w=ev.target.closest('.work'); if(w) navText(w.dataset.id);
+  });
+})();
+
+if(!CORPUS.length){ const m=document.getElementById('menu'); m.innerHTML='<p style="padding:40px;color:var(--muted)">Δεν βρέθηκαν κείμενα στο ανθολόγιο.</p>'; m.style.display='block'; }
+else {
+  const first=resolveFromParams(params);
+  // seed history so Back from a deep-linked text lands on the menu, in-app
+  try{ history.replaceState(first?{id:first.id}:{menu:1},'', first?('index.html?id='+encodeURIComponent(first.id)):'index.html'); }catch(_){}
+  applyEntry(first);
+}
 
 function render(t){
   const sents=Array.isArray(t.sentences)&&t.sentences.length ? t.sentences : [{gr:t.text||'',model:t.translation||''}];
@@ -243,6 +365,7 @@ function render(t){
   if(t.intro){const iel=document.getElementById('intro');iel.style.display='block';iel.textContent=t.intro;}
 
   const GL={}; (t.glosses||[]).forEach(g=>{ const k=norm((g.w||'').split(/\s+/)[0]); if(k&&!GL[k]) GL[k]=g; });
+  curGL=GL;
 
   document.getElementById('passage').innerHTML=sents.map((s,si)=>{
     const words=(s.gr||'').split(/(\s+)/).map(tok=>{
@@ -254,12 +377,13 @@ function render(t){
   }).join('');
 
   const pop=document.getElementById('pop');
+  if(!render._wired){
   document.getElementById('passage').addEventListener('click',e=>{
     const w=e.target.closest('.w');
     document.querySelectorAll('.w.sel').forEach(x=>x.classList.remove('sel'));
     if(!w){pop.classList.remove('open');return;}
     w.classList.add('sel');
-    const g=GL[w.dataset.k];
+    const g=curGL[w.dataset.k];
     pop.innerHTML=`<div class="pw">${esc(w.textContent)}</div>`+(g?`<div class="pgloss">${esc(g.gloss)}</div>`:`<div class="pnone">— δεν υπάρχει λεξιλογική σημείωση· δες το πλήρες λεξιλόγιο →</div>`);
     pop.classList.add('open');
     const r=w.getBoundingClientRect();
@@ -267,6 +391,7 @@ function render(t){
     pop.style.left=left+'px'; pop.style.top=(r.bottom+window.scrollY+8)+'px';
   });
   document.addEventListener('click',e=>{if(!e.target.closest('.w')&&!e.target.closest('.pop'))pop.classList.remove('open');});
+  }
 
   document.getElementById('workspace').innerHTML=sents.map((s,si)=>`
     <div class="ws-sent" data-si="${si}">
@@ -278,6 +403,7 @@ function render(t){
         <div class="self"><button data-v="ok">Το πέτυχα</button><button data-v="mid">Σχεδόν</button><button data-v="no">Λάθος</button></div>
       </div>
     </div>`).join('');
+  if(!render._wired){
   document.getElementById('workspace').addEventListener('click',e=>{
     const rb=e.target.closest('.reveal-btn');
     if(rb){document.getElementById('model'+rb.dataset.si).classList.add('show');rb.style.display='none';
@@ -286,24 +412,31 @@ function render(t){
     const sb=e.target.closest('.self button');
     if(sb){sb.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on'));sb.classList.add('on');}
   });
+  }
 
   const qs=t.questions||[];
+  // q.code is an INTERNAL id (gram-…, synt-…, translate) — never show it raw.
+  // Render the question number + a readable type label instead.
+  const QK={translate:'Μετάφραση',grammar:'Γραμματική',syntax:'Συντακτικό',comprehension:'Κατανόηση',interpretation:'Ερμηνεία',lexis:'Λεξιλόγιο'};
   document.getElementById('compCount').textContent=qs.length+' ερωτήσεις';
   document.getElementById('comp').innerHTML=qs.map((q,i)=>{
     const isTr=q.type==='translate';
     return `<div class="cq" data-i="${i}">
-      <div class="cqt"><span class="qn">${esc(q.code||(i+1)+'.')}</span>${esc(q.q)}${q.points?`<span class="cqp">${q.points} μ.</span>`:''}</div>
+      <div class="cqt"><span class="qn">${i+1}.</span>${QK[q.type]?`<span class="qkind" style="display:inline-block;font:700 10px/1 var(--disp,inherit);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--sink);border:1px solid var(--line-soft);border-radius:6px;padding:3px 7px;margin:0 8px 0 2px;vertical-align:middle">${esc(QK[q.type])}</span>`:''}${esc(q.q)}${q.points?`<span class="cqp">${q.points} μ.</span>`:''}</div>
       <textarea class="ca ${isTr?'gr':''}" placeholder="Η απάντησή σου…"></textarea>
       <div class="ws-actions"><button class="reveal-btn" data-i="${i}">Δες ενδεικτική απάντηση</button></div>
       <div class="model" id="qa${i}"><div class="ml">Ενδεικτική απάντηση</div><div class="mtxt">${esc(q.answer)}</div>${q.rubric?`<div class="mtxt" style="margin-top:8px;color:var(--fg-70);font-size:12.5px"><b>Κριτήρια:</b> ${esc(q.rubric)}</div>`:''}</div>
     </div>`;
   }).join('');
+  if(!render._wired){
   document.getElementById('comp').addEventListener('click',e=>{
     const rb=e.target.closest('.reveal-btn'); if(!rb)return;
     document.getElementById('qa'+rb.dataset.i).classList.add('show'); rb.style.display='none';
   });
+  }
 
   document.getElementById('drawerBody').innerHTML=`<div class="glossary">${(t.glosses||[]).map(g=>`<div class="gloss-row"><span class="gw">${esc(g.w)}</span><span class="gd">${esc(g.gloss)}</span></div>`).join('')||'<div style="color:var(--muted);font-size:13px">—</div>'}</div>`;
+  render._wired=true;
 }
 
 const drawer=document.getElementById('drawer');

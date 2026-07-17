@@ -10,6 +10,7 @@
   const esc = (s)=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   const MODES = [
+    {id:'read', ico:'scroll', gr:'Μελέτη',              en:'Θεωρία & Ορισμοί', c:'#9C8238', meta:'Διάβασε το κεφάλαιο & τους ορισμούς του.'},
     {id:'mc',   ico:'stele',  gr:'Πολλαπλής Επιλογής', en:'Multiple Choice', c:'#E0894C', meta:'Μία σωστή από τέσσερις.'},
     {id:'match',ico:'mosaic', gr:'Αντιστοίχιση',       en:'Matching',        c:'#5E8B96', meta:'Ένωσε όρο με ορισμό.'},
     {id:'fc',   ico:'amphora',gr:'Κάρτες Μνήμης',      en:'Flashcards',      c:'#D2B36A', meta:'Λήμμα κι ερμηνεία.'},
@@ -18,18 +19,36 @@
     {id:'fib',  ico:'chisel', gr:'Συμπλήρωση',         en:'Fill the gap',    c:'#D2B36A', meta:'Συμπλήρωσε το κενό.'},
     {id:'vid',  ico:'theatre',gr:'Βίντεο + Ερωτήσεις', en:'Video',           c:'#E0894C', meta:'Παρακολούθησε & απάντησε.'},
   ];
+  const COUNTABLE = ['read','mc','match','fc','tl','tf','fib'];  // vid counted separately
 
   let COURSE = 'g3';
   let CUR_UNIT = null;
+  let SCOPED = false;   // true = opened scoped to a single exam theme (?unit=…)
+  let CUR_SEC = null;   // null = «Όλη η ενότητα»; else a section id
+  let READ_SEC = null;  // section shown inside the reading mode
   const idx = {};   // per-mode current index
 
   function units(){ return ISTORIA.getUnits(COURSE); }
   function unit(){ return units().find(u=>u.id===CUR_UNIT) || units()[0]; }
-  function modeData(mode){ return ISTORIA.getModeData(COURSE, CUR_UNIT, mode); }
+  function sections(){ return ISTORIA.getSections(COURSE, CUR_UNIT); }
+  function modeData(mode){ return ISTORIA.getModeData(COURSE, CUR_UNIT, mode, CUR_SEC); }
+  function modeCount(id){
+    if(id==='read') return ISTORIA.getTheory(COURSE, CUR_UNIT, CUR_SEC).length;
+    if(id==='vid'){ const v=ISTORIA.getModeData(COURSE, CUR_UNIT, 'vid', CUR_SEC); return v?1:0; }
+    return (ISTORIA.getModeData(COURSE, CUR_UNIT, id, CUR_SEC)||[]).length;
+  }
+  function unitCount(id){ // whole-unit count, to decide if a mode card exists at all
+    if(id==='read') return ISTORIA.getTheory(COURSE, CUR_UNIT).length;
+    if(id==='vid'){ const v=ISTORIA.getModeData(COURSE, CUR_UNIT, 'vid'); return v?1:0; }
+    return (ISTORIA.getModeData(COURSE, CUR_UNIT, id)||[]).length;
+  }
+  function secName(id){ const s=sections().find(x=>x.id===id); return s? ((s.part?s.part+' ':'')+(s.code?s.code+'. ':'')+s.t) : 'Όλη η ενότητα'; }
 
   /* ── hub ──────────────────────────────────────────────────────────── */
   function renderHub(){
-    const us = units();
+    // When scoped to one exam theme, the unit rail shows only that theme (the
+    // whole panel is dedicated to it); otherwise show every unit to browse.
+    const us = SCOPED ? units().filter(u=>u.id===CUR_UNIT) : units();
     if (!CUR_UNIT && us.length) CUR_UNIT = us[0].id;
     $('#units').innerHTML = us.map(u=>`
       <button class="unit ${u.id===CUR_UNIT?'on':''}" onclick="HUB.pickUnit('${u.id}')">
@@ -39,14 +58,37 @@
         <div class="mini"><i style="width:${u.pct||0}%"></i></div>
         <div class="cnt">${(u.en||'').toUpperCase()}${u.cnt?' · '+esc(u.cnt):''}</div>
       </button>`).join('');
-    $('#modes').innerHTML = MODES.map(m=>`
-      <button class="mode" style="--c:${m.c}" onclick="HUB.openMode('${m.id}')">
-        <span class="glow"></span>${ICON(m.ico)}
+    renderSubrail();
+    // only show mode cards that carry content somewhere in this unit
+    const shown = MODES.filter(m=> m.id==='read' ? unitCount('read')>0 : unitCount(m.id)>0);
+    $('#modes').innerHTML = shown.map(m=>{
+      const n = modeCount(m.id);
+      const dim = n===0 ? ' dim' : '';
+      const badge = m.id==='vid' ? '' : `<span class="mcount">${n}</span>`;
+      return `
+      <button class="mode${dim}" style="--c:${m.c}" onclick="HUB.openMode('${m.id}')">
+        <span class="glow"></span>${ICON(m.ico)}${badge}
         <div><div class="gr">${esc(m.gr)}</div><div class="en">${m.en}</div></div>
         <div class="meta">${esc(m.meta)}</div>
-      </button>`).join('');
+      </button>`;}).join('');
     renderAISection();
   }
+
+  // Chapter rail — pick a study-section (sub-section) to scope the modes.
+  function renderSubrail(){
+    const el = $('#subrail'); if(!el) return;
+    const secs = sections();
+    if(!secs.length){ el.style.display='none'; el.innerHTML=''; return; }
+    el.style.display='';
+    const pill = (id,label,part,active)=>`
+      <button class="secpill ${active?'on':''}" onclick="HUB.pickSec(${id===null?'null':`'${id}'`})">
+        ${part?`<span class="pn">${esc(part)}</span>`:''}<span class="pt">${esc(label)}</span>
+      </button>`;
+    const all = pill(null, 'Όλη η ενότητα', '', CUR_SEC===null);
+    const list = secs.map(s=> pill(s.id, s.t, ((s.part?s.part+' ':'')+(s.code?s.code+'.':'')).trim(), CUR_SEC===s.id)).join('');
+    el.innerHTML = `<div class="subrail-lab">Κεφάλαια</div><div class="secpills">${all}${list}</div>`;
+  }
+  function pickSec(id){ CUR_SEC=id; READ_SEC=id; renderHub(); }
 
   // §Γ — AI-graded written methods (shown only when the course ships them)
   function renderAISection(){
@@ -80,7 +122,7 @@
       } else { esec.style.display='none'; egrid.style.display='none'; }
     }
   }
-  function pickUnit(id){ CUR_UNIT=id; renderHub(); }
+  function pickUnit(id){ CUR_UNIT=id; CUR_SEC=null; READ_SEC=null; renderHub(); }
 
   /* ── navigation ───────────────────────────────────────────────────── */
   function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); $('#'+id).classList.add('on'); window.scrollTo({top:0,behavior:'instant'}); }
@@ -88,10 +130,11 @@
 
   function head(m, prog){
     const u = unit();
+    const secTag = CUR_SEC ? ` &nbsp;/&nbsp; ${esc(secName(CUR_SEC))}` : '';
     return `<div class="wrap">
       <div class="topbar">
         <button class="back" onclick="HUB.goHub()">← Κατάλογος</button>
-        <span class="crumb">${esc((u.t||'').toUpperCase())} &nbsp;/&nbsp; <b>${esc(m.gr)}</b></span>
+        <span class="crumb">${esc((u.t||'').toUpperCase())}${secTag} &nbsp;/&nbsp; <b>${esc(m.gr)}</b></span>
       </div>
       <div class="mode-head" style="--c:${m.c}">
         <div class="badge">${ICON(m.ico)}</div>
@@ -109,6 +152,36 @@
 
   /* ── per-mode renderers ───────────────────────────────────────────── */
   const RENDER = {
+    read(m){
+      const secs = sections();
+      // pick the section to display: explicit READ_SEC → CUR_SEC → first
+      if(!READ_SEC || !secs.some(s=>s.id===READ_SEC)) READ_SEC = CUR_SEC || (secs[0]&&secs[0].id) || null;
+      const theory = ISTORIA.getTheory(COURSE, CUR_UNIT, READ_SEC);
+      const t = theory[0];
+      const gloss = ISTORIA.getOrismoiFor(COURSE, CUR_UNIT, READ_SEC);
+      const cur = secs.find(s=>s.id===READ_SEC);
+      const pos = Math.max(0, secs.findIndex(s=>s.id===READ_SEC));
+      const tabs = secs.length>1 ? `<div class="read-tabs">${secs.map(s=>`
+        <button class="rtab ${s.id===READ_SEC?'on':''}" onclick="HUB.readSec('${s.id}')">
+          <span class="rt-n">${esc(((s.part?s.part+' ':'')+(s.code?s.code+'.':'')).trim())}</span>${esc(s.t)}
+        </button>`).join('')}</div>` : '';
+      let body;
+      if(!t){
+        body = emptyInner();
+      } else {
+        const blocks = (t.blocks||[]).map(b=>`${b.h?`<h4 class="read-h">${esc(b.h)}</h4>`:''}<p class="read-p">${esc(b.p)}</p>`).join('');
+        const keys = (t.keypoints||[]).length ? `<div class="read-keys"><div class="rk-lab">Σημεία-κλειδιά</div><ul>${t.keypoints.map(k=>`<li>${esc(k)}</li>`).join('')}</ul></div>` : '';
+        const defs = gloss.length ? `<div class="read-defs"><div class="rd-lab">Ορισμοί — ${esc(cur?cur.t:'')}</div>${gloss.map(o=>`
+            <div class="rdef"><div class="rdef-t">${esc(o.term)}</div><div class="rdef-d">${esc(o.def||o.model||'')}</div></div>`).join('')}</div>` : '';
+        body = `<article class="read-art">
+            <div class="read-kick">${esc(((cur&&cur.part)?cur.part+' ':'')+((cur&&cur.code)?cur.code+'. ':''))}${esc((cur&&cur.t)||'')}</div>
+            ${cur&&cur.p?`<p class="read-lead">${esc(cur.p)}</p>`:''}
+            <div class="read-flow">${blocks}</div>
+            ${keys}${defs}
+          </article>`;
+      }
+      return head(m, `<b>${pos+1}</b>/${secs.length||1} κεφάλαια`)+tabs+body+`</div>`;
+    },
     mc(m){
       const arr = modeData('mc')||[]; const i = Math.min(idx.mc||0, Math.max(0,arr.length-1));
       if(!arr.length) return head(m,'—')+emptyBody();
@@ -210,6 +283,7 @@
     },
   };
   function emptyBody(){ return `<div class="wrap"><div class="empty-mode">Δεν υπάρχει ακόμη περιεχόμενο για αυτή την ενότητα.<br>Πρόσθεσέ το από τη <b>Διαχείριση Περιεχομένου</b>.</div></div>`; }
+  function emptyInner(){ return `<div class="empty-mode">Δεν υπάρχει ακόμη θεωρία για αυτό το κεφάλαιο.</div>`; }
   function nextBtn(id,label){ return `<button class="btn ghost" style="margin-top:16px;" onclick="HUB.nextItem('${id}')">${label} →</button>`; }
 
   /* ── interactions ─────────────────────────────────────────────────── */
@@ -262,8 +336,13 @@
   }
 
   /* ── boot ─────────────────────────────────────────────────────────── */
-  function init(course){
+  function init(course, unit){
     COURSE = course || ISTORIA.resolveCourse();
+    // Scope to a single exam theme when a valid ?unit= was passed.
+    if (unit) {
+      const us = ISTORIA.getUnits(COURSE) || [];
+      if (us.some(u=>u.id===unit)) { CUR_UNIT = unit; SCOPED = true; document.body.classList.add('unit-scoped'); }
+    }
     const meta = ISTORIA.getMeta(COURSE);
     const mast = $('#mast');
     if(mast){
@@ -275,5 +354,8 @@
     renderHub();
   }
 
-  window.HUB = { init, renderHub, pickUnit, openMode, goHub, nextItem, mcPick, mSel, fcStep, tfPick, fillLac, get course(){return COURSE;} };
+  function readSec(id){ READ_SEC=id; renderMode('read'); }
+
+  window.HUB = { init, renderHub, pickUnit, pickSec, readSec, openMode, goHub, nextItem, mcPick, mSel, fcStep, tfPick, fillLac,
+    get course(){return COURSE;}, get curUnit(){return CUR_UNIT;}, get curSec(){return CUR_SEC;} };
 })();

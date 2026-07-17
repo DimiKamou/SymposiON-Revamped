@@ -74,10 +74,30 @@
   function getUnits(course){ const p = getPack(course); return p ? p.units : []; }
   function getMeta(course){ const p = getPack(course); return p ? p.meta : {}; }
   function getMethods(course){ const p = getPack(course); return p ? p.methods : {}; }
-  function getModeData(course, unitId, mode){
+  // Optional `sec` narrows the returned items to one study-section (sub-section).
+  // Items without a `sec` tag only surface in the unscoped (whole-unit) view.
+  function getModeData(course, unitId, mode, sec){
     const p = getPack(course); if (!p) return mode==='vid' ? null : [];
     const u = p.data[unitId] || {};
-    return u[mode] != null ? u[mode] : (mode==='vid' ? null : []);
+    let v = u[mode] != null ? u[mode] : (mode==='vid' ? null : []);
+    if (sec && Array.isArray(v)) v = v.filter(it => it && it.sec === sec);
+    return v;
+  }
+  // ── sub-sections (chapters) + their reading/definitions ─────────────────
+  function getSections(course, unitId){
+    const p = getPack(course); if (!p) return [];
+    const u = (p.units||[]).find(x=>x.id===unitId);
+    return (u && u.sections) || [];
+  }
+  function getTheory(course, unitId, sec){
+    const p = getPack(course); if (!p) return [];
+    const t = (p.data[unitId]||{}).theory || [];
+    return sec ? t.filter(x=>x && x.sec===sec) : t;
+  }
+  function getOrismoiFor(course, unitId, sec){
+    const p = getPack(course); if (!p) return [];
+    const o = (p.data[unitId]||{}).orismoi || [];
+    return sec ? o.filter(x=>x && x.sec===sec) : o;
   }
   function hasAnyData(course){
     const p = getPack(course); if (!p) return false;
@@ -187,6 +207,7 @@
   const ISTORIA = {
     COURSES, resolveCourse, courseInfo, listCourses,
     getPack, getUnits, getMeta, getMethods, getModeData, hasAnyData,
+    getSections, getTheory, getOrismoiFor,
     getItems, setItems, exportJSON, importJSON, reset,
     getDir, setDir,
     // Multi-device: on whenever Firebase is reachable (own page or parent shell).

@@ -1,0 +1,385 @@
+export const UNIT = {
+  course: "Λατινικά Προσανατολισμού — Γ΄ Λυκείου",
+  number: 44,
+  title: "Η ζωή των τυράννων",
+  latinTitle: "Lectio XLIV",
+  dataVersion: 2,
+
+  // ── ΜΕΡΟΣ 1: ΚΕΙΜΕΝΟ + ΣΥΝΤΑΞΗ ────────────────────────────────────────────
+  periods: [
+    { n: 1, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'Haec', r:'Κατηγορούμενο', to:'στο vita (μέσω του est)', g:'ονομ. ενικ., θηλ. — δεικτική αντων.', d:'hic, haec, hoc — αυτός, αυτή, αυτό' },
+        { l:'est', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ.', d:'sum, fui, —, esse — είμαι' },
+        { l:'vita', r:'Υποκείμενο', to:'στο est', g:'ονομ. ενικ.', d:'vita, vitae (θηλ. α΄) — η ζωή' },
+        { l:'tyrannorum', r:'Γενική υποκειμενική', to:'στο vita', g:'γεν. πληθ.', d:'tyrannus, -i (αρσ. β΄) — ο τύραννος', a:',' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική (επιθετική – προσδιοριστική)', note:'Δευτ. επιθετική αναφορική, προσδιοριστική στο vita (πρότ. 1). Εισάγεται με την εμπρόθετη αναφορική αντωνυμία in qua· εκφέρεται με οριστική (δηλώνει το πραγματικό), και συγκεκριμένα οριστική ενεστώτα, γιατί αναφέρεται στο παρόν.', kids:[
+          { l:'in qua', k:'qui', r:'Εμπρόθετος επιρρ. προσδ. της στάσης σε τόπο (μεταφορικά)', to:'στο esse', g:'in (πρόθ. + αφαιρ.) + qua (αφαιρ. ενικ., θηλ.)', d:'in — σε· qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'nulla', r:'Επιθετικός προσδ.', to:'στο fides', g:'ονομ. ενικ., θηλ. — αόριστη επιθετική αντων.', d:'nullus, nulla, nullum — κανένας, καμία, κανένα' },
+          { l:'fides', r:'Υποκείμενο', to:'στο potest (και στο esse — ταυτοπροσωπία)', g:'ονομ. ενικ.', d:'fides, fidei (θηλ. ε΄) — η εμπιστοσύνη', note:'Δεν έχει πληθυντικό αριθμό.', a:',' },
+          { l:'nulla', r:'Επιθετικός προσδ.', to:'στο caritas', g:'ονομ. ενικ., θηλ. — αόριστη επιθετική αντων.', d:'nullus, nulla, nullum — κανένας, καμία, κανένα' },
+          { l:'caritas', r:'Υποκείμενο', to:'στο potest (και στο esse — ταυτοπροσωπία)', g:'ονομ. ενικ.', d:'caritas, caritatis (θηλ. γ΄) — η αγάπη, η στοργή', a:',' },
+          { l:'nulla', r:'Επιθετικός προσδ.', to:'στο fiducia', g:'ονομ. ενικ., θηλ. — αόριστη επιθετική αντων.', d:'nullus, nulla, nullum — κανένας, καμία, κανένα' },
+          { l:'fiducia', r:'Υποκείμενο', to:'στο potest (και στο esse — ταυτοπροσωπία)', g:'ονομ. ενικ.', d:'fiducia, fiduciae (θηλ. α΄) — η πίστη', note:'Δεν έχει πληθυντικό αριθμό.' },
+          { l:'stabilis', r:'Επιθετικός προσδ.', to:'στο benevolentiae', g:'γεν. ενικ., θηλ. — επίθ. γ΄ κλ.', d:'stabilis, -is, -e — σταθερός' },
+          { l:'benevolentiae', r:'Γενική αντικειμενική', to:'στο fiducia', g:'γεν. ενικ.', d:'benevolentia, -ae (θηλ. α΄) — η ευμένεια, η καλή θέληση, η εύνοια' },
+          { l:'potest', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. — ανώμαλο', d:'possum, potui, —, posse — μπορώ' },
+          { l:'esse', r:'Τελικό απαρέμφατο', to:'στο potest (αντικείμενο)', g:'απαρέμφατο ενεστ.', d:'sum, fui, —, esse — είμαι, υπάρχω', a:':' }
+        ]}
+      ]}
+    ]},
+
+    { n: 2, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'tyrannis', r:'Δοτική προσωπική του ενεργούντος προσώπου', to:'στις περιφράσεις suspecta / sollicita sunt', g:'δοτ. πληθ.', d:'tyrannus, -i (αρσ. β΄) — ο τύραννος', note:'Ή δοτική προσωπική αντιχαριστική στο sunt.' },
+        { l:'semper', r:'Επιρρ. προσδ. του χρόνου', to:'στο sunt', g:'χρονικό επίρρημα', d:'semper — πάντοτε, πάντα' },
+        { l:'suspecta', r:'Κατηγορούμενο', to:'στο omnia (μέσω του sunt)', g:'ονομ. πληθ., ουδ. — μτχ. παρακ. παθ. φωνής', d:'suspicio, suspexi, suspectum, suspicere (3, 15 σε -io) — υποπτεύομαι' },
+        { l:'atque', r:'Σύνδεσμος', g:'συμπλεκτικός σύνδεσμος', d:'atque — και' },
+        { l:'sollicita', r:'Κατηγορούμενο', to:'στο omnia (μέσω του sunt)', g:'ονομ. πληθ., ουδ. — επίθ. β΄ κλ.', d:'sollicitus, -a, -um — ταραγμένος, ανήσυχος' },
+        { l:'sunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ.', d:'sum, fui, —, esse — είμαι, υπάρχω' },
+        { l:'omnia', r:'Υποκείμενο', to:'στο sunt', g:'ονομ. πληθ., ουδ. — επίθ. γ΄ κλ. (ουσιαστικοπ.)', d:'omnis, -is, -e — όλος', a:';' }
+      ]}
+    ]},
+
+    { n: 3, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'nullus', r:'Επιθετικός προσδ.', to:'στο locus', g:'ονομ. ενικ., αρσ. — αόριστη επιθετική αντων.', d:'nullus, nulla, nullum — κανένας, καμία, κανένα' },
+        { l:'locus', r:'Υποκείμενο', to:'στο est', g:'ονομ. ενικ.', d:'locus, -i (αρσ. β΄) — ο τόπος, το μέρος', note:'Ετερογενές: πληθ. loci, -orum (= χωρία βιβλίου) και loca, -orum (= τόποι).' },
+        { l:'est', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ.', d:'sum, fui, —, esse — είμαι, υπάρχω' },
+        { l:'amicitiae', r:'Δοτική κατηγορηματική του σκοπού', to:'στο est', g:'δοτ. ενικ.', d:'amicitia, -ae (θηλ. α΄) — η φιλία' },
+        { l:'eis', r:'Δοτική προσωπική κτητική', to:'στο est', g:'δοτ. πληθ., αρσ. — δεικτική (ως επαναληπτική) αντων.', d:'is, ea, id — αυτός, αυτή, αυτό', a:'.' }
+      ]}
+    ]},
+
+    { n: 4, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'Nescio', r:'Ρήμα', g:'α΄ ενικ. οριστ. ενεστ. ενεργ.', d:'nescio, nesci(v)i, nescitum, nescire (4) — αγνοώ, δεν ξέρω', note:'Εννοούμενο υποκείμενο: ego.' },
+        { l:'enim', r:'Σύνδεσμος', g:'αιτιολογικός παρατακτικός σύνδεσμος', d:'enim — γιατί, δηλαδή' },
+        { type:'sub', key:'plagia', label:'Πλάγια ερωτηματική (ουσιαστική)', note:'Δευτ. ουσιαστική πλάγια ερωτηματική, μερικής αγνοίας. Εισάγεται με την ερωτηματική αντωνυμία quis· εκφέρεται με υποτακτική (η εξάρτηση δίνει υποκειμενική χροιά), και συγκεκριμένα υποτακτική ενεστώτα, γιατί εξαρτάται από αρκτικό χρόνο και δηλώνει το σύγχρονο στο παρόν. Λειτουργεί ως αντικ. του nescio.', kids:[
+          { l:'quis', r:'Υποκείμενο', to:'στο possit (και στο diligere — ταυτοπροσωπία)', g:'ονομ. ενικ., αρσ. — ερωτηματική ουσιαστική αντων.', d:'quis, quis, quid — ποιος, ποια, ποιο/τι' },
+          { l:'possit', r:'Ρήμα', g:'γ΄ ενικ. υποτ. ενεστ. — ανώμαλο', d:'possum, potui, —, posse — μπορώ' },
+          { l:'diligere', r:'Τελικό απαρέμφατο', to:'στο possit (αντικείμενο)', g:'απαρέμφατο ενεστ. ενεργ.', d:'diligo, dilexi, dilectum, diligere (3) — αγαπώ' },
+          { l:'eum', r:'Αντικείμενο', to:'στο diligere', g:'αιτ. ενικ., αρσ. — δεικτική (ως επαναληπτική) αντων.', d:'is, ea, id — αυτός, αυτή, αυτό', a:',' },
+          { type:'sub', key:'anaforiki', label:'Αναφορική (επιθετική – προσδιοριστική)', note:'Δευτ. επιθετική αναφορική, προσδιοριστική στο (1ο) eum. Εισάγεται με την αναφορική αντωνυμία quem· εκφέρεται με υποτακτική (πλαγίου λόγου), γιατί βρίσκεται σε πλάγιο λόγο, και συγκεκριμένα υποτακτική ενεστώτα (εξάρτηση από αρκτικό χρόνο, σύγχρονο στο παρόν).', kids:[
+            { l:'quem', r:'Αντικείμενο', to:'στο metuat', g:'αιτ. ενικ., αρσ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+            { l:'metuat', r:'Ρήμα', g:'γ΄ ενικ. υποτ. ενεστ. ενεργ.', d:'metuo, metui, metutum, metuere (3) — φοβάμαι', note:'Εννοούμενο υποκείμενο: is.', a:',' }
+          ]},
+          { l:'aut', r:'Σύνδεσμος', g:'διαζευκτικός σύνδεσμος', d:'aut — ή' },
+          { l:'eum', r:'Αντικείμενο', to:'στο diligere', g:'αιτ. ενικ., αρσ. — δεικτική (ως επαναληπτική) αντων.', d:'is, ea, id — αυτός, αυτή, αυτό', a:',' },
+          { type:'sub', key:'anaforiki', label:'Αναφορική (επιθετική – προσδιοριστική)', note:'Δευτ. επιθετική αναφορική, προσδιοριστική στο (2ο) eum. Εισάγεται με την αναφορική αντωνυμία (a) quo· εκφέρεται με υποτακτική (πλαγίου λόγου), και συγκεκριμένα υποτακτική ενεστώτα (εξάρτηση από αρκτικό χρόνο, σύγχρονο στο παρόν).', kids:[
+            { l:'a quo', k:'qui', r:'Εμπρόθετος προσδ. του ποιητικού αιτίου', to:'στο metui', g:'a/ab (πρόθ. + αφαιρ.) + quo (αφαιρ. ενικ., αρσ.)', d:'a/ab — από· qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+            { l:'se', r:'Υποκείμενο απαρεμφάτου', to:'στο metui (ταυτοπροσωπία — λατινισμός)', g:'αιτ. ενικ., γ΄ προσ. — προσωπική αντων.', d:'sui, sibi, se, se — εαυτός (γ΄ προσ.)', note:'Στην ταυτοπροσωπία, ως υποκ. ειδικού απαρεμφάτου τίθεται αιτιατική της προσωπικής αντωνυμίας (λατινισμός).' },
+            { l:'metui', r:'Ειδικό απαρέμφατο', to:'στο putet (αντικείμενο)', g:'απαρέμφατο ενεστ. παθ.', d:'metuo, metui, metutum, metuere (3) — φοβάμαι' },
+            { l:'putet', r:'Ρήμα', g:'γ΄ ενικ. υποτ. ενεστ. ενεργ.', d:'puto, putavi, putatum, putare (1) — νομίζω', note:'Εννοούμενο υποκείμενο: is.', a:'.' }
+          ]}
+        ]}
+      ]}
+    ]},
+
+    { n: 5, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'Coluntur', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. παθ.', d:'colo, colui, cultum, colere (3) — σέβομαι', note:'Εννοούμενο υποκείμενο: tyranni.' },
+        { l:'tamen', r:'Αντιθετικός σύνδεσμος', g:'αντιθετικός σύνδεσμος', d:'tamen — όμως' },
+        { l:'simulatione', r:'Αφαιρετική του τρόπου', to:'στο Coluntur', g:'αφαιρ. ενικ.', d:'simulatio, simulationis (θηλ. γ΄) — η προσποίηση, η υποκρισία' },
+        { l:'dumtaxat', r:'Επιρρ. προσδ. του ποσού', to:'στο ad tempus', g:'ποσοτικό επίρρημα', d:'dumtaxat — μόνον, τουλάχιστον' },
+        { l:'ad tempus', k:'tempus', r:'Εμπρόθετος επιρρ. προσδ. του χρόνου', to:'στο Coluntur', g:'ad (πρόθ. + αιτ.) + tempus (αιτ. ενικ., ουδ.)', d:'ad — σε, προς, για· tempus, temporis (ουδ. γ΄) — ο χρόνος', a:'.' }
+      ]}
+    ]},
+
+    { n: 6, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { type:'sub', key:'ypothetiki', label:'Υποθετική', note:'Δευτ. επιρρ. υποθετική. Εισάγεται με τον υποθετικό σύνδεσμο quodsi (= si), γιατί είναι καταφατική· εκφέρεται με οριστική (ανοικτή υπόθεση), και συγκεκριμένα οριστική παρακειμένου, γιατί αναφέρεται στο παρελθόν. Λειτουργεί ως επιρρ. προσδ. της προϋπόθεσης στο intellegitur, με το οποίο σχηματίζει υποθετικό λόγο α΄ είδους (ανοιχτή υπόθεση στο παρελθόν, με υπόθεση προτερόχρονη).', kids:[
+          { l:'Quodsi', r:'Υποθ. σύνδεσμος', g:'υποθετικός σύνδεσμος (= si) + οριστική', d:'quodsi — αν όμως' },
+          { l:'forte', r:'Επιρρ. προσδ. του τρόπου', to:'στο ceciderunt', g:'τροπικό επίρρημα', d:'forte — τυχαία, ίσως' },
+          { l:'ceciderunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. παρακειμένου ενεργ.', d:'cado, cecidi, casum, cadere (3) — πέφτω, χάνω την εξουσία', note:'Εννοούμενο υποκείμενο: tyranni.', a:',' }
+        ]},
+        { type:'sub', key:'paravoliki', label:'Παραβολική (παρενθετική)', note:'Δευτ. επιρρ. απλή παραβολική, δηλώνει τρόπο και είναι παρενθετική. Εισάγεται με τον παραβολικό σύνδεσμο ut· εκφέρεται με οριστική (η σύγκριση αφορά αντικειμενική πραγματικότητα), και συγκεκριμένα οριστική ενεστώτα, γιατί αναφέρεται στο παρόν.', kids:[
+          { l:'ut', r:'Παραβολικός σύνδεσμος', g:'παραβολικός σύνδεσμος (+ οριστική)', d:'ut — όπως' },
+          { l:'fit', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ. — ανώμαλο', d:'fio, factus sum, fieri — γίνομαι', note:'Εννοούμενο υποκείμενο: id. Χρησιμοποιείται ως παθητικό του facio.' },
+          { l:'plerumque', r:'Επιρρ. προσδ. του χρόνου', to:'στο fit', g:'χρονικό επίρρημα', d:'plerumque — πολλές φορές, συνήθως', a:',' }
+        ]},
+        { l:'tum', r:'Επιρρ. προσδ. του χρόνου', to:'στο intellegitur', g:'χρονικό επίρρημα', d:'tum — τότε' },
+        { l:'intellegitur', r:'Ρήμα (απρόσωπο)', g:'γ΄ ενικ. οριστ. ενεστ. παθ.', d:'intellego/intelligo, intellexi, intellectum, intellegere (3) — καταλαβαίνω', a:',' },
+        { type:'sub', key:'plagia', label:'Πλάγια ερωτηματική (ουσιαστική)', note:'Δευτ. ουσιαστική πλάγια ερωτηματική, μερικής αγνοίας. Εισάγεται με το ερωτηματικό επίρρημα quam· εκφέρεται με υποτακτική (υποκειμενική χροιά), και συγκεκριμένα υποτακτική παρακειμένου, γιατί εξαρτάται από αρκτικό χρόνο και δηλώνει το προτερόχρονο στο παρόν. Λειτουργεί ως υποκείμενο του intellegitur.', kids:[
+          { l:'quam', r:'Επιρρ. προσδ. του ποσού', to:'στο fuerint', g:'ερωτηματικό ποσοτικό επίρρημα', d:'quam — πόσο' },
+          { l:'fuerint', r:'Ρήμα', g:'γ΄ πληθ. υποτ. παρακειμένου', d:'sum, fui, —, esse — είμαι', note:'Εννοούμενο υποκείμενο: tyranni.' },
+          { l:'inopes', r:'Κατηγορούμενο', to:'στο (εννοούμενο) tyranni (μέσω του fuerint)', g:'ονομ. πληθ., αρσ. — επίθ. γ΄ κλ.', d:'inops, inops, inops (γεν. inopis) — στερημένος, ενδεής' },
+          { l:'amicorum', r:'Γενική αντικειμενική', to:'στο inopes', g:'γεν. πληθ.', d:'amicus, -i (αρσ. β΄) — ο φίλος', a:'.' }
+        ]}
+      ]}
+    ]},
+
+    { n: 7, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'Hoc', r:'Υποκείμενο', to:'στο est', g:'ονομ. ενικ., ουδ. — δεικτική αντων.', d:'hic, haec, hoc — αυτός, αυτή, αυτό' },
+        { l:'est', r:'Ρήμα', g:'γ΄ ενικ. οριστ. ενεστ.', d:'sum, fui, —, esse — είμαι' },
+        { type:'sub', key:'anaforiki', label:'Αναφορική (ουσιαστική)', note:'Δευτ. αναφορική ουσιαστική. Εισάγεται με την αναφορική αντωνυμία quod· εκφέρεται με οριστική (δηλώνει το πραγματικό), και συγκεκριμένα οριστική ενεστώτα, γιατί αναφέρεται στο παρόν. Λειτουργεί ως κατηγορούμενο στο hoc μέσω του est.', kids:[
+          { l:'quod', r:'Αντικείμενο', to:'στο dixisse', g:'αιτ. ενικ., ουδ. — αναφορική αντων.', d:'qui, quae, quod — ο οποίος, η οποία, το οποίο' },
+          { l:'ferunt', r:'Ρήμα', g:'γ΄ πληθ. οριστ. ενεστ. ενεργ. — ανώμαλο', d:'fero, tuli, latum, ferre — αναφέρω, λέω', note:'Εννοούμενο υποκείμενο: homines.' },
+          { l:'dixisse', r:'Ειδικό απαρέμφατο', to:'στο ferunt (αντικείμενο)', g:'απαρέμφατο παρακειμένου ενεργ.', d:'dico, dixi, dictum, dicere (3) — λέω' },
+          { l:'Tarquinium', r:'Υποκείμενο απαρεμφάτου', to:'στο dixisse (ετεροπροσωπία)', g:'αιτ. ενικ.', d:'Tarquinius, -ii/-i (αρσ. β΄) — ο Ταρκύνιος (κλητ. Tarquini)' },
+          { l:'exulantem', r:'Χρονική μετοχή', to:'συνημμένη στο Tarquinium', g:'αιτ. ενικ., αρσ. — μτχ. ενεστ. ενεργ.', d:'ex(s)ulo, -avi, -atum, -are (1) — είμαι εξόριστος', a:':' }
+        ]}
+      ]}
+    ]},
+
+    { n: 8, kids: [
+      { type:'main', key:'kyria', label:'Κύρια (κρίσεως)', kids:[
+        { l:'«Tum', r:'Επιρρ. προσδ. του χρόνου', to:'στο intellexi', g:'χρονικό επίρρημα', d:'tum — τότε' },
+        { l:'intellexi', r:'Ρήμα', g:'α΄ ενικ. οριστ. παρακειμένου ενεργ.', d:'intellego/intelligo, intellexi, intellectum, intellegere (3) — καταλαβαίνω', note:'Εννοούμενο υποκείμενο: ego.', a:',' },
+        { type:'sub', key:'plagia', label:'Πλάγια ερωτηματική (ουσιαστική)', note:'Δευτ. ουσιαστική πλάγια ερωτηματική, μερικής αγνοίας. Εισάγεται με την ερωτηματική αντωνυμία quos· εκφέρεται με υποτακτική (υποκειμενική χροιά), και συγκεκριμένα υποτακτική υπερσυντελίκου, γιατί εξαρτάται από ιστορικό χρόνο και δηλώνει το προτερόχρονο στο παρελθόν. Λειτουργεί ως αντικ. του intellexi.', kids:[
+          { l:'quos', r:'Αντικείμενο', to:'στο habuissem', g:'αιτ. πληθ., αρσ. — ερωτηματική ουσιαστική αντων.', d:'quis, quis, quid — ποιος, ποια, ποιο/τι' },
+          { l:'habuissem', r:'Ρήμα', g:'α΄ ενικ. υποτ. υπερσυντελίκου ενεργ.', d:'habeo, habui, habitum, habere (2) — έχω', note:'Εννοούμενο υποκείμενο: ego.' },
+          { l:'fidos', r:'Επιθετικός προσδ.', to:'στο amicos', g:'αιτ. πληθ., αρσ. — επίθ. β΄ κλ.', d:'fidus, -a, -um — πιστός' },
+          { l:'amicos', r:'Κατηγορούμενο στο αντικείμενο', to:'στο quos (μέσω του habuissem)', g:'αιτ. πληθ.', d:'amicus, -i (αρσ. β΄) — ο φίλος', a:',' }
+        ]},
+        { type:'sub', key:'plagia', label:'Πλάγια ερωτηματική (ουσιαστική)', note:'Δευτ. ουσιαστική πλάγια ερωτηματική, μερικής αγνοίας. Εισάγεται με την ερωτηματική αντωνυμία quos· εκφέρεται με υποτακτική υπερσυντελίκου (ιστορικός χρόνος, προτερόχρονο στο παρελθόν). Λειτουργεί ως αντικ. του intellexi. Εννοούνται: habuissem, amicos.', kids:[
+          { l:'quos', r:'Αντικείμενο', to:'στο (εννοούμενο) habuissem', g:'αιτ. πληθ., αρσ. — ερωτηματική ουσιαστική αντων.', d:'quis, quis, quid — ποιος, ποια, ποιο/τι' },
+          { l:'infidos', r:'Επιθετικός προσδ.', to:'στο (εννοούμενο) amicos', g:'αιτ. πληθ., αρσ. — επίθ. β΄ κλ.', d:'infidus, -a, -um — άπιστος, ψεύτικος', note:'Εννοούνται: habuissem (ρήμα), amicos (κατηγορούμενο στο quos).', a:',' }
+        ]},
+        { type:'sub', key:'xroniki', label:'Χρονική', note:'Δευτ. επιρρ. χρονική. Εισάγεται με τον καθαρά χρονικό cum· εκφέρεται με οριστική (η πράξη ενδιαφέρει μόνο από χρονική άποψη — διατηρείται η οριστική ανεξάρτητα από τον πλάγιο λόγο), και συγκεκριμένα οριστική παρατατικού, γιατί δηλώνει το σύγχρονο στο παρελθόν. Λειτουργεί ως επιρρ. προσδ. του χρόνου στο intellexi.', kids:[
+          { l:'cum', r:'Χρον. σύνδεσμος', g:'καθαρά χρονικός cum (+ οριστική)', d:'cum — όταν' },
+          { l:'poteram', r:'Ρήμα', g:'α΄ ενικ. οριστ. παρατατικού — ανώμαλο', d:'possum, potui, —, posse — μπορώ', note:'Εννοούμενο υποκείμενο: ego.' },
+          { l:'iam', r:'Επιρρ. προσδ. του χρόνου', to:'στο poteram', g:'χρονικό επίρρημα', d:'iam — ήδη, πια' },
+          { l:'referre', r:'Τελικό απαρέμφατο', to:'στο poteram (αντικείμενο)', g:'απαρέμφατο ενεστ. ενεργ. — ανώμαλο', d:'refero, re(t)tuli, relatum, referre — ανταποδίδω' },
+          { l:'gratiam', r:'Άμεσο αντικείμενο', to:'στο referre', g:'αιτ. ενικ.', d:'gratia, -ae (θηλ. α΄) — η χάρη' },
+          { l:'neutris', r:'Έμμεσο αντικείμενο', to:'στο referre', g:'δοτ. πληθ., αρσ. — αόριστη αντων.', d:'neuter, neutra, neutrum — ούτε ο ένας ούτε ο άλλος', a:'».' }
+        ]}
+      ]}
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 2: ΜΕΤΑΦΡΑΣΗ ΣΕ ΑΝΤΙΣΤΟΙΧΙΣΗ ────────────────────────────────────
+  alignment: [
+    { la:"Haec est vita tyrannorum,", el:"Αυτή είναι η ζωή των τυράννων," },
+    { la:"in qua nulla fides,", el:"στην οποία καμιά εμπιστοσύνη," },
+    { la:"nulla caritas,", el:"καμιά αγάπη," },
+    { la:"nulla fiducia", el:"καμιά πίστη" },
+    { la:"stabilis benevolentiae", el:"σε σταθερή φιλία" },
+    { la:"potest esse:", el:"δεν μπορεί να υπάρξει." },
+    { la:"tyrannis semper suspecta", el:"Οι τύραννοι πάντα υποπτεύονται" },
+    { la:"atque sollicita sunt omnia;", el:"και ανησυχούν για όλα·" },
+    { la:"nullus locus est", el:"καμία θέση" },
+    { la:"amicitiae eis.", el:"δεν έχει η φιλία σε αυτούς." },
+    { la:"Nescio enim", el:"Γιατί δεν ξέρω" },
+    { la:"quis possit diligere", el:"ποιος μπορεί να αγαπά" },
+    { la:"eum, quem metuat,", el:"αυτόν τον οποίο φοβάται," },
+    { la:"aut eum,", el:"ή αυτόν" },
+    { la:"a quo se metui putet.", el:"που νομίζει πως τον φοβάται." },
+    { la:"Coluntur tamen", el:"Στους τυράννους δείχνουν εντούτοις" },
+    { la:"simulatione dumtaxat", el:"υποκριτικό σεβασμό, τουλάχιστον" },
+    { la:"ad tempus.", el:"για κάποιο χρονικό διάστημα." },
+    { la:"Quodsi forte ceciderunt,", el:"Αν όμως τύχει να πέσουν," },
+    { la:"ut fit plerumque,", el:"όπως συμβαίνει συνήθως," },
+    { la:"tum intellegitur,", el:"τότε γίνεται αντιληπτό," },
+    { la:"quam fuerint inopes amicorum.", el:"πόσο στερημένοι ήταν από φίλους." },
+    { la:"Hoc est quod ferunt", el:"Αυτό είναι το οποίο λένε" },
+    { la:"dixisse Tarquinium", el:"ότι είπε ο Ταρκύνιος," },
+    { la:"exulantem:", el:"όταν ήταν εξόριστος:" },
+    { la:"«Tum intellexi,", el:"«Τότε κατάλαβα," },
+    { la:"quos habuissem fidos amicos,", el:"ποιους είχα πιστούς φίλους," },
+    { la:"quos infidos,", el:"ποιους άπιστους," },
+    { la:"cum poteram iam", el:"όταν δεν μπορούσα πια" },
+    { la:"referre gratiam", el:"να ανταποδώσω χάρη" },
+    { la:"neutris».", el:"ούτε σε εκείνους ούτε σε αυτούς»." }
+  ],
+
+  // ── ΜΕΡΟΣ 3: ΟΥΣΙΑΣΤΙΚΑ & ΕΠΙΘΕΤΑ (κατά κλίση & γένος) ────────────────────
+  nouns: [
+    { kl:"Α΄ κλίση", groups:[
+      { gender:"Θηλυκά", items:[
+        { form:"amicitia, -ae" },
+        { form:"benevolentia, -ae", note:"δεν έχει πληθυντικό" },
+        { form:"fiducia, -ae", note:"δεν έχει πληθυντικό" },
+        { form:"gratia, -ae" },
+        { form:"vita, -ae" }
+      ]}
+    ]},
+    { kl:"Β΄ κλίση", groups:[
+      { gender:"Αρσενικά", items:[
+        { form:"amicus, -i" },
+        { form:"locus, -i", note:"ετερογενές στον πληθ.: loci (χωρία) / loca (τόποι)" },
+        { form:"Tarquinius, -ii / -i", note:"μόνο ενικ. — κλητ. Tarquini" },
+        { form:"tyrannus, -i" }
+      ]}
+    ]},
+    { kl:"Γ΄ κλίση", groups:[
+      { gender:"Θηλυκά", items:[
+        { form:"caritas, caritatis" },
+        { form:"simulatio, simulationis" }
+      ]},
+      { gender:"Ουδέτερα", items:[
+        { form:"tempus, temporis" }
+      ]}
+    ]},
+    { kl:"Ε΄ κλίση", groups:[
+      { gender:"Θηλυκά", items:[
+        { form:"fides, fidei", note:"δεν έχει πληθυντικό" }
+      ]}
+    ]}
+  ],
+
+  adjectives: [
+    { kl:"Β΄ κλίση", items:[
+      { form:"fidus, -a, -um" },
+      { form:"infidus, -a, -um" },
+      { form:"sollicitus, -a, -um" },
+      { form:"suspectus, -a, -um", note:"μτχ. παρακ. του suspicio, ως επίθετο" }
+    ]},
+    { kl:"Γ΄ κλίση", items:[
+      { form:"inops, inops, inops", note:"γεν. inopis" },
+      { form:"omnis, -is, -e" },
+      { form:"stabilis, -is, -e" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 4: ΠΑΡΑΘΕΤΙΚΑ ΕΠΙΘΕΤΩΝ (κατά κλίση) ─────────────────────────────
+  comparatives: [
+    { kl:"Β΄ κλίση", rows:[
+      { pos:"fidus, -a, -um", comp:"fidior, -ior, -ius", sup:"fidissimus, -a, -um" },
+      { pos:"infidus, -a, -um", comp:"—", sup:"—" },
+      { pos:"sollicitus, -a, -um", comp:"sollicitior, -ior, -ius", sup:"sollicitissimus, -a, -um" },
+      { pos:"suspectus, -a, -um", comp:"suspectior, -ior, -ius", sup:"suspectissimus, -a, -um" }
+    ]},
+    { kl:"Γ΄ κλίση", rows:[
+      { pos:"inops, inops, inops", comp:"egentior, -ior, -ius", sup:"egentissimus, -a, -um", note:"από το egens" },
+      { pos:"omnis, -is, -e", comp:"—", sup:"—" },
+      { pos:"stabilis, -is, -e", comp:"stabilior, -ior, -ius", sup:"stabilissimus, -a, -um" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 5: ΑΝΤΩΝΥΜΙΕΣ ───────────────────────────────────────────────────
+  pronouns: [
+    { form:"hic, haec, hoc", kind:"Δεικτική" },
+    { form:"is, ea, id", kind:"Δεικτική", extra:"ως επαναληπτική" },
+    { form:"nullus, -a, -um", kind:"Αόριστη", extra:"επιθετική" },
+    { form:"qui, quae, quod", kind:"Αναφορική" },
+    { form:"quis, quis, quid", kind:"Ερωτηματική", extra:"ουσιαστική" },
+    { form:"se", kind:"Προσωπική", extra:"γ΄ προσ." },
+    { form:"neuter, neutra, neutrum", kind:"Αόριστη" }
+  ],
+
+  // ── ΜΕΡΟΣ 6: ΑΡΧΙΚΟΙ ΧΡΟΝΟΙ ΡΗΜΑΤΩΝ (κατά συζυγία) ────────────────────────
+  verbs: [
+    { syz:"Α΄ συζυγία", rows:[
+      { pres:"ex(s)ulo", perf:"ex(s)ulavi", sup:"ex(s)ulatum", inf:"ex(s)ulare", note:"" },
+      { pres:"puto", perf:"putavi", sup:"putatum", inf:"putare", note:"" }
+    ]},
+    { syz:"Β΄ συζυγία", rows:[
+      { pres:"habeo", perf:"habui", sup:"habitum", inf:"habere", note:"" }
+    ]},
+    { syz:"Γ΄ συζυγία", rows:[
+      { pres:"cado", perf:"cecidi", sup:"casum", inf:"cadere", note:"" },
+      { pres:"colo", perf:"colui", sup:"cultum", inf:"colere", note:"" },
+      { pres:"dico", perf:"dixi", sup:"dictum", inf:"dicere", note:"προστ. dic" },
+      { pres:"diligo", perf:"dilexi", sup:"dilectum", inf:"diligere", note:"" },
+      { pres:"intellego / intelligo", perf:"intellexi", sup:"intellectum", inf:"intellegere / intelligere", note:"" },
+      { pres:"metuo", perf:"metui", sup:"metutum", inf:"metuere", note:"" },
+      { pres:"suspicio", perf:"suspexi", sup:"suspectum", inf:"suspicere", note:"15 σε -io" }
+    ]},
+    { syz:"Δ΄ συζυγία", rows:[
+      { pres:"nescio", perf:"nesci(v)i", sup:"nescitum", inf:"nescire", note:"προστ. nescito / nescitote" }
+    ]},
+    { syz:"ΑΝΩΜΑΛΑ", rows:[
+      { pres:"fero", perf:"tuli", sup:"latum", inf:"ferre", note:"ανώμαλο· προστ. fer" },
+      { pres:"refero", perf:"re(t)tuli", sup:"relatum", inf:"referre", note:"ανώμαλο (σύνθ. του fero)· προστ. refer" },
+      { pres:"fio", perf:"factus sum", sup:"—", inf:"fieri", note:"ανώμαλο (παθ. του facio)" },
+      { pres:"possum", perf:"potui", sup:"—", inf:"posse", note:"ανώμαλο" },
+      { pres:"sum", perf:"fui", sup:"—", inf:"esse", note:"βοηθητικό" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 7: SOS — ΠΑΡΑΤΗΡΗΣΕΙΣ / ΠΑΓΙΔΕΣ ─────────────────────────────────
+  sos: [
+    { tag:"Απαρέμφατο", title:"Λατινισμός: se metui putet", body:"Στην ταυτοπροσωπία, ως υποκείμενο του ειδικού απαρεμφάτου metui τίθεται η αιτιατική της προσωπικής αντωνυμίας (se) — πρόκειται για λατινισμό. Το a quo είναι εμπρόθετος προσδ. του ποιητικού αιτίου στο metui." },
+    { tag:"Ρήμα", title:"fit → fio", body:"Ο τύπος fit είναι γ΄ ενικ. ενεστ. του ανώμαλου fio, factus sum, fieri, που χρησιμοποιείται ως παθητικό του facio." },
+    { tag:"Υπόθεση", title:"Quodsi (= si) — α΄ είδος", body:"Η υποθετική «Quodsi forte ceciderunt» (οριστ. παρακ.) με απόδοση το «tum intellegitur» σχηματίζει υποθετικό λόγο α΄ είδους: ανοιχτή υπόθεση στο παρελθόν (υπόθεση προτερόχρονη)." },
+    { tag:"Πλάγια ερώτηση", title:"Υποτακτική & ακολουθία χρόνων", body:"Οι πλάγιες ερωτηματικές εκφέρονται με υποτακτική (υποκειμενική χροιά): possit (ενεστ. = σύγχρονο από αρκτικό), fuerint (παρακ. = προτερόχρονο από αρκτικό), habuissem (υπερσυντ. = προτερόχρονο από ιστορικό)." },
+    { tag:"Χρονική", title:"cum + οριστική στον πλάγιο λόγο", body:"Το «cum poteram» είναι καθαρά χρονικός cum με οριστική· η οριστική διατηρείται γιατί η πρόταση λειτουργεί ανεξάρτητα από τον πλάγιο λόγο (δηλώνει σύγχρονο στο παρελθόν)." },
+    { tag:"Μετοχή", title:"exulantem: χρονική συνημμένη", body:"Το exulantem είναι χρονική μετοχή, συνημμένη στο Tarquinium (υποκ. του ειδικού απαρεμφάτου dixisse από το ferunt). Το intellegitur λειτουργεί απρόσωπα, με υποκείμενο την πλάγια ερωτηματική." }
+  ],
+
+  // ── ΜΕΡΟΣ 8: ΜΕΤΑΤΡΟΠΕΣ (Συντακτική επεξεργασία κειμένου) ─────────────────
+  transforms: [
+    { id:"Α", label:"Ανάλυση των μετοχών σε αντίστοιχες δευτερεύουσες προτάσεις", items:[
+      { from:"exulantem",
+        to:[
+        "cum exularet (cum ιστορικός + υποτ. παρατ.)",
+        "dum exulat (dum + οριστ. ενεστ. — σύγχρονο, συνεχιζόμενη πράξη)"],
+        note:"Επιρρηματική χρονική μετοχή ενεστώτα (σύγχρονο)· εξάρτηση από ιστορικό χρόνο (dixisse)." }
+    ]},
+    { id:"Β", label:"Μετατροπή της ενεργητικής σύνταξης σε παθητική", items:[
+      { from:"Hoc est quod Tarquinium dixisse ferunt exulantem",
+        to:[
+        "Hoc est quod Tarquinius dixisse fertur exulans",
+        "Hoc est quod a Tarquinio dictum esse ferunt exulante"] },
+      { from:"Tum intellexi, quos fidos amicos habuissem, quos infidos, …", to:"Tum intellectum est a me, qui fidi amici a me habiti essent, qui infidi, …" }
+    ]},
+    { id:"Γ", label:"Μετατροπή της παθητικής σύνταξης σε ενεργητική", items:[
+      { from:"Coluntur tamen simulatione dumtaxat ad tempus.",
+        to:"Colunt tyrannos tamen simulatione dumtaxat ad tempus.",
+        note:"Στην παθητική σύνταξη εννοείται ως υποκ. το tyranni." }
+    ]},
+    { id:"Δ", label:"Μετατροπή του υποθετικού λόγου στα άλλα είδη", items:[
+      { from:"Quodsi forte (ut fit plerumque) ceciderunt, tum intellegitur (μεικτός: υπόθεση στο παρελθόν – απόδοση στο παρόν)",
+        to:[
+        "Ανοικτή (πραγματική) για το παρόν: Quodsi forte cadunt, tum intellegitur (οριστ. ενεστ. – οριστ. ενεστ.)",
+        "Ανοικτή (πραγματική) για το παρελθόν: Quodsi forte ceciderunt, tum intellectum est (οριστ. παρακ. – οριστ. παρακ.)",
+        "Ανοικτή για το μέλλον: Quodsi forte cadent (ή ceciderint), tum intellegetur (οριστ. μέλλ. ή συντ. μέλλ. – οριστ. μέλλ.)",
+        "Δυνατή/πιθανή για το παρόν-μέλλον: Quodsi forte cadant, tum intellegatur (υποτ. ενεστ. – υποτ. ενεστ.)",
+        "Αντίθετη προς την πραγματικότητα (παρόν): Quodsi forte caderent, tum intellegeretur (υποτ. παρατ. – υποτ. παρατ.)",
+        "Αντίθετη προς την πραγματικότητα (παρελθόν): Quodsi forte cecidissent, tum intellectum esset (υποτ. υπερσ. – υποτ. υπερσ.)"],
+        note:"Ο αρχικός είναι μεικτός (α΄ είδος): υπόθεση στο παρελθόν (οριστ. παρακ. ceciderunt), απόδοση στο παρόν (οριστ. ενεστ. intellegitur)." }
+    ]},
+    { id:"Ε", label:"Μετατροπή του ευθέος λόγου σε πλάγιο", items:[
+      { from:"Haec est tyrannorum vita … Hoc est quod Tarquinium dixisse ferunt exulantem (εξάρτηση: Cicero dicit / dixit)", to:"Cicero dicit / dixit illam esse tyrannorum vitam, in qua nulla fides … esse possit / posset; tyrannis omnia semper suspecta atque sollicita esse; nullum locum amicitiae eis esse; se nescire quis possit / posset diligere eum, quem metuat / metueret, aut eum, a quo se metui putet / putaret; tyrannos coli tamen simulatione dumtaxat ad tempus; quodsi forte … ceciderint / cecidissent, tum intellegi quam fuerint / fuissent inopes amicorum; illud esse quod Tarquinium dixisse ferant / ferrent exulantem." },
+      { from:"Tum intellexi, quos fidos amicos habuissem, quos infidos, cum iam neutris gratiam referre poteram (λόγια Ταρκυνίου· εξάρτηση: Tarquinius dicit / dixit)",
+        to:"Tarquinius dicit / dixit tum se intellexisse, quos fidos amicos habuerit / habuisset, quos infidos, cum iam neutris gratiam referre possit / posset.",
+        note:"Η habuisset (ιστ. χρόνου) εξαρτάται από το ιστορικού χρόνου απαρέμφατο intellexisse." }
+    ]},
+    { id:"ΣΤ", label:"Μετατροπή του πλάγιου λόγου σε ευθύ", items:[
+      { from:"Nescio enim quis possit diligere eum, quem metuat, aut eum, a quo se metui putet", to:"Quis potest diligere eum, quem metuit, aut eum, a quo se metui putat?" },
+      { from:"… tum intellegitur, quam fuerint inopes amicorum", to:"Quam fuerunt (fuere) inopes amicorum?" },
+      { from:"… quod Tarquinium dixisse ferunt exulantem", to:"… quod Tarquinius dixit exulans." },
+      { from:"«Tum intellexi, quos fidos amicos habuissem, quos infidos, cum iam neutris gratiam referre poteram»", to:"Quos fidos amicos habui, quos infidos, cum iam neutris gratiam referre poteram?" }
+    ]}
+  ],
+
+  // ── ΜΕΡΟΣ 9: ΕΤΥΜΟΛΟΓΙΚΑ (Λεξιλογικός κόσμος) ────────────────────────────
+  etymology: [
+    { la:"sunt [< sum]", el:"εἰμί, ἐστί(ν) // (αγγλ.) essence (= ουσία, φύση) // (ιταλ.) essere (= (το) είναι, είμαι)." },
+    { la:"tyrannorum, tyrannis [< tyrannus]", el:"τύραννος // (αγγλ.) tyrant (= τύραννος) // (γαλλ.) tyran (= τύραννος)." },
+    { la:"vita", el:"βίος // βιταλισμός (< γαλλ. vitalisme), βιταμίνη (< γαλλ. vitamine) // (ισπαν.) vida (= ζωή)." },
+    { la:"nulla [< nullus]", el:"(ιταλ.) nulla (= μηδενικά, χωρίς αξία) // (αγγλ.) annul (= ακυρώνω)." },
+    { la:"fides, fiducia, fidos, infidos [< fides / fido]", el:"πειθώ, πείθω, πίστις, πιθανός // (αγγλ.) confidence (= αυτοπεποίθηση), fidelity (= πίστη, αφοσίωση), infidel (= άπιστος), fiduciary (= καταπιστευματικός)." },
+    { la:"caritas [< carus (= αγαπητός)]", el:"(γαλλ.) caritatif (= φιλανθρωπικός), cher (= αγαπητός, ακριβός) // (αγγλ.) charity (= φιλανθρωπία, αγάπη), caress (= χάδι)." },
+    { la:"benevolentiae [< bene (< bonus) + volo]", el:"(ιταλ.) bona mano (= καλό χέρι), μπουνάτσα (< βενετ.), μπόνους // βούλομαι, (αγγλ.) volunteer (= εθελοντής), (γαλλ.) bénévolat (= εθελοντισμός) // (αγγλ.) benevolent (= καλοπροαίρετος, ευμενής) // (γαλλ.) bienveillance (= καλή διάθεση, ευμένεια)." },
+    { la:"stabilis", el:"ἵστημι, στάση // (γαλλ.) stable (= σταθερός), stabilité (= σταθερότητα) // (αγγλ.) establish (= εγκαθιδρύω, ιδρύω) // (ιταλ.) stabile (= σταθερός)." },
+    { la:"potest, possit, poteram [< possum < potis (= δυνατός) + sum]", el:"πόσις, δεσπότης («κύριος του σπιτιού») // (αγγλ.) potent (= ισχυρός, δυνατός), possible (= δυνατός, πιθανός) // (γαλλ.) pouvoir (= μπορώ· εξουσία)." },
+    { la:"semper", el:"(ισπαν.) siempre (= πάντα) // (αγγλ.) sempiternal (= αιώνιος, παντοτινός) // (ιταλ.) sempre (= πάντα)." },
+    { la:"suspecta [< suspicio < sub + specio]", el:"σπεκουλάντζα (= κερδοσκοπία), σπεκουλαδόρος, σπεκουλάρω (< ιταλ.) // (γαλλ.) suspect (= ύποπτος) // (αγγλ.) suspicion (= υποψία)." },
+    { la:"sollicita [< sollus (= όλος) + cieo (= κινώ)]", el:"(γαλλ.) solliciter (= εκλιπαρώ), inciter (= υποκινώ) // (αγγλ.) solicit (= ζητώ επίμονα, παρακαλώ), excite (= διεγείρω, ερεθίζω)." },
+    { la:"locus", el:"(γαλλ.) locale (= τοπικός), lieu (= τόπος, θέση) // (αγγλ.) location (= τοποθεσία) // (ιταλ.) luogo (= τόπος)." },
+    { la:"amicitiae, amicorum, amicos [< amicus]", el:"(ιταλ.) αμόρε [amore] // (γαλλ.) amour (= αγάπη), ami (= φίλος), amical (= φιλικός) // (αγγλ.) amicable (= φιλικός, εγκάρδιος), enemy (= εχθρός) // (ισπαν.) amigo (= φίλος)." },
+    { la:"nescio [< ne + scio]", el:"(γαλλ.) science (= επιστήμη), conscience (= συνείδηση) // (αγγλ.) nice (= ωραίος, καλός (αρχ. 'ανόητος')), conscious (= συνειδητός)." },
+    { la:"diligere [< dis + lego]", el:"(αγγλ.) diligent (= επιμελής) // (γαλλ.) diligence (= επιμέλεια· (παλ.) ταχυδρομική άμαξα)." },
+    { la:"putet [< puto]", el:"(αγγλ.) dispute, disputation (= συζήτηση, λογομαχία), compute (= υπολογίζω), amputate (= ακρωτηριάζω), reputation (= φήμη, υπόληψη) // putative (= υποτιθέμενος)." },
+    { la:"coluntur [< colo]", el:"(αγγλ.) cult (= λατρεία), culture (= καλλιέργεια), colony (= αποικία), cultivate (= καλλιεργώ)." },
+    { la:"simulatione [< simulo]", el:"(αγγλ.) simulation (= προσποίηση), resemble (= μοιάζω) // (γαλλ.) similarité (= ομοιότητα), sembler (= φαίνομαι)." },
+    { la:"tempus", el:"τέμπο (< ιταλ. tempo) // (ισπαν.) tiempo (= χρόνος) // (αγγλ.) temporary (= προσωρινός), temporal (= χρονικός), tempest (= θύελλα, καταιγίδα)." },
+    { la:"forte [< fors]", el:"φουρτούνα (< ιταλ. fortuna) // (γαλλ.) fortune (= τύχη), fortuit (= τυχαίος) // (αγγλ.) fortuitous (= τυχαίος, συμπτωματικός)." },
+    { la:"fit [< fio]", el:"φύω, φύσις // (αγγλ.) fiat (= διάταγμα, εντολή)." },
+    { la:"plerumque [< plerus / pleo]", el:"πίμπλημι, πληθύς, πλήθος, πλημμύρα, πλήρης, πλησμονή // (αγγλ.) complete (= πλήρης· ολοκληρώνω) // (γαλλ.) plein (= γεμάτος)." },
+    { la:"ceciderunt [< cado]", el:"κάζο (< ιταλ. caso = συμβάν) // (αγγλ.) accident (= ατύχημα, συμβάν), occasion (= ευκαιρία, περίσταση), cadence (= ρυθμός, πτώση φωνής), chance (= τύχη, ευκαιρία)." },
+    { la:"intellegitur, intellexi [< intellego]", el:"(γαλλ.) intelligent (= ευφυής) // (αγγλ.) intellect (= νόηση, διάνοια), intelligence (= νοημοσύνη)." },
+    { la:"Tarquinium [< Tarquinius]", el:"Ταρκύνιος." },
+    { la:"dixisse [< dico]", el:"δείκνυμι (= δείχνω) // (γαλλ.) dictionnaire (= λεξικό), dictée (= ορθογραφία, υπαγόρευση) // (αγγλ.) dictate (= υπαγορεύω), predict (= προβλέπω), verdict (= ετυμηγορία)." },
+    { la:"ferunt, referre [< fero]", el:"φέρω, διαφορά, φορέας, φορείο // (αγγλ.) transfer (= μεταφορά), refer (= αναφέρω, παραπέμπω), fertile (= γόνιμος), prefer (= προτιμώ)." },
+    { la:"exulantem [< ex(s)ulo]", el:"(γαλλ.) exil (= εξορία), exilé (= εξόριστος) // (ιταλ.) esilio (= εξορία)." },
+    { la:"habuissem [< habeo]", el:"(γερμ.) haben (= έχω) // (αγγλ.) have, habit (= συνήθεια), able (= ικανός), exhibit (= εκθέτω) // (γαλλ.) avoir (= έχω)." },
+    { la:"neutris [< neuter < ne + uter]", el:"οὐδέτερος // (γαλλ.) neutre (= ουδέτερος) // (αγγλ.) neutral (= ουδέτερος), neuter (= ουδέτερος (γραμμ. γένος))." },
+    { la:"gratiam [< gratia]", el:"(αγγλ.) grateful (= ευγνώμων), grace (= χάρη) // (γαλλ.) gratitude (= ευγνωμοσύνη) // (ιταλ.) grazie (= ευχαριστώ (κυριολ. 'χάρες')) // (ισπαν.) gracias (= ευχαριστώ)." }
+  ]
+};
+
+export default UNIT;

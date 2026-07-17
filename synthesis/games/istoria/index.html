@@ -6,7 +6,7 @@
 <title>Ιστορία — Εξάσκηση</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="css/istoria.css"/>
 </head>
 <body class="dir-atlas istoria-body">
@@ -31,7 +31,9 @@
       <div class="sec-h"><span class="n">§ Α</span><span class="ic" id="lab1" style="display:none"></span><h2>Θεματικές Ενότητες</h2><span class="ln"></span></div>
       <div class="units" id="units"></div>
 
-      <div class="sec-h" style="margin-top:36px;"><span class="n">§ Β</span><span class="ic" id="lab2" style="display:none"></span><h2>Τρόποι Μελέτης</h2><span class="ln"></span></div>
+      <div class="subrail" id="subrail" style="display:none;"></div>
+
+      <div class="sec-h" style="margin-top:30px;"><span class="n">§ Β</span><span class="ic" id="lab2" style="display:none"></span><h2>Τρόποι Μελέτης</h2><span class="ln"></span></div>
       <div class="modes" id="modes"></div>
 
       <div class="sec-h" id="ai-sec" style="margin-top:36px;display:none;"><span class="n">§ Γ</span><h2>Γραπτή Εξάσκηση — AI</h2><span class="ln"></span></div>
@@ -47,6 +49,7 @@
   </div>
 
   <!-- ════ MODE SCREENS (filled by JS) ════ -->
+  <div class="screen" id="m-read"></div>
   <div class="screen" id="m-mc"></div>
   <div class="screen" id="m-match"></div>
   <div class="screen" id="m-fc"></div>

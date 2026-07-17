@@ -219,12 +219,15 @@
     openOlympus:     { mode:'sym', closeFn:'closeOlympus' },
     openHippodrome:  { mode:'sym', closeFn:'closeHippodrome' },
     openErinyes:     { mode:'sym', closeFn:'closeErinyes' },
-    openLabyrinth:   { mode:'config' }
-    // NOTE: invaders / myth-memory / epic-puzzle are self-contained arcades with
-    // their own built-in pack menus — they do NOT read the injected SYM_QUESTIONS
-    // bank, so routing them through the "Διάλεξε ύλη" picker would silently discard
-    // the user's selection (a false promise). Omit them → S.level falls through to
-    // the honest direct-launch card. Re-add only once each grows a bank adapter.
+    openLabyrinth:   { mode:'config' },
+    // Iliada/Odyssea Arcade now HAVE a bank adapter: the picked bank is forwarded
+    // into their iframe via localStorage (mode 'arcade', see injectBankAndLaunch),
+    // and the Game-Panel launch runs in endless mode. So they reach the picker.
+    openIliadaArcade:  { mode:'arcade', campaign:'iliada',   endless:true },
+    openOdysseaArcade: { mode:'arcade', campaign:'odysseia', endless:true }
+    // NOTE: invaders / myth-memory / epic-puzzle stay self-contained arcades with
+    // their own built-in pack menus — they do NOT read injected content, so they
+    // are omitted → S.level falls through to the honest direct-launch card.
   };
   // Resolve the injection descriptor for an openFn: a real SymMix entry wins,
   // else the panel default above. Returns null for engines we know nothing about
@@ -275,11 +278,8 @@
         window.__symEdit = !window.__symEdit; symRender();
       } }, [ glyph('quill','sc-editbtn__gl'), window.__symEdit?L({gr:'Τέλος',en:'Done'}):L({gr:'Επεξεργασία',en:'Edit'}) ]));
     }
-    const seg = el('div', { class:'sc-disp' });
-    [['grid','▦'],['list','≣'],['compact','▤'],['gallery','◳']].forEach(([v,ic])=> seg.appendChild(el('button', {
-      class:(ST().display===v?'active':''), title:v, onclick:()=>{ ST().display=v; symRender(); }
-    }, ic)));
-    bar.appendChild(seg);
+    // Display-mode switcher (grid / list / compact / gallery) removed per request —
+    // the panels always render in the default grid view now.
     return bar;
   }
   // editable text (admin) — persists
@@ -364,7 +364,7 @@
             isAdmin()&&window.__symEdit? el('span',{class:'sc-gcard__drag',html:'⠿'}):null ]),
           el('div',{class:'sc-gcard__b'},[ el('h3',{class:'sc-gcard__t'}, L(g)), el('p',{class:'sc-gcard__m'}, g.meta),
             el('div',{class:'sc-gcard__f'},[ el('span',{class:'sc-gcard__tags'},[pill(soon?L({gr:'Σύντομα',en:'Soon'}):L({gr:'Μόνος',en:'Solo'}),accent)]),
-              soon ? null : el('button',{class:'sc-gcard__eye', title:'Preview', onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu}); }, html:'&#128065;'}),
+              soon ? null : el('button',{class:'sc-gcard__eye', title:(typeof g.meta==='object'?L(g.meta):(g.meta||'Preview')), onclick:(e)=>{ e.preventDefault(); e.stopPropagation(); SymPreview.open(SymPreview.typeFor(g),{title:L(g), illu:g.illu, desc:(typeof g.meta==='object'?L(g.meta):(g.meta||''))}); }, html:'&#128065;'}),
               el('span',{class:'sc-gcard__play',html: soon ? '&#9679;' : '&#9654;'}) ]) ]),
         ]);
         grid.appendChild(card);
@@ -424,6 +424,17 @@
   /* ══ 2 · MODE SELECT ══ */
   S.mode = function(home, ctx){
     const { cls, subject, game, accent } = defaults(ctx);
+    // Safety net: reading / study panels (Latin texts, Γνωστό, Αδίδακτο, Ιστορία,
+    // 3D experiences, exam sim…) have no Solo/Tug/Arena/Practice variants — never
+    // show them this picker. If a caller still routed one here, sit the overlay
+    // over the subject page and launch the panel straight away.
+    const _dfn = window.synResolveLaunch && synResolveLaunch(game);
+    if (_dfn && window.symIsDirectLaunch && symIsDirectLaunch(_dfn) &&
+        window.SYN_GAMES && SYN_GAMES[_dfn] && window.synLaunch){
+      go('subject', { subject, cls });
+      synLaunch(_dfn, ...((game.launch && game.launch.args) || []));
+      return;
+    }
     const body = P(home, { back:'subject', backLabel:L(subject), accent, eyebrow:L(subject)+' · '+L(gName(game)),
       title:L({gr:'Επίλεξε Λειτουργία',en:'Choose a mode'}), sub:L({gr:'Πώς θες να παίξεις απόψε;',en:'How do you want to play tonight?'}),
       actions:[ el('button',{class:'sc-cta sc-cta--ghost sc-cta--sm', onclick:()=>SymPreview.open(SymPreview.typeFor(game),{title:L(gName(game)),illu:game.illu})},[ el('span',{html:'&#128065;'}), L({gr:'Δες σε δράση',en:'See it in action'}) ]) ] });
@@ -998,6 +1009,18 @@
 
     wrap.appendChild(bar);
     body.appendChild(wrap);
+    // "Play a friend" — the same QR share-and-compare surface the level-bank picker
+    // exposes, so the content-picker menu offers Start OR share-vs-friend.
+    if (window.showQR){
+      body.appendChild(el('button',{class:'lv-sharebtn', onclick:()=>{ try{ window.showQR(L(gName(game)), { game: fn }); }catch(_){} }},[
+        glyph('grid-blocks','lv-sharebtn__gl'),
+        el('span',{class:'lv-sharebtn__b'},[
+          el('span',{class:'lv-sharebtn__t'}, L({gr:'Παίξε με φίλο',en:'Play a friend'})),
+          el('span',{class:'lv-sharebtn__d'}, L({gr:'Μοιράσου το QR — ίδια ύλη, συγκρίνετε σκορ',en:'Share the QR — same content, compare scores'})),
+        ]),
+        el('span',{class:'lv-sharebtn__qr',html:'&#9783;'}),
+      ]));
+    }
     paintTags(); paintList(); updateBar();
 
     // Merge Firestore published packs (config/datasets + custom_games), then refresh.
@@ -1022,6 +1045,13 @@
     inj = inj || (window.SymMix && SymMix.ENGINE_INJECTION && SymMix.ENGINE_INJECTION[fn]) || { mode:'sym' };
     return Promise.resolve().then(function(){
       qs = qs || [];
+      if (inj.mode === 'arcade'){
+        // The arcade is a same-origin IFRAME. Hand the picked bank + endless flag
+        // to its opener (arcade-launch.js), which maps the bank to the arcade's
+        // {q,o,a} shape, seeds it into localStorage, and opens the run in endless
+        // mode. Does NOT touch window.SYM_QUESTIONS (no in-page engine to feed).
+        return window.synLaunch ? window.synLaunch(fn, { questions: qs, campaign: inj.campaign, endless: inj.endless !== false, title: title }) : null;
+      }
       if (inj.mode === 'config'){
         // Engine takes a config arg (Agora Surfers reads config.questions).
         return window.synLaunch ? window.synLaunch(fn, { questions: qs, title: title }) : null;
@@ -1138,7 +1168,7 @@
         el('span',{class:'sc-engc__ban'},[ glyph(e.illu || GP_ILLU[e.id] || 'amphora','sc-engc__illu') ]),
         el('span',{class:'sc-engc__b'},[ el('span',{class:'sc-engc__t'}, L(e)), el('span',{class:'sc-engc__m'}, L(e.meta)) ]),
         el('span',{class:'sc-engc__tools'},[
-          el('button',{class:'sc-engc__eye', title:'Preview', onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu}); }, html:'&#128065;'}),
+          el('button',{class:'sc-engc__eye', title:(typeof e.meta==='object'?L(e.meta):(e.meta||'Preview')), onclick:(ev)=>{ ev.preventDefault(); ev.stopPropagation(); SymPreview.open(SymPreview.typeFor(e),{title:L(e),illu:e.illu, desc:(typeof e.meta==='object'?L(e.meta):(e.meta||''))}); }, html:'&#128065;'}),
           (isAdmin()&&window.__symEdit)? el('span',{class:'sc-engc__drag',html:'⠿'}) : el('span',{class:'sc-engc__go',html:'&#9654;'}),
         ]),
       ]));

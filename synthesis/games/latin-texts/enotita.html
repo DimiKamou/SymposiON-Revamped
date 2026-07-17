@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Λατινικά · Ανάλυση Κειμένου</title>
+<link rel="stylesheet" href="fonts.css" />
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#e7e0cf}
+input::placeholder{color:var(--muted);opacity:.8}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.lt-sc::-webkit-scrollbar{width:11px;height:11px}
+.lt-sc::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:3px solid transparent;background-clip:content-box}
+.lt-sc::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:content-box}
+@keyframes ltpop{from{opacity:0;transform:translateY(4px) scale(.98)}to{opacity:1}}
+@keyframes ltfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ltspin{to{transform:rotate(360deg)}}
+[data-edit][contenteditable="true"]{outline:1px dashed color-mix(in oklab,var(--accent) 55%,transparent);outline-offset:2px;border-radius:3px;cursor:text;min-width:12px}
+[data-edit][contenteditable="true"]:hover{background:color-mix(in oklab,var(--accent) 7%,transparent)}
+[data-edit][contenteditable="true"]:focus{outline:2px solid var(--accent);background:color-mix(in oklab,var(--accent) 10%,transparent)}
+/* SOS cards + practice-mode helpers */
+.lt-sosc{transition:transform .18s ease, box-shadow .18s ease}
+.lt-sosc:hover{transform:translateY(-3px);box-shadow:0 12px 30px -14px rgba(0,0,0,.28)}
+.lt-popt{cursor:pointer;transition:border-color .15s, background .15s, transform .1s}
+.lt-popt:hover{border-color:var(--accent) !important;background:color-mix(in oklab,var(--accent) 8%,var(--panel2)) !important}
+.lt-popt:active{transform:scale(.99)}
+@keyframes ltring{0%,100%{box-shadow:0 0 0 2.5px var(--accent)}50%{box-shadow:0 0 0 7px color-mix(in oklab,var(--accent) 28%,transparent)}}
+/* hover helpers (these were `style-hover` in the design prototype's runtime) */
+.lt-hovb:hover{filter:brightness(0.98)}
+.lt-hova:hover{border-color:var(--accent) !important;color:var(--accent) !important}
+.lt-hovc:hover{color:var(--accent)}
+.lt-hovu:hover{text-decoration:underline}
+.lt-hovr:hover{background:var(--panel2)}
+@media (max-width:860px){
+ [data-body]{flex-direction:column !important}
+ [data-nav]{flex-direction:row !important;width:100% !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid var(--line) !important;flex-wrap:nowrap !important}
+}
+@media (max-width:600px){ [data-align]{grid-template-columns:1fr !important} [data-align] [data-el]{border-left:0 !important;border-top:0 !important} }
+@media print{
+ [data-chrome]{display:none !important}
+ [data-root]{height:auto !important;overflow:visible !important;display:block !important}
+ [data-body]{display:block !important}
+ [data-scroll]{overflow:visible !important;height:auto !important}
+ [data-part]{display:block !important;break-inside:avoid;page-break-inside:avoid;margin-bottom:26px}
+ body,[data-root]{background:#fff !important}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Unit data: an ES module (`export const UNIT`) chosen by ?unit=NN.
+     Loaded here so the Babel-compiled component never touches dynamic import(). -->
+<script type="module">
+  (async () => {
+    const p = new URLSearchParams(location.search);
+    const n = parseInt(p.get('unit') || '16', 10) || 16;
+    try {
+      const m = await import(`./units/unit${n}.js`);
+      window.LATIN_UNIT = m.UNIT || m.default;
+    } catch (e) {
+      window.LATIN_UNIT_ERR = String((e && e.message) || e);
+      console.error('[latin-texts] failed to load unit', n, e);
+    }
+    window.dispatchEvent(new Event('latin-unit-ready'));
+  })();
+</script>
+
+<!-- Isolated React 18 runtime, vendored locally (no CDN dependency, works offline
+     and under strict CSP). panel.js is compiled from app/panel.jsx — see app/build.md. -->
+<script src="vendor/react.production.min.js"></script>
+<script src="vendor/react-dom.production.min.js"></script>
+<script src="app/panel.js"></script>
+</body>
+</html>

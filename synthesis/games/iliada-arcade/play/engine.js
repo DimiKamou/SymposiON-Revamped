@@ -11,6 +11,7 @@ let canvas, ctx, hud, last=0, acc=0, gameT=0;
 let campaignKey='iliada', rhapKey='alpha', C, R;
 let state='play'; let shake=0, flash=0, camX=0;
 let totalWaves=5;
+let endless=false;             // unlimited-wave mode (Game-Panel launch): no boss, waves never stop
 let bgActive=false, lastBgKey='';
 /* --- combat-feel state (visual only, no balance impact) --- */
 const RM=(typeof matchMedia!=='undefined') && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -32,6 +33,7 @@ let wave=0, waveDefs=[], spawnQueue=[], spawnTimer=0, betweenWave=0, quizIdx=0;
 let score=0, combo=0, comboTimer=0, kills=0;
 let rain=null;
 let difficulty='med'; const DMG_SCALE={easy:0.5, med:0.78, hard:1.1};
+const ENDLESS_DMG_K=0.14;      // endless mode: damage taken grows +14% per wave survived
 let quizQueue=[], quizCur=null, quizTimer=0, quizTimerMax=12, quizCorrect=0, quizTotal=0;
 let quizCorrectAll=0, quizTotalAll=0, paused=false;
 function bestKey(){ return 'ia_best_'+campaignKey+'_'+rhapKey; }
@@ -39,7 +41,18 @@ function getBest(){ try{ return +(localStorage.getItem(bestKey())||0); }catch(e)
 function setBest(v){ try{ localStorage.setItem(bestKey(), v); }catch(e){} }
 
 /* ---------- wave generation ---------- */
+// One endless combat wave: size ramps up slowly with the wave index, a champion
+// every 3rd wave. No boss (endless has no win — only how far you get before HP runs out).
+function makeCombatWave(i){
+  const per = Math.min(12, 3 + Math.floor(i*0.6));
+  const archers = i>=1 ? Math.max(0, Math.round(per*0.32)) : 0;
+  const spearmen = i>=1 ? Math.max(0, Math.round(per*0.30)) : 0;
+  const soldiers = Math.max(1, per - archers - spearmen);
+  const champion = (i>0 && i%3===0) ? 1 : 0;
+  return { soldiers, archers, spearmen, champion };
+}
 function buildWaveDefs(n){
+  if(endless){ const defs=[]; for(let i=0;i<3;i++) defs.push(makeCombatWave(i)); return defs; }  // seed a few; startWave grows on demand
   const defs=[];
   const champEvery = Math.max(2, Math.floor(n/3));
   for(let i=0;i<n-1;i++){
@@ -53,6 +66,7 @@ function buildWaveDefs(n){
   defs.push({ boss:true, soldiers:Math.max(1,Math.round(6/n)), archers:1, spearmen: n>=5?1:0, champion: n>=6?1:0 });
   return defs;
 }
+function waveLabel(i){ return endless ? ((i+1)+'/∞') : ((i+1)+'/'+totalWaves); }
 
 /* ---------- setup ---------- */
 function setup(){
@@ -79,6 +93,7 @@ function mountBg(){ if(!window.BG){ bgActive=false; return; } const sc=document.
   try{ if(campaignKey==='iliada') window.BG.troy(sc,rhapKey); else window.BG.palace(sc,rhapKey); }catch(e){ bgActive=false; } }
 
 function startWave(i){
+  if(endless && !waveDefs[i]) waveDefs[i]=makeCombatWave(i);   // generate the next endless wave on demand
   wave=i; const def=waveDefs[i]; spawnQueue=[];
   const mk=(type,nn)=>{ for(let k=0;k<nn;k++) spawnQueue.push({type,t:0.5+k*0.7+Math.random()*0.5,side:Math.random()<0.7?1:-1}); };
   if(def.soldiers) mk('soldier',def.soldiers);
@@ -87,7 +102,7 @@ function startWave(i){
   if(def.champion) spawnQueue.push({type:'champion',t:1.4,side:1});
   if(def.boss) spawnQueue.push({type:'boss',t:1.4,side:1});
   spawnQueue.sort((a,b)=>a.t-b.t); spawnTimer=0;
-  toast(def.boss?('ΤΕΛΙΚΟ ΚΥΜΑ · '+R.boss.name):('ΚΥΜΑ '+(i+1)+'/'+totalWaves));
+  toast(def.boss?('ΤΕΛΙΚΟ ΚΥΜΑ · '+R.boss.name):('ΚΥΜΑ '+waveLabel(i)));
 }
 
 function spawnEnemy(type,side){
@@ -241,7 +256,7 @@ function killEntity(t){ t.dead=true; t.dying=0.5; t.fall=0; t.corpseT=0; kills++
   // drops — bosses give a guaranteed cache; others ~13% chance of something useful
   if(t.boss){ dropItem(t.x,'hp'); dropItem(t.x-54,'rage'); dropItem(t.x+54,'ult'); }
   else { const ch=t.champion?0.55:0.13; if(Math.random()<ch) dropItem(t.x, randDrop()); }
-  if(t.boss){ state='won'; flash=1; shake=20; setTimeout(()=>showEnd('ΝΙΚΗ'),700); }
+  if(t.boss && !endless){ state='won'; flash=1; shake=20; setTimeout(()=>showEnd('ΝΙΚΗ'),700); }
 }
 function randDrop(){ const r=Math.random();
   return r<0.30?'hp' : r<0.52?'rage' : r<0.72?'ammo' : r<0.88?'ult' : 'coin'; }
@@ -269,7 +284,9 @@ function hurtPlayer(amt, attacker){ if(state!=='play'||player.dead) return;
       if(attacker){ attacker.stun=0.9; attacker.swing=0; } return; }
     amt*=0.2; player.inv=0.3; spawnFX('block', player.x+player.facing*26, player.y-50, {}); window.SFX&&SFX.block();
   } else { if(player.inv>0) return; player.inv=0.7; combo=0; }
-  amt*=mul('taken'); amt*=(DMG_SCALE[difficulty]||0.78); player.hp-=amt; player.hurt=0.2; shake=8; window.SFX&&SFX.hurt();
+  amt*=mul('taken'); amt*=(DMG_SCALE[difficulty]||0.78);
+  if(endless) amt*=(1+wave*ENDLESS_DMG_K);   // damage taken ramps up every wave in endless mode
+  player.hp-=amt; player.hurt=0.2; shake=8; window.SFX&&SFX.hurt();
   hitstop=Math.max(hitstop,0.03);
   spawnBurst(player.x, player.y-90, attacker? (player.x>=attacker.x?1:-1):1, 5, '#D2452E');
   spawnFX('dmg', player.x+(Math.random()*30-15), player.y-120, {val:Math.round(amt), enemy:true, vx:(Math.random()-0.5)*50, rot:(Math.random()-0.5)*0.3});
@@ -361,7 +378,7 @@ function update(dt){
     if(it.life<=0) items.splice(i,1); }
 
   if(!spawnQueue.length && enemies.filter(e=>!e.dead).length===0 && state==='play'){
-    if(wave<waveDefs.length-1){ betweenWave+=dt; if(betweenWave>0.4){ betweenWave=0; openQuiz(); } }
+    if(endless || wave<waveDefs.length-1){ betweenWave+=dt; if(betweenWave>0.4){ betweenWave=0; openQuiz(); } }
   }
   // arrow-rain hazard (wrong-answer penalty)
   if(rain){ rain.t-=dt; if(rain.t<=0){ rain.t=0.1;
@@ -563,7 +580,7 @@ function updateHUD(){
   hud.querySelector('#ultFill').style.width=player.ult+'%'; hud.querySelector('#ultBar').classList.toggle('full',player.ult>=100);
   hud.querySelector('#ammoPips').innerHTML=pips;
   hud.querySelector('#scoreV').textContent=score.toLocaleString('el-GR');
-  hud.querySelector('#waveV').textContent=(wave+1)+'/'+totalWaves;
+  hud.querySelector('#waveV').textContent=waveLabel(wave);
   const cv=hud.querySelector('#comboV');
   if(combo>1){ cv.textContent='×'+combo+' COMBO'; cv.classList.add('show');
     cv.style.fontSize=Math.min(17+combo*1.35,46)+'px';                     // grows with the streak
@@ -590,7 +607,10 @@ function updateHUD(){
 function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
 function openQuiz(){ state='quiz';
   const n = 2 + ((Math.random()<0.5)?0:1);            // 2 or 3 questions
-  const pool=R.quiz.slice();                            // shuffle a fresh copy
+  // Prefer the injected practice bank (Game-Panel content picker) over the
+  // bundled per-rhapsody Homer questions when one was seeded.
+  const src=(Array.isArray(window.ARCADE_BANK)&&window.ARCADE_BANK.length)?window.ARCADE_BANK:R.quiz;
+  const pool=src.slice();                               // shuffle a fresh copy
   for(let i=pool.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [pool[i],pool[j]]=[pool[j],pool[i]]; }
   quizQueue = pool.slice(0, Math.min(n, pool.length));
   quizTotal = quizQueue.length; quizCorrect=0;
@@ -606,9 +626,9 @@ function nextQuizQuestion(){
   const opts=el.querySelector('.quiz-opts'); opts.innerHTML='';
   q.o.forEach((o,i)=>{ const d=document.createElement('div'); d.className='quiz-opt';
     d.innerHTML=`<span class="k">${['Α','Β','Γ','Δ'][i]}</span><span class="o">${o}</span>`;
-    d.addEventListener('click',()=>answerQuiz(i)); opts.appendChild(d); });
+    d.addEventListener('pointerdown',e=>{ e.preventDefault(); answerQuiz(i); }); opts.appendChild(d); });
   const idx = quizTotal - quizQueue.length;
-  el.querySelector('.quiz-prog').textContent='ΕΡΩΤΗΣΗ '+idx+'/'+quizTotal+' · ΚΥΜΑ '+(wave+1)+'/'+totalWaves+' ΤΕΛΕΙΩΣΕ';
+  el.querySelector('.quiz-prog').textContent='ΕΡΩΤΗΣΗ '+idx+'/'+quizTotal+' · ΚΥΜΑ '+waveLabel(wave)+' ΤΕΛΕΙΩΣΕ';
   const bar=el.querySelector('#quizTimerBar'); if(bar){ bar.style.transition='none'; bar.style.width='100%'; }
 }
 function tickQuiz(dt){ if(!quizCur) return; quizTimer-=dt;
@@ -716,7 +736,8 @@ function boot(){
     campaignKey=b.dataset.camp; document.querySelectorAll('.camp-btn').forEach(x=>x.classList.toggle('on',x===b));
     rhapKey=window.RHAP_ORDER[campaignKey][0]; buildRhapBar(); setup(); }));
   document.querySelectorAll('.wave-btn').forEach(b=>b.addEventListener('click',()=>{
-    totalWaves=+b.dataset.n; document.querySelectorAll('.wave-btn').forEach(x=>x.classList.toggle('on',x===b)); setup(); }));
+    const n=+b.dataset.n; endless=(n===0); if(!endless) totalWaves=n;   // data-n="0" → ∞ (endless)
+    document.querySelectorAll('.wave-btn').forEach(x=>x.classList.toggle('on',x===b)); setup(); }));
   document.querySelectorAll('.diff-btn').forEach(b=>b.addEventListener('click',()=>{
     difficulty=b.dataset.diff; document.querySelectorAll('.diff-btn').forEach(x=>x.classList.toggle('on',x===b)); setup(); }));
   // Single-campaign tile (launched from the SymposiON panel as Ιλιάδα / Οδύσσεια
@@ -727,6 +748,9 @@ function boot(){
     document.querySelectorAll('.camp-btn').forEach(x=>x.classList.toggle('on', x.dataset.camp===campaignKey));
     var campRow=document.querySelector('.camp-row'); if(campRow) campRow.style.display='none';
   }
+  // Game-Panel launch: forced endless mode. Reflect it on the ∞ wave button.
+  if(window.ARCADE_ENDLESS){ endless=true;
+    document.querySelectorAll('.wave-btn').forEach(x=>x.classList.toggle('on', x.dataset.n==='0')); }
   buildRhapBar();
   setup();
   // system buttons: pause / mute / help

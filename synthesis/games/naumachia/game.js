@@ -223,12 +223,30 @@ const NAU_QB = [
   { q:'Τι ήταν η «διέκπλους» τακτική;',                                    opts:['Εμβολισμός από μπροστά','Διάσχιση της εχθρικής γραμμής','Φυγή','Απόβαση'], ans:1 },
 ];
 
+// Normalise any injected item to this game's {q, opts, ans} shape. Accepts the
+// native {q, opts, ans}, the app-wide Game-Panel bank {q:{gr,en}|str, a:[…], c}
+// (window.SYM_QUESTIONS — the "Διάλεξε ύλη" picker), and {q, a, correct}.
+function _nauNorm(it) {
+  if (!it) return null;
+  const q = (it.q && typeof it.q === 'object') ? (it.q.gr || it.q.en || '') : (it.q || '');
+  const opts = Array.isArray(it.opts) ? it.opts : (Array.isArray(it.a) ? it.a : []);
+  let ans = typeof it.ans === 'number' ? it.ans
+          : typeof it.c === 'number' ? it.c
+          : typeof it.correct === 'number' ? it.correct : 0;
+  if (ans < 0 || ans >= opts.length) ans = 0;
+  return (q && opts.length >= 2) ? { q: String(q), opts: opts.map(String), ans } : null;
+}
 function _nauGetQuestion() {
-  // GP pool injected by nav.js _gpInjectEngineData for selected-level questions
-  if (window._gpNauPool && window._gpNauPool.length) {
-    const idx = ((window._gpNauIdx || 0)) % window._gpNauPool.length;
+  // Content-picker bank, in priority: nav.js level pool → the mode:'sym' picker
+  // bank (window.SYM_QUESTIONS) → built-in naval questions. Normalise so the
+  // picked ύλη actually plays (previously SYM_QUESTIONS was ignored).
+  const injected = (window._gpNauPool && window._gpNauPool.length) ? window._gpNauPool
+                 : (Array.isArray(window.SYM_QUESTIONS) && window.SYM_QUESTIONS.length ? window.SYM_QUESTIONS : null);
+  if (injected) {
+    const idx = ((window._gpNauIdx || 0)) % injected.length;
     window._gpNauIdx = idx + 1;
-    return window._gpNauPool[idx];
+    const norm = _nauNorm(injected[idx]);
+    if (norm) return norm;
   }
   // Merge with QUESTIONS.gr.all if the trivia game is loaded
   const extra = (typeof QUESTIONS !== 'undefined' && QUESTIONS?.gr?.all) || [];

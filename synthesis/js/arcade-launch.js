@@ -23,10 +23,35 @@
     } catch (_) {}
   }
 
+  // Map an app-wide MC bank entry {q:{gr,en}|string, a:[options], c:index} to the
+  // arcade's quiz shape {q:string, o:[≤4 options], a:correctIndex}. Drops entries
+  // without a prompt or fewer than 2 options; clamps the correct index in range.
+  function _mapBank(qs) {
+    return (qs || []).map(function (e) {
+      if (!e) return null;
+      var q = (e.q && typeof e.q === 'object') ? (e.q.gr || e.q.en || '') : (e.q || '');
+      var o = (Array.isArray(e.a) ? e.a : (Array.isArray(e.o) ? e.o : [])).slice(0, 4).map(String);
+      var c = (typeof e.c === 'number') ? e.c : (typeof e.a === 'number' ? e.a : 0);
+      if (c < 0 || c >= o.length) c = 0;
+      return (q && o.length >= 2) ? { q: String(q), o: o, a: c } : null;
+    }).filter(Boolean);
+  }
+  // Seed / clear the injected practice bank the arcade reads (localStorage, same
+  // origin as the iframe). Called with the picked bank from the Game-Panel picker.
+  function seedBank(cfg) {
+    try {
+      var pool = (cfg && cfg.questions) ? _mapBank(cfg.questions) : null;
+      if (pool && pool.length) localStorage.setItem('ARCADE_QUESTION_BANK', JSON.stringify(pool));
+      else localStorage.removeItem('ARCADE_QUESTION_BANK');
+    } catch (_) {}
+  }
+
   var _close = null; // teardown for the currently-open overlay
 
-  function openArcade(campaign) {
+  function openArcade(campaign, cfg) {
     seedContent();
+    seedBank(cfg);
+    var endless = !!(cfg && cfg.endless);
     var prev = document.getElementById('arcade-overlay'); if (prev) prev.remove();
 
     var ov = document.createElement('div');
@@ -48,7 +73,7 @@
         'font:600 13px Oswald,system-ui,sans-serif;color:#ECDAB4;background:rgba(20,14,8,.85);' +
         'border:1px solid rgba(232,201,106,.45);border-radius:999px;padding:8px 15px;cursor:pointer;' +
         'backdrop-filter:blur(6px)">✕ Έξοδος</button>' +
-      '<iframe src="games/iliada-arcade/index.html?campaign=' + encodeURIComponent(campaign) + '" ' +
+      '<iframe src="games/iliada-arcade/index.html?campaign=' + encodeURIComponent(campaign) + (endless ? '&mode=endless' : '') + '" ' +
         'title="Arcade" style="width:100%;height:100%;border:0;display:block" allow="autoplay; fullscreen"></iframe>';
 
     document.body.appendChild(ov);
@@ -64,8 +89,11 @@
 
   function closeArcade() { if (_close) _close(); }
 
-  window.openIliadaArcade  = function () { openArcade('iliada'); };
-  window.openOdysseaArcade = function () { openArcade('odysseia'); };
+  // cfg (from the Game-Panel content picker via injectBankAndLaunch) may carry
+  // { questions, endless }. Direct launches (home/subject tiles) pass nothing →
+  // default Homer content, finite waves.
+  window.openIliadaArcade  = function (cfg) { openArcade('iliada', cfg); };
+  window.openOdysseaArcade = function (cfg) { openArcade('odysseia', cfg); };
   window.closeIliadaArcade  = closeArcade;
   window.closeOdysseaArcade = closeArcade;
 })();

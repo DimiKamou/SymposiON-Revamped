@@ -112,9 +112,27 @@
       null;
   }
 
+  // Route a tile click. Reading / study panels (Latin texts, Γνωστό, Αδίδακτο,
+  // Ιστορία, 3D experiences, exam sim…) have no Solo/Tug/Arena/Practice variants,
+  // so they must open their panel DIRECTLY rather than land on the game
+  // mode-select screen. Everything else keeps the mode picker (via symGo('mode')).
+  // Shared by the home subject grid, tag pages and the learn/browse screens so
+  // the behaviour is identical everywhere.
+  function symTileLaunch(tile, modeCtx) {
+    var fn = synResolveLaunch(tile);
+    var direct = fn && window.symIsDirectLaunch && window.symIsDirectLaunch(fn) &&
+                 window.SYN_GAMES[fn] && typeof window.synLaunch === 'function';
+    if (direct) {
+      var args = (tile && tile.launch && tile.launch.args) || [];
+      return window.synLaunch.apply(null, [fn].concat(args));
+    }
+    if (typeof window.symGo === 'function') return window.symGo('mode', modeCtx);
+  }
+
   window.synEnsureCss = synEnsureCss;
   window.synEnsureOverlay = synEnsureOverlay;
   window.synEnsureFirebase = synEnsureFirebase;
   window.synLaunch = synLaunch;
   window.synResolveLaunch = synResolveLaunch;
+  window.symTileLaunch = symTileLaunch;
 })();

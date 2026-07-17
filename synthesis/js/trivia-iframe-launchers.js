@@ -141,12 +141,15 @@
     if (typeof goTo === 'function') goTo('home');
   }
 
-  // ── ISTORIA Γ΄ ΛΥΚΕΙΟΥ (iframe → games/istoria/index.html?course=g3) ──
-  function openIstoria(course) {
+  // ── ISTORIA Γ΄ ΛΥΚΕΙΟΥ (iframe → games/istoria/index.html?course=g3[&unit=…]) ──
+  // Optional `unit` scopes the panel to a single exam theme (oikonomia / politika
+  // / prosfygiko / kritiko / pontiako) so each home tile opens straight into it.
+  function openIstoria(course, unit) {
     course = course || 'g3';   // default preserves the old no-arg behavior
     const wrap = document.getElementById('istoria-wrap');
     if (wrap) {
-      const want = _appBase() + 'games/istoria/index.html?course=' + encodeURIComponent(course);
+      let want = _appBase() + 'games/istoria/index.html?course=' + encodeURIComponent(course);
+      if (unit) want += '&unit=' + encodeURIComponent(unit);
       const ifr = wrap.querySelector('iframe');
       if (!ifr) wrap.innerHTML = '<iframe src="' + want + '" style="width:100%;height:100%;border:none;display:block;"></iframe>';
       else if (ifr.getAttribute('src') !== want) ifr.setAttribute('src', want);   // re-scope to the requested course

@@ -11,7 +11,7 @@
 /* ── strip the dev chrome, fill the frame ─────────────────────────── */
 body.oly { background:#0A0907; }
 body.oly #harness { display:none !important; }
-body.oly .stage { min-height:100vh; }
+body.oly .stage { min-height:100vh; min-height:100dvh; }
 body.oly #sym-home { transition:opacity .45s ease; }
 body.oly:not(.oly-ready) #sym-home { opacity:0; }
 

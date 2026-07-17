@@ -318,7 +318,7 @@ function buildHarness() {
   // theme picker
   const pop = el('div', { class:'hpop' });
   const cur = THEMES.find(t=>t.id===STATE.theme);
-  const tbtn = el('button', { class:'hctl', onclick:(e)=>{ e.stopPropagation(); menu.classList.toggle('open'); } }, [
+  const tbtn = el('button', { class:'hctl', onclick:(e)=>{ e.stopPropagation(); const opening=!menu.classList.contains('open'); menu.classList.toggle('open'); if(opening){ try{ const r=e.currentTarget.getBoundingClientRect(); menu.style.top=(Math.round(r.bottom)+9)+'px'; }catch(_){}}} }, [
     el('span',{class:'hctl__dot', style:`background:linear-gradient(135deg,${cur.a} 48%,${cur.b} 48%)`}),
     cur.nm
   ]);

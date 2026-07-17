@@ -27,6 +27,8 @@
   let curCourse='g3', curUnit=null, curType='mc', editIdx=null;
 
   function units(){ return ISTORIA.getUnits(curCourse); }
+  function secList(){ return ISTORIA.getSections(curCourse, curUnit) || []; }
+  function secLabel(id){ const s=secList().find(x=>x.id===id); return s? ((s.part?s.part+' ':'')+(s.code?s.code+'. ':'')+s.t) : ''; }
   function type(){ return TYPES.find(t=>t.id===curType); }
   function listOf(typeId){ const v=ISTORIA.getItems(curCourse, curUnit, typeId); return Array.isArray(v)?v:[]; }
   function vidOf(){ const v=ISTORIA.getItems(curCourse, curUnit, 'vid'); return (v&&!Array.isArray(v))?v:{title:'',desc:'',url:'',q:[]}; }
@@ -52,7 +54,7 @@
     const a=listOf(curType);
     if(!a.length){ $('#adm-list').innerHTML=`<div class="adm-empty">Καμία εγγραφή ακόμη. Πρόσθεσε την πρώτη παρακάτω.</div>`; return; }
     $('#adm-list').innerHTML=a.map((it,i)=>`<div class="itemrow"><span class="ix">${i+1}</span>
-      <div class="tx">${escHtml(t.sum(it))}${curType==='mc'?`<small>Σωστή: ${'ΑΒΓΔ'[it.ans]||'-'} · ${(it.opts||[]).length} επιλογές</small>`:''}</div>
+      <div class="tx">${escHtml(t.sum(it))}${it.sec?` <span style="font-family:var(--f-mono);font-size:10px;color:var(--terra-dk);">▸ ${escHtml(secLabel(it.sec))}</span>`:''}${curType==='mc'?`<small>Σωστή: ${'ΑΒΓΔ'[it.ans]||'-'} · ${(it.opts||[]).length} επιλογές</small>`:''}</div>
       <div class="ops"><button class="iconb" title="Επεξεργασία" onclick="ADM.edit(${i})">✎</button><button class="iconb del" title="Διαγραφή" onclick="ADM.del(${i})">🗑</button></div></div>`).join('');
   }
 
@@ -78,6 +80,15 @@
       for(let i=0;i<4;i++) html+=`<div class="optrow"><input type="radio" name="correct" value="${i}" ${it.ans===i||(it.ans==null&&i===0)?'checked':''}><span class="ltr">${'ΑΒΓΔ'[i]}</span><input type="text" id="o_${i}" value="${escAttr(opts[i]||'')}" placeholder="Επιλογή ${'ΑΒΓΔ'[i]}"></div>`;
       html+=`</div>`;
     }
+    if(!t.single){
+      const secs=secList();
+      if(secs.length){
+        const cur=it.sec||'';
+        html+=`<div class="fld"><label>Κεφάλαιο (υποενότητα)</label><select id="f_sec"><option value="">— όλη η ενότητα —</option>`+
+          secs.map(s=>`<option value="${escAttr(s.id)}" ${cur===s.id?'selected':''}>${esc((s.part?s.part+' ':'')+(s.code?s.code+'. ':'')+s.t)}</option>`).join('')+
+          `</select></div>`;
+      }
+    }
     html+=`<div class="form-actions"><button class="btn primary" onclick="ADM.submitForm()">${t.single?'Αποθήκευση':(editIdx!=null?'Αποθήκευση':'Προσθήκη')}</button>${(!t.single&&editIdx!=null)?'<button class="btn ghost" onclick="ADM.cancel()">Άκυρο</button>':''}</div>`;
     $('#adm-editor').innerHTML=html;
   }
@@ -91,6 +102,7 @@
       else if(f.t==='qlist') v=v.split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{ const p=line.split('|'); return {ts:(p[0]||'').trim(), q:(p.slice(1).join('|')||'').trim()}; }).filter(x=>x.q);
       obj[f.k]=v; });
     if(t.opts){ obj.opts=[0,1,2,3].map(i=>$('#o_'+i).value.trim()); obj.ans=parseInt(($$('input[name=correct]:checked')[0]||{}).value||0); }
+    const secSel=$('#f_sec'); if(secSel){ const sv=(secSel.value||'').trim(); if(sv) obj.sec=sv; }
     const first=t.fields[0];
     if(!obj[first.k] || (typeof obj[first.k]==='string' && !obj[first.k].trim())){ toast('Συμπλήρωσε τουλάχιστον το «'+first.l+'»'); return; }
     if(t.single){ ISTORIA.setItems(curCourse,curUnit,'vid',obj); toast('Αποθηκεύτηκε ✓'); }

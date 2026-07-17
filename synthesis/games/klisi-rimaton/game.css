@@ -162,3 +162,4 @@
   .kr-all-row      { grid-template-columns:1fr; gap:3px; }
   .kr-all-label    { font-size:.68rem; }
 }
+@media(max-width:640px){.kr-dkey{min-height:44px;box-sizing:border-box;justify-content:center;}.kr-vkey{min-height:44px;min-width:40px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;line-height:1;}}
