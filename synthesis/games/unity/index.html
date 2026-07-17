@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>SymposiON — Unity</title>
+<style>
+  html,body{height:100%;margin:0;background:#0b0b12;color:#e9e6f2;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+  #unity-stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #unity-canvas{width:100%;height:100%;display:block;background:#0b0b12}
+  /* Progress bar shown while the real build streams in */
+  #unity-loading{position:fixed;inset:0;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;background:#0b0b12;z-index:5}
+  #unity-loading.on{display:flex}
+  .bar{width:min(360px,70vw);height:6px;border-radius:6px;background:#241f33;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c5ac2,#c5572f);transition:width .2s}
+  .muted{color:#9a92b5;font-size:13px}
+  /* Placeholder / bridge-demo shown when no Build/ is present yet */
+  #unity-placeholder{position:fixed;inset:0;display:none;flex-direction:column;z-index:6;
+    padding:28px;box-sizing:border-box;overflow:auto;
+    background:radial-gradient(120% 90% at 50% -10%,#1a1330 0%,#0b0b12 60%)}
+  #unity-placeholder.on{display:flex}
+  .ph-card{max-width:620px;margin:auto;width:100%}
+  .ph-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;color:#c8b8ff;
+    background:#221a3a;border:1px solid #3a2f5e;border-radius:999px;padding:6px 12px}
+  .ph-badge .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80}
+  h1{font-size:22px;margin:16px 0 6px}
+  .ph-lead{color:#b8b0d0;line-height:1.5;margin:0 0 18px}
+  code{background:#1b1530;border:1px solid #2f2650;border-radius:6px;padding:1px 6px;font-size:12.5px;color:#d9cfff}
+  .ph-steps{margin:0 0 20px;padding-left:18px;line-height:1.7;color:#c6bee0;font-size:14px}
+  .demo{border:1px solid #2f2650;border-radius:14px;padding:16px;background:#120e22}
+  .demo h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#9a92b5;margin:0 0 12px}
+  .demo .row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  button.act{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:13px;
+    color:#fff;background:#7c5ac2}
+  button.act.alt{background:#241f33;color:#d9cfff;border:1px solid #3a2f5e}
+  button.act:active{transform:translateY(1px)}
+  #demo-log{background:#0b0813;border:1px solid #241f33;border-radius:10px;padding:10px 12px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#a6f0c9;
+    height:150px;overflow:auto;white-space:pre-wrap;line-height:1.5}
+  #demo-log .in{color:#ffd7a6}
+  #demo-log .out{color:#a6f0c9}
+  #demo-log .sys{color:#8b83a8}
+</style>
+</head>
+<body>
+  <!-- Real Unity build renders here -->
+  <div id="unity-stage"><canvas id="unity-canvas" tabindex="-1"></canvas></div>
+
+  <!-- Streaming/loading progress for a real build -->
+  <div id="unity-loading">
+    <div class="bar"><i id="unity-progress"></i></div>
+    <div class="muted" id="unity-progress-label">Loading Unity…</div>
+  </div>
+
+  <!-- No-build fallback + live bridge demo (also proves the connection works) -->
+  <div id="unity-placeholder">
+    <div class="ph-card">
+      <span class="ph-badge"><span class="dot"></span> Unity bridge connected</span>
+      <h1>Unity WebGL host is ready</h1>
+      <p class="ph-lead">
+        No Unity build is loaded yet — but the <strong>SymposiON&nbsp;↔&nbsp;Unity bridge is live</strong>.
+        Drop a WebGL export into <code>games/unity/Build/</code> and it will boot here automatically.
+      </p>
+      <ol class="ph-steps">
+        <li>In Unity: <em>File ▸ Build Settings ▸ WebGL ▸ Build</em>.</li>
+        <li>Copy the four output files into <code>games/unity/Build/</code>.</li>
+        <li>Set their names in <code>games/unity/unity-config.js</code>.</li>
+        <li>Reopen this game — the build replaces this screen.</li>
+      </ol>
+      <div class="demo">
+        <h2>Bridge test — Unity ↔ SymposiON</h2>
+        <div class="row">
+          <button class="act" id="btn-emit">Send event → SymposiON</button>
+          <button class="act alt" id="btn-score">Emit score:42</button>
+          <button class="act alt" id="btn-clear">Clear log</button>
+        </div>
+        <div id="demo-log"></div>
+      </div>
+    </div>
+  </div>
+
+<script src="unity-config.js"></script>
+<script>
+(function(){
+  'use strict';
+  var CFG = window.UNITY_BUILD || {};
+  // Parent (SymposiON shell) is same-origin — pin messages to this origin.
+  var PARENT_ORIGIN = (function(){
+    try { return window.location.origin; } catch(_) { return '*'; }
+  })();
+
+  var canvas   = document.getElementById('unity-canvas');
+  var loadingEl= document.getElementById('unity-loading');
+  var progEl   = document.getElementById('unity-progress');
+  var progLbl  = document.getElementById('unity-progress-label');
+  var phEl     = document.getElementById('unity-placeholder');
+  var logEl    = document.getElementById('demo-log');
+
+  var unityInstance = null;     // set once createUnityInstance resolves
+  var callQueue = [];           // parent→Unity calls buffered until instance ready
+
+  // ── Emit a message UP to the SymposiON shell ──────────────────────────
+  //  Unity code reaches this via the .jslib plugin (see README): it calls
+  //  window.SymposionBridge.emit(type, data). Also usable from this page.
+  function emitToParent(type, data){
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ source:'unity', type:String(type), data:data }, PARENT_ORIGIN);
+      }
+    } catch(e){ console.warn('[unity-host] emit failed', e); }
+  }
+
+  // Public bridge object the Unity build (and this page) call into.
+  window.SymposionBridge = {
+    emit: emitToParent,
+    // Convenience wrappers Unity can call for common events.
+    ready:      function(payload){ emitToParent('unity-ready', payload || {}); },
+    score:      function(n){ emitToParent('score', { value: Number(n) }); },
+    levelDone:  function(id){ emitToParent('level-complete', { level: id }); },
+    close:      function(){ emitToParent('request-close', {}); }
+  };
+
+  // ── Receive messages FROM the SymposiON shell ─────────────────────────
+  //  { source:'symposion', type:'unity-call', gameObject, method, value }
+  //  → forwarded to unityInstance.SendMessage(gameObject, method, value)
+  window.addEventListener('message', function(ev){
+    if (PARENT_ORIGIN !== '*' && ev.origin !== PARENT_ORIGIN) return;
+    var d = ev.data;
+    if (!d || d.source !== 'symposion') return;
+
+    if (d.type === 'handshake') { emitToParent('ready', { host:'unity' }); return; }
+
+    if (d.type === 'unity-call') {
+      var target = d.gameObject || CFG.defaultReceiver || 'SymposionBridge';
+      var value  = d.value;
+      // Unity SendMessage only accepts string/number — stringify objects.
+      if (value !== null && typeof value === 'object') { value = JSON.stringify(value); }
+      if (unityInstance) {
+        try { unityInstance.SendMessage(target, d.method, value == null ? '' : value); }
+        catch(e){ console.warn('[unity-host] SendMessage failed', e); }
+      } else {
+        callQueue.push({ target:target, method:d.method, value:value });
+      }
+      // Mirror into the demo log when no real build is present.
+      log('in', '← ' + target + '.' + d.method + '(' + (value == null ? '' : value) + ')');
+    }
+  });
+
+  function flushQueue(){
+    if (!unityInstance) return;
+    while (callQueue.length){
+      var c = callQueue.shift();
+      try { unityInstance.SendMessage(c.target, c.method, c.value == null ? '' : c.value); }
+      catch(e){ console.warn('[unity-host] queued SendMessage failed', e); }
+    }
+  }
+
+  // ── Boot the real Unity build if present, else show the placeholder ───
+  function showLoading(on){ loadingEl.classList.toggle('on', !!on); }
+  function showPlaceholder(){ phEl.classList.add('on'); showLoading(false); wireDemo(); }
+
+  function boot(){
+    if (!CFG.loaderUrl){ showPlaceholder(); emitToParent('no-build', {}); return; }
+    showLoading(true);
+    progLbl.textContent = 'Loading Unity…';
+    var s = document.createElement('script');
+    s.src = CFG.loaderUrl;
+    s.onload = function(){
+      if (typeof createUnityInstance !== 'function'){ showPlaceholder(); emitToParent('no-build', {}); return; }
+      createUnityInstance(canvas, {
+        dataUrl:            CFG.dataUrl,
+        frameworkUrl:       CFG.frameworkUrl,
+        codeUrl:            CFG.codeUrl,
+        streamingAssetsUrl: CFG.streamingAssetsUrl,
+        companyName:        CFG.companyName,
+        productName:        CFG.productName,
+        productVersion:     CFG.productVersion,
+        devicePixelRatio:   CFG.devicePixelRatio || undefined
+      }, function(p){
+        progEl.style.width = Math.round((p || 0) * 100) + '%';
+        progLbl.textContent = 'Loading Unity… ' + Math.round((p || 0) * 100) + '%';
+      }).then(function(inst){
+        unityInstance = inst;
+        showLoading(false);
+        flushQueue();
+        emitToParent('unity-ready', { productName: CFG.productName });
+      }).catch(function(err){
+        console.error('[unity-host] createUnityInstance failed', err);
+        showPlaceholder();
+        emitToParent('unity-error', { message: String(err && err.message || err) });
+      });
+    };
+    s.onerror = function(){ showPlaceholder(); emitToParent('no-build', {}); };
+    document.body.appendChild(s);
+  }
+
+  // ── Demo log + buttons (placeholder only) ─────────────────────────────
+  function log(kind, text){
+    if (!logEl) return;
+    var line = document.createElement('div');
+    line.className = kind;
+    line.textContent = text;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  var demoWired = false;
+  function wireDemo(){
+    if (demoWired) return; demoWired = true;
+    log('sys', 'bridge ready — parent origin: ' + PARENT_ORIGIN);
+    document.getElementById('btn-emit').addEventListener('click', function(){
+      var payload = { msg: 'hello from Unity host', at: new Date().toISOString() };
+      emitToParent('demo', payload);
+      log('out', '→ emit demo ' + JSON.stringify(payload));
+    });
+    document.getElementById('btn-score').addEventListener('click', function(){
+      window.SymposionBridge.score(42);
+      log('out', '→ emit score {value:42}');
+    });
+    document.getElementById('btn-clear').addEventListener('click', function(){ logEl.textContent = ''; });
+  }
+
+  // Tell the shell the host bridge is up (before the build finishes), then boot.
+  emitToParent('ready', { host:'unity' });
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Drop your Unity WebGL export here.
+#
+# After "File > Build Settings > WebGL > Build", copy the four output files
+# from Unity's Build/ folder into THIS folder:
+#
+#   <name>.loader.js
+#   <name>.data          (or .data.gz / .data.br if compression is on)
+#   <name>.framework.js
+#   <name>.wasm          (or .wasm.gz / .wasm.br)
+#
+# Then set their names in ../unity-config.js.
+#
+# Note: .wasm/.data files are large binaries. They are intentionally NOT
+# committed by default (see .gitignore). Host them with the app (Firebase
+# Hosting deploys the whole synthesis/ folder) or your own CDN.

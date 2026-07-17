@@ -7,3 +7,8 @@ Thumbs.db
 
 # Claude agent worktrees / internals
 .claude/
+
+# Unity WebGL build artifacts (large binaries — host with the app or a CDN,
+# don't commit them). Keep the folder itself via .gitkeep.
+synthesis/games/unity/Build/*
+!synthesis/games/unity/Build/.gitkeep
