@@ -1055,3 +1055,284 @@ exports.gradeAnswer = functions.https.onRequest(async (req, res) => {
     res.status(502).json({ error: 'grader-failed' });
   }
 });
+
+
+// ============================================================
+//  generateExam  (callable — ADMIN / content role)
+//  The exam-authoring agent: analyses a source text and drafts
+//  exam-ready θέματα in the teacher's style, grounded on the
+//  θεωρία έκθεσης. Mirror of gradeAnswer (same Anthropic setup,
+//  key server-side). v1 target: enrich ΘΕΜΑ 1 (Νεοελληνική
+//  Γλώσσα, Β΄ Λυκείου, Τράπεζα Θεμάτων).
+//
+//  Input:  { subject, profile, source:{title,text}, request:{perSlot,target}, theory? }
+//  Output: { subject, profile, source:{title}, themata:[…], status:'draft' }
+//
+//  The authoritative θεωρία is read from Firestore config/ekthesi-theory
+//  (the teacher's live theory); falls back to the embedded standard
+//  curriculum θεωρία, or an explicit `theory` string passed by the client.
+// ============================================================
+
+// Compact standard-curriculum θεωρία (fallback). The live app theory in
+// config/ekthesi-theory (doc field `text`) overrides this when present.
+const EKTHESI_THEORY_FALLBACK = [
+  'ΤΡΟΠΟΙ/ΜΕΘΟΔΟΙ ΑΝΑΠΤΥΞΗΣ ΠΑΡΑΓΡΑΦΟΥ: ορισμός· διαίρεση· παραδείγματα· σύγκριση-αντίθεση· αίτιο-αποτέλεσμα (αιτιολόγηση)· αναλογία· συνδυασμός μεθόδων. (ονομάζω μέθοδο + χωρίο + λειτουργία).',
+  'ΔΟΜΗ ΠΑΡΑΓΡΑΦΟΥ: θεματική περίοδος → λεπτομέρειες/σχόλια → κατακλείδα (προαιρετική).',
+  'ΤΡΟΠΟΙ ΠΕΙΘΟΥΣ: επίκληση στη λογική· στο συναίσθημα· στην αυθεντία· στο ήθος (πομπού) / επίθεση στο ήθος αντιπάλου. ΜΕΣΑ: επιχειρήματα (έγκυρα/άκυρα) & τεκμήρια (αληθή/ψευδή — παραδείγματα, στατιστικά, μαρτυρίες).',
+  'ΣΥΝΟΧΗ (γλωσσική): διαρθρωτικές λέξεις που δηλώνουν προσθήκη/αντίθεση/αιτία/αποτέλεσμα/χρόνο/επεξήγηση. ΣΥΝΕΚΤΙΚΟΤΗΤΑ (νοηματική): λογική αλληλουχία ιδεών, ενότητα θέματος.',
+  'ΚΕΙΜΕΝΙΚΑ ΕΙΔΗ: άρθρο, δοκίμιο, επιστολή, ομιλία, ρεπορτάζ, συνέντευξη… ΛΕΙΤΟΥΡΓΙΑ ΓΛΩΣΣΑΣ: αναφορική/δηλωτική vs ποιητική/συνυποδηλωτική.',
+  'ΛΕΙΤΟΥΡΓΙΑ ΤΙΤΛΟΥ: σημασιολογία (κυριολεκτικός/μεταφορικός, δηλωτικός/συνυποδηλωτικός)· λειτουργίες (δηλώνει/προϊδεάζει θέμα· προβάλλει θέση/οπτική· κεντρίζει ενδιαφέρον)· σχέση τίτλου-κειμένου.',
+  'ΥΦΟΣ: επίσημο/οικείο, σοβαρό/ειρωνικό, λιτό/πλούσιο — τεκμηρίωση με γλωσσικές επιλογές (λεξιλόγιο, πρόσωπα, σύνταξη, στίξη, σχήματα).',
+  'ΣΗΜΕΙΑ ΣΤΙΞΗΣ: εισαγωγικά (παράθεμα/τίτλος/μεταφορική-ειρωνική σημασία)· άνω-κάτω τελεία (επεξήγηση/παράθεση/απαρίθμηση/συμπέρασμα)· παύλα (έμφαση/επεξήγηση)· παρένθεση· ρητορική ερώτηση· θαυμαστικό· αποσιωπητικά.',
+  'ΛΕΞΙΛΟΓΙΟ: συνώνυμα/αντώνυμα δόκιμα ΣΤΟ ΣΥΓΚΕΙΜΕΝΟ· δηλωτική↔συνυποδηλωτική χρήση.',
+  'ΡΗΜΑΤΙΚΑ ΠΡΟΣΩΠΑ: α΄ εν. (προσωπικός τόνος)· α΄ πληθ. (καθολίκευση/οικειότητα)· β΄ (αμεσότητα)· γ΄ (αντικειμενικότητα). Ενεργητική↔παθητική σύνταξη (μετατόπιση έμφασης).',
+].join('\n');
+
+async function getEkthesiTheory() {
+  try {
+    const doc = await admin.firestore().collection('config').doc('ekthesi-theory').get();
+    if (doc.exists) {
+      const d = doc.data();
+      if (d && typeof d.text === 'string' && d.text.trim()) return d.text.trim();
+    }
+  } catch (_) { /* offline / perms — fall through to fallback */ }
+  return EKTHESI_THEORY_FALLBACK;
+}
+
+function buildExamGenPrompt(p) {
+  const perSlot = Math.max(1, Math.min(5, parseInt(p.request && p.request.perSlot, 10) || 3));
+  const title = p.source && p.source.title ? ` (τίτλος: «${p.source.title}»)` : '';
+  const text = (p.source && p.source.text) || '';
+  return `Είσαι έμπειρος/η φιλόλογος που συντάσσει θέματα εξετάσεων για το μάθημα «Νεοελληνική Γλώσσα & Λογοτεχνία», Β΄ Λυκείου, στη μορφή «Τράπεζα Θεμάτων». Θα εμπλουτίσεις το ΘΕΜΑ 1 (35 μονάδες) με βάση το ΚΕΙΜΕΝΟ 1 (μη λογοτεχνικό) που ακολουθεί.
+
+ΔΟΜΗ ΘΕΜΑΤΟΣ 1 — τρία υποερωτήματα:
+• Α (κατανόηση/πύκνωση) — 10 μονάδες
+• Β (οργάνωση/δομή/πειθώ) — 10 μονάδες
+• Γ (γλώσσα/ύφος/λεξιλόγιο) — 15 μονάδες
+
+ΚΑΝΟΝΕΣ ΥΦΟΥΣ (αυστηροί):
+- Απευθύνσου στον μαθητή σε β΄ ενικό ("να αποδώσεις", "να γράψεις", "εξήγησε").
+- Βάλε ρητά όρια λέξεων όπου ταιριάζει (π.χ. 40–60 λέξεις για την πύκνωση).
+- Κάθε ενδεικτική απάντηση να είναι ΤΕΚΜΗΡΙΩΜΕΝΗ με στοιχεία/χωρία του κειμένου.
+- Θεμελίωσε ΚΑΘΕ ορισμό/κατηγορία ΑΠΟΚΛΕΙΣΤΙΚΑ στην παρακάτω ΘΕΩΡΙΑ — μη χρησιμοποιείς δικούς σου ορισμούς.
+
+ΘΕΩΡΙΑ ΕΚΘΕΣΗΣ (η μόνη έγκυρη πηγή ορισμών):
+${p.theory || EKTHESI_THEORY_FALLBACK}
+
+ΚΕΙΜΕΝΟ 1${title}:
+"""
+${text}
+"""
+
+ΖΗΤΟΥΜΕΝΟ: Για ΚΑΘΕ υποερώτημα (Α, Β, Γ) δώσε ${perSlot} διαφορετικές εναλλακτικές ερωτήσεις, καθεμιά από ΔΙΑΦΟΡΕΤΙΚΗ κατηγορία της θεωρίας:
+- Α: πύκνωση/κατανόηση, ανάλυση/λειτουργία τίτλου, κειμενικό είδος & σκοπός.
+- Β: τρόποι ανάπτυξης παραγράφου, δομή παραγράφου, τρόποι & μέσα πειθούς, συνοχή/συνεκτικότητα, πρόθεση συγγραφέα.
+- Γ: συνώνυμα, αντώνυμα, συνυποδηλωτική↔δηλωτική, ύφος & γλωσσικές επιλογές, λειτουργία σημείων στίξης, ρηματικά πρόσωπα.
+Μονάδες: Α=10, Β=10, Γ=15 (μοίρασε υπο-μονάδες όπου το υποερώτημα έχει μέρη).
+
+Επίστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς markdown, χωρίς σχόλια, με ΑΚΡΙΒΩΣ αυτή τη μορφή:
+{"subject":"ekthesi","profile":"${p.profile || 'trapeza'}","source":{"title":"${(p.source && p.source.title) || ''}"},"themata":[{"slot":"Α","category":"<κατηγορία θεωρίας>","prompt":"<η ερώτηση σε β΄ ενικό>","marks":10,"modelAnswer":"<ενδεικτική απάντηση στα ελληνικά>","points":["<βασικό σημείο αξιολόγησης>"]}],"status":"draft"}`;
+}
+
+function parseExamJSON(raw) {
+  let s = String(raw || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  const r = JSON.parse(s);
+  const themata = Array.isArray(r.themata) ? r.themata.map(t => ({
+    slot:        String(t.slot || ''),
+    category:    String(t.category || ''),
+    prompt:      String(t.prompt || ''),
+    marks:       Math.max(0, parseInt(t.marks, 10) || 0),
+    modelAnswer: String(t.modelAnswer || ''),
+    points:      Array.isArray(t.points) ? t.points.filter(Boolean).map(String) : [],
+  })).filter(t => t.prompt) : [];
+  return {
+    subject: String(r.subject || 'ekthesi'),
+    profile: String(r.profile || 'trapeza'),
+    source:  (r.source && typeof r.source === 'object') ? { title: String(r.source.title || '') } : { title: '' },
+    themata,
+    status:  'draft',
+  };
+}
+
+exports.generateExam = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);              // super/admin + content role
+
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) throw new functions.https.HttpsError('failed-precondition', 'generator-unconfigured');
+
+  const p = data || {};
+  const source = p.source || {};
+  if (typeof source.text !== 'string' || source.text.trim().length < 40) {
+    throw new functions.https.HttpsError('invalid-argument', 'source.text (≥40 chars) required.');
+  }
+
+  const subject = String(p.subject || 'ekthesi');
+  const profile = String(p.profile || 'trapeza');
+  const theory  = (typeof p.theory === 'string' && p.theory.trim())
+    ? p.theory.trim()
+    : await getEkthesiTheory();
+
+  const prompt = buildExamGenPrompt({ subject, profile, source, request: p.request || {}, theory });
+
+  try {
+    const resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!resp.ok) {
+      console.error('[generateExam] upstream', resp.status, await resp.text().catch(() => ''));
+      throw new functions.https.HttpsError('unavailable', 'generator-upstream');
+    }
+    const body = await resp.json();
+    const text = (body.content || []).map(b => b.text || '').join('').trim();
+    const parsed = parseExamJSON(text);
+    if (!parsed.themata.length) {
+      throw new functions.https.HttpsError('internal', 'generator-empty');
+    }
+    await writeAudit(context, 'exam.generate', subject, { profile, themata: parsed.themata.length });
+    return parsed;
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    console.error('[generateExam] failed', err);
+    throw new functions.https.HttpsError('internal', 'generator-failed');
+  }
+});
+
+
+// ============================================================
+//  adminSaveExamContent  (callable — ADMIN / content role)
+//  Validated server-side write for a drafted exam doc. Mirrors
+//  adminSaveGameContent: requireRole + structural checks + set + audit.
+//  Rules deny direct client writes to examContent/* — this is the path.
+// ============================================================
+exports.adminSaveExamContent = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+  const { contentId, content } = data || {};
+  if (!contentId || typeof contentId !== 'string') {
+    throw new functions.https.HttpsError('invalid-argument', 'contentId required.');
+  }
+  if (!content || content.schema !== 'exam' || !Array.isArray(content.themata)) {
+    throw new functions.https.HttpsError('invalid-argument', 'content.themata[] required (schema "exam").');
+  }
+  for (const t of content.themata) {
+    if (!t || typeof t.prompt !== 'string' || !t.prompt.trim()) {
+      throw new functions.https.HttpsError('invalid-argument', 'each θέμα needs a non-empty prompt.');
+    }
+    if (t.marks != null && !(isFinite(Number(t.marks)) && Number(t.marks) >= 0)) {
+      throw new functions.https.HttpsError('invalid-argument', 'θέμα marks must be ≥ 0.');
+    }
+  }
+  const status = ['draft', 'approved', 'published'].includes(content.status) ? content.status : 'draft';
+  await admin.firestore().doc(`examContent/${contentId}`).set({
+    ...content,
+    status,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedBy: context.auth.token.email,
+  }, { merge: false });
+  await writeAudit(context, 'exam.content.save', contentId, { themata: content.themata.length, status });
+  return { ok: true, id: contentId };
+});
+
+
+// ============================================================
+//  ingestExamSource  (callable — ADMIN / content role)
+//  Upload a Τράπεζα Θεμάτων / Πανελλήνιες exam file (PDF or image)
+//  and extract its structured content, so the teacher doesn't paste.
+//  The file is sent to Claude NATIVELY (document/image content block) —
+//  it reads both digital text and scanned pages (vision).
+//
+//  Input:  { fileData:<base64>, mediaType:'application/pdf'|'image/png'|…, filename? }
+//  Output: { profile, grade, text1:{title,text}, text2:{title,text}, existingThemata:[…] }
+//
+//  Callable payload limit ~10MB → keep files ≲ 6MB (client-guarded too).
+// ============================================================
+function buildIngestPrompt() {
+  return `Σου δίνεται ένα αρχείο εξέτασης «Νεοελληνική Γλώσσα & Λογοτεχνία» (Τράπεζα Θεμάτων ή Πανελλήνιες). Εξήγαγε ΠΙΣΤΑ το περιεχόμενό του — ΜΗΝ εφευρίσκεις τίποτα.
+
+Επίστρεψε ΜΟΝΟ έγκυρο JSON, χωρίς markdown, χωρίς σχόλια, με ΑΚΡΙΒΩΣ αυτή τη μορφή:
+{"profile":"trapeza|panellinies|unknown","grade":"<π.χ. Β΄ Λυκείου, ή unknown>","text1":{"title":"<τίτλος Κειμένου 1 ή \\"\\">","text":"<ΠΛΗΡΕΣ Κείμενο 1 — το μη λογοτεχνικό>"},"text2":{"title":"","text":"<Κείμενο 2 — το λογοτεχνικό, αν υπάρχει, αλλιώς \\"\\">"},"existingThemata":[{"code":"<π.χ. ΘΕΜΑ 1 · 1ο υποερώτημα>","prompt":"<η εκφώνηση όπως ακριβώς είναι>","marks":<αριθμός μονάδων ή null>}]}`;
+}
+
+function parseIngestJSON(raw) {
+  let s = String(raw || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a >= 0 && b >= 0) s = s.slice(a, b + 1);
+  const r = JSON.parse(s);
+  const clean = o => ({ title: String((o && o.title) || ''), text: String((o && o.text) || '') });
+  const themata = Array.isArray(r.existingThemata) ? r.existingThemata.map(t => ({
+    code:   String((t && t.code) || ''),
+    prompt: String((t && t.prompt) || ''),
+    marks:  (t && t.marks != null && isFinite(parseInt(t.marks, 10))) ? parseInt(t.marks, 10) : null,
+  })).filter(t => t.prompt) : [];
+  return {
+    profile: String(r.profile || 'unknown'),
+    grade:   String(r.grade || ''),
+    text1:   clean(r.text1),
+    text2:   clean(r.text2),
+    existingThemata: themata,
+  };
+}
+
+exports.ingestExamSource = functions.https.onCall(async (data, context) => {
+  requireRole(context, ['content']);
+
+  const key = graderEnv('ANTHROPIC_KEY', 'anthropic.key', null);
+  if (!key) throw new functions.https.HttpsError('failed-precondition', 'generator-unconfigured');
+
+  const p = data || {};
+  const b64 = typeof p.fileData === 'string' ? p.fileData.replace(/^data:[^;]+;base64,/, '') : '';
+  const mediaType = String(p.mediaType || 'application/pdf');
+  if (!b64 || b64.length < 50) {
+    throw new functions.https.HttpsError('invalid-argument', 'fileData (base64) required.');
+  }
+  if (b64.length > 9_500_000) {   // ~7MB binary — keep under the callable payload cap
+    throw new functions.https.HttpsError('invalid-argument', 'file too large (max ~6MB).');
+  }
+
+  const isImg = /^image\//.test(mediaType);
+  const docBlock = isImg
+    ? { type: 'image',    source: { type: 'base64', media_type: mediaType,        data: b64 } }
+    : { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } };
+
+  try {
+    const resp = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: graderEnv('ANTHROPIC_MODEL', 'anthropic.model', 'claude-sonnet-4-6'),
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: [docBlock, { type: 'text', text: buildIngestPrompt() }] }],
+      }),
+    });
+    if (!resp.ok) {
+      console.error('[ingestExamSource] upstream', resp.status, await resp.text().catch(() => ''));
+      throw new functions.https.HttpsError('unavailable', 'ingest-upstream');
+    }
+    const body = await resp.json();
+    const text = (body.content || []).map(bl => bl.text || '').join('').trim();
+    const parsed = parseIngestJSON(text);
+    await writeAudit(context, 'exam.ingest', mediaType, {
+      chars: (parsed.text1.text || '').length, themata: parsed.existingThemata.length,
+    });
+    return parsed;
+  } catch (err) {
+    if (err instanceof functions.https.HttpsError) throw err;
+    console.error('[ingestExamSource] failed', err);
+    throw new functions.https.HttpsError('internal', 'ingest-failed');
+  }
+});
