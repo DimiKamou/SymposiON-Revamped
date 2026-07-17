@@ -1091,7 +1091,9 @@
           : L({gr:'Έναρξη →',en:'Start →'})));
         startBtn2.appendChild(el('small', null, play==='vs'
           ? L({gr:'Μοιράσου το QR για να παίξει ο φίλος σου',en:'Share the QR so your friend can play'})
-          : (srcParts.length + ' ' + L({gr:'πηγές στο μιξ',en:'sources in the mix'}))));
+          : (srcParts.length + ' ' + (srcParts.length===1
+              ? L({gr:'πηγή στο μιξ',en:'source in the mix'})
+              : L({gr:'πηγές στο μιξ',en:'sources in the mix'})))));
       }
       soloCard = el('button',{class:'syn-mode__card is-solo', onclick:()=>{ play='solo'; paintMode(); }},[
         el('span',{class:'syn-mode__sela',html:'&#10003;'}),
