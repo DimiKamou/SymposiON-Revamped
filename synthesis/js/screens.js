@@ -965,32 +965,16 @@
       if(!shown) listWrap.appendChild(el('p',{class:'sc-hint'}, L({gr:'Καμία ύλη δεν ταιριάζει.',en:'No content matches.'})));
     }
 
-    // ── sticky "N sources" bar + Start ──
+    // ── sticky "N sources" bar + Continue (→ mode screen) ──
+    // The picker no longer launches directly: pressing Continue snapshots the
+    // current selection and slides to STEP 2 (Μόνος / VS-με-QR). "Play a friend"
+    // moved there as the VS card, so the two live behind one flow.
     const bar = el('div',{class:'syn-mix__bar'});
     const count = el('span',{class:'syn-mix__count'});
     const startBtn = el('button',{class:'syn-mix__start', onclick:()=>{
       if(!sel.size && !customQs.length) return;
       const picks = Array.from(sel.entries()).map(([id,st])=>({ id:id, levelIds: Array.from(st.levels) }));
-      startBtn.disabled = true;
-      const old = startBtn.textContent;
-      startBtn.textContent = L({gr:'Φόρτωση…',en:'Loading…'});
-      // Catalog picks (may be empty) resolve through SymMix.bankMulti; the teacher's
-      // uploaded customQs are then appended onto the merged bank. If only customQs
-      // were provided (no dataset picks) we still launch with just those.
-      const bankP = (picks.length && window.SymMix && SymMix.bankMulti)
-        ? Promise.resolve(SymMix.bankMulti(picks))
-        : Promise.resolve([]);
-      bankP.then(qs=>{
-        const merged = (qs||[]).concat(customQs);
-        const onlyOwn = !picks.length && customQs.length;
-        const title = onlyOwn
-          ? (L(gName(game)) + ' · ' + L({gr:'Δικό μου ερωτηματολόγιο',en:'My questionnaire'}))
-          : (picks.length===1 && !customQs.length)
-            ? L(gName(game))
-            : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
-        return injectBankAndLaunch(fn, inj, merged, title);
-      }).then(()=>{ startBtn.disabled=false; startBtn.textContent=old; })
-        .catch(()=>{ startBtn.disabled=false; startBtn.textContent=old; });
+      enterMode(picks, customQs.slice());
     }});
     bar.appendChild(count);
     bar.appendChild(el('span',{class:'syn-mix__sp'}));
@@ -1003,24 +987,153 @@
       startBtn.disabled = n===0;
       startBtn.classList.toggle('is-off', n===0);
       startBtn.textContent = n
-        ? L({gr:'Ξεκίνα με '+n+(n===1?' πηγή':' πηγές'),en:'Start with '+n})
+        ? L({gr:'Συνέχεια · '+n+(n===1?' πηγή':' πηγές'),en:'Continue · '+n})
         : L({gr:'Διάλεξε ύλη',en:'Choose content'});
     }
 
     wrap.appendChild(bar);
     body.appendChild(wrap);
-    // "Play a friend" — the same QR share-and-compare surface the level-bank picker
-    // exposes, so the content-picker menu offers Start OR share-vs-friend.
-    if (window.showQR){
-      body.appendChild(el('button',{class:'lv-sharebtn', onclick:()=>{ try{ window.showQR(L(gName(game)), { game: fn }); }catch(_){} }},[
-        glyph('grid-blocks','lv-sharebtn__gl'),
-        el('span',{class:'lv-sharebtn__b'},[
-          el('span',{class:'lv-sharebtn__t'}, L({gr:'Παίξε με φίλο',en:'Play a friend'})),
-          el('span',{class:'lv-sharebtn__d'}, L({gr:'Μοιράσου το QR — ίδια ύλη, συγκρίνετε σκορ',en:'Share the QR — same content, compare scores'})),
-        ]),
-        el('span',{class:'lv-sharebtn__qr',html:'&#9783;'}),
-      ]));
+
+    /* ── STEP 2 · play-mode screen (Μόνος / VS-με-QR) ─────────────────────
+       A separate container swapped in over the picker. Back returns to the
+       picker with its selection intact (the picker DOM is only hidden, never
+       torn down). Solo builds the bank and launches; VS shares a QR that
+       encodes the exact same content mix (see share-qr.js `picks`). */
+    const modeWrap = el('div',{class:'syn-mode', style:'display:none'});
+    body.appendChild(modeWrap);
+
+    function enterMode(picks, ownQs){
+      buildMode(picks, ownQs);
+      wrap.style.display = 'none';
+      modeWrap.style.display = '';
+      try { modeWrap.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_){}
     }
+    function backToPick(){
+      modeWrap.style.display = 'none';
+      modeWrap.innerHTML = '';
+      wrap.style.display = '';
+      try { wrap.scrollIntoView({ behavior:'smooth', block:'start' }); } catch(_){}
+    }
+
+    // Human-readable summary of the picked sources (label · N/total levels).
+    function _sumSources(picks, ownQs){
+      const parts = [];
+      picks.forEach(p=>{
+        let it = null;
+        cat.forEach(g=>(g.items||[]).forEach(i=>{ if(i.id===p.id) it=i; }));
+        const label = it ? it.label : p.id;
+        const total = (it && it.levels) ? it.levels.length : 0;
+        const n = (p.levelIds||[]).length;
+        parts.push(label + (total>1 ? ' · ' + (n>=total ? L({gr:'όλα',en:'all'}) : n+'/'+total) : ''));
+      });
+      if (ownQs && ownQs.length) parts.push(L({gr:'Δικό μου ('+ownQs.length+')',en:'My own ('+ownQs.length+')'}));
+      return parts;
+    }
+
+    function launchSolo(picks, ownQs, btn){
+      btn.disabled = true;
+      const old = btn.innerHTML;
+      btn.innerHTML=''; btn.appendChild(el('b', null, L({gr:'Φόρτωση…',en:'Loading…'})));
+      const bankP = (picks.length && window.SymMix && SymMix.bankMulti)
+        ? Promise.resolve(SymMix.bankMulti(picks))
+        : Promise.resolve([]);
+      bankP.then(qs=>{
+        const merged = (qs||[]).concat(ownQs||[]);
+        const onlyOwn = !picks.length && ownQs && ownQs.length;
+        const title = onlyOwn
+          ? (L(gName(game)) + ' · ' + L({gr:'Δικό μου ερωτηματολόγιο',en:'My questionnaire'}))
+          : (picks.length===1 && !(ownQs && ownQs.length))
+            ? L(gName(game))
+            : (L(gName(game)) + ' · ' + L({gr:'Μεικτή ύλη',en:'Mixed'}));
+        return injectBankAndLaunch(fn, inj, merged, title);
+      }).then(()=>{ btn.disabled=false; btn.innerHTML=old; })
+        .catch(()=>{ btn.disabled=false; btn.innerHTML=old; });
+    }
+    // VS share: encode game + the exact picks so a scanned QR reproduces the mix
+    // (teacher-uploaded customQs can't ride a URL, so VS carries catalog picks only).
+    function shareVs(picks){
+      if (!window.showQR) return;
+      try { window.showQR(L(gName(game)) + ' · VS', { game: fn, picks: picks.map(p=>({ id:p.id, levelIds:p.levelIds })) }); } catch(_){}
+    }
+
+    function buildMode(picks, ownQs){
+      modeWrap.innerHTML='';
+      let play = 'solo';
+      const canVs = picks.length > 0;   // no catalog picks → nothing to share
+
+      modeWrap.appendChild(el('button',{class:'syn-mode__back', onclick:backToPick},[
+        el('span',{class:'syn-mode__backic',html:'&larr;'}), L({gr:'Άλλαξε ύλη',en:'Change content'}) ]));
+
+      modeWrap.appendChild(el('div',{class:'syn-mode__hd'},[
+        el('h2',{class:'syn-mode__ttl'}, L({gr:'Πώς θα παίξεις;',en:'How will you play?'})),
+        el('p',{class:'syn-mode__sub'}, L(gName(game))),
+      ]));
+
+      const srcParts = _sumSources(picks, ownQs);
+      modeWrap.appendChild(el('div',{class:'syn-mode__sum'},[
+        el('span',{class:'syn-mode__sumic',html:'&#10022;'}),
+        el('div',{class:'syn-mode__sumb'},[
+          el('b',{class:'syn-mode__sumt'}, L({gr:'Η ύλη σου',en:'Your content'})),
+          el('div',{class:'syn-mode__chips'}, srcParts.map(s=> el('span',{class:'syn-mode__chip'}, s))),
+        ]),
+        el('button',{class:'syn-mode__chg', onclick:backToPick}, L({gr:'Αλλαγή',en:'Change'})),
+      ]));
+
+      let soloCard, vsCard, startBtn2, vsPanel;
+      function paintMode(){
+        soloCard.classList.toggle('on', play==='solo');
+        vsCard.classList.toggle('on', play==='vs');
+        vsPanel.style.display = (play==='vs') ? '' : 'none';
+        startBtn2.className = 'syn-mode__start ' + (play==='vs' ? 'is-vs' : 'is-solo');
+        startBtn2.innerHTML='';
+        startBtn2.appendChild(el('b', null, play==='vs'
+          ? L({gr:'Δημιουργία αγώνα VS',en:'Create VS match'})
+          : L({gr:'Έναρξη →',en:'Start →'})));
+        startBtn2.appendChild(el('small', null, play==='vs'
+          ? L({gr:'Μοιράσου το QR για να παίξει ο φίλος σου',en:'Share the QR so your friend can play'})
+          : (srcParts.length + ' ' + (srcParts.length===1
+              ? L({gr:'πηγή στο μιξ',en:'source in the mix'})
+              : L({gr:'πηγές στο μιξ',en:'sources in the mix'})))));
+      }
+      soloCard = el('button',{class:'syn-mode__card is-solo', onclick:()=>{ play='solo'; paintMode(); }},[
+        el('span',{class:'syn-mode__sela',html:'&#10003;'}),
+        el('span',{class:'syn-mode__cardic'}, glyph('runner')),
+        el('h3', null, L({gr:'Μόνος',en:'Solo'})),
+        el('p', null, L({gr:'Ξεκίνα αμέσως και βελτίωσε το σκορ σου.',en:'Start now and beat your score.'})),
+      ]);
+      vsCard = el('button',{class:'syn-mode__card is-vs'+(canVs?'':' is-disabled'),
+        onclick:()=>{ if(!canVs) return; play='vs'; paintMode(); }},[
+        el('span',{class:'syn-mode__sela',html:'&#10003;'}),
+        el('span',{class:'syn-mode__cardic'}, glyph('grid-blocks')),
+        el('h3', null, L({gr:'VS — Πρόκληση φίλου',en:'VS — Challenge a friend'})),
+        el('p', null, canVs
+          ? L({gr:'Μοιράσου QR — ίδια ύλη, συγκρίνετε σκορ.',en:'Share a QR — same content, compare scores.'})
+          : L({gr:'Διάλεξε ύλη από τον κατάλογο για VS.',en:'Pick catalog content to play VS.'})),
+      ]);
+      modeWrap.appendChild(el('div',{class:'syn-mode__duel'},[soloCard, vsCard]));
+
+      vsPanel = el('div',{class:'syn-mode__vs', style:'display:none'},[
+        el('div',{class:'syn-mode__vsic',html:'&#9783;'}),
+        el('div',{class:'syn-mode__vsb'},[
+          el('h3', null, L({gr:'Κάλεσε έναν φίλο',en:'Invite a friend'})),
+          el('p', null, L({gr:'Θα παίξει την ίδια μιξ ύλη — κερδίζει το μεγαλύτερο σκορ.',en:'They play the same content mix — highest score wins.'})),
+          el('button',{class:'syn-mode__vsshare', onclick:()=>shareVs(picks)},[
+            el('span',{html:'&#9783;'}), L({gr:'Μοιράσου QR / σύνδεσμο',en:'Share QR / link'}) ]),
+        ]),
+      ]);
+      modeWrap.appendChild(vsPanel);
+
+      startBtn2 = el('button',{class:'syn-mode__start is-solo', onclick:()=>{
+        if (play==='vs') shareVs(picks); else launchSolo(picks, ownQs, startBtn2);
+      }});
+      modeWrap.appendChild(el('div',{class:'syn-mode__startbar'},[ startBtn2 ]));
+
+      paintMode();
+      // Card glyphs are [data-illu] placeholders resolved by injectIllus, which
+      // only runs on render() — this screen is built on-click, so resolve them now.
+      if (window.injectIllus) { try { window.injectIllus(modeWrap); } catch(_){} }
+    }
+
     paintTags(); paintList(); updateBar();
 
     // Merge Firestore published packs (config/datasets + custom_games), then refresh.

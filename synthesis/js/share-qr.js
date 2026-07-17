@@ -35,6 +35,15 @@
     });
   }
 
+  /* URL-safe base64 of a JSON value (used for multi-source `picks`) */
+  function _b64urlJSON(v) {
+    try {
+      var json = JSON.stringify(v);
+      var b64 = btoa(unescape(encodeURIComponent(json)));
+      return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch (_) { return ''; }
+  }
+
   /* resolve the share URL from the opts shape */
   function buildURL(opts) {
     opts = opts || {};
@@ -43,6 +52,14 @@
     if (opts.join != null && opts.join !== '') return origin + '/?join=' + opts.join;
     if (opts.game) {
       var u = origin + '/?game=' + encodeURIComponent(opts.game);
+      // `picks` = the universal-picker multi-source selection ([{id, levelIds}]),
+      // reproduced verbatim by the boot deep-link handler in app.js. Takes
+      // precedence over the single-dataset ds/levels shape.
+      if (opts.picks && opts.picks.length) {
+        var enc = _b64urlJSON(opts.picks);
+        if (enc) u += '&picks=' + enc;
+        return u;
+      }
       if (opts.ds)     u += '&ds=' + encodeURIComponent(opts.ds);
       if (opts.levels) u += '&levels=' + encodeURIComponent(opts.levels);
       return u;

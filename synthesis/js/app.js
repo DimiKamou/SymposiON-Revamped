@@ -546,13 +546,34 @@ function boot(){
   // launch with whatever the launcher passes). Mirrors the ?join= handler.
   try {
     var _q = new URLSearchParams(location.search);
-    var _g = _q.get('game'), _ds = _q.get('ds'), _lv = _q.get('levels');
-    if (_g && _ds && _lv && window.SymMix && typeof window.launchEngineWithBank === 'function'
+    var _g = _q.get('game'), _ds = _q.get('ds'), _lv = _q.get('levels'), _picks = _q.get('picks');
+    var _inj = (_g && window.SymMix && window.SymMix.ENGINE_INJECTION && window.SymMix.ENGINE_INJECTION[_g]) || null;
+    // (a) VS multi-source share (?game=&picks=<base64url JSON of [{id,levelIds}]>):
+    //     a scanned VS QR opens the EXACT same content mix via SymMix.bankMulti.
+    if (_g && _picks && window.SymMix && typeof window.SymMix.bankMulti === 'function'
+        && typeof window.injectBankAndLaunch === 'function'
+        && window.SYN_GAMES && window.SYN_GAMES[_g]) {
+      try {
+        var _b = _picks.replace(/-/g, '+').replace(/_/g, '/');
+        while (_b.length % 4) _b += '=';
+        var _sel = JSON.parse(decodeURIComponent(escape(atob(_b))));
+        if (Array.isArray(_sel) && _sel.length) {
+          setTimeout(function () {
+            try {
+              Promise.resolve(window.SymMix.bankMulti(_sel)).then(function (qs) {
+                window.injectBankAndLaunch(_g, _inj, qs || [], '');
+              });
+            } catch (_) {}
+          }, 0);
+        }
+      } catch (_) {}
+    }
+    // (b) single-dataset share (?game=&ds=&levels=<csv>) — the original shape.
+    else if (_g && _ds && _lv && window.SymMix && typeof window.launchEngineWithBank === 'function'
         && window.SYN_GAMES && window.SYN_GAMES[_g]) {
       var _ids = _lv.split(',').map(function (s) { var n = parseInt(s, 10); return isNaN(n) ? s.trim() : n; })
                     .filter(function (v) { return v !== '' && v != null; });
       if (_ids.length) {
-        var _inj = (window.SymMix.ENGINE_INJECTION && window.SymMix.ENGINE_INJECTION[_g]) || null;
         setTimeout(function () { try { window.launchEngineWithBank(_g, _inj, _ds, _ids, ''); } catch (_) {} }, 0);
       }
     }
