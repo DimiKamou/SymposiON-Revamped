@@ -37,6 +37,7 @@
     $$('.meander').forEach(m=>{ m.style.backgroundImage = SYM.meanderBG('#74601C'); });
 
     if(window.MT) MT.init(course);   // AI methods must know the course before the hub renders its §Γ
+    if(window.AIGEN) AIGEN.init(course); // AI source generator
     if(window.TT) TT.init(course);   // timed exams (§Δ)
     HUB.init(course, unit);
   }
