@@ -50,6 +50,9 @@ function _latnFilter(subs) {
 }
 
 let _latnMode = 'mc', _latnState = null, _latnLastSelIds = [];
+const LATN_MIX_POOL=['mc','fi'];
+const LATN_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _latnCurMode='mc';
 
 function _latnBuild() {
   document.getElementById('latn-wrap').innerHTML = `
@@ -75,6 +78,7 @@ function _latnBuild() {
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="latn-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="latnOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -180,6 +184,7 @@ function latnOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: latnLaunch, onClose: closeLatNouns });
 }
@@ -260,8 +265,12 @@ function latnNext() {
   if (!ans||ans==='-') { latnNext(); return; }
   _latnState.curr = { n, isSg, cIdx, ans };
   const qt = `<div class="lq-main" style="font-size:1.15rem;text-align:center;margin-bottom:8px;"><em>${n.l}</em></div><div class="lq-tags"><span class="lq-tag voice">${LAT_N_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span><span class="lq-tag mood">${_LATN_DECL(n)}</span><span class="lq-tag gender">${_LATN_GEND[n.t]||n.t}</span></div>`;
-  document.getElementById('latn-q').innerHTML = qt;
-  if (_latnMode==='mc') {
+  _latnCurMode = (_latnMode==='mix') ? LATN_MIX_POOL[Math.floor(Math.random()*LATN_MIX_POOL.length)] : _latnMode;
+  document.getElementById('latn-mc-area').style.display=_latnCurMode==='mc'?'grid':'none';
+  document.getElementById('latn-fi-area').style.display=_latnCurMode==='fi'?'block':'none';
+  const _mixChip = (_latnMode==='mix') ? `<div class="gram-mixchip">🎲 ${LATN_MIX_LABELS[_latnCurMode]||''}</div>` : '';
+  document.getElementById('latn-q').innerHTML = _mixChip + qt;
+  if (_latnCurMode==='mc') {
     const grid = document.getElementById('latn-mc-area'); grid.innerHTML = '';
     _latnGenOpts(n,isSg,cIdx,ans).forEach(opt => {
       const b = document.createElement('button'); b.className='lopt-btn'; b.textContent=opt;

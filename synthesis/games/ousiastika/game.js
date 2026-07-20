@@ -78,6 +78,10 @@ function _ousFilterNouns(subs){
 }
 
 let _ousMode='mc';
+// MIX: random single-question style per question (this game offers mc + fi).
+const OUS_MIX_POOL=['mc','fi'];
+const OUS_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _ousCurMode='mc';
 let _ousState=null;
 let _ousLastSelIds=[];
 
@@ -105,6 +109,7 @@ function _ousBuild(){
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="ous-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="ousOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -220,6 +225,7 @@ function ousOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε την κατάληξη'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix',   label:'MIX — Ανάμεικτο',  hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: ousLaunch,
     onClose: closeOusiastika,
@@ -328,9 +334,14 @@ function ousNext(){
   const caseLabel=(isEn?OUS_CASES_EN:OUS_CASES)[cIdx];
   const numLabel=isEn?(isSg?'Singular':'Plural'):(isSg?'Ενικός':'Πληθυντικός');
   const genderLabel=isEn?{αρσενικό:'Masc.',θηλυκό:'Fem.',ουδέτερο:'Neut.'}[n.t]||n.t:n.t;
-  const qt=`<div class="lq-main" style="font-size:1.2rem;text-align:center;margin-bottom:8px;"><em>${n.l}</em></div><div class="lq-tags"><span class="lq-tag voice">${caseLabel}</span><span class="lq-tag tense">${numLabel}</span><span class="lq-tag mood">${dl}</span><span class="lq-tag gender">${genderLabel}</span></div>`;
+  // MIX: pick this question's style, flip the mc/fi areas to match.
+  _ousCurMode = (_ousMode==='mix') ? OUS_MIX_POOL[Math.floor(Math.random()*OUS_MIX_POOL.length)] : _ousMode;
+  document.getElementById('ous-mc-area').style.display=_ousCurMode==='mc'?'grid':'none';
+  document.getElementById('ous-fi-area').style.display=_ousCurMode==='fi'?'block':'none';
+  const _mixChip = (_ousMode==='mix') ? `<div class="gram-mixchip">🎲 ${OUS_MIX_LABELS[_ousCurMode]||''}</div>` : '';
+  const qt=_mixChip+`<div class="lq-main" style="font-size:1.2rem;text-align:center;margin-bottom:8px;"><em>${n.l}</em></div><div class="lq-tags"><span class="lq-tag voice">${caseLabel}</span><span class="lq-tag tense">${numLabel}</span><span class="lq-tag mood">${dl}</span><span class="lq-tag gender">${genderLabel}</span></div>`;
   document.getElementById('ous-q').innerHTML=qt;
-  if(_ousMode==='mc'){
+  if(_ousCurMode==='mc'){
     const grid=document.getElementById('ous-mc-area');grid.innerHTML='';
     _ousGenOptions(n,isSg,cIdx,ans).forEach(opt=>{
       const b=document.createElement('button');b.className='lopt-btn';b.textContent=opt;b.onclick=()=>ousAnswer(opt);grid.appendChild(b);
@@ -338,7 +349,7 @@ function ousNext(){
   }else{
     const inp=document.getElementById('ous-fi-input');if(inp){inp.value='';inp.disabled=false;inp.style.borderColor='#7a6030';inp.focus();}
     document.getElementById('ous-fi-submit').disabled=false;
-    _gramDiac['ous']=null;document.querySelectorAll('#ous-diac-row .lpoly-dkey').forEach(b=>b.classList.remove('ldkey-active'));gramRenderVowels('ous');
+    gramClearDiacritics('ous');document.querySelectorAll('#ous-diac-row .lpoly-dkey').forEach(b=>b.classList.remove('ldkey-active'));gramRenderVowels('ous');
   }
 }
 

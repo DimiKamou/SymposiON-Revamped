@@ -21,6 +21,9 @@ const LATV_LEVEL_GROUPS = [
 ];
 
 let _latvMode = 'mc', _latvState = null, _latvLastSelPacks = [];
+const LATV_MIX_POOL=['mc','fi'];
+const LATV_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _latvCurMode='mc';
 
 function _latvBuild() {
   document.getElementById('latv-wrap').innerHTML = `
@@ -45,6 +48,7 @@ function _latvBuild() {
           <option value="" disabled selected>— τρόπος —</option>
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="latv-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="latvOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -142,6 +146,7 @@ function latvOpenSettings(){
     modes:[
       {id:'mc', label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi', label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: latvLaunch, onClose: closeLatVerbs });
 }
@@ -185,8 +190,11 @@ function latvNext(){
   const tenseLabel=_latvKeyLabel(item.key);
   const person=LAT_V_PERSONS[item.pi];
   const qt=`<div class="lq-main" style="font-size:1.1rem;text-align:center;margin-bottom:8px;"><em>${item.verb.inf}</em> <span style="color:#8a7a60;font-size:.85em;">(${item.verb.meaning})</span></div><div class="lq-tags"><span class="lq-tag voice">${tenseLabel}</span><span class="lq-tag tense">${person}</span><span class="lq-tag mood">${conj}</span></div>`;
-  document.getElementById('latv-q').innerHTML=qt;
-  if(_latvMode==='mc'){
+  _latvCurMode=(_latvMode==='mix')?LATV_MIX_POOL[Math.floor(Math.random()*LATV_MIX_POOL.length)]:_latvMode;
+  document.getElementById('latv-mc-area').style.display=_latvCurMode==='mc'?'grid':'none';
+  document.getElementById('latv-fi-area').style.display=_latvCurMode==='fi'?'block':'none';
+  const _mixChip=(_latvMode==='mix')?`<div class="gram-mixchip">🎲 ${LATV_MIX_LABELS[_latvCurMode]||''}</div>`:'';document.getElementById('latv-q').innerHTML=_mixChip+qt;
+  if(_latvCurMode==='mc'){
     const grid=document.getElementById('latv-mc-area');grid.innerHTML='';
     _latvGenOpts(item).forEach(opt=>{
       const b=document.createElement('button');b.className='lopt-btn';b.textContent=opt;b.onclick=()=>latvAnswer(opt);grid.appendChild(b);

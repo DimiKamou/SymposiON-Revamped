@@ -41,6 +41,9 @@ function _lateFilter(subs) {
 }
 
 let _lateMode='mc', _lateState=null, _lateLastSelIds=[];
+const LATE_MIX_POOL=['mc','fi'];
+const LATE_MIX_LABELS={mc:'Πολλαπλή Επιλογή',fi:'Συμπλήρωση Κενού'};
+let _lateCurMode='mc';
 
 function _lateBuild(){
   document.getElementById('late-wrap').innerHTML=`
@@ -66,6 +69,7 @@ function _lateBuild(){
           <option value="mc">Πολλ. Επιλογή</option>
           <option value="fi">Συμπλήρωση</option>
           <option value="match">🔗 Αντιστοίχιση</option>
+          <option value="mix">🎲 MIX</option>
         </select>
       </div>
       <button id="late-start-btn" class="lbtn lbtn-primary" style="opacity:.5;pointer-events:none;" onclick="lateOpenSettings()">✓ Διάλεξε επίπεδο →</button>
@@ -154,6 +158,7 @@ function lateOpenSettings(){
       {id:'mc',    label:'Πολλαπλή Επιλογή', hint:'Επίλεξε από 4 επιλογές'},
       {id:'fi',    label:'Συμπλήρωση Κενού', hint:'Γράψε τον τύπο'},
       {id:'match', label:'Αντιστοίχιση',     hint:'Αντιστοίχισε τύπο με μορφή'},
+      {id:'mix', label:'MIX — Ανάμεικτο', hint:'Τυχαίο στυλ σε κάθε ερώτηση'},
     ],
     onLaunch: lateLaunch, onClose: closeLatEpitheta });
 }
@@ -215,6 +220,10 @@ const _LATE_GEND={αρσενικό:'m.',θηλυκό:'f.',ουδέτερο:'n.'}
 function lateNext(){
   _lateState.answering=false;
   const fb=document.getElementById('late-fb');if(fb){fb.textContent='';fb.className='lfeedback';}
+  _lateCurMode=(_lateMode==='mix')?LATE_MIX_POOL[Math.floor(Math.random()*LATE_MIX_POOL.length)]:_lateMode;
+  document.getElementById('late-mc-area').style.display=_lateCurMode==='mc'?'grid':'none';
+  document.getElementById('late-fi-area').style.display=_lateCurMode==='fi'?'block':'none';
+  const _mixChip=(_lateMode==='mix')?`<div class="gram-mixchip">🎲 ${LATE_MIX_LABELS[_lateCurMode]||''}</div>`:'';
   if(_lateState.isDegrees){_lateNextDegrees();return;}
   let a,isSg,cIdx,ans,tries=0;
   do{
@@ -225,8 +234,8 @@ function lateNext(){
   _lateState.curr={a,isSg,cIdx,ans,isDegree:false};
   const degLabel={positive:'θετικός',comparative:'συγκριτικός',superlative:'υπερθετικός'}[a.degree]||'';
   const qt=`<div class="lq-main" style="font-size:1.1rem;text-align:center;margin-bottom:8px;"><em>${a.l}</em> <span style="color:#8a7a60;font-size:.8em;">${a.meaning}</span></div><div class="lq-tags"><span class="lq-tag voice">${LAT_A_CASES[cIdx]}</span><span class="lq-tag tense">${isSg?'Ενικός':'Πληθυντικός'}</span><span class="lq-tag mood">${_LATE_GEND[a.t]||a.t}</span>${degLabel?`<span class="lq-tag gender">${degLabel}</span>`:''}</div>`;
-  document.getElementById('late-q').innerHTML=qt;
-  if(_lateMode==='mc'){
+  document.getElementById('late-q').innerHTML=_mixChip+qt;
+  if(_lateCurMode==='mc'){
     const grid=document.getElementById('late-mc-area');grid.innerHTML='';
     _lateGenOpts(a,isSg,cIdx,ans).forEach(opt=>{const b=document.createElement('button');b.className='lopt-btn';b.textContent=opt;b.onclick=()=>lateAnswer(opt);grid.appendChild(b);});
   }else{
@@ -244,10 +253,11 @@ function _lateNextDegrees(){
   const qLabel=askComp?'Συγκριτικός':'Υπερθετικός';
   _lateState.curr={isDegree:true,row,askComp,ans:correct,qLabel};
   const qt=`<div class="lq-main" style="font-size:1.1rem;text-align:center;margin-bottom:8px;">Θετικός: <em>${row.pos}</em></div><div class="lq-tags"><span class="lq-tag voice">${qLabel}</span></div>`;
-  document.getElementById('late-q').innerHTML=qt;
+  const _mixChip=(_lateMode==='mix')?`<div class="gram-mixchip">🎲 ${LATE_MIX_LABELS[_lateCurMode]||''}</div>`:'';
+  document.getElementById('late-q').innerHTML=_mixChip+qt;
   const distractors=_lateShuffle(LAT_A_DEGREES.filter(r=>r!==row)).slice(0,3).map(r=>askComp?r.comp:r.superl);
   const opts=_lateShuffle([correct,...distractors].slice(0,4));
-  if(_lateMode==='mc'){
+  if(_lateCurMode==='mc'){
     const grid=document.getElementById('late-mc-area');grid.innerHTML='';
     opts.forEach(opt=>{const b=document.createElement('button');b.className='lopt-btn';b.textContent=opt;b.onclick=()=>lateAnswer(opt);grid.appendChild(b);});
   }else{
