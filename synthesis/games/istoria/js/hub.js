@@ -171,8 +171,14 @@
       } else {
         const blocks = (t.blocks||[]).map(b=>`${b.h?`<h4 class="read-h">${esc(b.h)}</h4>`:''}<p class="read-p">${esc(b.p)}</p>`).join('');
         const keys = (t.keypoints||[]).length ? `<div class="read-keys"><div class="rk-lab">Σημεία-κλειδιά</div><ul>${t.keypoints.map(k=>`<li>${esc(k)}</li>`).join('')}</ul></div>` : '';
-        const defs = gloss.length ? `<div class="read-defs"><div class="rd-lab">Ορισμοί — ${esc(cur?cur.t:'')}</div>${gloss.map(o=>`
-            <div class="rdef"><div class="rdef-t">${esc(o.term)}</div><div class="rdef-d">${esc(o.def||o.model||'')}</div></div>`).join('')}</div>` : '';
+        const dcard = o=>`<div class="rdef"><div class="rdef-t">${esc(o.term)}</div><div class="rdef-d">${esc(o.def||o.model||'')}</div></div>`;
+        const dgrp = (lab,arr)=> arr.length ? `<div class="rd-grp"><div class="rd-sub">${lab} <span class="rd-cnt">${arr.length}</span></div>${arr.map(dcard).join('')}</div>` : '';
+        const gBook = gloss.filter(o=>o.kind!=='expl'), gExpl = gloss.filter(o=>o.kind==='expl');
+        const defs = gloss.length ? `<div class="read-defs"><div class="rd-lab">Ορισμοί — ${esc(cur?cur.t:'')}</div>${
+            (gBook.length && gExpl.length)
+              ? dgrp('Από το σχολικό βιβλίο', gBook) + dgrp('Επεξηγηματικοί όροι', gExpl)
+              : gloss.map(dcard).join('')
+          }</div>` : '';
         body = `<article class="read-art">
             <div class="read-kick">${esc(((cur&&cur.part)?cur.part+' ':'')+((cur&&cur.code)?cur.code+'. ':''))}${esc((cur&&cur.t)||'')}</div>
             ${cur&&cur.p?`<p class="read-lead">${esc(cur.p)}</p>`:''}

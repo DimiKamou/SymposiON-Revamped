@@ -560,6 +560,11 @@ body.istoria-body{
 .rdef-t{font-family:var(--f-disp);font-weight:600;font-size:16px;color:var(--ink);}
 .dir-agon .rdef-t{color:var(--gold-lt);}
 .rdef-d{font-family:var(--f-serif);font-size:15px;line-height:1.55;color:var(--ink-soft);margin-top:3px;}
+.rd-grp{margin-top:14px;}
+.rd-grp:first-of-type{margin-top:0;}
+.rd-sub{display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone);margin:0 0 6px;}
+.rd-cnt{font-family:var(--f-mono);font-size:9.5px;color:var(--gold-dk);background:var(--wash);border:1px solid var(--hair);border-radius:20px;padding:1px 7px;}
+.dir-agon .rd-cnt{color:var(--gold);}
 @media(max-width:560px){ .read-art{padding:24px 20px 28px;} }
 
 /* ── reduced motion (the prototypes lacked this) ─────────────────────── */
