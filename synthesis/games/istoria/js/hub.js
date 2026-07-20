@@ -231,7 +231,7 @@
         <p style="font-family:var(--f-quote);font-style:italic;font-size:17px;color:var(--ink-soft);margin:0 0 6px;">Τα γεγονότα ταξινομημένα κατά μήκος της ζωφόρου, στη σωστή χρονική σειρά.</p>
         <div class="frieze"><div class="band"></div></div>
         <div class="tl-row">
-          ${ev.map((e,i)=>`<div class="tl-card"><span class="dot"></span><span class="seq">${i+1}</span><div class="yr">${e.year}</div><div class="ev">${esc(e.event)}</div></div>`).join('')}
+          ${ev.map((e,i)=>`<div class="tl-card"><span class="dot"></span><span class="seq">${i+1}</span><div class="yr">${esc(e.disp||String(e.year))}</div><div class="ev">${esc(e.event)}</div></div>`).join('')}
         </div></div>`;
     },
     tf(m){
