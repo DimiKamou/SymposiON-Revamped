@@ -268,11 +268,16 @@ Object.assign(SUBJECTS, {
       games:[ g('Η Δομή της Πρότασης','Sentence Structure','Απαρέμφατο · μετοχή · πτώσεις · αίτιο','book',{fn:'openLatSyntaxDomi'}),
               g('Οι Δευτερεύουσες Προτάσεις','Subordinate Clauses','Αιτιολογικές → ενδοιαστικές','book',{fn:'openLatSyntaxDeuterevouses'}),
               g('Ο Σύνδεσμος Cum','The Conjunction Cum','Είδη χρονικού · ιστορικός/διηγηματικός','book',{fn:'openLatSyntaxCum'}),
-              g('Γερούνδιο · Σουπίνο · Γερουνδιακό','Gerund · Supine · Gerundive','Λειτουργία & έλξη','book',{fn:'openLatSyntaxGerund'}) ] },
+              g('Γερούνδιο · Σουπίνο · Γερουνδιακό','Gerund · Supine · Gerundive','Λειτουργία & έλξη','book',{fn:'openLatSyntaxGerund'}),
+              g('Ο Πλάγιος Λόγος','Indirect Speech','Μετατροπές · ευθείες/πλάγιες ερωτήσεις','book',{fn:'openLatSyntaxPlagios'}) ] },
+    // ── Θεωρία Μορφολογίας — συμπληρωματικά μορφολογικά φαινόμενα. ──
+    { id:'gl-morph', roman:'V', illu:'column', gr:'Θεωρία Μορφολογίας', en:'Morphology Theory', sub:'Latin · Προσανατολισμού',
+      summary:{ gr:'Προστακτική, περιφραστική συζυγία, χρόνοι & ονοματικοί τύποι του ρήματος, αντωνυμικά επίθετα, παραθετικά επιρρημάτων.', en:'Imperative, periphrastic conjugation, verb tenses & nominal forms, pronominal adjectives, adverb comparison.' },
+      games:[ g('Θεωρία Μορφολογίας','Morphology Theory','Ρήμα · αντωνυμικά επίθετα · επιρρήματα','column',{fn:'openLatMorphologia'}) ] },
     // ── Κείμενα · Β΄ Λυκείου — per-Ενότητα text-analysis panels (Lectiones 1–15).
     //    Coming-soon placeholders for now; each flips to g('…',…,{fn:'openLatinTextN'})
     //    once its units/unitN.js data file lands (same textbook, contiguous with 16–50). ──
-    { id:'gl-texts-b', roman:'V', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Β΄ Λυκείου',
+    { id:'gl-texts-b', roman:'VI', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Β΄ Λυκείου',
       summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
       games:[ gSoon('Ενότητα 1','Unit 1','σύντομα','scroll'),
               gSoon('Ενότητα 2','Unit 2','σύντομα','scroll'),
@@ -290,7 +295,7 @@ Object.assign(SUBJECTS, {
               gSoon('Ενότητα 14','Unit 14','σύντομα','scroll'),
               gSoon('Ενότητα 15','Unit 15','σύντομα','scroll') ] },
     // ── Κείμενα · Γ΄ Λυκείου (Προσανατολισμού) — full per-Ενότητα panels (16–50). ──
-    { id:'gl-texts', roman:'VI', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
+    { id:'gl-texts', roman:'VII', illu:'scroll', gr:'Ανάλυση Κειμένων', en:'Text Analysis', sub:'Latin · Προσανατολισμού',
       summary:{ gr:'Πλήρης ανάλυση κάθε ενότητας: κείμενο & σύνταξη, μετάφραση, ουσιαστικά/επίθετα, παραθετικά, αντωνυμίες, ρήματα, SOS.', en:'Full per-unit analysis: text & syntax, translation, nouns/adjectives, degrees, pronouns, verbs, SOS.' },
       games:[ g('Εισαγωγή','Introduction','Ρωμαϊκή λογοτεχνία · συγγραφείς · ασκήσεις','book',{fn:'openLatinIntro'}),
               g('Ενότητα 16','Unit 16','Η τελευταία μάχη του Καίσαρα στη Γαλατία','scroll',{fn:'openLatinText16'}),
@@ -768,7 +773,7 @@ window.SYM.SUBJECT_TAGS = {
   'istoria-kat':['history'],     'latinika-c':['latin'],
   'ga-verbs':['grammar','ancient'],  'ga-nouns':['grammar','ancient'],  'ga-syntax':['grammar','ancient'],
   'gl-decl':['grammar','latin'],     'gl-verbs':['grammar','latin'],    'gl-theory':['latin'],
-  'gl-syntax':['grammar','latin'],
+  'gl-syntax':['grammar','latin'],  'gl-morph':['grammar','latin'],
   'gn-gram':['grammar','language'],  'gn-express':['composition','language'], 'gn-spell':['language'],
 };
 

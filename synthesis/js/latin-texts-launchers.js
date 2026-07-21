@@ -155,7 +155,9 @@
     'syntax-domi': 'Λατινικά · Θεωρία Συντακτικού — Η Δομή της Πρότασης',
     'syntax-deuterevouses': 'Λατινικά · Θεωρία Συντακτικού — Οι Δευτερεύουσες Προτάσεις',
     'syntax-cum': 'Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum',
-    'syntax-gerund': 'Λατινικά · Θεωρία Συντακτικού — Γερούνδιο · Σουπίνο · Γερουνδιακό'
+    'syntax-gerund': 'Λατινικά · Θεωρία Συντακτικού — Γερούνδιο · Σουπίνο · Γερουνδιακό',
+    'syntax-plagios': 'Λατινικά · Θεωρία Συντακτικού — Ο Πλάγιος Λόγος',
+    'morphologia': 'Λατινικά · Θεωρία Μορφολογίας'
   };
   function openLatSyntax(slug, title) {
     title = title || SYNTAX[slug] || 'Λατινικά · Θεωρία Συντακτικού';
@@ -196,4 +198,6 @@
   window.openLatSyntaxDeuterevouses = function () { openLatSyntax('syntax-deuterevouses'); };
   window.openLatSyntaxCum = function () { openLatSyntax('syntax-cum'); };
   window.openLatSyntaxGerund = function () { openLatSyntax('syntax-gerund'); };
+  window.openLatSyntaxPlagios = function () { openLatSyntax('syntax-plagios'); };
+  window.openLatMorphologia = function () { openLatSyntax('morphologia'); };
 })();
