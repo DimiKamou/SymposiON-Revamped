@@ -249,7 +249,6 @@
        🔵 Φάκελος Υλικού   ·   🟣 Φιλοσοφικός Λόγος   (χρώματα προσωρινά) */
   function renderSxolia(u){
     const wrap = el('div','panel'); wrap.removeAttribute('hidden');
-    wrap.appendChild(el('div','verbatim-flag','◆ Σχόλια προς αποστήθιση — αυτούσια από τα βιβλία'));
     const META = { fakelos:['sx-fakelos','Σχόλια · Φάκελος Υλικού'], filosofikos:['sx-filosofikos','Ερμηνευτικά σχόλια · Φιλοσοφικός Λόγος'] };
     ['fakelos','filosofikos'].forEach(k=>{
       const g = (u.sxolia||[]).filter(s=> (s.src==='filosofikos'?'filosofikos':'fakelos')===k );
