@@ -232,6 +232,7 @@ const NAV = [
   {id:'kikeron',n:'VI', t:'Χρόνοι Κικέρωνα'},
   {id:'augoust',n:'VII',t:'Αυγούστειοι Χρόνοι'},
   {id:'askiseis',n:'✎', t:'Ασκήσεις'},
+  {id:'paixnidi',n:'🎮', t:'Παιχνίδι'},
 ];
 
 /* Author profiles (era: 'kik' | 'aug'; genos: prose/history/poetry) */
@@ -440,6 +441,12 @@ const CONTENT = `
     <div class="controls"><button class="btn ghost" id="mtReset">Επαναφορά</button><span class="score" id="mtScore"></span></div>
   </div>
 </section>
+
+<section class="sec" id="paixnidi">
+  <h2><span class="rn">🎮</span> Παιχνίδι Εξάσκησης</h2>
+  <p style="color:var(--muted)">Τυχαίες ερωτήσεις κάθε φορά — συγγραφείς, έργα, χρονολογίες, γένη &amp; περίοδοι. Κάθε γύρος είναι διαφορετικός· δοκίμασε ξανά και ξανά!</p>
+  <div class="quiz" id="litgame"></div>
+</section>
 `;
 document.getElementById('content').innerHTML = CONTENT;
 
@@ -538,6 +545,86 @@ document.getElementById('mtReset').addEventListener('click',()=>{
   document.querySelectorAll('#mt .mtile').forEach(t=>{t.classList.remove('done','active','miss'); const b=t.querySelector('.badge'); if(b)b.remove();});
   document.getElementById('mtScore').textContent='';
 });
+
+/* ═══════════════════ ΠΑΙΧΝΙΔΙ ΕΞΑΣΚΗΣΗΣ — γεννήτρια τυχαίων ερωτήσεων ═══════════════════ */
+(function(){
+  const G = document.getElementById('litgame');
+  if(!G) return;
+  const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+  const shuffle = arr => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+  const uniq = arr => [...new Set(arr)];
+  const PERIODS = { kik:'Χρόνοι Κικέρωνα (100–40 π.Χ.)', aug:'Αυγούστειοι Χρόνοι (40 π.Χ.–14 μ.Χ.)' };
+  const GENRES = ['Πεζογραφία','Ιστοριογραφία','Ποίηση'];
+  // authors carrying at least one clean Latin work-title (for work↔author questions)
+  const titled = AUTHORS.map(a=>({a, works:a.works.filter(w=>w.la && /^[A-ZÀ-Ý]/.test(w.la) && w.la.length<42 && !/\d/.test(w.la))}))
+                        .filter(x=>x.works.length);
+  const allTitles = uniq([].concat(...titled.map(x=>x.works.map(w=>w.la))));
+
+  function genPool(){
+    const Q=[];
+    titled.forEach(({a,works})=>{
+      const w = rnd(works).la;
+      const distract = shuffle(AUTHORS.filter(x=>x.gr!==a.gr)).slice(0,3).map(x=>x.gr);
+      Q.push({ q:`Ποιος έγραψε το «${w}»;`, o:shuffle(uniq([a.gr,...distract])), ans:a.gr, ex:`${a.gr} (${a.la}).` });
+    });
+    titled.forEach(({a,works})=>{
+      const correct = rnd(works).la;
+      const others = shuffle(allTitles.filter(t=>!works.some(w=>w.la===t))).slice(0,3);
+      Q.push({ q:`Ποιο έργο έγραψε ο ${a.gr};`, o:shuffle(uniq([correct,...others])), ans:correct, ex:`${a.gr}: ${a.works.map(w=>w.la||w.gr).join(' · ')}.` });
+    });
+    AUTHORS.forEach(a=>Q.push({ q:`Σε ποιο λογοτεχνικό γένος εντάσσεται κυρίως ο ${a.gr};`, o:GENRES.slice(), ans:a.genos, ex:`${a.gr}: ${a.genos}.` }));
+    AUTHORS.forEach(a=>Q.push({ q:`Σε ποια περίοδο έδρασε ο ${a.gr};`, o:[PERIODS.kik,PERIODS.aug], ans:PERIODS[a.era], ex:`${a.gr} (${a.dt}).` }));
+    MC.forEach(m=>Q.push({ q:m.q, o:m.o.slice(), ans:m.o[m.a], ex:m.ex||'' }));
+    TF.forEach(t=>Q.push({ q:t.q, o:['Σωστό','Λάθος'], ans:t.a?'Σωστό':'Λάθος', ex:t.ex||'' }));
+    return Q;
+  }
+
+  const ROUND = 10;
+  let pool=[], idx=0, sc=0, cur=null;
+  function start(){ pool = shuffle(genPool()).slice(0, ROUND); idx=0; sc=0; delete G.dataset.done; render(); }
+  function render(){
+    if(idx>=pool.length){ return results(); }
+    cur = pool[idx]; delete G.dataset.done;
+    G.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<span class="score">Ερώτηση '+(idx+1)+' / '+pool.length+'</span>'+
+        '<span class="score big">Σκορ: '+sc+'</span></div>'+
+      '<div class="progress" style="margin:0 0 16px"><i style="width:'+(idx/pool.length*100)+'%"></i></div>'+
+      '<p class="q" style="font-size:17px;margin:0 0 14px">'+esc(cur.q)+'</p>'+
+      '<div class="opts" id="lgOpts">'+cur.o.map((op,j)=>'<div class="opt" data-j="'+j+'">'+esc(op)+'</div>').join('')+'</div>'+
+      '<div class="explain" id="lgEx">'+esc(cur.ex||'')+'</div>'+
+      '<div class="controls"><button class="btn" id="lgNext" style="display:none">Επόμενη →</button></div>';
+    G.querySelectorAll('#lgOpts .opt').forEach(o=>o.addEventListener('click',()=>{
+      if(G.dataset.done) return; G.dataset.done='1';
+      const chose = cur.o[+o.dataset.j];
+      G.querySelectorAll('#lgOpts .opt').forEach(x=>{
+        const v=cur.o[+x.dataset.j];
+        if(v===cur.ans){ x.classList.add('correct'); x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+        else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+      });
+      if(chose===cur.ans) sc++;
+      if(cur.ex) document.getElementById('lgEx').classList.add('show');
+      const nx=document.getElementById('lgNext'); nx.style.display='inline-block';
+      nx.textContent = (idx+1>=pool.length) ? 'Αποτελέσματα →' : 'Επόμενη →';
+      nx.addEventListener('click',()=>{ idx++; render(); },{once:true});
+    }));
+  }
+  function results(){
+    const pct = Math.round(sc/pool.length*100);
+    const msg = pct>=80?'Άριστα! 🏛️':pct>=50?'Καλή προσπάθεια! 💪':'Συνέχισε την εξάσκηση! 📚';
+    G.innerHTML =
+      '<div style="text-align:center;padding:10px 0">'+
+        '<div class="score big" style="font-size:34px;color:var(--wine)">'+sc+' / '+pool.length+'</div>'+
+        '<p style="color:var(--muted);margin:6px 0 16px">'+msg+'</p>'+
+        '<button class="btn" id="lgAgain">🎲 Νέος γύρος</button></div>';
+    document.getElementById('lgAgain').addEventListener('click',start);
+  }
+  G.innerHTML =
+    '<div style="text-align:center;padding:14px 0">'+
+      '<p style="margin:0 0 14px">Δέκα <b>τυχαίες</b> ερωτήσεις για τη ρωμαϊκή λογοτεχνία — κάθε γύρος διαφορετικός.</p>'+
+      '<button class="btn" id="lgStart">▶︎ Ξεκίνα</button></div>';
+  document.getElementById('lgStart').addEventListener('click',start);
+})();
 
 /* progress bar = fraction of exercises answered */
 function bump(){
