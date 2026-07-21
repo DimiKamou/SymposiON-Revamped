@@ -171,7 +171,9 @@ a{color:var(--gold-lt); text-decoration:none}
 .sec-h:first-child{margin-top:4px}
 
 .lemma{margin:0 0 14px; padding:14px 16px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius)}
-.lemma .l{font-family:var(--greek); font-size:16px; color:var(--gold-lt); margin:0 0 6px; display:block}
+.lemma .l{font-family:var(--greek); font-size:16px; font-weight:700; color:var(--gold-lt); margin:0 0 6px; display:block}
+/* bolded lemma that a comment opens with (Σχόλια Βιβλίου + Εισαγωγικά/Φάκελος) */
+.sx-lemma{font-weight:700; color:var(--gold-lt)}
 .lemma .note{font-size:14px; color:var(--txt)}
 .chips{display:flex; flex-direction:column; gap:8px; margin:0}
 .chip-note{padding:11px 14px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius-sm); font-size:13.8px}
@@ -265,6 +267,7 @@ a{color:var(--gold-lt); text-decoration:none}
   --a-interp:#7671a0;  /* muted violet */
   --a-ex:#5f8a72;      /* sage green   */
   --a-quiz:#a5726c;    /* muted clay-rose */
+  --a-lexico:#a08149;  /* bronze / ochre (etymology roots) */
   /* exercise-type accents */
   --k-omorriza:#5f8a72;
   --k-match:#5f7c90;
@@ -279,6 +282,7 @@ a{color:var(--gold-lt); text-decoration:none}
 .tab[data-accent="intro"][aria-selected="true"] {color:var(--a-intro);  box-shadow:0 -2px 0 var(--a-intro) inset}
 .tab[data-accent="interp"][aria-selected="true"]{color:var(--a-interp); box-shadow:0 -2px 0 var(--a-interp) inset}
 .tab[data-accent="ex"][aria-selected="true"]    {color:var(--a-ex);     box-shadow:0 -2px 0 var(--a-ex) inset}
+.tab[data-accent="lexico"][aria-selected="true"]{color:var(--a-lexico); box-shadow:0 -2px 0 var(--a-lexico) inset}
 .tab[data-accent="quiz"][aria-selected="true"]  {color:var(--a-quiz);   box-shadow:0 -2px 0 var(--a-quiz) inset}
 /* small colour dot on each tab */
 .tab::before{content:''; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.55; flex:none}
@@ -286,11 +290,13 @@ a{color:var(--gold-lt); text-decoration:none}
 .tab[data-accent="intro"]::before{background:var(--a-intro)}
 .tab[data-accent="interp"]::before{background:var(--a-interp)}
 .tab[data-accent="ex"]::before{background:var(--a-ex)}
+.tab[data-accent="lexico"]::before{background:var(--a-lexico)}
 .tab[data-accent="quiz"]::before{background:var(--a-quiz)}
 
 /* coloured section headings */
 .sec-h.accent-interp{color:var(--a-interp)}
 .sec-h.accent-ex{color:var(--a-ex)}
+.sec-h.accent-lexico{color:var(--a-lexico)}
 .sec-h.accent-quiz{color:var(--a-quiz)}
 .sub-h{font-family:var(--mono); font-size:11px; color:var(--muted); margin:22px 0 10px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase}
 
@@ -341,3 +347,101 @@ a{color:var(--gold-lt); text-decoration:none}
 .scope.out{color:var(--a-quiz); background:color-mix(in srgb,var(--a-quiz) 14%,transparent); border:1px solid color-mix(in srgb,var(--a-quiz) 38%,transparent)}
 .intro-note{font-size:12.5px; color:var(--muted); padding:11px 14px; margin-bottom:16px; border:1px dashed var(--border); border-radius:var(--radius-sm); background:color-mix(in srgb,var(--a-text) 6%,transparent)}
 .unit-link .n{white-space:nowrap}
+
+/* ════════ Σχόλια Βιβλίου (color-coded) + Παράλληλα Κείμενα ════════
+   🔵 Φάκελος Υλικού  ·  🟣 Φιλοσοφικός Λόγος  (χρώματα προσωρινά, αλλάζουν εύκολα) */
+:root{ --sx-fakelos:#2E6F8E; --sx-filosofikos:#7A5C9E; }
+
+.sec-h.sx-fakelos{ color:var(--sx-fakelos); }
+.sec-h.sx-filosofikos{ color:var(--sx-filosofikos); }
+.sec-h.sx-fakelos::before,
+.sec-h.sx-filosofikos::before{ content:'▦ '; font-size:14px; }
+
+.sxolio{ margin:0 0 12px; padding:14px 16px 12px 18px; border-radius:var(--radius);
+  background:var(--panel); border:1px solid var(--border-soft); border-left:4px solid var(--gold); }
+.sxolio.sx-fakelos{ border-left-color:var(--sx-fakelos);
+  background:color-mix(in srgb, var(--sx-fakelos) 6%, var(--panel)); }
+.sxolio.sx-filosofikos{ border-left-color:var(--sx-filosofikos);
+  background:color-mix(in srgb, var(--sx-filosofikos) 6%, var(--panel)); }
+.sxolio .sx-title{ font-family:var(--greek); font-size:16.5px; color:var(--gold-lt); margin-bottom:6px; font-weight:700; }
+.sxolio p{ margin:0 0 8px; font-size:14.5px; line-height:1.6; color:var(--txt); }
+.sxolio p:last-child{ margin-bottom:0; }
+
+/* Παράλληλα Κείμενα */
+.parallel{ margin:0 0 18px; padding:16px 18px; border-radius:var(--radius);
+  background:var(--panel); border:1px solid var(--border-soft); }
+.par-src{ font-family:var(--mono); font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:10px; }
+.par-intro{ font-size:13.5px; color:var(--muted); font-style:italic; margin-bottom:10px; }
+.par-text{ font-family:var(--greek); font-size:17px; line-height:1.6; color:var(--gold-lt); margin-bottom:10px; white-space:pre-line; }
+.par-mod{ font-size:14.5px; line-height:1.6; color:var(--txt); margin-bottom:8px; }
+.par-qh{ font-family:var(--serif); font-size:15px; color:var(--gold-lt); font-weight:600; margin:14px 0 8px; border-top:1px solid var(--border-soft); padding-top:12px; }
+.par-q{ margin:0 0 10px; }
+.pq{ font-size:14.5px; color:var(--txt); margin-bottom:6px; }
+.par-reveal{ font-family:var(--sans); font-size:12.5px; color:var(--sx-filosofikos); background:none; border:0;
+  cursor:pointer; padding:0; text-decoration:underline; }
+.par-reveal:hover{ color:var(--gold-lt); }
+.par-ans{ margin-top:6px; padding:11px 14px; border-radius:var(--radius-sm);
+  background:color-mix(in srgb, var(--ok) 8%, var(--panel)); border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);
+  font-size:14px; line-height:1.6; color:var(--txt); }
+
+/* ─── Ετυμολογικά — λεξικό αναφοράς (ομόρριζα + συνώνυμα/αντώνυμα) ─── */
+/* alphabet quick-filter bar */
+.etym-alpha{ display:flex; flex-wrap:wrap; gap:4px; margin:0 0 14px; }
+.etym-al{ min-width:26px; padding:4px 7px; font-family:var(--greek); font-size:14px; line-height:1;
+  background:var(--panel); color:var(--gold-lt); border:1px solid var(--border-soft); border-radius:7px; cursor:pointer; }
+.etym-al:hover{ border-color:var(--a-lexico); }
+.etym-al.active{ background:var(--a-lexico); color:#fff; border-color:var(--a-lexico); font-weight:700; }
+/* multi-column flow so the glossary needs little scrolling */
+.etym-lex{ columns:290px; column-gap:16px; margin:0 0 8px; }
+.etym-entry{ break-inside:avoid; -webkit-column-break-inside:avoid; display:inline-block; width:100%;
+  margin:0 0 14px; padding:12px 15px 11px; border-radius:var(--radius);
+  background:color-mix(in srgb, var(--a-lexico) 6%, var(--panel));
+  border:1px solid var(--border-soft); border-left:4px solid var(--a-lexico); }
+/* root / head word(s) on top (plain), stacked one below another (e.g. ὁράω / παροράω) */
+.etym-heads{ display:flex; flex-direction:column; gap:1px; }
+.etym-root{ font-family:var(--greek); font-size:17px; font-weight:600; color:var(--gold-lt); }
+/* the word(s) of the text — coloured, right below the root */
+.etym-textword{ margin-top:3px; }
+.etym-textword .grk{ font-family:var(--greek); font-size:18px; font-weight:700; color:var(--a-lexico);
+  background:color-mix(in srgb,var(--a-lexico) 13%,transparent); padding:0 5px; border-radius:5px; }
+.etym-tw-lbl{ display:inline-block; font-family:var(--mono); font-size:9px; letter-spacing:.8px; text-transform:uppercase;
+  color:var(--muted); margin-right:7px; vertical-align:middle; }
+/* when there is no separate text form, the root itself becomes the coloured anchor */
+.etym-root.hl{ font-size:19px; font-weight:700; color:var(--a-lexico);
+  background:color-mix(in srgb,var(--a-lexico) 13%,transparent); padding:0 5px; border-radius:5px; align-self:flex-start; }
+.etym-note{ font-family:var(--greek); font-size:14px; font-style:italic; color:var(--muted); margin-top:5px; }
+/* gap, then the rest of the family */
+.etym-cognates{ margin-top:9px; padding-top:9px; border-top:1px dotted color-mix(in srgb,var(--a-lexico) 30%,transparent);
+  font-size:14px; line-height:1.7; color:var(--txt); }
+.etym-synant{ margin-top:9px; display:flex; flex-wrap:wrap; gap:6px 20px; font-size:14px; color:var(--txt); }
+.etym-synant .tag{ font-family:var(--mono); font-size:10px; letter-spacing:1px; font-weight:700;
+  padding:1px 5px; border-radius:4px; margin-right:5px; }
+.etym-synant .tag.syn{ color:#3f7d63; background:color-mix(in srgb,#3f7d63 15%,transparent); }
+.etym-synant .tag.ant{ color:#b06a54; background:color-mix(in srgb,#b06a54 15%,transparent); }
+.etym-units{ margin-top:8px; font-family:var(--mono); font-size:10.5px; letter-spacing:.6px;
+  text-transform:uppercase; color:var(--muted); }
+
+/* ─── Ετυμολογικά — ΣΥΝ./ΑΝΤ. tags + units (kept) ─── */
+.etym-sa{ display:inline-block; margin-right:16px; }
+
+/* ─── colour-palette switcher (fixed, top-right) ─── */
+.pal-dock{ position:fixed; top:12px; right:14px; z-index:60; display:flex; align-items:center; gap:8px; }
+.pal-toggle{ width:38px; height:38px; border-radius:50%; border:1px solid var(--border);
+  background:var(--panel); color:var(--txt); font-size:17px; line-height:1; box-shadow:0 2px 10px rgba(40,34,24,.16); }
+.pal-toggle:hover{ border-color:var(--gold); }
+.pal-tray{ display:flex; align-items:center; gap:7px; padding:8px 11px; background:var(--panel);
+  border:1px solid var(--border); border-radius:24px; box-shadow:0 6px 20px rgba(40,34,24,.2); }
+.pal-tray[hidden]{ display:none; }
+.pal-sw{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border-soft);
+  cursor:pointer; padding:0; transition:transform .12s; }
+.pal-sw:hover{ transform:scale(1.12); }
+.pal-sw.active{ border-color:var(--gold-lt); box-shadow:0 0 0 2px var(--panel), 0 0 0 4px var(--gold-lt); }
+
+/* palette token sets (override the neutrals; --border/-soft derive via color-mix) */
+body[data-palette="papyrus"]{ --bg:#f3efe6; --panel:#fbf9f3; --panel2:#ece5d7; --gold:#928873; --gold-lt:#3c372e; --txt:#332f28; --muted:#877e6d; --fill:#463f34; --fill-ink:#f6f2e8; }
+body[data-palette="thalassa"]{ --bg:#eaf1f4; --panel:#f7fbfc; --panel2:#d8e6ec; --gold:#5f8497; --gold-lt:#22414e; --txt:#20323a; --muted:#5f7883; --fill:#2f4f5c; --fill-ink:#eef6f8; }
+body[data-palette="elia"]{ --bg:#eef2e6; --panel:#f8faf1; --panel2:#e0e6cf; --gold:#7c8a5f; --gold-lt:#37402a; --txt:#2f3327; --muted:#727a5b; --fill:#414a2f; --fill-ink:#f4f6ea; }
+body[data-palette="amethystos"]{ --bg:#f0ecf5; --panel:#faf8fd; --panel2:#e5dcee; --gold:#8974a0; --gold-lt:#3e2f52; --txt:#332b3d; --muted:#7d7189; --fill:#4a3a5c; --fill-ink:#f6f2fa; }
+body[data-palette="rodo"]{ --bg:#f6ecea; --panel:#fdf8f7; --panel2:#eddcd8; --gold:#a5726c; --gold-lt:#4e2f2c; --txt:#3a2f2e; --muted:#8b746f; --fill:#5c3a37; --fill-ink:#faf1ef; }
+body[data-palette="nyxta"]{ --bg:#1c1c22; --panel:#26262e; --panel2:#30303a; --gold:#9a8f78; --gold-lt:#e9e3d5; --txt:#e6e1d6; --muted:#9c9384; --fill:#c9bfa6; --fill-ink:#22201b; }

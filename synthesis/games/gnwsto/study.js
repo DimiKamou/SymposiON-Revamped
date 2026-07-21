@@ -103,12 +103,18 @@
       ['text','Κείμενο & Μετάφραση', ()=>renderText(u)],
       ['intro','Εισαγωγικά Σχόλια',  ()=>renderIntro(u)],
       ['interp','Ερμηνευτική',       ()=>renderInterp(u)],
+      ['sxolia','Σχόλια Βιβλίου',    ()=>renderSxolia(u)],
+      ['parallels','Παράλληλα Κείμενα', ()=>renderParallels(u)],
+      ['lexico','Ετυμολογικά',       ()=>renderLexico(u)],
       ['ex','Ασκήσεις',              ()=>renderEx(u)],
       ['quiz','Κατανόηση',           ()=>renderQuiz(u)],
     ]).filter(t=>{
       if(t[0]==='intro')  return (u.eisagogika&&u.eisagogika.length)||(u.fakelos&&u.fakelos.length);
       if(t[0]==='interp') return (u.ermineutiki&&u.ermineutiki.length)||(u.domi&&u.domi.length)||(u.yfologika&&u.yfologika.length);
-      if(t[0]==='ex')     return (u.ermineytikes&&u.ermineytikes.length)||(u.etymologika&&u.etymologika.length)||(u.etymBank&&u.etymBank.length);
+      if(t[0]==='sxolia') return u.sxolia&&u.sxolia.length;
+      if(t[0]==='parallels') return u.parallels&&u.parallels.length;
+      if(t[0]==='lexico') return (u.etymRef&&u.etymRef.length)||(u.etymBank&&u.etymBank.length)||(u.etymologika&&u.etymologika.length);
+      if(t[0]==='ex')     return (u.ermineytikes&&u.ermineytikes.length);
       if(t[0]==='quiz')   return u.quiz&&u.quiz.length;
       return true;
     });
@@ -186,19 +192,18 @@
   function block(blk){
     const note = el('div','book-note');
     if(blk.src) note.appendChild(el('span','src',esc(blk.src)));
-    (blk.paras||[blk.text||'']).forEach(p=> note.appendChild(el('p',null,esc(p))));
+    (blk.paras||[blk.text||'']).forEach(p=> note.appendChild(el('p',null,sxLemma(p))));
     return note;
   }
   function renderIntro(u){
     const wrap = el('div','panel'); wrap.removeAttribute('hidden');
     if(u.type==='intro'){
       if(u.note) wrap.appendChild(el('div','intro-note',esc(u.note)));
-    } else {
-      wrap.appendChild(el('div','verbatim-flag','◆ Αυτούσια σχόλια από το βιβλίο / Φάκελο Υλικού'));
     }
     (u.eisagogika||[]).forEach(blk=> wrap.appendChild(block(blk)));
     if(u.fakelos&&u.fakelos.length){
-      wrap.appendChild(el('h3','sec-h','Από τον Φάκελο Υλικού'));
+      wrap.appendChild(el('h3','sec-h','Πλαίσιο — Φάκελος Υλικού'));
+      wrap.appendChild(el('p','gen-hint','Σύντομη σύνοψη για το πλαίσιο της ενότητας· τα αναλυτικά, αυτούσια σχόλια βρίσκονται στην καρτέλα «Σχόλια Βιβλίου».'));
       (u.fakelos||[]).forEach(blk=> wrap.appendChild(block(blk)));
     }
     return wrap;
@@ -240,6 +245,62 @@
     return wrap;
   }
 
+  /* ── Σχόλια Βιβλίου (verbatim, χρωματικά ανά πηγή — προς αποστήθιση) ──
+     u.sxolia = [{ src:'fakelos'|'filosofikos', title?, paras:[…] }]
+       🔵 Φάκελος Υλικού   ·   🟣 Φιλοσοφικός Λόγος   (χρώματα προσωρινά) */
+  /* bold the leading lemma «λέξη(εις): …» of a σχόλιο paragraph */
+  function sxLemma(p){
+    const m = /^\s*([^:.]{1,80}?)\s*:\s+([\s\S]+)$/.exec(p);
+    if(m && /[\u0370-\u03FF\u1F00-\u1FFF]/.test(m[1]) && m[1].split(/\s+/).length<=7)
+      return '<b class="sx-lemma grk">'+esc(m[1])+'</b>: '+esc(m[2]);
+    return esc(p);
+  }
+  function renderSxolia(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+    const META = { fakelos:['sx-fakelos','Σχόλια · Φάκελος Υλικού'], filosofikos:['sx-filosofikos','Ερμηνευτικά σχόλια · Φιλοσοφικός Λόγος'] };
+    ['fakelos','filosofikos'].forEach(k=>{
+      const g = (u.sxolia||[]).filter(s=> (s.src==='filosofikos'?'filosofikos':'fakelos')===k );
+      if(!g.length) return;
+      wrap.appendChild(el('h3','sec-h '+META[k][0], META[k][1]));
+      g.forEach(s=>{
+        const box = el('div','sxolio '+META[k][0]);
+        if(s.title) box.appendChild(el('div','sx-title',esc(s.title)));
+        (s.paras||[s.text||'']).forEach(p=> box.appendChild(el('p',null,sxLemma(p))));
+        wrap.appendChild(box);
+      });
+    });
+    return wrap;
+  }
+
+  /* ── Παράλληλα Κείμενα (από τον Φάκελο Υλικού) + απαντημένες ερωτήσεις ──
+     u.parallels = [{ source, intro?, text?, mod?, questions:[{q, a}] }] */
+  function renderParallels(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+    (u.parallels||[]).forEach((p,pi)=>{
+      const card = el('div','parallel');
+      card.appendChild(el('div','par-src',esc(p.source||('Παράλληλο κείμενο '+(pi+1)))));
+      if(p.intro) card.appendChild(el('div','par-intro',esc(p.intro)));
+      if(p.text)  card.appendChild(el('div','par-text',esc(p.text)));
+      if(p.mod)   card.appendChild(el('div','par-mod',esc(p.mod)));
+      if(p.questions&&p.questions.length){
+        card.appendChild(el('div','par-qh','Ερωτήσεις'));
+        p.questions.forEach((q,qi)=>{
+          const qb = el('div','par-q');
+          qb.appendChild(el('div','pq',esc((qi+1)+'. '+(q.q||''))));
+          if(q.a){
+            const btn = el('button','par-reveal','Δες ενδεικτική απάντηση');
+            const ans = el('div','par-ans'); ans.hidden=true; ans.innerHTML = esc(q.a).replace(/\n/g,'<br>');
+            btn.onclick = ()=>{ ans.hidden=!ans.hidden; btn.textContent = ans.hidden?'Δες ενδεικτική απάντηση':'Απόκρυψη απάντησης'; };
+            qb.appendChild(btn); qb.appendChild(ans);
+          }
+          card.appendChild(qb);
+        });
+      }
+      wrap.appendChild(card);
+    });
+    return wrap;
+  }
+
   /* refresh toolbar helper */
   function refreshBar(label, onClick){
     const bar = el('div','gen-bar');
@@ -249,13 +310,13 @@
     return {bar, btn};
   }
 
-  /* ── Ασκήσεις (interpretive + generated etymology) ── */
+  /* ── Ασκήσεις (interpretive) ── */
   function renderEx(u){
     const wrap = el('div','panel'); wrap.removeAttribute('hidden');
 
-    /* Α. Ερμηνευτικές — random subset + refresh */
+    /* Ερμηνευτικές — random subset + refresh */
     if(u.ermineytikes&&u.ermineytikes.length){
-      wrap.appendChild(el('h3','sec-h accent-interp','Α. Ερμηνευτικές'));
+      wrap.appendChild(el('h3','sec-h accent-interp','Ερμηνευτικές ερωτήσεις'));
       const host = el('div');
       const N = Math.min(3, u.ermineytikes.length);
       let showAll=false;
@@ -271,10 +332,42 @@
       }
       wrap.append(bar, host); roll();
     }
+    return wrap;
+  }
 
-    /* Β. Λεξιλογικά — Ετυμολογικά: generated (refreshable) + book */
-    if((u.etymBank&&u.etymBank.length) || (u.etymologika&&u.etymologika.length)){
-      wrap.appendChild(el('h3','sec-h accent-ex','Β. Λεξιλογικά — Ετυμολογικά'));
+  /* ── Ετυμολογικά: reference lexicon (ομόρριζα + συνώνυμα/αντώνυμα) + exercises ── */
+  function renderLexico(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+
+    /* Α. Λεξικό αναφοράς — από τον Φάκελο Υλικού */
+    if(u.etymRef && u.etymRef.length){
+      wrap.appendChild(el('h3','sec-h accent-lexico','Λεξικό ενότητας — ομόρριζα & συγγενικά'));
+      wrap.appendChild(el('p','gen-hint','Επάνω η ρίζα / λέξη-αφετηρία, από κάτω με χρώμα η λέξη του κειμένου· ακολουθούν τα ομόρριζα και, όπου υπάρχουν, συνώνυμα (ΣΥΝ.) / αντώνυμα (ΑΝΤ.).'));
+      const glo = el('div','etym-lex');
+      u.etymRef.forEach(e=> glo.appendChild(etymRefBox(e, u.num)));
+      /* alphabet quick-filter: press an initial letter */
+      const present = {};
+      u.etymRef.forEach(e=>{ const L=grkInitial((e.lemmas||[])[0]); if(L) present[L]=1; });
+      const order = 'ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ';
+      const letters = Object.keys(present).sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+      const alpha = el('div','etym-alpha');
+      const mk = (lab,L)=>{
+        const b = el('button','etym-al'+(L==null?' active':''), esc(lab));
+        b.onclick = ()=>{
+          $$('.etym-al',alpha).forEach(x=>x.classList.remove('active')); b.classList.add('active');
+          $$('.etym-entry',glo).forEach(en=>{ en.style.display=(L==null||en.dataset.letter===L)?'':'none'; });
+        };
+        return b;
+      };
+      alpha.appendChild(mk('Όλα',null));
+      letters.forEach(L=> alpha.appendChild(mk(L,L)));
+      wrap.appendChild(alpha);
+      wrap.appendChild(glo);
+    }
+
+    /* Β. Ασκήσεις: generated (refreshable) + book */
+    if((u.etymBank&&u.etymBank.length>=3) || (u.etymologika&&u.etymologika.length)){
+      wrap.appendChild(el('h3','sec-h accent-lexico','Ασκήσεις λεξιλογικές — ετυμολογικές'));
     }
     if(u.etymBank&&u.etymBank.length>=3){
       const genHost = el('div');
@@ -287,6 +380,51 @@
       u.etymologika.forEach((x,i)=> wrap.appendChild(etymEx(x,i)));
     }
     return wrap;
+  }
+
+  /* first (uppercase, un-accented) Greek letter of a word, for the A–Ω filter */
+  function grkInitial(w){
+    if(!w) return '';
+    const s = String(w).normalize('NFD').replace(/[\u0300-\u036F]/g,'');
+    const m = s.match(/[\u0370-\u03FF]/);
+    return m ? m[0].toUpperCase() : '';
+  }
+
+  /* one reference box: the root / head word(s) on top, then the word(s) of the
+     text in colour below, then the cognate family and ΣΥΝ./ΑΝΤ.
+     (e.g. ὁράω / παροράω share a box). */
+  function etymRefBox(e, curNum){
+    const box = el('div','etym-entry');
+    box.dataset.letter = grkInitial((e.lemmas||[])[0]) || '';
+    const hasForms = !!(e.forms && String(e.forms).trim());
+    const heads = el('div','etym-heads');
+    (e.lemmas||[]).forEach(lm=> heads.appendChild(el('div','etym-root'+(hasForms?'':' hl')+' grk', esc(lm))));
+    box.appendChild(heads);
+    if(hasForms){
+      const tw = el('div','etym-textword');
+      tw.innerHTML = '<span class="etym-tw-lbl">στο κείμενο</span><span class="grk">'+esc(e.forms)+'</span>';
+      box.appendChild(tw);
+    }
+    if(e.note) box.appendChild(el('div','etym-note grk', esc(e.note)));
+    if(e.cognates && e.cognates.length)
+      box.appendChild(el('div','etym-cognates', esc(e.cognates.join(' · '))));
+    if((e.syn&&e.syn.length)||(e.ant&&e.ant.length)){
+      const sa = el('div','etym-synant');
+      if(e.syn&&e.syn.length){
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag syn">ΣΥΝ.</span> <span class="grk">'+esc(e.syn.join(', '))+'</span>';
+        sa.appendChild(l);
+      }
+      if(e.ant&&e.ant.length){
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag ant">ΑΝΤ.</span> <span class="grk">'+esc(e.ant.join(', '))+'</span>';
+        sa.appendChild(l);
+      }
+      box.appendChild(sa);
+    }
+    if(e.units && e.units.length){
+      const others = e.units.filter(n=> String(n)!==String(curNum));
+      if(others.length) box.appendChild(el('div','etym-units','Επίσης στις ενότ. '+others.join(', ')));
+    }
+    return box;
   }
 
   /* generate a fresh set of etymology exercises from etymBank */
@@ -484,13 +622,47 @@
 
   /* ── boot ── */
   function initSearch(){ const s=$('#search'); if(s) s.oninput=e=>{ searchQ=norm(e.target.value); applyFilters(); }; }
+
+  /* ── colour-palette switcher (top-right) ── */
+  const PAL_KEY = 'gnwsto.palette';
+  const PALETTES = [
+    ['papyrus',    'Πάπυρος',    '#f3efe6'],
+    ['thalassa',   'Θάλασσα',    '#eef4f6'],
+    ['elia',       'Ελιά',       '#f1f3e9'],
+    ['amethystos', 'Αμέθυστος',  '#f2eff6'],
+    ['rodo',       'Ρόδο',       '#f6eeec'],
+    ['nyxta',      'Νύχτα',      '#1c1c22'],
+  ];
+  function applyPalette(id){ document.body.dataset.palette = id || 'papyrus'; }
+  function buildPalette(){
+    let saved = 'papyrus';
+    try{ saved = localStorage.getItem(PAL_KEY) || 'papyrus'; }catch(e){}
+    applyPalette(saved);
+    const dock = el('div','pal-dock');
+    const toggle = el('button','pal-toggle','🎨');
+    toggle.title = 'Χρώματα'; toggle.setAttribute('aria-label','Επιλογή χρωμάτων');
+    const tray = el('div','pal-tray'); tray.hidden = true;
+    PALETTES.forEach(p=>{
+      const b = el('button','pal-sw'+(saved===p[0]?' active':''));
+      b.style.background = p[2]; b.title = p[1]; b.dataset.pal = p[0];
+      b.setAttribute('aria-label', p[1]);
+      b.onclick = ()=>{
+        applyPalette(p[0]); try{ localStorage.setItem(PAL_KEY, p[0]); }catch(e){}
+        $$('.pal-sw',tray).forEach(x=>x.classList.remove('active')); b.classList.add('active');
+      };
+      tray.appendChild(b);
+    });
+    toggle.onclick = ()=>{ tray.hidden = !tray.hidden; };
+    dock.append(toggle, tray); document.body.appendChild(dock);
+  }
+
   function boot(){
     if(!G.units.length){ $('#main').innerHTML='<p class="empty">Δεν έχουν φορτωθεί ενότητες.</p>'; return; }
     applyOverrides();
     G.units.sort((a,b)=> (a.num||0)-(b.num||0));
     G.units.forEach(u=> u.exam = (u.type==='intro') ? true : EXAM_2026.has(u.num));
     try{ examOnly = localStorage.getItem(EXAM_KEY)!=='0'; }catch(e){}  // default: exam-only
-    buildSidebar(); initSearch();
+    buildPalette(); buildSidebar(); initSearch();
     let start=null; try{ start=localStorage.getItem(LAST_KEY); }catch(e){}
     let u = (start && G.units.find(x=>x.id===start)) || G.units[0];
     if(examOnly && !u.exam) u = G.units.find(x=>x.exam) || u;
