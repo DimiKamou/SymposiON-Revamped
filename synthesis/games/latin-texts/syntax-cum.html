@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum</title>
+<link rel="stylesheet" href="fonts.css" />
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Θεωρία Συντακτικού — Ο Σύνδεσμος Cum (αυτόνομη σελίδα)
+   Ίδια παλέτα/τυπογραφία με την Εισαγωγή & τα panels ανάλυσης.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --font-display:'EB Garamond',Georgia,serif;
+  --font-body:'EB Garamond',Georgia,serif;
+  --font-ui:'Commissioner',system-ui,sans-serif;
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168);
+  --accent-soft:color-mix(in oklab, var(--accent) 12%, var(--panel));
+  --wine:oklch(0.47 0.13 20);
+  --wine-soft:color-mix(in oklab, var(--wine) 12%, var(--panel));
+  --gold:oklch(0.66 0.11 78);
+  --ok:oklch(0.55 0.13 150); --bad:oklch(0.55 0.15 25);
+  --shadow:0 14px 34px -20px rgba(20,30,20,.45);
+  --radius:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+    --muted:#9ba695; --line:#363d33;
+    --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+    --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+  --muted:#9ba695; --line:#363d33;
+  --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+  --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168); --wine:oklch(0.47 0.13 20); --gold:oklch(0.66 0.11 78);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.6; font-size:17px; -webkit-font-smoothing:antialiased}
+.wrap{display:flex; min-height:100vh; align-items:stretch}
+nav.side{width:250px; flex:0 0 250px; background:var(--panel); border-right:1px solid var(--line); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px}
+nav.side .brand{font-family:var(--font-display); font-weight:700; letter-spacing:.03em; color:var(--wine); font-size:15px; text-transform:uppercase; margin:0 0 4px}
+nav.side .sub{color:var(--muted); font-size:12.5px; margin:0 0 18px}
+nav.side a{display:flex; gap:9px; align-items:baseline; text-decoration:none; color:var(--muted); padding:8px 10px; border-radius:10px; font-size:14.5px; transition:.15s; margin-bottom:2px}
+nav.side a .n{font-family:var(--font-display); font-size:12px; color:var(--wine); min-width:20px; opacity:.8}
+nav.side a:hover{background:var(--panel2); color:var(--ink)}
+nav.side a.on{background:var(--accent-soft); color:var(--ink); font-weight:600}
+nav.side a.on .n{opacity:1}
+main{flex:1 1 auto; min-width:0; max-width:920px; margin:0 auto; padding:34px 30px 90px}
+header.hero{margin-bottom:30px}
+header.hero .kick{color:var(--wine); font-family:var(--font-display); letter-spacing:.14em; font-size:12px; text-transform:uppercase; margin-bottom:8px}
+header.hero h1{font-family:var(--font-display); font-weight:700; font-size:31px; line-height:1.15; margin:0 0 10px; color:var(--ink)}
+header.hero h1 .la{font-style:italic; color:var(--wine)}
+header.hero p.lead{color:var(--muted); font-size:16px; margin:0; max-width:64ch}
+.progress{margin-top:18px; height:7px; background:var(--panel2); border-radius:99px; overflow:hidden; border:1px solid var(--line)}
+.progress > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--wine)); transition:width .35s ease}
+section.sec{scroll-margin-top:16px; margin:38px 0; animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+section.sec > h2{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); display:flex; align-items:center; gap:12px; margin:0 0 4px; padding-bottom:12px; border-bottom:2px solid var(--line)}
+section.sec > h2 .rn{font-size:14px; color:var(--wine); border:1.5px solid color-mix(in oklab,var(--wine) 40%,transparent); border-radius:8px; padding:3px 9px; font-family:var(--font-display)}
+h3.subh{font-family:var(--font-display); font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--wine); margin:24px 0 10px}
+p{margin:0 0 13px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:16px 0}
+.callout{border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:12px; padding:14px 18px; margin:16px 0; font-size:15.5px}
+.callout.wine{border-left-color:var(--wine); background:var(--wine-soft)}
+.callout b{color:var(--ink)}
+.la{font-style:italic; color:var(--wine)}
+@media(prefers-color-scheme:dark){.la{color:var(--gold)}}
+:root[data-theme="dark"] .la{color:var(--gold)}
+:root[data-theme="light"] .la{color:var(--wine)}
+.tag{display:inline-block; font-family:var(--font-ui); font-size:12px; font-weight:600; color:var(--wine); background:var(--wine-soft); border:1px solid color-mix(in oklab,var(--wine) 25%,var(--line)); border-radius:99px; padding:1px 10px; vertical-align:middle}
+
+/* ── classification diagram (cum → έγκλιση → είδη) ── */
+.cumtree{margin:20px 0 8px}
+.cumtree .root{display:flex; justify-content:center; margin-bottom:6px}
+.cumtree .node{font-family:var(--font-display); font-weight:700; text-align:center; border-radius:12px; padding:9px 16px; border:1.5px solid var(--line); background:var(--panel)}
+.cumtree .node.cum{font-size:20px; color:var(--wine); border-color:color-mix(in oklab,var(--wine) 45%,transparent); background:var(--wine-soft)}
+.cumtree .branches{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px}
+.cumtree .limb{border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--panel2)}
+.cumtree .limb > .mood{display:block; text-align:center; font-family:var(--font-ui); font-size:12.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:10px}
+.cumtree .limb > .mood b{color:var(--ink); font-family:var(--font-display); font-size:14px; text-transform:none; letter-spacing:0}
+.cumtree .kinds{display:flex; flex-direction:column; gap:8px}
+.cumtree .kind{display:flex; align-items:center; gap:9px; background:var(--panel); border:1.5px solid var(--line); border-radius:10px; padding:8px 12px; font-size:14.5px; text-decoration:none; color:var(--ink); transition:.14s}
+.cumtree .kind:hover{border-color:var(--accent); transform:translateX(3px)}
+.cumtree .kind .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); flex:0 0 auto}
+.cumtree .kind.hist .dot{background:var(--wine)}
+.cumtree .kind b{font-family:var(--font-display)}
+
+/* ── example boxes ── */
+.exbox{border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:12px; padding:13px 16px; margin:12px 0; background:var(--panel)}
+.exbox .la{font-style:italic; color:var(--wine); font-size:16px}
+.exbox .la u{text-decoration-color:var(--accent); text-underline-offset:3px}
+.exbox .gr{color:var(--muted); font-size:15px; margin-top:4px}
+.exbox .ref{float:right; font-family:var(--font-ui); font-size:11.5px; font-weight:600; color:var(--muted); background:var(--panel2); border:1px solid var(--line); border-radius:99px; padding:1px 9px; margin-left:8px}
+.rulegrid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0}
+.rulegrid .rc{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.rulegrid .rc h4{margin:0 0 5px; font-family:var(--font-display); font-size:14.5px; color:var(--wine)}
+.rulegrid .rc p{margin:0; font-size:14px; color:var(--muted)}
+
+/* ── Exercises (identical machinery to Εισαγωγή) ── */
+.opts{display:flex; flex-direction:column; gap:8px}
+.opt{display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--line); border-radius:11px; cursor:pointer; background:var(--panel2); transition:.14s; font-size:15px}
+.opt:hover{border-color:var(--accent)}
+.opt.correct{border-color:var(--ok); background:color-mix(in oklab,var(--ok) 15%,var(--panel)); color:var(--ink)}
+.opt.wrong{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 13%,var(--panel))}
+.opt .mk{margin-left:auto; font-weight:700}
+.tf{display:flex; gap:10px}
+.tf .opt{flex:1; justify-content:center; font-family:var(--font-display); font-size:14px}
+.quiz{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:16px 0; box-shadow:var(--shadow)}
+.qitem{padding:16px 0; border-bottom:1px solid var(--line)}
+.qitem:last-child{border-bottom:0; padding-bottom:2px}
+.qitem .q{font-weight:600; margin:0 0 12px; font-size:16px}
+.qitem .q .qn{color:var(--wine); font-family:var(--font-display); margin-right:6px}
+.explain{margin-top:9px; font-size:14px; color:var(--muted); display:none; padding:9px 12px; background:var(--panel2); border-radius:9px; border-left:3px solid var(--accent)}
+.explain.show{display:block; animation:fade .3s ease both}
+.match{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.match .col{display:flex; flex-direction:column; gap:8px}
+.match .col h5{margin:0 0 3px; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-family:var(--font-display)}
+.mtile{padding:10px 13px; border:1.5px solid var(--line); border-radius:11px; background:var(--panel2); cursor:pointer; transition:.14s; font-size:14.5px}
+.mtile .la{font-style:italic}
+.mtile:hover{border-color:var(--accent)}
+.mtile.active{border-color:var(--wine); background:var(--wine-soft); box-shadow:0 0 0 2px color-mix(in oklab,var(--wine) 30%,transparent)}
+.mtile.done{cursor:default; opacity:.62}
+.mtile.done .badge{float:right; font-family:var(--font-display); font-size:12px; color:var(--wine)}
+.mtile.miss{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 12%,var(--panel))}
+.controls{display:flex; gap:10px; align-items:center; margin-top:16px; flex-wrap:wrap}
+button.btn{font-family:inherit; font-size:14.5px; padding:9px 18px; border-radius:11px; border:1.5px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; transition:.15s; font-weight:600}
+button.btn.ghost{background:transparent; color:var(--accent)}
+button.btn.ghost:hover{background:var(--accent-soft)}
+.score{font-family:var(--font-display); font-weight:700; color:var(--wine)}
+.score.big{font-size:16px}
+.toTop{position:fixed; right:20px; bottom:20px; width:44px; height:44px; border-radius:50%; background:var(--wine); color:#fff; border:none; cursor:pointer; box-shadow:var(--shadow); font-size:19px; opacity:0; pointer-events:none; transition:.25s}
+.toTop.show{opacity:1; pointer-events:auto}
+.footnote{color:var(--muted); font-size:13px; margin-top:30px; padding-top:16px; border-top:1px solid var(--line)}
+@media (max-width:880px){
+  .wrap{flex-direction:column}
+  nav.side{position:static; width:100%; height:auto; border-right:0; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:4px; padding:12px}
+  nav.side .brand,nav.side .sub{width:100%}
+  nav.side a{padding:6px 10px; font-size:13px}
+  main{padding:22px 16px 80px}
+  .cumtree .branches,.rulegrid,.match{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="side" id="nav"></nav>
+  <main id="main">
+    <header class="hero">
+      <div class="kick">Λατινικά · Θεωρία Συντακτικού</div>
+      <h1>Ο Σύνδεσμος <span class="la">Cum</span></h1>
+      <p class="lead">Ο <span class="la">cum</span> άλλοτε είναι πρόθεση (πάντα με οργανική αφαιρετική) κι άλλοτε υποτακτικός σύνδεσμος. Εδώ τον μελετάμε ως <b>χρονικό σύνδεσμο</b>: πώς διακρίνεται ανάλογα με την έγκλιση και τι δηλώνει το κάθε είδος.</p>
+      <div class="progress"><i id="pbar"></i></div>
+    </header>
+    <div id="content"></div>
+    <p class="footnote">Θεωρία Συντακτικού · Λατινικά Γ΄ Λυκείου — παραδείγματα από τα σχολικά κείμενα (ο αριθμός σε παρένθεση δηλώνει το κείμενο).</p>
+  </main>
+</div>
+<button class="toTop" id="toTop" title="Πάνω">↑</button>
+
+<script>
+/* ═══════════════════ ΔΕΔΟΜΕΝΑ ═══════════════════ */
+const NAV = [
+  {id:'eisagogi', n:'I',  t:'Εισαγωγή'},
+  {id:'katharos', n:'II', t:'Καθαρά Χρονικός'},
+  {id:'epanal',   n:'III',t:'Επαναληπτικός'},
+  {id:'antistr',  n:'IV', t:'Αντίστροφος'},
+  {id:'istorikos',n:'V',  t:'Ιστορικός / Διηγηματικός'},
+  {id:'askiseis', n:'✎',  t:'Ασκήσεις'},
+];
+
+const TF = [
+  {q:'Ο χρονικός cum, όταν εκφέρεται με οριστική, διακρίνεται σε καθαρά χρονικό, επαναληπτικό και αντίστροφο.', a:true},
+  {q:'Ο ιστορικός / διηγηματικός cum εκφέρεται με οριστική.', a:false, ex:'Εκφέρεται με ΥΠΟΤΑΚΤΙΚΗ (παρατατικού για το σύγχρονο, υπερσυντελίκου για το προτερόχρονο).'},
+  {q:'Ο αντίστροφος cum (cum inversum) αναφέρεται μόνο στο παρελθόν.', a:true, ex:'Εκφέρεται με οριστική παρακειμένου (συχνά με repente), ενώ η κύρια έχει παρατατικό/υπερσυντέλικο (vix, aegre).'},
+  {q:'Ο καθαρά χρονικός cum χρησιμοποιείται μόνο για το παρελθόν.', a:false, ex:'Χρησιμοποιείται και για τις τρεις χρονικές βαθμίδες: παρελθόν, παρόν και μέλλον.'},
+  {q:'Ο σύνδεσμος quotiescumque ισοδυναμεί με τον επαναληπτικό cum.', a:true},
+  {q:'Στον ιστορικό / διηγηματικό cum η υποτακτική τονίζει τον υποκειμενικό χαρακτήρα και μια βαθύτερη σχέση αιτίου–αιτιατού με την κύρια.', a:true},
+];
+const MC = [
+  {q:'Με ποια έγκλιση εκφέρεται ο ιστορικός / διηγηματικός cum;',
+   o:['Οριστική παρακειμένου','Υποτακτική παρατατικού & υπερσυντελίκου','Οριστική ενεστώτα','Προστακτική'], a:1,
+   ex:'Παρατατικού για πράξη σύγχρονη, υπερσυντελίκου για πράξη προτερόχρονη.'},
+  {q:'Το επίρρημα repente (ξαφνικά) χαρακτηρίζει κυρίως ποιο είδος cum;',
+   o:['Καθαρά χρονικό','Επαναληπτικό','Αντίστροφο (cum inversum)','Ιστορικό'], a:2},
+  {q:'Ως πρόθεση ο cum εκφέρεται πάντα με:',
+   o:['αιτιατική','οργανική αφαιρετική','γενική','δοτική'], a:1},
+  {q:'Ο επαναληπτικός cum + οριστική παρατατικού ή υπερσυντελίκου δηλώνει αόριστη επανάληψη:',
+   o:['στο παρόν–μέλλον','στο παρελθόν','μόνο στο μέλλον','ανεξαρτήτως χρόνου'], a:1,
+   ex:'Ενεστώτας/μέλλοντας → παρόν-μέλλον· παρατατικός/υπερσυντέλικος → παρελθόν.'},
+  {q:'Η κύρια πρόταση στον αντίστροφο cum συνοδεύεται συνήθως από τα επιρρήματα:',
+   o:['vix, aegre (μόλις)','iam, nunc','saepe, semper','repente'], a:0,
+   ex:'vix/aegre στην κύρια (παρατ./υπερσ.)· repente στη δευτερεύουσα (οριστ. παρακειμένου).'},
+];
+/* Matching: είδος cum → διακριτικό γνώρισμα */
+const MATCH = [
+  {l:'Καθαρά χρονικός', r:'και για τις 3 χρονικές βαθμίδες · οριστική'},
+  {l:'Επαναληπτικός', r:'αόριστη επανάληψη · = quotiescumque'},
+  {l:'Αντίστροφος', r:'αιφνίδιο γεγονός · repente · μόνο παρελθόν'},
+  {l:'Ιστορικός / διηγηματικός', r:'υποτακτική · σχέση αιτίου–αιτιατού'},
+  {l:'Cum (πρόθεση)', r:'πάντα με οργανική αφαιρετική'},
+];
+
+/* ═══════════════════ RENDER ═══════════════════ */
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function ex(la, gr, ref){
+  return `<div class="exbox"><div class="la">${ref?`<span class="ref">κείμ. ${ref}</span>`:''}${la}</div><div class="gr">${esc(gr)}</div></div>`;
+}
+
+const CONTENT = `
+<section class="sec" id="eisagogi">
+  <h2><span class="rn">I</span> Εισαγωγή — Δύο ρόλοι του <span class="la" style="font-size:.9em">cum</span></h2>
+  <div class="card">
+    <p>Ο <span class="la">cum</span> εμφανίζεται με δύο ρόλους:</p>
+    <div class="rulegrid">
+      <div class="rc"><h4>Ως πρόθεση</h4><p>Εκφέρεται <b>πάντα με οργανική αφαιρετική</b> (π.χ. <span class="la">cum amicis</span> = με τους φίλους).</p></div>
+      <div class="rc"><h4>Ως υποτακτικός σύνδεσμος</h4><p>Χρονικός, αιτιολογικός ή εναντιωματικός. Εδώ τον μελετάμε <b>ως χρονικό</b>.</p></div>
+    </div>
+  </div>
+
+  <h3 class="subh">Η διάκριση με μια ματιά</h3>
+  <div class="cumtree">
+    <div class="root"><div class="node cum">cum <span style="font-size:13px;font-weight:400">(χρονικός)</span></div></div>
+    <div class="branches">
+      <div class="limb">
+        <span class="mood">εκφέρεται με <b>ΟΡΙΣΤΙΚΗ</b></span>
+        <div class="kinds">
+          <a class="kind" href="#katharos"><span class="dot"></span><b>Καθαρά χρονικός</b></a>
+          <a class="kind" href="#epanal"><span class="dot"></span><b>Επαναληπτικός</b></a>
+          <a class="kind" href="#antistr"><span class="dot"></span><b>Αντίστροφος</b> <span style="color:var(--muted)">(cum inversum)</span></a>
+        </div>
+      </div>
+      <div class="limb">
+        <span class="mood">εκφέρεται με <b>ΥΠΟΤΑΚΤΙΚΗ</b></span>
+        <div class="kinds">
+          <a class="kind hist" href="#istorikos"><span class="dot"></span><b>Ιστορικός / διηγηματικός</b></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="katharos">
+  <h2><span class="rn">II</span> Καθαρά Χρονικός <span class="tag">οριστική</span></h2>
+  <div class="card">
+    <p>Χρησιμοποιείται και για τις <b>τρεις χρονικές βαθμίδες</b> (παρελθόν, παρόν, μέλλον) και προσδιορίζει <b>χρονικά</b> την πράξη ή την κατάσταση που περιγράφει η πρόταση εξάρτησης (συνήθως η κύρια).</p>
+    ${ex('Cur, <u>cum</u> in conspectu Roma <u>fuit</u>, tibi non succurrit?', 'Γιατί, όταν αντίκρισες τη Ρώμη, δεν σου πέρασε από το μυαλό;', '43')}
+    <div class="callout">Εμφανίζεται και στα κείμενα <b>8, 43, 44</b>.</div>
+  </div>
+</section>
+
+<section class="sec" id="epanal">
+  <h2><span class="rn">III</span> Επαναληπτικός <span class="tag">οριστική</span></h2>
+  <div class="card">
+    <p>Εκφράζει <b>αόριστη επανάληψη</b> (όπως οι υποθετικοί λόγοι της αρχαίας ελληνικής). Η βαθμίδα κρίνεται από τον χρόνο της οριστικής:</p>
+    <div class="rulegrid">
+      <div class="rc"><h4>Παρόν – μέλλον</h4><p><span class="la">cum</span> + οριστική <b>ενεστώτα / μέλλοντα</b></p></div>
+      <div class="rc"><h4>Παρελθόν</h4><p><span class="la">cum</span> + οριστική <b>παρατατικού / υπερσυντελίκου</b></p></div>
+    </div>
+    ${ex('<u>Cum</u> civitas bellum <u>gerit</u>…', 'Κάθε φορά που η πολιτεία διεξάγει πόλεμο…', '15')}
+    ${ex('<u>Cum</u> illa cubiculum mariti <u>intraverat</u>…', 'Κάθε φορά που εκείνη έμπαινε στην κρεβατοκάμαρα του συζύγου…', '23')}
+    <div class="callout wine">Ο σύνδεσμος <span class="la">quotiescumque</span> ισοδυναμεί με τον επαναληπτικό <span class="la">cum</span>.<br>
+      ${ex('<u>Quotiescumque</u> avis non <u>respondebat</u>…', 'Κάθε φορά που το πουλί δεν απαντούσε…', '29').replace(/margin:12px 0/,'margin:10px 0 0')}
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="antistr">
+  <h2><span class="rn">IV</span> Αντίστροφος <span class="tag">cum inversum</span></h2>
+  <div class="card">
+    <p>Δηλώνει το <b>αιφνίδιο γεγονός</b> και αναφέρεται <b>μόνο στο παρελθόν</b>.</p>
+    <div class="rulegrid">
+      <div class="rc"><h4>Δευτερεύουσα (cum)</h4><p>οριστική <b>παρακειμένου</b>, συχνά με το επίρρημα <span class="la">repente</span> (ξαφνικά)</p></div>
+      <div class="rc"><h4>Κύρια</h4><p>οριστική <b>παρατατικού / υπερσυντελίκου</b>, με επιρρήματα <span class="la">vix, aegre</span> (μόλις και μετά βίας)</p></div>
+    </div>
+    <p>Από άποψη χρονικής βαθμίδας εκφράζει πάντα το <b>υστερόχρονο</b>. Λέγεται «αντίστροφος» γιατί, λογικά, θα έπρεπε οι ρόλοι να είναι αντεστραμμένοι — η κύρια να είναι χρονική και η χρονική κύρια.</p>
+    ${ex('Ibi vix … dederat, <u>cum repente apparuit</u> ei species horrenda.', 'Εκεί μόλις είχε παραδώσει…, (όταν) ξαφνικά εμφανίστηκε μπροστά του μια φρικτή μορφή.', '14')}
+  </div>
+</section>
+
+<section class="sec" id="istorikos">
+  <h2><span class="rn">V</span> Ιστορικός / Διηγηματικός <span class="tag" style="color:#fff;background:var(--wine);border-color:var(--wine)">υποτακτική</span></h2>
+  <div class="card">
+    <p>Χρησιμοποιείται για τις <b>διηγήσεις του παρελθόντος</b> και εκφέρεται με <b>υποτακτική</b>:</p>
+    <div class="rulegrid">
+      <div class="rc"><h4>Πράξη σύγχρονη</h4><p>υποτακτική <b>παρατατικού</b></p></div>
+      <div class="rc"><h4>Πράξη προτερόχρονη</h4><p>υποτακτική <b>υπερσυντελίκου</b></p></div>
+    </div>
+    <p>Υπογραμμίζει τη <b>βαθύτερη σχέση</b> της δευτερεύουσας χρονικής με την κύρια, δημιουργώντας ανάμεσά τους μια σχέση <b>αιτίου και αιτιατού</b>. Η υποτακτική τονίζει τον <b>υποκειμενικό χαρακτήρα</b> της πρότασης.</p>
+    ${ex('Ego, <u>cum</u> te <u>quaererem</u>, ancillae tuae credidi…', 'Εγώ, όταν σε ζητούσα, πίστεψα την υπηρέτριά σου…', '24')}
+    ${ex('<u>Cum</u> omnes recentem esse <u>dixissent</u>, inquit…', 'Όταν όλοι απάντησαν ότι είναι φρέσκο, είπε…', '25')}
+  </div>
+</section>
+
+<section class="sec" id="askiseis">
+  <h2><span class="rn">✎</span> Ασκήσεις</h2>
+  <p style="color:var(--muted)">Δοκίμασε τον εαυτό σου. Οι απαντήσεις ελέγχονται αμέσως και κρατείται σκορ.</p>
+  <h3 class="subh">Α. Σωστό / Λάθος</h3>
+  <div class="quiz" id="tf"></div>
+  <h3 class="subh">Β. Πολλαπλής επιλογής</h3>
+  <div class="quiz" id="mc"></div>
+  <h3 class="subh">Γ. Αντιστοίχιση είδους – γνωρίσματος</h3>
+  <div class="quiz" id="mt">
+    <p style="margin:0 0 12px;color:var(--muted);font-size:14px">Πάτησε ένα είδος <span class="la">cum</span> και μετά το γνώρισμά του.</p>
+    <div class="match"><div class="col" id="mL"><h5>Είδος</h5></div><div class="col" id="mR"><h5>Γνώρισμα</h5></div></div>
+    <div class="controls"><button class="btn ghost" id="mtReset">Επαναφορά</button><span class="score" id="mtScore"></span></div>
+  </div>
+</section>
+`;
+document.getElementById('content').innerHTML = CONTENT;
+
+document.getElementById('nav').innerHTML =
+  '<div class="brand">Ο Σύνδεσμος Cum</div><div class="sub">Θεωρία Συντακτικού</div>' +
+  NAV.map(s=>`<a href="#${s.id}" data-to="${s.id}"><span class="n">${s.n}</span>${s.t}</a>`).join('');
+
+/* ═══════════════════ INTERACTIVITY ═══════════════════ */
+let score = {tf:0, mc:0, mt:0};
+const totals = {tf:TF.length, mc:MC.length, mt:MATCH.length};
+
+document.getElementById('tf').innerHTML = TF.map((it,i)=>`
+  <div class="qitem">
+    <p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+    <div class="tf" data-i="${i}"><div class="opt" data-v="1">Σωστό</div><div class="opt" data-v="0">Λάθος</div></div>
+    <div class="explain" id="tfx${i}">${esc(it.ex||'')}</div>
+  </div>`).join('') + `<div class="controls"><span class="score big" id="tfScore">Σκορ: 0 / ${TF.length}</span></div>`;
+document.querySelectorAll('#tf .tf').forEach(row=>{
+  const i=+row.dataset.i;
+  row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+    if(row.dataset.done) return; row.dataset.done='1';
+    const chose = o.dataset.v==='1'; const correct = TF[i].a;
+    row.querySelectorAll('.opt').forEach(x=>{
+      const v = x.dataset.v==='1';
+      if(v===correct){ x.classList.add('correct'); x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+      else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+    });
+    if(chose===correct) score.tf++;
+    if(TF[i].ex) document.getElementById('tfx'+i).classList.add('show');
+    document.getElementById('tfScore').textContent = `Σκορ: ${score.tf} / ${TF.length}`;
+    bump();
+  }));
+});
+
+document.getElementById('mc').innerHTML = MC.map((it,i)=>`
+  <div class="qitem">
+    <p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+    <div class="opts" data-i="${i}">${it.o.map((op,j)=>`<div class="opt" data-j="${j}">${esc(op)}</div>`).join('')}</div>
+    <div class="explain" id="mcx${i}">${esc(it.ex||'')}</div>
+  </div>`).join('') + `<div class="controls"><span class="score big" id="mcScore">Σκορ: 0 / ${MC.length}</span></div>`;
+document.querySelectorAll('#mc .opts').forEach(row=>{
+  const i=+row.dataset.i;
+  row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+    if(row.dataset.done) return; row.dataset.done='1';
+    const j=+o.dataset.j; const a=MC[i].a;
+    row.querySelectorAll('.opt').forEach(x=>{
+      const xj=+x.dataset.j;
+      if(xj===a){ x.classList.add('correct'); x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+      else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+    });
+    if(j===a) score.mc++;
+    if(MC[i].ex) document.getElementById('mcx'+i).classList.add('show');
+    document.getElementById('mcScore').textContent = `Σκορ: ${score.mc} / ${MC.length}`;
+    bump();
+  }));
+});
+
+function shuffle(arr, seed){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ seed=(seed*9301+49297)%233280; const j=Math.floor(seed/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const rights = shuffle(MATCH.map((m,i)=>({...m,i})), 5);
+const mL=document.getElementById('mL'), mR=document.getElementById('mR');
+mL.insertAdjacentHTML('beforeend', MATCH.map((m,i)=>`<div class="mtile" data-side="L" data-i="${i}">${esc(m.l)}</div>`).join(''));
+mR.insertAdjacentHTML('beforeend', rights.map(m=>`<div class="mtile" data-side="R" data-i="${m.i}">${esc(m.r)}</div>`).join(''));
+let pick=null;
+function clearActive(){ document.querySelectorAll('#mt .mtile.active').forEach(t=>t.classList.remove('active')); }
+document.querySelectorAll('#mt .mtile').forEach(t=>t.addEventListener('click',()=>{
+  if(t.classList.contains('done')) return;
+  if(!pick){ clearActive(); pick=t; t.classList.add('active'); return; }
+  if(pick===t){ pick=null; t.classList.remove('active'); return; }
+  if(pick.dataset.side===t.dataset.side){ clearActive(); pick=t; t.classList.add('active'); return; }
+  const L = pick.dataset.side==='L'?pick:t;
+  const R = pick.dataset.side==='R'?pick:t;
+  const ok = L.dataset.i===R.dataset.i;
+  if(ok){
+    [L,R].forEach(x=>{x.classList.add('done'); x.classList.remove('active');});
+    L.insertAdjacentHTML('beforeend',' <span class="badge">✓</span>');
+    score.mt++; document.getElementById('mtScore').textContent = `Σκορ: ${score.mt} / ${MATCH.length}`;
+    if(score.mt===MATCH.length) document.getElementById('mtScore').textContent += '  — τέλεια! 🏛️';
+    bump();
+  } else {
+    [L,R].forEach(x=>{x.classList.add('miss');});
+    setTimeout(()=>{[L,R].forEach(x=>x.classList.remove('miss','active'));},550);
+  }
+  pick=null;
+}));
+document.getElementById('mtReset').addEventListener('click',()=>{
+  score.mt=0; pick=null;
+  document.querySelectorAll('#mt .mtile').forEach(t=>{t.classList.remove('done','active','miss'); const b=t.querySelector('.badge'); if(b)b.remove();});
+  document.getElementById('mtScore').textContent='';
+  bump();
+});
+
+function bump(){
+  const answered = document.querySelectorAll('#tf .tf[data-done], #mc .opts[data-done]').length + score.mt;
+  const total = totals.tf + totals.mc + totals.mt;
+  document.getElementById('pbar').style.width = Math.round(answered/total*100)+'%';
+}
+
+const links = [...document.querySelectorAll('nav.side a')];
+const secs = NAV.map(s=>document.getElementById(s.id));
+const spy = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ const id=e.target.id; links.forEach(l=>l.classList.toggle('on', l.dataset.to===id)); } });
+},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>s&&spy.observe(s));
+const toTop=document.getElementById('toTop');
+window.addEventListener('scroll',()=>toTop.classList.toggle('show', window.scrollY>500),{passive:true});
+toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>

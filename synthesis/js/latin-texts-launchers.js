@@ -148,4 +148,47 @@
     setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
   }
   window.openLatinIntro = openLatinIntro;
+
+  // Θεωρία Συντακτικού — standalone interactive syntax-theory chapters (like the Εισαγωγή).
+  // Each is a self-contained HTML page (games/latin-texts/<slug>.html) opened in the overlay.
+  var SYNTAX = {
+    'syntax-cum': 'Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum'
+    // 'syntax-domi', 'syntax-deuterevouses', 'syntax-gerund' land here as they are built.
+  };
+  function openLatSyntax(slug, title) {
+    title = title || SYNTAX[slug] || 'Λατινικά · Θεωρία Συντακτικού';
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = document.getElementById(OVID);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = OVID;
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      ov.innerHTML =
+        '<div class="overlay-topbar">' +
+          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+          '<span class="overlay-title"></span>' +
+          '<span style="width:64px;display:inline-block"></span>' +
+        '</div>' +
+        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+          '<iframe title="" allow="fullscreen" ' +
+            'style="width:100%;height:100%;border:none;display:block;background:#ecede7"></iframe>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    }
+    ov.querySelector('.overlay-title').textContent = title;
+    var fr = ov.querySelector('iframe');
+    fr.title = title;
+    fr.src = _appBase() + 'games/latin-texts/' + slug + '.html';
+    fr.addEventListener('load', function _l() {
+      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
+      fr.removeEventListener('load', _l);
+    });
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+  }
+  window.openLatSyntax = openLatSyntax;
+  window.openLatSyntaxCum = function () { openLatSyntax('syntax-cum'); };
 })();
