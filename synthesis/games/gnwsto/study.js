@@ -105,6 +105,7 @@
       ['interp','Ερμηνευτική',       ()=>renderInterp(u)],
       ['sxolia','Σχόλια Βιβλίου',    ()=>renderSxolia(u)],
       ['parallels','Παράλληλα Κείμενα', ()=>renderParallels(u)],
+      ['lexico','Ετυμολογικά',       ()=>renderLexico(u)],
       ['ex','Ασκήσεις',              ()=>renderEx(u)],
       ['quiz','Κατανόηση',           ()=>renderQuiz(u)],
     ]).filter(t=>{
@@ -112,7 +113,8 @@
       if(t[0]==='interp') return (u.ermineutiki&&u.ermineutiki.length)||(u.domi&&u.domi.length)||(u.yfologika&&u.yfologika.length);
       if(t[0]==='sxolia') return u.sxolia&&u.sxolia.length;
       if(t[0]==='parallels') return u.parallels&&u.parallels.length;
-      if(t[0]==='ex')     return (u.ermineytikes&&u.ermineytikes.length)||(u.etymologika&&u.etymologika.length)||(u.etymBank&&u.etymBank.length);
+      if(t[0]==='lexico') return (u.etymRef&&u.etymRef.length)||(u.etymBank&&u.etymBank.length)||(u.etymologika&&u.etymologika.length);
+      if(t[0]==='ex')     return (u.ermineytikes&&u.ermineytikes.length);
       if(t[0]==='quiz')   return u.quiz&&u.quiz.length;
       return true;
     });
@@ -302,13 +304,13 @@
     return {bar, btn};
   }
 
-  /* ── Ασκήσεις (interpretive + generated etymology) ── */
+  /* ── Ασκήσεις (interpretive) ── */
   function renderEx(u){
     const wrap = el('div','panel'); wrap.removeAttribute('hidden');
 
-    /* Α. Ερμηνευτικές — random subset + refresh */
+    /* Ερμηνευτικές — random subset + refresh */
     if(u.ermineytikes&&u.ermineytikes.length){
-      wrap.appendChild(el('h3','sec-h accent-interp','Α. Ερμηνευτικές'));
+      wrap.appendChild(el('h3','sec-h accent-interp','Ερμηνευτικές ερωτήσεις'));
       const host = el('div');
       const N = Math.min(3, u.ermineytikes.length);
       let showAll=false;
@@ -324,10 +326,25 @@
       }
       wrap.append(bar, host); roll();
     }
+    return wrap;
+  }
 
-    /* Β. Λεξιλογικά — Ετυμολογικά: generated (refreshable) + book */
-    if((u.etymBank&&u.etymBank.length) || (u.etymologika&&u.etymologika.length)){
-      wrap.appendChild(el('h3','sec-h accent-ex','Β. Λεξιλογικά — Ετυμολογικά'));
+  /* ── Ετυμολογικά: reference lexicon (ομόρριζα + συνώνυμα/αντώνυμα) + exercises ── */
+  function renderLexico(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+
+    /* Α. Λεξικό αναφοράς — από τον Φάκελο Υλικού */
+    if(u.etymRef && u.etymRef.length){
+      wrap.appendChild(el('h3','sec-h accent-lexico','Λεξικό ενότητας — ομόρριζα & συγγενικά'));
+      wrap.appendChild(el('p','gen-hint','Ομόρριζα / παράγωγα και, όπου υπάρχουν, συνώνυμα (ΣΥΝ.) και αντώνυμα (ΑΝΤ.), από τον Φάκελο Υλικού.'));
+      const glo = el('div','etym-lex');
+      u.etymRef.forEach(e=> glo.appendChild(etymRefBox(e, u.num)));
+      wrap.appendChild(glo);
+    }
+
+    /* Β. Ασκήσεις: generated (refreshable) + book */
+    if((u.etymBank&&u.etymBank.length>=3) || (u.etymologika&&u.etymologika.length)){
+      wrap.appendChild(el('h3','sec-h accent-lexico','Ασκήσεις λεξιλογικές — ετυμολογικές'));
     }
     if(u.etymBank&&u.etymBank.length>=3){
       const genHost = el('div');
@@ -340,6 +357,40 @@
       u.etymologika.forEach((x,i)=> wrap.appendChild(etymEx(x,i)));
     }
     return wrap;
+  }
+
+  /* one reference box: highlighted lemma(s) stacked, then the cognate family,
+     then ΣΥΝ./ΑΝΤ. if available (e.g. ὁράω / παροράω share a box). */
+  function etymRefBox(e, curNum){
+    const box = el('div','etym-entry');
+    const heads = el('div','etym-heads');
+    (e.lemmas||[]).forEach(lm=>{
+      const row = el('div','etym-lemma');
+      row.appendChild(el('span','etym-word grk', esc(lm)));
+      heads.appendChild(row);
+    });
+    if(e.note) heads.appendChild(el('span','etym-note grk', esc(e.note)));
+    box.appendChild(heads);
+    if(e.forms) box.appendChild(el('div','etym-forms grk', esc(e.forms)));
+    if(e.cognates && e.cognates.length)
+      box.appendChild(el('div','etym-cognates', esc(e.cognates.join(' · '))));
+    if((e.syn&&e.syn.length)||(e.ant&&e.ant.length)){
+      const sa = el('div','etym-synant');
+      if(e.syn&&e.syn.length){
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag syn">ΣΥΝ.</span> '+esc(e.syn.join(', '));
+        sa.appendChild(l);
+      }
+      if(e.ant&&e.ant.length){
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag ant">ΑΝΤ.</span> '+esc(e.ant.join(', '));
+        sa.appendChild(l);
+      }
+      box.appendChild(sa);
+    }
+    if(e.units && e.units.length){
+      const others = e.units.filter(n=> String(n)!==String(curNum));
+      if(others.length) box.appendChild(el('div','etym-units','Επίσης στις ενότ. '+others.join(', ')));
+    }
+    return box;
   }
 
   /* generate a fresh set of etymology exercises from etymBank */
