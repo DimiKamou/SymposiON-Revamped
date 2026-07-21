@@ -38,6 +38,42 @@
   function levelsFlat() { var out = []; G.topics.forEach(function (t) { (t.levels || []).forEach(function (l) { out.push({ level: l, group: t.group, accent: t.accent }); }); }); return out; }
   function poolFor(id) { return (G.pools[id] || []).slice(); }
 
+  /* ── variation engine ────────────────────────────────────────────────
+     Turns the authored seed questions into fresh, still-correct variants
+     each session: shuffles MC options, thins a distractor, derives
+     Σωστό/Λάθος items from MC (quoting the question + a candidate answer),
+     reshuffles match pairs. No new data; answers stay guaranteed-correct. */
+  function _varyMC(q) {
+    var opts = q.opts.slice(), correctVal = opts[q.correct];
+    var wrongs = opts.filter(function (o, i) { return i !== q.correct; });
+    // sometimes drop one distractor (4→3) for variety
+    if (opts.length >= 4 && Math.random() < 0.5) wrongs = shuffle(wrongs).slice(0, opts.length - 2);
+    var merged = shuffle(wrongs.concat([correctVal]));
+    return { type: 'mc', q: q.q, opts: merged, correct: merged.indexOf(correctVal), explain: q.explain };
+  }
+  function _deriveTF(stem, candidate, isTrue, correctVal) {
+    return { type: 'tf',
+      q: '«' + stem + '»\nΠροτεινόμενη απάντηση: «' + candidate + '».',
+      answer: isTrue,
+      explain: isTrue ? ('Σωστό — «' + candidate + '» εἶναι ἡ ὀρθὴ ἀπάντηση.')
+                      : ('Λάθος — ἡ ὀρθὴ ἀπάντηση εἶναι «' + correctVal + '».') };
+  }
+  function expandPool(base) {
+    var out = [];
+    base.forEach(function (q) {
+      if (q.type === 'mc' && q.opts && q.opts.length >= 2 && q.correct != null) {
+        out.push(_varyMC(q));
+        var correctVal = q.opts[q.correct];
+        if (Math.random() < 0.6) out.push(_deriveTF(q.q, correctVal, true, correctVal));
+        var wrongs = q.opts.filter(function (o, i) { return i !== q.correct; });
+        if (wrongs.length && Math.random() < 0.6) out.push(_deriveTF(q.q, wrongs[Math.floor(Math.random() * wrongs.length)], false, correctVal));
+      } else if (q.type === 'match' && q.pairs) {
+        out.push({ type: 'match', q: q.q, pairs: shuffle(q.pairs.slice()) });
+      } else { out.push(q); }
+    });
+    return shuffle(out);
+  }
+
   /* ── state ───────────────────────────────────────────────────────── */
   var S = { openGroup: null, sel: {}, quiz: null };
   var MOUNT = null;
@@ -164,7 +200,7 @@
   function startQuiz(ids, name) {
     var pool = [];
     ids.forEach(function (id) { poolFor(id).forEach(function (q) { pool.push(q); }); });
-    pool = shuffle(pool);
+    pool = expandPool(pool);
     if (!pool.length) { renderQuizEmpty(name); return; }
     var queue = pool.slice(0, Math.min(SESSION, pool.length));
     S.quiz = { ids: ids, name: name, queue: queue, i: 0, correct: 0, answered: false };
