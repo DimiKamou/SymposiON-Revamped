@@ -269,6 +269,7 @@ const SUBJECTS = {
     { id:'archaia-kat', roman:'III', illu:'scroll', gr:'Αρχαία Κείμενα Κατεύθυνσης', en:'Ancient Greek Texts (Advanced)', sub:'Διδαγμένο · Γνωστό',
       summary:{ gr:'Διδαγμένο κείμενο, παράλληλη μετάφραση, ερμηνεία και προσομοίωση εξετάσεων.', en:'Seen text, parallel translation, interpretation and exam simulation.' },
       games:[ g('Διδαγμένο Κείμενο','Seen Text','22 ενότητες + εισαγωγή · μετάφραση · ερμηνεία · ασκήσεις','scroll',{fn:'openGnwsto'}),
+              g('Εισαγωγή','Introduction','Σωκράτης · Πλάτων · Αριστοτέλης · θεωρία & κουίζ ανά θέμα','book',{fn:'openEisagwgi'}),
               g('Κείμενα · Μεταφράσεις','Texts · Translations','Παράλληλο κείμενο · σύνταξη','scroll',{fn:'openParallelLesson',args:['texts-lyk-c']}),
               g('Προσομοίωση Πανελληνίων','Exam Simulator','Πλήρες διαγώνισμα · χρονόμετρο · βαθμολόγηση','column',{fn:'openExamSim'}) ] },
     { id:'agnwsto-kat', roman:'IV', illu:'scroll', gr:'Άγνωστο Κείμενα', en:'Unseen Texts', sub:'Αδίδακτο',

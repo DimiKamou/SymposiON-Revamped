@@ -1,0 +1,129 @@
+/* ════════════════════════════════════════════════════════════════════
+   Εισαγωγή — study.css
+   The .gpx-* picker, .lyo-screen and .lcard chrome + --gg-* tokens come from
+   games/lyo/game.css (linked by index.html). Here we add only the quiz,
+   theory and selection-bar styles, all prefixed .eq-*.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* --gg-* tokens: in the host shell these are stamped on .game-overlay; inside
+   this standalone iframe there is no .game-overlay, so define them here (same
+   alabaster fallbacks as games/lyo/game.css) for the reused .gpx/.lcard chrome. */
+:root {
+  --gg-card: #fff;
+  --gg-sunk: color-mix(in srgb, #1E1810 5%, #fff);
+  --gg-line: color-mix(in srgb, #1E1810 13%, transparent);
+  --gg-ink: #1E1810;
+  --gg-dim: #8C7F6B;
+  --gg-acc: #C5572F;
+  --gg-acc-dk: #9C3F1F;
+}
+.eis-app { min-height: 100vh; background: var(--gg-sunk, #f4f1ea); color: var(--gg-ink, #1E1810); }
+#eis-wrap { max-width: 940px; margin: 0 auto; padding: 26px 18px 90px; }
+
+/* row extras on the picker */
+.eq-sub { font-style: normal; font-weight: 600; font-size: .72em; color: var(--gg-acc); opacity: .85; margin-left: 4px; }
+.eq-hint { display: block; font-size: 12px; color: var(--gg-dim); margin-top: 3px; line-height: 1.35; }
+.gpx-row.eq-picked { border-color: var(--gg-acc); background: color-mix(in srgb, var(--gg-acc) 8%, transparent); }
+.gpx-row.eq-picked .gpx-num { background: var(--gg-acc); color: #fff; }
+
+/* selection action bar (sticky) */
+.eq-selbar {
+  position: sticky; bottom: 0; margin-top: 18px; display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; padding: 14px 18px; border-radius: 14px;
+  background: var(--gg-card, #fff); border: 1px solid var(--gg-line); box-shadow: 0 -6px 26px rgba(0,0,0,.12);
+}
+.eq-selcount { font: 600 14px 'Montserrat', system-ui, sans-serif; color: var(--gg-dim); }
+.eq-selacts { display: flex; gap: 10px; }
+
+/* buttons */
+.eq-btn {
+  font: 600 14px 'Montserrat', system-ui, sans-serif; letter-spacing: .2px; cursor: pointer;
+  padding: 11px 20px; border-radius: 999px; border: 1.5px solid transparent;
+  background: var(--gg-acc); color: #fff; transition: transform .12s, background .16s, opacity .16s;
+}
+.eq-btn:hover:not(:disabled) { transform: translateY(-1px); background: var(--gg-acc-dk, #9C3F1F); }
+.eq-btn:disabled { opacity: .4; cursor: default; }
+.eq-btn-ghost { background: transparent; color: var(--gg-ink); border-color: var(--gg-line); }
+.eq-btn-ghost:hover:not(:disabled) { border-color: var(--gg-acc); color: var(--gg-acc); background: transparent; }
+.eq-btn-go { animation: eqPulse .5s ease; }
+@keyframes eqPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.eq-back { background: none; border: 0; color: var(--gg-dim); font: 600 13px 'Montserrat', sans-serif; cursor: pointer; padding: 4px 0; margin-bottom: 6px; }
+.eq-back:hover { color: var(--gg-acc); }
+.eq-eyebrow { font: 600 11px 'Montserrat', sans-serif; letter-spacing: .18em; text-transform: uppercase; color: var(--gg-acc); margin-bottom: 6px; }
+
+/* ── ΘΕΩΡΙΑ ── */
+.eq-theory { max-width: 760px; text-align: left; }
+.eq-theory h1 { text-align: left; }
+.eq-src { font: 600 12px 'Montserrat', sans-serif; color: var(--gg-dim); margin: 2px 0 16px; }
+.eq-th-h { font-family: 'Alegreya', serif; font-size: 1.22rem; color: var(--gg-acc); margin: 20px 0 6px; }
+.eq-th-p { font-family: 'Alegreya', serif; font-size: 1.06rem; line-height: 1.7; margin: 0 0 12px; color: var(--gg-ink); }
+.eq-th-foot { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+
+/* ── ΚΟΥΙΖ ── */
+.eq-quiz { max-width: 720px; text-align: left; }
+.eq-qhead { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; margin-bottom: 18px; }
+.eq-qprog { display: flex; align-items: center; gap: 10px; }
+.eq-qbar { width: 140px; height: 7px; border-radius: 999px; background: var(--gg-line); overflow: hidden; }
+.eq-qbar > i { display: block; height: 100%; background: var(--gg-acc); border-radius: 999px; transition: width .3s; }
+.eq-qprog span { font: 600 12px 'Montserrat', sans-serif; color: var(--gg-dim); white-space: nowrap; }
+.eq-qname { font: 600 12px 'Montserrat', sans-serif; color: var(--gg-acc); text-align: right; }
+.eq-qtype { font: 600 11px 'Montserrat', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--gg-dim); margin-bottom: 8px; }
+.eq-q { font-family: 'Alegreya', serif; font-size: 1.32rem; line-height: 1.5; margin-bottom: 20px; }
+.eq-body { margin-bottom: 8px; }
+.eq-qfoot { display: flex; justify-content: flex-end; margin-top: 22px; }
+
+/* options (MC / TF) */
+.eq-opts { display: flex; flex-direction: column; gap: 10px; }
+.eq-opt {
+  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer;
+  padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--gg-line); background: var(--gg-card, #fff);
+  font-family: 'Alegreya', serif; font-size: 1.08rem; color: var(--gg-ink); transition: border-color .14s, background .14s;
+}
+.eq-opt:hover:not(:disabled) { border-color: var(--gg-acc); }
+.eq-opt:disabled { cursor: default; }
+.eq-mk { display: grid; place-items: center; width: 26px; height: 26px; flex: 0 0 26px; border-radius: 50%; background: var(--gg-sunk); color: var(--gg-dim); font: 700 13px 'Montserrat', sans-serif; }
+.eq-opt.correct { border-color: #4b9d5e; background: color-mix(in srgb, #4b9d5e 12%, transparent); }
+.eq-opt.correct .eq-mk { background: #4b9d5e; color: #fff; }
+.eq-opt.incorrect { border-color: #c0503f; background: color-mix(in srgb, #c0503f 12%, transparent); }
+.eq-opt.incorrect .eq-mk { background: #c0503f; color: #fff; }
+.eq-explain { margin-top: 14px; padding: 13px 16px; border-radius: 10px; border-left: 3px solid var(--gg-acc); background: var(--gg-sunk); font-family: 'Alegreya', serif; font-size: 1.02rem; line-height: 1.55; }
+
+/* match */
+.eq-mcols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.eq-mcol { display: flex; flex-direction: column; gap: 8px; }
+.eq-mi { padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--gg-line); background: var(--gg-card, #fff); cursor: pointer; font-family: 'Alegreya', serif; font-size: 1.05rem; text-align: center; transition: all .14s; }
+.eq-mi .grk { font-weight: 600; }
+.eq-mi:hover:not(.done) { border-color: var(--gg-acc); }
+.eq-mi.sel { border-color: var(--gg-acc); background: color-mix(in srgb, var(--gg-acc) 12%, transparent); }
+.eq-mi.done { border-color: #4b9d5e; background: color-mix(in srgb, #4b9d5e 12%, transparent); color: var(--gg-dim); cursor: default; }
+.eq-mi.miss { border-color: #c0503f; background: color-mix(in srgb, #c0503f 14%, transparent); }
+.eq-mscore { margin-top: 14px; font: 600 14px 'Montserrat', sans-serif; color: #4b9d5e; }
+.eq-mscore.eq-miss { color: var(--gg-dim); }
+.eq-skip { display: block; margin-top: 12px; background: none; border: 0; color: var(--gg-dim); font: 500 13px 'Montserrat', sans-serif; cursor: pointer; text-decoration: underline; }
+.eq-skip:hover { color: var(--gg-acc); }
+
+/* fill */
+.eq-fill { display: flex; flex-direction: column; gap: 12px; }
+.eq-fi { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.eq-fp { font-family: 'Alegreya', serif; font-size: 1.08rem; }
+.eq-fp .grk { font-weight: 600; }
+.eq-blank { color: var(--gg-acc); letter-spacing: 1px; }
+.eq-inp { font-family: 'Alegreya', serif; font-size: 1.06rem; padding: 9px 13px; border-radius: 9px; border: 1.5px solid var(--gg-line); background: var(--gg-card, #fff); color: var(--gg-ink); min-width: 160px; }
+.eq-inp:focus { outline: none; border-color: var(--gg-acc); }
+.eq-inp.right { border-color: #4b9d5e; background: color-mix(in srgb, #4b9d5e 10%, transparent); }
+.eq-inp.wrong { border-color: #c0503f; background: color-mix(in srgb, #c0503f 10%, transparent); }
+.eq-acc { font: 500 12px 'Montserrat', sans-serif; color: var(--gg-dim); }
+.eq-check { margin-top: 6px; align-self: flex-start; }
+
+/* score */
+.eq-scorecard { text-align: center; max-width: 520px; }
+.eq-scorenum { font-family: 'Alegreya', serif; font-weight: 800; font-size: 4.4rem; line-height: 1; color: var(--gg-acc); margin: 8px 0; }
+.eq-scorel { font: 600 15px 'Montserrat', sans-serif; color: var(--gg-dim); margin-bottom: 4px; }
+.eq-scorecard .eq-th-foot { justify-content: center; }
+
+@media (max-width: 640px) {
+  .eq-qhead { grid-template-columns: 1fr; gap: 8px; }
+  .eq-qname { text-align: left; }
+  .eq-mcols { grid-template-columns: 1fr 1fr; }
+  .eq-scorenum { font-size: 3.4rem; }
+}

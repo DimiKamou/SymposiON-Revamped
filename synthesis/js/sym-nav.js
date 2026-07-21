@@ -146,7 +146,7 @@
   // lose, so they must NOT trigger the «Έξοδος από το παιχνίδι; Η πρόοδος θα
   // χαθεί» exit warning — that belongs to real game modes only. Extend as needed.
   var STUDY_MODES = {
-    openParallelLesson: 1, openGnwsto: 1, openAdidakto: 1, openSyntaktiko: 1,
+    openParallelLesson: 1, openGnwsto: 1, openEisagwgi: 1, openAdidakto: 1, openSyntaktiko: 1,
     openIstoria: 1, openLatinIntro: 1, openLatinTexts: 1, openLatinText: 1,
     openHagiaSophia: 1, openConstantinople: 1, openKnossos: 1, openAcropolis: 1
   };
