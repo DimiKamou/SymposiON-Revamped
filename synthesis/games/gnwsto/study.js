@@ -377,11 +377,11 @@
     if((e.syn&&e.syn.length)||(e.ant&&e.ant.length)){
       const sa = el('div','etym-synant');
       if(e.syn&&e.syn.length){
-        const l=el('span','etym-sa'); l.innerHTML='<span class="tag syn">ΣΥΝ.</span> '+esc(e.syn.join(', '));
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag syn">ΣΥΝ.</span> <span class="grk">'+esc(e.syn.join(', '))+'</span>';
         sa.appendChild(l);
       }
       if(e.ant&&e.ant.length){
-        const l=el('span','etym-sa'); l.innerHTML='<span class="tag ant">ΑΝΤ.</span> '+esc(e.ant.join(', '));
+        const l=el('span','etym-sa'); l.innerHTML='<span class="tag ant">ΑΝΤ.</span> <span class="grk">'+esc(e.ant.join(', '))+'</span>';
         sa.appendChild(l);
       }
       box.appendChild(sa);
