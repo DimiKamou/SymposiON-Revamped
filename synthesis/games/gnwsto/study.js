@@ -103,11 +103,15 @@
       ['text','Κείμενο & Μετάφραση', ()=>renderText(u)],
       ['intro','Εισαγωγικά Σχόλια',  ()=>renderIntro(u)],
       ['interp','Ερμηνευτική',       ()=>renderInterp(u)],
+      ['sxolia','Σχόλια Βιβλίου',    ()=>renderSxolia(u)],
+      ['parallels','Παράλληλα Κείμενα', ()=>renderParallels(u)],
       ['ex','Ασκήσεις',              ()=>renderEx(u)],
       ['quiz','Κατανόηση',           ()=>renderQuiz(u)],
     ]).filter(t=>{
       if(t[0]==='intro')  return (u.eisagogika&&u.eisagogika.length)||(u.fakelos&&u.fakelos.length);
       if(t[0]==='interp') return (u.ermineutiki&&u.ermineutiki.length)||(u.domi&&u.domi.length)||(u.yfologika&&u.yfologika.length);
+      if(t[0]==='sxolia') return u.sxolia&&u.sxolia.length;
+      if(t[0]==='parallels') return u.parallels&&u.parallels.length;
       if(t[0]==='ex')     return (u.ermineytikes&&u.ermineytikes.length)||(u.etymologika&&u.etymologika.length)||(u.etymBank&&u.etymBank.length);
       if(t[0]==='quiz')   return u.quiz&&u.quiz.length;
       return true;
@@ -237,6 +241,56 @@
       });
       wrap.appendChild(box);
     }
+    return wrap;
+  }
+
+  /* ── Σχόλια Βιβλίου (verbatim, χρωματικά ανά πηγή — προς αποστήθιση) ──
+     u.sxolia = [{ src:'fakelos'|'filosofikos', title?, paras:[…] }]
+       🔵 Φάκελος Υλικού   ·   🟣 Φιλοσοφικός Λόγος   (χρώματα προσωρινά) */
+  function renderSxolia(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+    wrap.appendChild(el('div','verbatim-flag','◆ Σχόλια προς αποστήθιση — αυτούσια από τα βιβλία'));
+    const META = { fakelos:['sx-fakelos','Σχόλια · Φάκελος Υλικού'], filosofikos:['sx-filosofikos','Ερμηνευτικά σχόλια · Φιλοσοφικός Λόγος'] };
+    ['fakelos','filosofikos'].forEach(k=>{
+      const g = (u.sxolia||[]).filter(s=> (s.src==='filosofikos'?'filosofikos':'fakelos')===k );
+      if(!g.length) return;
+      wrap.appendChild(el('h3','sec-h '+META[k][0], META[k][1]));
+      g.forEach(s=>{
+        const box = el('div','sxolio '+META[k][0]);
+        if(s.title) box.appendChild(el('div','sx-title',esc(s.title)));
+        (s.paras||[s.text||'']).forEach(p=> box.appendChild(el('p',null,esc(p))));
+        wrap.appendChild(box);
+      });
+    });
+    return wrap;
+  }
+
+  /* ── Παράλληλα Κείμενα (από τον Φάκελο Υλικού) + απαντημένες ερωτήσεις ──
+     u.parallels = [{ source, intro?, text?, mod?, questions:[{q, a}] }] */
+  function renderParallels(u){
+    const wrap = el('div','panel'); wrap.removeAttribute('hidden');
+    (u.parallels||[]).forEach((p,pi)=>{
+      const card = el('div','parallel');
+      card.appendChild(el('div','par-src',esc(p.source||('Παράλληλο κείμενο '+(pi+1)))));
+      if(p.intro) card.appendChild(el('div','par-intro',esc(p.intro)));
+      if(p.text)  card.appendChild(el('div','par-text',esc(p.text)));
+      if(p.mod)   card.appendChild(el('div','par-mod',esc(p.mod)));
+      if(p.questions&&p.questions.length){
+        card.appendChild(el('div','par-qh','Ερωτήσεις'));
+        p.questions.forEach((q,qi)=>{
+          const qb = el('div','par-q');
+          qb.appendChild(el('div','pq',esc((qi+1)+'. '+(q.q||''))));
+          if(q.a){
+            const btn = el('button','par-reveal','Δες ενδεικτική απάντηση');
+            const ans = el('div','par-ans'); ans.hidden=true; ans.innerHTML = esc(q.a).replace(/\n/g,'<br>');
+            btn.onclick = ()=>{ ans.hidden=!ans.hidden; btn.textContent = ans.hidden?'Δες ενδεικτική απάντηση':'Απόκρυψη απάντησης'; };
+            qb.appendChild(btn); qb.appendChild(ans);
+          }
+          card.appendChild(qb);
+        });
+      }
+      wrap.appendChild(card);
+    });
     return wrap;
   }
 

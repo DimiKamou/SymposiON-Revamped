@@ -341,3 +341,40 @@ a{color:var(--gold-lt); text-decoration:none}
 .scope.out{color:var(--a-quiz); background:color-mix(in srgb,var(--a-quiz) 14%,transparent); border:1px solid color-mix(in srgb,var(--a-quiz) 38%,transparent)}
 .intro-note{font-size:12.5px; color:var(--muted); padding:11px 14px; margin-bottom:16px; border:1px dashed var(--border); border-radius:var(--radius-sm); background:color-mix(in srgb,var(--a-text) 6%,transparent)}
 .unit-link .n{white-space:nowrap}
+
+/* ════════ Σχόλια Βιβλίου (color-coded) + Παράλληλα Κείμενα ════════
+   🔵 Φάκελος Υλικού  ·  🟣 Φιλοσοφικός Λόγος  (χρώματα προσωρινά, αλλάζουν εύκολα) */
+:root{ --sx-fakelos:#2E6F8E; --sx-filosofikos:#7A5C9E; }
+
+.sec-h.sx-fakelos{ color:var(--sx-fakelos); }
+.sec-h.sx-filosofikos{ color:var(--sx-filosofikos); }
+.sec-h.sx-fakelos::before,
+.sec-h.sx-filosofikos::before{ content:'▦ '; font-size:14px; }
+
+.sxolio{ margin:0 0 12px; padding:14px 16px 12px 18px; border-radius:var(--radius);
+  background:var(--panel); border:1px solid var(--border-soft); border-left:4px solid var(--gold); }
+.sxolio.sx-fakelos{ border-left-color:var(--sx-fakelos);
+  background:color-mix(in srgb, var(--sx-fakelos) 6%, var(--panel)); }
+.sxolio.sx-filosofikos{ border-left-color:var(--sx-filosofikos);
+  background:color-mix(in srgb, var(--sx-filosofikos) 6%, var(--panel)); }
+.sxolio .sx-title{ font-family:var(--serif); font-size:15px; color:var(--gold-lt); margin-bottom:6px; font-weight:600; }
+.sxolio p{ margin:0 0 8px; font-size:14.5px; line-height:1.6; color:var(--txt); }
+.sxolio p:last-child{ margin-bottom:0; }
+
+/* Παράλληλα Κείμενα */
+.parallel{ margin:0 0 18px; padding:16px 18px; border-radius:var(--radius);
+  background:var(--panel); border:1px solid var(--border-soft); }
+.par-src{ font-family:var(--mono); font-size:11px; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--gold); margin-bottom:10px; }
+.par-intro{ font-size:13.5px; color:var(--muted); font-style:italic; margin-bottom:10px; }
+.par-text{ font-family:var(--greek); font-size:17px; line-height:1.6; color:var(--gold-lt); margin-bottom:10px; white-space:pre-line; }
+.par-mod{ font-size:14.5px; line-height:1.6; color:var(--txt); margin-bottom:8px; }
+.par-qh{ font-family:var(--serif); font-size:15px; color:var(--gold-lt); font-weight:600; margin:14px 0 8px; border-top:1px solid var(--border-soft); padding-top:12px; }
+.par-q{ margin:0 0 10px; }
+.pq{ font-size:14.5px; color:var(--txt); margin-bottom:6px; }
+.par-reveal{ font-family:var(--sans); font-size:12.5px; color:var(--sx-filosofikos); background:none; border:0;
+  cursor:pointer; padding:0; text-decoration:underline; }
+.par-reveal:hover{ color:var(--gold-lt); }
+.par-ans{ margin-top:6px; padding:11px 14px; border-radius:var(--radius-sm);
+  background:color-mix(in srgb, var(--ok) 8%, var(--panel)); border:1px solid color-mix(in srgb,var(--ok) 30%,transparent);
+  font-size:14px; line-height:1.6; color:var(--txt); }
