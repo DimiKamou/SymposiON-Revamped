@@ -199,12 +199,11 @@
     const wrap = el('div','panel'); wrap.removeAttribute('hidden');
     if(u.type==='intro'){
       if(u.note) wrap.appendChild(el('div','intro-note',esc(u.note)));
-    } else {
-      wrap.appendChild(el('div','verbatim-flag','◆ Αυτούσια σχόλια από το βιβλίο / Φάκελο Υλικού'));
     }
     (u.eisagogika||[]).forEach(blk=> wrap.appendChild(block(blk)));
     if(u.fakelos&&u.fakelos.length){
-      wrap.appendChild(el('h3','sec-h','Από τον Φάκελο Υλικού'));
+      wrap.appendChild(el('h3','sec-h','Πλαίσιο — Φάκελος Υλικού'));
+      wrap.appendChild(el('p','gen-hint','Σύντομη σύνοψη για το πλαίσιο της ενότητας· τα αναλυτικά, αυτούσια σχόλια βρίσκονται στην καρτέλα «Σχόλια Βιβλίου».'));
       (u.fakelos||[]).forEach(blk=> wrap.appendChild(block(blk)));
     }
     return wrap;
