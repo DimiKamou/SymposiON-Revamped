@@ -152,8 +152,10 @@
   // Θεωρία Συντακτικού — standalone interactive syntax-theory chapters (like the Εισαγωγή).
   // Each is a self-contained HTML page (games/latin-texts/<slug>.html) opened in the overlay.
   var SYNTAX = {
-    'syntax-cum': 'Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum'
-    // 'syntax-domi', 'syntax-deuterevouses', 'syntax-gerund' land here as they are built.
+    'syntax-domi': 'Λατινικά · Θεωρία Συντακτικού — Η Δομή της Πρότασης',
+    'syntax-deuterevouses': 'Λατινικά · Θεωρία Συντακτικού — Οι Δευτερεύουσες Προτάσεις',
+    'syntax-cum': 'Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum',
+    'syntax-gerund': 'Λατινικά · Θεωρία Συντακτικού — Γερούνδιο · Σουπίνο · Γερουνδιακό'
   };
   function openLatSyntax(slug, title) {
     title = title || SYNTAX[slug] || 'Λατινικά · Θεωρία Συντακτικού';
@@ -190,5 +192,8 @@
     setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
   }
   window.openLatSyntax = openLatSyntax;
+  window.openLatSyntaxDomi = function () { openLatSyntax('syntax-domi'); };
+  window.openLatSyntaxDeuterevouses = function () { openLatSyntax('syntax-deuterevouses'); };
   window.openLatSyntaxCum = function () { openLatSyntax('syntax-cum'); };
+  window.openLatSyntaxGerund = function () { openLatSyntax('syntax-gerund'); };
 })();

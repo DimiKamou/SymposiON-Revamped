@@ -265,10 +265,10 @@ Object.assign(SUBJECTS, {
     // ── Θεωρία Συντακτικού — αυτόνομα διαδραστικά κεφάλαια συντακτικών φαινομένων. ──
     { id:'gl-syntax', roman:'IV', illu:'labyrinth', gr:'Θεωρία Συντακτικού', en:'Syntax Theory', sub:'Latin · Προσανατολισμού',
       summary:{ gr:'Συντακτικά φαινόμενα με διαγράμματα, παραδείγματα από τα κείμενα και διαδραστικές ασκήσεις.', en:'Syntax topics with diagrams, examples from the texts, and interactive exercises.' },
-      games:[ gSoon('Η Δομή της Πρότασης','Sentence Structure','σύντομα','book'),
-              gSoon('Οι Δευτερεύουσες Προτάσεις','Subordinate Clauses','σύντομα','book'),
+      games:[ g('Η Δομή της Πρότασης','Sentence Structure','Απαρέμφατο · μετοχή · πτώσεις · αίτιο','book',{fn:'openLatSyntaxDomi'}),
+              g('Οι Δευτερεύουσες Προτάσεις','Subordinate Clauses','Αιτιολογικές → ενδοιαστικές','book',{fn:'openLatSyntaxDeuterevouses'}),
               g('Ο Σύνδεσμος Cum','The Conjunction Cum','Είδη χρονικού · ιστορικός/διηγηματικός','book',{fn:'openLatSyntaxCum'}),
-              gSoon('Γερούνδιο · Σουπίνο · Γερουνδιακό','Gerund · Supine · Gerundive','σύντομα','book') ] },
+              g('Γερούνδιο · Σουπίνο · Γερουνδιακό','Gerund · Supine · Gerundive','Λειτουργία & έλξη','book',{fn:'openLatSyntaxGerund'}) ] },
     // ── Κείμενα · Β΄ Λυκείου — per-Ενότητα text-analysis panels (Lectiones 1–15).
     //    Coming-soon placeholders for now; each flips to g('…',…,{fn:'openLatinTextN'})
     //    once its units/unitN.js data file lands (same textbook, contiguous with 16–50). ──
