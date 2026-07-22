@@ -84,7 +84,16 @@
         <div class="acol you"><div class="lab">${esc(opts.youLabel||'Η απάντησή σου')}</div><div class="abody">${esc(you)}</div></div>
         <div class="acol model"><div class="lab">${esc(opts.modelLabel||'Ενδεικτική απάντηση')}</div><div class="abody">${esc(model)}</div></div>
       </div>
+      ${opts.modelBook?`<div class="sk-modelbook"><div class="mb-lab">${SYM.icon('scroll')} Υπόδειγμα — Βιβλίο + Πηγή</div><div class="mb-body">${fmtMB(opts.modelBook)}</div></div>`:''}
       <div class="sk-note">${r.demo?'⚠ Λειτουργία επίδειξης (offline): αξιολόγηση με τοπικό αλγόριθμο. Στο ζωντανό περιβάλλον τη βαθμολόγηση κάνει ο AI βοηθός.':'Αξιολόγηση από τον AI βοηθό · σημασιολογική σύγκριση.'}</div>`;
+  }
+  // format a modelBook: ALL-CAPS short lines become sub-headings, rest paragraphs
+  function fmtMB(t){
+    return String(t||'').split(/\n\n+/).map(b=>{
+      b=b.trim(); if(!b) return '';
+      const isH = b.length<=64 && b===b.toLocaleUpperCase('el') && /[Α-Ω]/.test(b);
+      return isH ? `<h5 class="mb-h">${esc(b)}</h5>` : `<p>${esc(b)}</p>`;
+    }).join('');
   }
 
   // ── AI source generator ────────────────────────────────────────────

@@ -431,6 +431,16 @@ body.istoria-body{
 .acol.you{border-top:3px solid var(--stone);}.acol.model{border-top:3px solid var(--gold);}
 .acol .abody{font-family:var(--f-serif);font-size:14.5px;line-height:1.62;color:var(--ink);white-space:pre-wrap;}
 .sk-note{font-family:var(--f-mono);font-size:10.5px;color:var(--stone);margin-top:12px;letter-spacing:.04em;}
+.sk-modelbook{margin-top:16px;background:var(--paper);border:1px solid var(--hair);border-left:3px solid var(--gold);border-radius:6px;padding:16px 20px 18px;}
+.mb-lab{display:flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-dk);margin-bottom:10px;}
+.mb-lab .ico{font-size:13px;}
+.dir-agon .mb-lab{color:var(--gold);}
+.mb-body{font-family:var(--f-serif);font-size:14.5px;line-height:1.64;color:var(--ink);}
+.mb-body p{margin:0 0 11px;}
+.mb-body p:last-child{margin-bottom:0;}
+.mb-h{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--terra-dk);margin:15px 0 7px;padding-top:11px;border-top:1px dotted var(--hair);}
+.mb-h:first-child{margin-top:0;padding-top:0;border-top:0;}
+.dir-agon .mb-h{color:var(--terra);}
 
 /* T/F choice (σ/λ) */
 .sk-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px;}

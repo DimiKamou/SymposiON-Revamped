@@ -191,6 +191,7 @@
       const rubric = ss.length ? `Η ερώτηση απαιτεί ΣΥΝΔΥΑΣΜΟ ${multi?'ΟΛΩΝ των πηγών':'της πηγής'} με τις ιστορικές γνώσεις. Στα «missed» επισήμανε ρητά αν ο μαθητής ΔΕΝ αξιοποίησε ${multi?'κάποια από τις πηγές (ανάφερε ποια)':'την πηγή'}. ${multi?'Οι πηγές':'Η πηγή'}:\n${srcText}` : '';
       params={question:q.q, model:q.model, points:q.points, answer:ans, rubric};
       you=ans;
+      if(CUR==='pigi' && q.modelBook) opts={modelBook:q.modelBook};
     } else if(CUR==='sl'){
       if(sel===null){ alert('Διάλεξε πρώτα Σωστό ή Λάθος.'); return; }
       const ans=($('#mt-ans').value||'').trim(); if(ans.length<5){$('#mt-ans').focus();return;}
