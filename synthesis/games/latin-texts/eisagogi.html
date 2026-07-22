@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Λατινικά · Εισαγωγή στη Ρωμαϊκή Λογοτεχνία</title>
+<link rel="stylesheet" href="fonts.css" />
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Εισαγωγή στη Λατινική Γλώσσα & Λογοτεχνία — αυτόνομη σελίδα
+   Παλέτα εναρμονισμένη με τα panels ανάλυσης (sage) + κλασικό
+   δευτερεύον accent (μπορντό) για το ιστορικό/λογοτεχνικό στίγμα.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  /* bundled faces (fonts.css) — EB Garamond covers Greek + Latin, Commissioner = UI sans */
+  --font-display:'EB Garamond',Georgia,serif;
+  --font-body:'EB Garamond',Georgia,serif;
+  --font-ui:'Commissioner',system-ui,sans-serif;
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168);           /* sage green — διαδραστικά */
+  --accent-soft:color-mix(in oklab, var(--accent) 12%, var(--panel));
+  --wine:oklch(0.47 0.13 20);              /* μπορντό — τίτλοι/χρονολόγιο */
+  --wine-soft:color-mix(in oklab, var(--wine) 12%, var(--panel));
+  --gold:oklch(0.66 0.11 78);
+  --ok:oklch(0.55 0.13 150); --bad:oklch(0.55 0.15 25);
+  --shadow:0 14px 34px -20px rgba(20,30,20,.45);
+  --radius:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+    --muted:#9ba695; --line:#363d33;
+    --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+    --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+  --muted:#9ba695; --line:#363d33;
+  --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+  --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168); --wine:oklch(0.47 0.13 20); --gold:oklch(0.66 0.11 78);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); line-height:1.6;
+  font-size:17px; -webkit-font-smoothing:antialiased;
+}
+.wrap{display:flex; min-height:100vh; align-items:stretch}
+/* ── Sidebar nav ── */
+nav.side{
+  width:250px; flex:0 0 250px; background:var(--panel); border-right:1px solid var(--line);
+  position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px;
+}
+nav.side .brand{font-family:var(--font-display); font-weight:700; letter-spacing:.03em;
+  color:var(--wine); font-size:15px; text-transform:uppercase; margin:0 0 4px}
+nav.side .sub{color:var(--muted); font-size:12.5px; margin:0 0 18px}
+nav.side a{
+  display:flex; gap:9px; align-items:baseline; text-decoration:none; color:var(--muted);
+  padding:8px 10px; border-radius:10px; font-size:14.5px; transition:.15s; margin-bottom:2px;
+}
+nav.side a .n{font-family:var(--font-display); font-size:12px; color:var(--wine); min-width:20px; opacity:.8}
+nav.side a:hover{background:var(--panel2); color:var(--ink)}
+nav.side a.on{background:var(--accent-soft); color:var(--ink); font-weight:600}
+nav.side a.on .n{opacity:1}
+/* ── Main column ── */
+main{flex:1 1 auto; min-width:0; max-width:920px; margin:0 auto; padding:34px 30px 90px}
+header.hero{margin-bottom:30px}
+header.hero .kick{color:var(--wine); font-family:var(--font-display); letter-spacing:.14em; font-size:12px; text-transform:uppercase; margin-bottom:8px}
+header.hero h1{font-family:var(--font-display); font-weight:700; font-size:31px; line-height:1.15; margin:0 0 10px; color:var(--ink)}
+header.hero p.lead{color:var(--muted); font-size:16px; margin:0; max-width:64ch}
+.progress{margin-top:18px; height:7px; background:var(--panel2); border-radius:99px; overflow:hidden; border:1px solid var(--line)}
+.progress > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--wine)); transition:width .35s ease}
+
+section.sec{scroll-margin-top:16px; margin:38px 0; animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+section.sec > h2{
+  font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink);
+  display:flex; align-items:center; gap:12px; margin:0 0 4px; padding-bottom:12px; border-bottom:2px solid var(--line);
+}
+section.sec > h2 .rn{font-size:14px; color:var(--wine); border:1.5px solid color-mix(in oklab,var(--wine) 40%,transparent);
+  border-radius:8px; padding:3px 9px; font-family:var(--font-display)}
+h3.subh{font-family:var(--font-display); font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--wine); margin:24px 0 10px}
+p{margin:0 0 13px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:16px 0}
+.callout{border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:12px; padding:14px 18px; margin:16px 0}
+.callout.wine{border-left-color:var(--wine); background:var(--wine-soft)}
+.callout b{color:var(--ink)}
+.la{font-style:italic; color:var(--wine)}
+@media(prefers-color-scheme:dark){.la{color:var(--gold)}}
+:root[data-theme="dark"] .la{color:var(--gold)}
+:root[data-theme="light"] .la{color:var(--wine)}
+.gr-cog{font-variant:small-caps}
+
+/* grids */
+.g3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:16px 0}
+.g2{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:16px 0}
+.mini{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:15px 16px}
+.mini h4{margin:0 0 7px; font-family:var(--font-display); font-size:14px; color:var(--wine); display:flex; gap:8px; align-items:center}
+.mini h4 .ico{font-size:19px}
+.mini p{font-size:14.5px; color:var(--muted); margin:0}
+.mini .ex{margin-top:9px; font-size:14px}
+.mini .ex .pair{display:inline-flex; gap:6px; align-items:center; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:3px 9px; margin:3px 5px 0 0}
+.mini .ex .pair .la{font-style:italic}
+
+/* feature milestone */
+.milestone{display:flex; gap:16px; align-items:flex-start; background:linear-gradient(180deg,var(--wine-soft),var(--panel)); border:1px solid color-mix(in oklab,var(--wine) 30%,var(--line)); border-radius:var(--radius); padding:18px 20px; margin:16px 0}
+.milestone .yr{font-family:var(--font-display); font-weight:700; color:var(--wine); font-size:26px; line-height:1; white-space:nowrap; padding-top:2px}
+.milestone .txt{flex:1}
+.milestone .txt b{color:var(--ink)}
+
+/* timeline band */
+.timeline{position:relative; margin:22px 0 8px; padding:8px 4px}
+.tl-track{position:relative; height:2px; background:var(--line); margin:44px 6px 8px}
+.tl-mark{position:absolute; top:-6px; transform:translateX(-50%); text-align:center; width:0}
+.tl-mark .dot{width:12px;height:12px;border-radius:50%;background:var(--wine);border:2px solid var(--panel);margin:0 auto; box-shadow:0 0 0 2px var(--wine)}
+.tl-mark .yr{position:absolute; top:-34px; left:50%; transform:translateX(-50%); font-family:var(--font-display); font-size:12.5px; color:var(--wine); white-space:nowrap}
+.tl-mark .lb{position:absolute; top:20px; left:50%; transform:translateX(-50%); font-size:12px; color:var(--muted); white-space:nowrap; max-width:130px}
+.tl-eras{display:flex; gap:6px; margin-top:66px}
+.tl-eras .era{flex:1; text-align:center; font-size:12px; padding:7px 4px; border-radius:9px; border:1px dashed var(--line); color:var(--muted)}
+.tl-eras .era b{display:block; color:var(--ink); font-family:var(--font-display); font-size:12.5px; margin-bottom:2px}
+
+ul.feat{list-style:none; padding:0; margin:14px 0}
+ul.feat li{position:relative; padding:9px 12px 9px 40px; border-bottom:1px solid var(--line); font-size:15.5px}
+ul.feat li:last-child{border-bottom:0}
+ul.feat li::before{content:"❧"; position:absolute; left:12px; top:9px; color:var(--wine); font-size:16px}
+ul.feat li b{color:var(--ink)}
+
+/* author cards */
+.era-band{display:flex; align-items:center; gap:12px; margin:26px 0 4px}
+.era-band .lab{font-family:var(--font-display); font-weight:700; color:var(--wine); font-size:16px; white-space:nowrap}
+.era-band .yrs{font-size:13px; color:var(--muted); background:var(--wine-soft); border:1px solid color-mix(in oklab,var(--wine) 25%,var(--line)); border-radius:99px; padding:2px 11px}
+.era-band .rule{flex:1; height:1px; background:var(--line)}
+.genos{font-family:var(--font-display); letter-spacing:.1em; font-size:12.5px; text-transform:uppercase; color:var(--muted); margin:18px 0 8px; display:flex; gap:8px; align-items:center}
+.genos .g-ico{font-size:15px}
+.authors{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px}
+.au{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:15px 16px; box-shadow:var(--shadow); transition:transform .16s, box-shadow .16s}
+.au:hover{transform:translateY(-3px); box-shadow:0 18px 38px -20px rgba(20,30,20,.5)}
+.au .nm{font-family:var(--font-display); font-weight:700; font-size:15.5px; color:var(--ink); margin:0}
+.au .la-nm{font-style:italic; color:var(--wine); font-size:13.5px; margin:1px 0 0}
+.au .dt{display:inline-block; font-size:12px; color:var(--muted); background:var(--panel2); border:1px solid var(--line); border-radius:99px; padding:1px 9px; margin:8px 0 6px}
+.au .row{font-size:13.8px; margin:6px 0 0}
+.au .row .k{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:2px}
+.au .work{display:inline-block; margin:2px 5px 0 0}
+.au .work .la{font-style:italic}
+.au .models{color:var(--muted); font-size:13px}
+
+/* ── Exercises ── */
+.quiz{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:16px 0; box-shadow:var(--shadow)}
+.quiz .q{font-weight:600; margin:0 0 12px; font-size:16px}
+.quiz .q .qn{color:var(--wine); font-family:var(--font-display); margin-right:6px}
+.opts{display:flex; flex-direction:column; gap:8px}
+.opt{display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--line); border-radius:11px; cursor:pointer; background:var(--panel2); transition:.14s; font-size:15px}
+.opt:hover{border-color:var(--accent)}
+.opt.sel{border-color:var(--accent); background:var(--accent-soft)}
+.opt.correct{border-color:var(--ok); background:color-mix(in oklab,var(--ok) 15%,var(--panel)); color:var(--ink)}
+.opt.wrong{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 13%,var(--panel))}
+.opt .mk{margin-left:auto; font-weight:700}
+.tf{display:flex; gap:10px}
+.tf .opt{flex:1; justify-content:center; font-family:var(--font-display); font-size:14px}
+.qitem{padding:16px 0; border-bottom:1px solid var(--line)}
+.qitem:last-child{border-bottom:0; padding-bottom:2px}
+.explain{margin-top:9px; font-size:14px; color:var(--muted); display:none; padding:9px 12px; background:var(--panel2); border-radius:9px; border-left:3px solid var(--accent)}
+.explain.show{display:block; animation:fade .3s ease both}
+
+/* matching */
+.match{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.match .col{display:flex; flex-direction:column; gap:8px}
+.match .col h5{margin:0 0 3px; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-family:var(--font-display)}
+.mtile{padding:10px 13px; border:1.5px solid var(--line); border-radius:11px; background:var(--panel2); cursor:pointer; transition:.14s; font-size:14.5px}
+.mtile .la{font-style:italic}
+.mtile:hover{border-color:var(--accent)}
+.mtile.active{border-color:var(--wine); background:var(--wine-soft); box-shadow:0 0 0 2px color-mix(in oklab,var(--wine) 30%,transparent)}
+.mtile.done{cursor:default; opacity:.62}
+.mtile.done .badge{float:right; font-family:var(--font-display); font-size:12px; color:var(--wine)}
+.mtile.miss{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 12%,var(--panel))}
+
+.controls{display:flex; gap:10px; align-items:center; margin-top:16px; flex-wrap:wrap}
+button.btn{font-family:inherit; font-size:14.5px; padding:9px 18px; border-radius:11px; border:1.5px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; transition:.15s; font-weight:600}
+button.btn:hover{filter:brightness(1.06)}
+button.btn.ghost{background:transparent; color:var(--accent)}
+button.btn.ghost:hover{background:var(--accent-soft)}
+.score{font-family:var(--font-display); font-weight:700; color:var(--wine)}
+.score.big{font-size:16px}
+
+.toTop{position:fixed; right:20px; bottom:20px; width:44px; height:44px; border-radius:50%; background:var(--wine); color:#fff; border:none; cursor:pointer; box-shadow:var(--shadow); font-size:19px; opacity:0; pointer-events:none; transition:.25s}
+.toTop.show{opacity:1; pointer-events:auto}
+.footnote{color:var(--muted); font-size:13px; margin-top:30px; padding-top:16px; border-top:1px solid var(--line)}
+
+@media (max-width:880px){
+  .wrap{flex-direction:column}
+  nav.side{position:static; width:100%; height:auto; border-right:0; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:4px; padding:12px}
+  nav.side .brand,nav.side .sub{width:100%}
+  nav.side a{padding:6px 10px; font-size:13px}
+  main{padding:22px 16px 80px}
+  .g3{grid-template-columns:1fr}
+  .match{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="side lt-sc" id="nav"></nav>
+  <main id="main">
+    <header class="hero">
+      <div class="kick">Λατινικά · Προσανατολισμού</div>
+      <h1>Εισαγωγή στη Λατινική Γλώσσα &amp; Λογοτεχνία</h1>
+      <p class="lead">Β΄ &amp; Γ΄ Λυκείου — από τη γένεση της Λατινικής ως την ακμή της κλασικής εποχής (χρόνοι Κικέρωνα &amp; αυγούστεια περίοδος). Διάβασε τις ενότητες και δοκίμασε τον εαυτό σου στις ασκήσεις στο τέλος.</p>
+      <div class="progress"><i id="pbar"></i></div>
+    </header>
+    <div id="content"></div>
+    <p class="footnote">Πρώτη έκδοση της εισαγωγής — θα εμπλουτιστεί με τα σαρωμένα υλικά και τα διαγράμματα (Notebook LM) για διασταύρωση.</p>
+  </main>
+</div>
+<button class="toTop" id="toTop" title="Πάνω">↑</button>
+
+<script>
+/* ═══════════════════ ΔΕΔΟΜΕΝΑ ═══════════════════ */
+const NAV = [
+  {id:'glossa', n:'I',  t:'Η Λατινική Γλώσσα'},
+  {id:'genesi', n:'II', t:'Γένεση της Λογοτεχνίας'},
+  {id:'epoxes', n:'III',t:'Εποχές'},
+  {id:'xarakt', n:'IV', t:'Γενικά Χαρακτηριστικά'},
+  {id:'klasiki',n:'V',  t:'Κλασική Εποχή'},
+  {id:'kikeron',n:'VI', t:'Χρόνοι Κικέρωνα'},
+  {id:'augoust',n:'VII',t:'Αυγούστειοι Χρόνοι'},
+  {id:'askiseis',n:'✎', t:'Ασκήσεις'},
+  {id:'paixnidi',n:'🎮', t:'Παιχνίδι'},
+];
+
+/* Author profiles (era: 'kik' | 'aug'; genos: prose/history/poetry) */
+const AUTHORS = [
+  // — Χρόνοι Κικέρωνα —
+  {era:'kik', genos:'Πεζογραφία', gr:'Μάρκος Τύλλιος Κικέρων', la:'M. Tullius Cicero', dt:'106–43 π.Χ.',
+   works:[{la:'Λόγοι (πολιτικοί & δικανικοί)'},{la:'Ρητορικά & φιλοσοφικοί διάλογοι'},{la:'~800 Επιστολές'}],
+   style:'καθαρότητα, κομψότητα, καλλιέπεια, ζωηρότητα, υφολογικό ύψος', models:'θαυμαστής του Πλάτωνα'},
+  {era:'kik', genos:'Πεζογραφία', gr:'Βάρρων ο Ρεατίνος', la:'M. Terentius Varro', dt:'116–27 π.Χ.',
+   works:[{la:'πάνω από 600 βιβλία (ιστορία, θρησκεία, πολιτισμός, νόμοι, επιστήμες, γλώσσα, γεωργία)'}],
+   style:'αρχαιοδίφης, ιστορικός, φιλόσοφος, νομομαθής, εγκυκλοπαιδιστής', models:'—'},
+  {era:'kik', genos:'Ιστοριογραφία', gr:'Γάιος Ιούλιος Καίσαρ', la:'C. Iulius Caesar', dt:'100–44 π.Χ.',
+   works:[{la:'Commentarii'},{gr:'Στρατιωτικές αναμνήσεις (απομνημονεύματα)'}],
+   style:'καθαρά & λιτά Λατινικά· ύφος που ανακαλεί τον Ξενοφώντα', models:'Ξενοφών'},
+  {era:'kik', genos:'Ιστοριογραφία', gr:'Κορνήλιος Νέπως', la:'Cornelius Nepos', dt:'100–27 π.Χ.',
+   works:[{gr:'~25 βιογραφίες διάσημων Ελλήνων & Ρωμαίων (κυρίως στρατηγών)'}],
+   style:'εγκαινιάζει στη Ρώμη την ιστορική βιογραφία', models:'—'},
+  {era:'kik', genos:'Ιστοριογραφία', gr:'Σαλλούστιος Κρίσπος', la:'C. Sallustius Crispus', dt:'86–35 π.Χ.',
+   works:[{la:'De Catilinae Coniuratione'},{gr:'(Η συνωμοσία του Κατιλίνα)'}],
+   style:'ιστορική μονογραφία στα βήματα του Θουκυδίδη', models:'Θουκυδίδης'},
+  {era:'kik', genos:'Ποίηση', gr:'Βαλέριος Κάτουλλος', la:'C. Valerius Catullus', dt:'84–54 π.Χ.',
+   works:[{gr:'116 έξοχα ποιήματα (λυρική & επιγραμματική ποίηση)'}],
+   style:'έμπνευση η «Λεσβία» — αιώνιο σύμβολο ερωτικής ποίησης', models:'νεωτερικοί / Καλλίμαχος'},
+  {era:'kik', genos:'Ποίηση', gr:'Λουκρήτιος', la:'T. Lucretius Carus', dt:'96–53 π.Χ.',
+   works:[{la:'De rerum natura'},{gr:'(Για τη φύση των πραγμάτων — 6 βιβλία)'}],
+   style:'φιλοσοφικό έπος· κήρυγμα κατά της δεισιδαιμονίας & του φόβου του θανάτου', models:'Επίκουρος'},
+  {era:'kik', genos:'Ποίηση', gr:'Βάρρων', la:'Varro', dt:'116–27 π.Χ.',
+   works:[{la:'Saturae Menippeae'},{gr:'(Μενίππειες σάτιρες — 150 βιβλία)'}],
+   style:'συνδυασμός ποιητικού & πεζού λόγου· ψυχαγωγικός & διδακτικός', models:'Μένιππος'},
+  // — Αυγούστειοι Χρόνοι —
+  {era:'aug', genos:'Ποίηση', gr:'Πόπλιος Βεργίλιος Μάρων', la:'P. Vergilius Maro', dt:'70–19 π.Χ.',
+   works:[{la:'Aeneis'},{gr:'(Αινειάδα — εθνικό έπος)'},{la:'Eclogae / Bucolica (10)'},{la:'Georgica (4)'}],
+   style:'«εθνικός ποιητής» των Ρωμαίων· ηρωικό & διδακτικό έπος', models:'Όμηρος, Θεόκριτος, Ησίοδος'},
+  {era:'aug', genos:'Ποίηση', gr:'Κόιντος Οράτιος Φλάκκος', la:'Q. Horatius Flaccus', dt:'65–8 π.Χ.',
+   works:[{la:'Epodi'},{la:'Carmina (Ωδές)'},{la:'Sermones (σάτιρα)'},{la:'Epistulae — Ars Poetica'},{la:'Carmen Saeculare'}],
+   style:'«πρώτος μετέφερε το αιολικό άσμα» στη Ρώμη· κομψοτεχνήματα', models:'Αρχίλοχος, Αλκαίος, Σαπφώ, Πίνδαρος'},
+  {era:'aug', genos:'Ποίηση', gr:'Τίβουλλος · Προπέρτιος · Οβίδιος', la:'Tibullus · Propertius · Ovidius', dt:'~50 π.Χ. – 17 μ.Χ.',
+   works:[{gr:'Ρωμαϊκή ερωτική ελεγεία (κορύφωση του είδους)'}],
+   style:'Τίβουλλος: καθαρός/κομψός · Προπέρτιος: σκοτεινός/σύγχρονος · Οβίδιος: πνευματώδης', models:'«λεπταλέη Μούσα» / Καλλίμαχος'},
+  {era:'aug', genos:'Ποίηση', gr:'Οβίδιος', la:'P. Ovidius Naso', dt:'43 π.Χ. – 17 μ.Χ.',
+   works:[{la:'Metamorphoses (15 βιβλία)'},{la:'Heroides'},{la:'Fasti'},{la:'Tristia · Epistulae ex Ponto'},{la:'Medicamina faciei'}],
+   style:'επινοεί & καλλιεργεί νέα ποιητικά είδη· κοινό μοτίβο η μεταμόρφωση', models:'ελληνιστική ποίηση'},
+  {era:'aug', genos:'Πεζογραφία', gr:'Τίτος Λίβιος', la:'T. Livius', dt:'59 π.Χ. – 17 μ.Χ.',
+   works:[{la:'Ab urbe condita (142 βιβλία)'},{gr:'(η Ρώμη από την ίδρυσή της ως το 9 π.Χ.)'}],
+   style:'κεντρικές έννοιες: mos maiorum, pietas, virtus', models:'—'},
+  {era:'aug', genos:'Πεζογραφία', gr:'Βιτρούβιος', la:'Vitruvius', dt:'αυγούστεια εποχή',
+   works:[{la:'De architectura'},{gr:'(εξειδικευμένο σύγγραμμα αρχιτεκτονικής)'}],
+   style:'επιστήμονας – λογοτέχνης', models:'—'},
+];
+
+/* Interactive exercises */
+const TF = [
+  {q:'Η ρωμαϊκή λογοτεχνία χαρακτηρίζεται ως «παράγωγη», γιατί γεννήθηκε υπό την επίδραση της ελληνικής γραμματείας.', a:true},
+  {q:'Το έπος ήταν το πρώτο λογοτεχνικό είδος που ωρίμασε στη Ρώμη.', a:false, ex:'Αντίθετα: η κωμωδία (τελευταίος καρπός των Ελλήνων) ωρίμασε πρώτη, ενώ το έπος (πρώτος καρπός) ωρίμασε τελευταίο.'},
+  {q:'Η σάτιρα είναι καθαρά ρωμαϊκό λογοτεχνικό είδος.', a:true},
+  {q:'Η «αριστοκρατική» διαίρεση σε «χρυσό» και «αργυρό» αιώνα θεωρείται επιστημονικά έγκυρη.', a:false, ex:'Θεωρείται αντιεπιστημονική· προτιμώνται η περιγραφική και η ιστορική διαίρεση.'},
+  {q:'Οι Ρωμαίοι υιοθέτησαν το αλφάβητό τους από την ελληνική αποικία της Κύμης (8ος/7ος αι. π.Χ.).', a:true},
+  {q:'Η σχέση του Ρωμαίου λογοτέχνη με το ελληνικό πρότυπο περιγράφεται ως imitatio και aemulatio.', a:true, ex:'imitatio = δημιουργική πρόσληψη · aemulatio = ανταγωνισμός.'},
+];
+const MC = [
+  {q:'Ποια χρονολογία θεωρείται η «γενέθλιος» της ρωμαϊκής λογοτεχνίας;',
+   o:['753 π.Χ.','240 π.Χ.','100 π.Χ.','14 μ.Χ.'], a:1, ex:'Το 240 π.Χ. ο Λίβιος Ανδρόνικος οργάνωσε θεατρικές παραστάσεις και μετέφρασε την Οδύσσεια.'},
+  {q:'Ποιος μετέφρασε την «Οδύσσεια» σε σατούρνιο στίχο;',
+   o:['Βεργίλιος','Έννιος','Λίβιος Ανδρόνικος','Κικέρων'], a:2},
+  {q:'«Εθνικός ποιητής» των Ρωμαίων και ποιητής της Αινειάδας:',
+   o:['Οράτιος','Βεργίλιος','Οβίδιος','Λουκρήτιος'], a:1},
+  {q:'Ποιος έγραψε την ιστορική μονογραφία «De Catilinae Coniuratione»;',
+   o:['Καίσαρας','Λίβιος','Σαλλούστιος','Νέπως'], a:2, ex:'Ο Σαλλούστιος μετέφερε στη Ρώμη τη θουκυδίδεια ιστορική μονογραφία.'},
+  {q:'Οι «αυγούστειοι χρόνοι» καλύπτουν την περίοδο:',
+   o:['100–40 π.Χ.','40 π.Χ. – 14 μ.Χ.','14–68 μ.Χ.','240–100 π.Χ.'], a:1},
+  {q:'Ο όρος «πατρωνεία» (patronatus) αναφέρεται σε:',
+   o:['ποιητικό μέτρο','οικονομική υποστήριξη λογοτεχνών από Αύγουστο/Μαικήνα','είδος σάτιρας','ρητορική τεχνική'], a:1, ex:'Με αντάλλαγμα, συχνά, την ιδεολογική στράτευση.'},
+];
+const MATCH = [
+  {l:'Καίσαρας', r:'Commentarii (Στρατ. αναμνήσεις)'},
+  {l:'Σαλλούστιος', r:'De Catilinae Coniuratione'},
+  {l:'Βεργίλιος', r:'Aeneis'},
+  {l:'Οράτιος', r:'Carmina (Ωδές)'},
+  {l:'Λίβιος', r:'Ab urbe condita'},
+  {l:'Λουκρήτιος', r:'De rerum natura'},
+  {l:'Οβίδιος', r:'Metamorphoses'},
+  {l:'Βιτρούβιος', r:'De architectura'},
+];
+
+/* ═══════════════════ RENDER — narrative ═══════════════════ */
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const authorCard = a => `<div class="au">
+  <p class="nm">${esc(a.gr)}</p><p class="la-nm">${esc(a.la)}</p>
+  <span class="dt">${esc(a.dt)}</span>
+  <div class="row"><span class="k">Έργο</span>${a.works.map(w=>`<span class="work">${w.la?`<span class="la">${esc(w.la)}</span>`:esc(w.gr)}</span>`).join(' · ')}</div>
+  <div class="row"><span class="k">Ύφος / Πρότυπα</span>${esc(a.style)}${a.models&&a.models!=='—'?` <span class="models">· πρότυπα: ${esc(a.models)}</span>`:''}</div>
+</div>`;
+const byGenos = (era) => {
+  const list = AUTHORS.filter(a=>a.era===era);
+  const order=['Πεζογραφία','Ιστοριογραφία','Ποίηση'];
+  const ico={'Πεζογραφία':'📜','Ιστοριογραφία':'🏛️','Ποίηση':'🪶'};
+  return order.filter(g=>list.some(a=>a.genos===g)).map(g=>
+    `<div class="genos"><span class="g-ico">${ico[g]}</span>${g}</div>
+     <div class="authors">${list.filter(a=>a.genos===g).map(authorCard).join('')}</div>`).join('');
+};
+
+const CONTENT = `
+<section class="sec" id="glossa">
+  <h2><span class="rn">I</span> Η Λατινική Γλώσσα</h2>
+  <div class="card">
+    <p>Η <b>Λατινική</b> ήταν η διάλεκτος των <b>Λατίνων</b> και ανήκει στην <b>ινδοευρωπαϊκή</b> γλωσσική οικογένεια. Υπερίσχυσε των άλλων διαλέκτων (π.χ. Φαλισκική, Οσκο-ουμβρική) σε ολόκληρη την ιταλική χερσόνησο.</p>
+  </div>
+  <h3 class="subh">Ομοιότητες Λατινικής – Ελληνικής</h3>
+  <div class="g3">
+    <div class="mini"><h4><span class="ico">🌳</span> Κοινή καταγωγή</h4><p>Και οι δύο προέρχονται από την Ινδοευρωπαϊκή.</p>
+      <div class="ex"><span class="pair"><span class="la">fero</span> ↔ φέρω</span><span class="pair"><span class="la">pater</span> ↔ πατήρ</span></div></div>
+    <div class="mini"><h4><span class="ico">⛵</span> Ελληνικός αποικισμός</h4><p>Πολιτιστικά &amp; γλωσσικά δάνεια από τις αποικίες στην κεντρική &amp; κάτω Ιταλία (Νεάπολη → Σικελία).</p></div>
+    <div class="mini"><h4><span class="ico">🗺️</span> Κατάκτηση της Ανατολής</h4><p>Επαφή με την ελληνική Ανατολή. Πρώτο δάνειο: το <b>αλφάβητο</b> από την αποικία της <b>Κύμης</b> (8ος/7ος αι. π.Χ.).</p></div>
+  </div>
+  <div class="callout"><b>Από την αγροτική στη λόγια:</b> Η αρχέγονη Λατινική ήταν λιτή &amp; αγροτική. Ως τον 3ο αι. π.Χ. σώζονται ελάχιστα γραπτά χωρίς λογοτεχνική αξία. Η συστηματική καλλιέργειά της αρχίζει μετά την «συνάντηση» με τους Έλληνες το <b>240 π.Χ.</b></div>
+</section>
+
+<section class="sec" id="genesi">
+  <h2><span class="rn">II</span> Η Γένεση της Ρωμαϊκής Λογοτεχνίας</h2>
+  <p>Η ρωμαϊκή λογοτεχνία είναι <b>«παράγωγη»</b>: γεννήθηκε υπό την επίδραση της ελληνικής γραμματείας. Στις ρίζες της βρίσκονται ο <b>Όμηρος</b> και το <b>δράμα</b> — άρρηκτη σύνδεση της ρωμαϊκής παραγωγής με τις ελληνικές πηγές.</p>
+  <div class="milestone">
+    <div class="yr">240<br><small style="font-size:12px;font-weight:400">π.Χ.</small></div>
+    <div class="txt"><b>Η «γενέθλιος» χρονολογία.</b> Ο <b>Λίβιος Ανδρόνικος</b>:
+      <ul class="feat" style="margin-top:8px">
+        <li>Οργανώνει <b>παραστάσεις θεάτρου</b> με ελληνικά έργα διασκευασμένα στα Λατινικά.</li>
+        <li>Μεταφράζει την <b>«Οδύσσεια»</b> του Ομήρου σε <span class="la">σατούρνιο</span> στίχο.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="epoxes">
+  <h2><span class="rn">III</span> Εποχές της Ρωμαϊκής Λογοτεχνίας</h2>
+  <div class="callout wine"><b>Προσοχή:</b> Η «αριστοκρατική» αξιολόγηση (διαίρεση σε «χρυσό», «αργυρό» αιώνα κ.ο.κ.) θεωρείται <b>αντιεπιστημονική</b>.</div>
+  <h3 class="subh">Περιγραφική διαίρεση</h3>
+  <div class="timeline">
+    <div class="tl-eras">
+      <div class="era"><b>Προκλασική / Αρχαϊκή</b> ως το 100 π.Χ.</div>
+      <div class="era"><b>Κλασική</b> ως το 14 μ.Χ.</div>
+      <div class="era"><b>Μετακλασική</b> ως τα μέσα 3ου αι. μ.Χ.</div>
+      <div class="era"><b>Ύστερη Αρχαιότητα</b></div>
+    </div>
+  </div>
+  <h3 class="subh">Ιστορική διαίρεση</h3>
+  <div class="timeline">
+    <div class="tl-eras">
+      <div class="era"><b>Δημοκρατική</b> ως το 31 π.Χ.</div>
+      <div class="era"><b>Αυγούστεια</b> ως το 14 μ.Χ.</div>
+      <div class="era"><b>Αυτοκρατορική</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="xarakt">
+  <h2><span class="rn">IV</span> Γενικά Χαρακτηριστικά</h2>
+  <ul class="feat">
+    <li><b>Στενή συνάφεια με την ελληνική</b> γλώσσα &amp; γραμματεία — τα ελληνικά πρότυπα γονιμοποιούν τα ρωμαϊκά ταλέντα.</li>
+    <li><b>imitatio &amp; aemulatio:</b> δημιουργική πρόσληψη και ανταγωνισμός προς το ελληνικό πρότυπο.</li>
+    <li><b>Ανάμειξη προτύπων:</b> ταυτόχρονη απομίμηση ελληνιστικών, κλασικών &amp; αρχαϊκών προτύπων.</li>
+    <li><b>Ιδιόρρυθμη εξέλιξη ειδών:</b> η κωμωδία (τελευταίος καρπός των Ελλήνων) ωριμάζει πρώτη· το έπος (πρώτος καρπός) ωριμάζει τελευταίο.</li>
+    <li><b>Μεταμόρφωση ή νέα είδη:</b> η ρωμαϊκή ελεγεία απέχει από την ελληνική· η <b>σάτιρα</b> είναι καθαρά ρωμαϊκό είδος.</li>
+    <li><b>Εξειδίκευση:</b> προοδευτικά στενότερο ειδολογικό εύρος και, μετά, συμφυρμός των ειδών.</li>
+    <li><b>Ωρίμανση:</b> με τη συνεχή καλλιέργεια ο λατινικός λόγος εμπλουτίζεται &amp; εξωραΐζεται.</li>
+    <li><b>Ιδεολογικός πλούτος:</b> πάτρια ήθη (<span class="la">mos maiorum</span>), υποδείγματα (<span class="la">exempla</span>), αρετές (<span class="la">virtus</span>, <span class="la">pietas</span>), πολιτεία, θρησκεία, οικογένεια.</li>
+  </ul>
+</section>
+
+<section class="sec" id="klasiki">
+  <h2><span class="rn">V</span> Κλασική Εποχή</h2>
+  <p>Η Λατινική διαμορφώνεται σε <b>όργανο κατάλληλο για έντεχνο λόγο</b>· επιδιώκεται η αρμονική σύζευξη μορφής &amp; περιεχομένου. Μετά το <b>90 π.Χ.</b> εμφανίζεται πλήθος ταλέντων που διαμορφώνει την έννοια του «κλασικού».</p>
+  <div class="g2">
+    <div class="mini"><h4>α) ως ~40 π.Χ.</h4><p>Κικερώνειος λόγος &amp; πεζογραφία.</p></div>
+    <div class="mini"><h4>β) Αυγούστειοι χρόνοι</h4><p>Παίρνει τη σκυτάλη η υψηλή <b>ποίηση</b>.</p></div>
+  </div>
+  <div class="callout"><b>«Κίνημα των Νεωτέρων»:</b> μεταφυτεύεται στη Ρώμη το «μοντερνιστικό» ρεύμα της σχολής του <b>Καλλιμάχου</b> — καλοδουλεμένα, σύντομα, λόγια ποιήματα (λυρική &amp; ελεγειακή ποίηση, επύλλια, επιγράμματα).</div>
+</section>
+
+<section class="sec" id="kikeron">
+  <h2><span class="rn">VI</span> Οι Χρόνοι του Κικέρωνα </h2>
+  <div class="era-band"><span class="lab">Χρόνοι Κικέρωνα</span><span class="yrs">100 – 40 π.Χ.</span><span class="rule"></span></div>
+  <p>Οι εξωτερικές κατακτήσεις και κυρίως οι εσωτερικές συγκρούσεις για την εξουσία διαμορφώνουν το κλίμα. Ο λογοτέχνης της περιόδου χαρακτηρίζεται από: <b>εθνική αυτοσυνειδησία</b> (ιστορία, γλώσσα, δίκαιο), <b>έντονη συμμετοχή</b> στα πολιτικά (ρητορικοί λόγοι) και <b>απογοήτευση</b> → φιλοσοφικός &amp; πολιτικός στοχασμός.</p>
+  ${byGenos('kik')}
+</section>
+
+<section class="sec" id="augoust">
+  <h2><span class="rn">VII</span> Αυγούστειοι Χρόνοι</h2>
+  <div class="era-band"><span class="lab">Αυγούστεια περίοδος</span><span class="yrs">40 π.Χ. – 14 μ.Χ.</span><span class="rule"></span></div>
+  <p>Συνδυασμός <b>καλλιμαχικής αυτάρκειας</b> με το σύγχρονο πολιτικό γίγνεσθαι. Η <b>«πατρωνεία»</b> — οικονομική υποστήριξη λογοτεχνικών κύκλων από τον <b>Αύγουστο</b> &amp; τον <b>Μαικήνα</b> — συχνά με απαίτηση ιδεολογικής στράτευσης.</p>
+  ${byGenos('aug')}
+</section>
+
+<section class="sec" id="askiseis">
+  <h2><span class="rn">✎</span> Ασκήσεις</h2>
+  <p style="color:var(--muted)">Δοκίμασε τον εαυτό σου. Οι απαντήσεις ελέγχονται αμέσως και κρατείται σκορ.</p>
+
+  <h3 class="subh">Α. Σωστό / Λάθος</h3>
+  <div class="quiz" id="tf"></div>
+
+  <h3 class="subh">Β. Πολλαπλής επιλογής</h3>
+  <div class="quiz" id="mc"></div>
+
+  <h3 class="subh">Γ. Αντιστοίχιση συγγραφέα – έργου</h3>
+  <div class="quiz" id="mt">
+    <p style="margin:0 0 12px;color:var(--muted);font-size:14px">Πάτησε έναν συγγραφέα και μετά το έργο του.</p>
+    <div class="match"><div class="col" id="mL"><h5>Συγγραφέας</h5></div><div class="col" id="mR"><h5>Έργο</h5></div></div>
+    <div class="controls"><button class="btn ghost" id="mtReset">Επαναφορά</button><span class="score" id="mtScore"></span></div>
+  </div>
+</section>
+
+<section class="sec" id="paixnidi">
+  <h2><span class="rn">🎮</span> Παιχνίδι Εξάσκησης</h2>
+  <p style="color:var(--muted)">Τυχαίες ερωτήσεις κάθε φορά — συγγραφείς, έργα, χρονολογίες, γένη &amp; περίοδοι. Κάθε γύρος είναι διαφορετικός· δοκίμασε ξανά και ξανά!</p>
+  <div class="quiz" id="litgame"></div>
+</section>
+`;
+document.getElementById('content').innerHTML = CONTENT;
+
+/* nav */
+document.getElementById('nav').innerHTML =
+  '<div class="brand">Εισαγωγή</div><div class="sub">Ρωμαϊκή Λογοτεχνία</div>' +
+  NAV.map(s=>`<a href="#${s.id}" data-to="${s.id}"><span class="n">${s.n}</span>${s.t}</a>`).join('');
+
+/* ═══════════════════ INTERACTIVITY ═══════════════════ */
+let score = {tf:0, mc:0, mt:0};
+const totals = {tf:TF.length, mc:MC.length, mt:MATCH.length};
+
+/* True / False */
+document.getElementById('tf').innerHTML = TF.map((it,i)=>`
+  <div class="qitem">
+    <p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+    <div class="tf" data-i="${i}">
+      <div class="opt" data-v="1">Σωστό</div><div class="opt" data-v="0">Λάθος</div>
+    </div>
+    <div class="explain" id="tfx${i}">${esc(it.ex||'')}</div>
+  </div>`).join('') + `<div class="controls"><span class="score big" id="tfScore">Σκορ: 0 / ${TF.length}</span></div>`;
+document.querySelectorAll('#tf .tf').forEach(row=>{
+  const i=+row.dataset.i;
+  row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+    if(row.dataset.done) return; row.dataset.done='1';
+    const chose = o.dataset.v==='1'; const correct = TF[i].a;
+    row.querySelectorAll('.opt').forEach(x=>{
+      const v = x.dataset.v==='1';
+      if(v===correct){ x.classList.add('correct'); x.querySelector('.mk')||x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+      else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+    });
+    if(chose===correct) score.tf++;
+    if(TF[i].ex) document.getElementById('tfx'+i).classList.add('show');
+    document.getElementById('tfScore').textContent = `Σκορ: ${score.tf} / ${TF.length}`;
+    bump();
+  }));
+});
+
+/* Multiple choice */
+document.getElementById('mc').innerHTML = MC.map((it,i)=>`
+  <div class="qitem">
+    <p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+    <div class="opts" data-i="${i}">
+      ${it.o.map((op,j)=>`<div class="opt" data-j="${j}">${esc(op)}</div>`).join('')}
+    </div>
+    <div class="explain" id="mcx${i}">${esc(it.ex||'')}</div>
+  </div>`).join('') + `<div class="controls"><span class="score big" id="mcScore">Σκορ: 0 / ${MC.length}</span></div>`;
+document.querySelectorAll('#mc .opts').forEach(row=>{
+  const i=+row.dataset.i;
+  row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+    if(row.dataset.done) return; row.dataset.done='1';
+    const j=+o.dataset.j; const a=MC[i].a;
+    row.querySelectorAll('.opt').forEach(x=>{
+      const xj=+x.dataset.j;
+      if(xj===a){ x.classList.add('correct'); x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+      else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+    });
+    if(j===a) score.mc++;
+    if(MC[i].ex) document.getElementById('mcx'+i).classList.add('show');
+    document.getElementById('mcScore').textContent = `Σκορ: ${score.mc} / ${MC.length}`;
+    bump();
+  }));
+});
+
+/* Matching (deterministic shuffle so the two columns don't line up) */
+function shuffle(arr, seed){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ seed=(seed*9301+49297)%233280; const j=Math.floor(seed/233280*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+const rights = shuffle(MATCH.map((m,i)=>({...m,i})), 7);
+const mL=document.getElementById('mL'), mR=document.getElementById('mR');
+mL.insertAdjacentHTML('beforeend', MATCH.map((m,i)=>`<div class="mtile" data-side="L" data-i="${i}">${esc(m.l)}</div>`).join(''));
+mR.insertAdjacentHTML('beforeend', rights.map(m=>`<div class="mtile" data-side="R" data-i="${m.i}"><span class="la">${esc(m.r)}</span></div>`).join(''));
+let pick=null;
+function clearActive(){ document.querySelectorAll('#mt .mtile.active').forEach(t=>t.classList.remove('active')); }
+document.querySelectorAll('#mt .mtile').forEach(t=>t.addEventListener('click',()=>{
+  if(t.classList.contains('done')) return;
+  if(!pick){ clearActive(); pick=t; t.classList.add('active'); return; }
+  if(pick===t){ pick=null; t.classList.remove('active'); return; }
+  if(pick.dataset.side===t.dataset.side){ clearActive(); pick=t; t.classList.add('active'); return; }
+  // we have an L and an R
+  const L = pick.dataset.side==='L'?pick:t;
+  const R = pick.dataset.side==='R'?pick:t;
+  const ok = L.dataset.i===R.dataset.i;
+  if(ok){
+    [L,R].forEach(x=>{x.classList.add('done'); x.classList.remove('active');});
+    L.insertAdjacentHTML('beforeend',' <span class="badge">✓</span>');
+    score.mt++; document.getElementById('mtScore').textContent = `Σκορ: ${score.mt} / ${MATCH.length}`;
+    if(score.mt===MATCH.length) document.getElementById('mtScore').textContent += '  — τέλεια! 🏛️';
+    bump();
+  } else {
+    [L,R].forEach(x=>{x.classList.add('miss');});
+    setTimeout(()=>{[L,R].forEach(x=>x.classList.remove('miss','active'));},550);
+  }
+  pick=null;
+}));
+document.getElementById('mtReset').addEventListener('click',()=>{
+  score.mt=0; pick=null;
+  document.querySelectorAll('#mt .mtile').forEach(t=>{t.classList.remove('done','active','miss'); const b=t.querySelector('.badge'); if(b)b.remove();});
+  document.getElementById('mtScore').textContent='';
+});
+
+/* ═══════════════════ ΠΑΙΧΝΙΔΙ ΕΞΑΣΚΗΣΗΣ — γεννήτρια τυχαίων ερωτήσεων ═══════════════════ */
+(function(){
+  const G = document.getElementById('litgame');
+  if(!G) return;
+  const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+  const shuffle = arr => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+  const uniq = arr => [...new Set(arr)];
+  const PERIODS = { kik:'Χρόνοι Κικέρωνα (100–40 π.Χ.)', aug:'Αυγούστειοι Χρόνοι (40 π.Χ.–14 μ.Χ.)' };
+  const GENRES = ['Πεζογραφία','Ιστοριογραφία','Ποίηση'];
+  // authors carrying at least one clean Latin work-title (for work↔author questions)
+  const titled = AUTHORS.map(a=>({a, works:a.works.filter(w=>w.la && /^[A-ZÀ-Ý]/.test(w.la) && w.la.length<42 && !/\d/.test(w.la))}))
+                        .filter(x=>x.works.length);
+  const allTitles = uniq([].concat(...titled.map(x=>x.works.map(w=>w.la))));
+
+  function genPool(){
+    const Q=[];
+    titled.forEach(({a,works})=>{
+      const w = rnd(works).la;
+      const distract = shuffle(AUTHORS.filter(x=>x.gr!==a.gr)).slice(0,3).map(x=>x.gr);
+      Q.push({ q:`Ποιος έγραψε το «${w}»;`, o:shuffle(uniq([a.gr,...distract])), ans:a.gr, ex:`${a.gr} (${a.la}).` });
+    });
+    titled.forEach(({a,works})=>{
+      const correct = rnd(works).la;
+      const others = shuffle(allTitles.filter(t=>!works.some(w=>w.la===t))).slice(0,3);
+      Q.push({ q:`Ποιο έργο έγραψε ο ${a.gr};`, o:shuffle(uniq([correct,...others])), ans:correct, ex:`${a.gr}: ${a.works.map(w=>w.la||w.gr).join(' · ')}.` });
+    });
+    AUTHORS.forEach(a=>Q.push({ q:`Σε ποιο λογοτεχνικό γένος εντάσσεται κυρίως ο ${a.gr};`, o:GENRES.slice(), ans:a.genos, ex:`${a.gr}: ${a.genos}.` }));
+    AUTHORS.forEach(a=>Q.push({ q:`Σε ποια περίοδο έδρασε ο ${a.gr};`, o:[PERIODS.kik,PERIODS.aug], ans:PERIODS[a.era], ex:`${a.gr} (${a.dt}).` }));
+    MC.forEach(m=>Q.push({ q:m.q, o:m.o.slice(), ans:m.o[m.a], ex:m.ex||'' }));
+    TF.forEach(t=>Q.push({ q:t.q, o:['Σωστό','Λάθος'], ans:t.a?'Σωστό':'Λάθος', ex:t.ex||'' }));
+    return Q;
+  }
+
+  const ROUND = 10;
+  let pool=[], idx=0, sc=0, cur=null;
+  function start(){ pool = shuffle(genPool()).slice(0, ROUND); idx=0; sc=0; delete G.dataset.done; render(); }
+  function render(){
+    if(idx>=pool.length){ return results(); }
+    cur = pool[idx]; delete G.dataset.done;
+    G.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<span class="score">Ερώτηση '+(idx+1)+' / '+pool.length+'</span>'+
+        '<span class="score big">Σκορ: '+sc+'</span></div>'+
+      '<div class="progress" style="margin:0 0 16px"><i style="width:'+(idx/pool.length*100)+'%"></i></div>'+
+      '<p class="q" style="font-size:17px;margin:0 0 14px">'+esc(cur.q)+'</p>'+
+      '<div class="opts" id="lgOpts">'+cur.o.map((op,j)=>'<div class="opt" data-j="'+j+'">'+esc(op)+'</div>').join('')+'</div>'+
+      '<div class="explain" id="lgEx">'+esc(cur.ex||'')+'</div>'+
+      '<div class="controls"><button class="btn" id="lgNext" style="display:none">Επόμενη →</button></div>';
+    G.querySelectorAll('#lgOpts .opt').forEach(o=>o.addEventListener('click',()=>{
+      if(G.dataset.done) return; G.dataset.done='1';
+      const chose = cur.o[+o.dataset.j];
+      G.querySelectorAll('#lgOpts .opt').forEach(x=>{
+        const v=cur.o[+x.dataset.j];
+        if(v===cur.ans){ x.classList.add('correct'); x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>'); }
+        else if(x===o){ x.classList.add('wrong'); x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>'); }
+      });
+      if(chose===cur.ans) sc++;
+      if(cur.ex) document.getElementById('lgEx').classList.add('show');
+      const nx=document.getElementById('lgNext'); nx.style.display='inline-block';
+      nx.textContent = (idx+1>=pool.length) ? 'Αποτελέσματα →' : 'Επόμενη →';
+      nx.addEventListener('click',()=>{ idx++; render(); },{once:true});
+    }));
+  }
+  function results(){
+    const pct = Math.round(sc/pool.length*100);
+    const msg = pct>=80?'Άριστα! 🏛️':pct>=50?'Καλή προσπάθεια! 💪':'Συνέχισε την εξάσκηση! 📚';
+    G.innerHTML =
+      '<div style="text-align:center;padding:10px 0">'+
+        '<div class="score big" style="font-size:34px;color:var(--wine)">'+sc+' / '+pool.length+'</div>'+
+        '<p style="color:var(--muted);margin:6px 0 16px">'+msg+'</p>'+
+        '<button class="btn" id="lgAgain">🎲 Νέος γύρος</button></div>';
+    document.getElementById('lgAgain').addEventListener('click',start);
+  }
+  G.innerHTML =
+    '<div style="text-align:center;padding:14px 0">'+
+      '<p style="margin:0 0 14px">Δέκα <b>τυχαίες</b> ερωτήσεις για τη ρωμαϊκή λογοτεχνία — κάθε γύρος διαφορετικός.</p>'+
+      '<button class="btn" id="lgStart">▶︎ Ξεκίνα</button></div>';
+  document.getElementById('lgStart').addEventListener('click',start);
+})();
+
+/* progress bar = fraction of exercises answered */
+function bump(){
+  const answered = document.querySelectorAll('#tf .tf[data-done], #mc .opts[data-done]').length + score.mt;
+  const total = totals.tf + totals.mc + totals.mt;
+  document.getElementById('pbar').style.width = Math.round(answered/total*100)+'%';
+}
+
+/* scrollspy + back-to-top */
+const links = [...document.querySelectorAll('nav.side a')];
+const secs = NAV.map(s=>document.getElementById(s.id));
+const spy = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ const id=e.target.id;
+    links.forEach(l=>l.classList.toggle('on', l.dataset.to===id)); } });
+},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>s&&spy.observe(s));
+const toTop=document.getElementById('toTop');
+window.addEventListener('scroll',()=>toTop.classList.toggle('show', window.scrollY>500),{passive:true});
+toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>

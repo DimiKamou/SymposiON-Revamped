@@ -1,0 +1,260 @@
+// ============================================================
+//  SymposiON — Λατινικά · Κείμενα (Latin text-analysis panels)
+//  Opens each Ενότητα's analysis panel as a full-screen overlay iframe.
+//  The panel (games/latin-texts/enotita.html) is a self-contained React 18
+//  app (vendored React, no CDN) that reads ?unit=NN and renders the 7-part
+//  study panel — Κείμενο, Μετάφραση, Ουσιαστικά/Επίθετα, Παραθετικά,
+//  Αντωνυμίες, Ρήματα, SOS. The iframe isolates its React runtime from the
+//  vanilla shell; the shared `.game-overlay` class auto-suppresses the custom
+//  cursor / mouse-FX while open — same mechanism as the Voyage games.
+//
+//  Add a text = add games/latin-texts/units/unitNN.js + one line in UNITS
+//  below (+ a tile in data.js). Public openers: openLatinText(n, title),
+//  openLatinText16 … ; closeLatinText().
+// ============================================================
+(function () {
+  'use strict';
+
+  // Registry of published Ενότητες → header title used on the overlay topbar.
+  var UNITS = {
+    16: 'Λατινικά · Ενότητα 16 — Η τελευταία μάχη του Καίσαρα στη Γαλατία',
+    17: 'Λατινικά · Ενότητα 17 — Φόβος μπροστά στο άγνωστο',
+    18: 'Λατινικά · Ενότητα 18 — Ο Ηρακλής στην Ιταλία',
+    19: 'Λατινικά · Ενότητα 19 — Η συνωμοσία του Κατιλίνα',
+    20: 'Λατινικά · Ενότητα 20 — Πίσω από τις κουρτίνες ή πώς ο Κλαύδιος έγινε αυτοκράτορας',
+    21: 'Λατινικά · Ενότητα 21 — Πώς πήρε το όνομά του το Πίσαυρο',
+    22: 'Λατινικά · Ενότητα 22 — Προτροπές προς τους Ρωμαίους',
+    23: 'Λατινικά · Ενότητα 23 — Ένας υπέροχος άνθρωπος',
+    24: 'Λατινικά · Ενότητα 24 — Το πάθημα ενός ψεύτη',
+    25: 'Λατινικά · Ενότητα 25 — Πώς ένα σύκο στάθηκε αφορμή να καταστραφεί η Καρχηδόνα',
+    26: 'Λατινικά · Ενότητα 26 — Ο Πλίνιος αναγγέλλει ένα θλιβερό γεγονός',
+    27: 'Λατινικά · Ενότητα 27 — Το πνεύμα ωριμάζει όπως και οι καρποί',
+    28: 'Λατινικά · Ενότητα 28 — Στα ίχνη ενός δραπέτη δούλου',
+    29: 'Λατινικά · Ενότητα 29 — Ο Οκταβιανός, ο παπουτσής και το κοράκι',
+    30: 'Λατινικά · Ενότητα 30 — Ο Λικίνιος Μουρήνας και τα ήθη της Ανατολής',
+    31: 'Λατινικά · Ενότητα 31 — Η γενναιότητα δε βγαίνει πάντα σε καλό',
+    32: 'Λατινικά · Ενότητα 32 — Ένας πανηγυρικός της λογοτεχνίας',
+    33: 'Λατινικά · Ενότητα 33 — Καιρός για ανασυγκρότηση',
+    34: 'Λατινικά · Ενότητα 34 — Ο Σκιπίωνας ο Αφρικανός και οι λήσταρχοι',
+    35: 'Λατινικά · Ενότητα 35 — Ο φιλόσοφος μπροστά στα δεινά της εξορίας',
+    36: 'Λατινικά · Ενότητα 36 — Μια απόπειρα δωροδοκίας',
+    37: 'Λατινικά · Ενότητα 37 — Η κατάρα των εμφυλίων πολέμων',
+    38: 'Λατινικά · Ενότητα 38 — Η μοίρα της Καικιλίας',
+    39: 'Λατινικά · Ενότητα 39 — Ένα πρότυπο ιδανικού ανθρώπου',
+    40: 'Λατινικά · Ενότητα 40 — Ακλόνητη αποφασιστικότητα μπροστά στις απειλές του δικτάτορα',
+    41: 'Λατινικά · Ενότητα 41 — Μίλα για να σε καταλαβαίνουν, όχι για να μιλάς',
+    42: 'Λατινικά · Ενότητα 42 — Ο Κικέρωνας και η συνωμοσία του Κατιλίνα',
+    43: 'Λατινικά · Ενότητα 43 — Η οργή της μάνας',
+    44: 'Λατινικά · Ενότητα 44 — Η ζωή των τυράννων',
+    45: 'Λατινικά · Ενότητα 45 — Μια επιστολή στα ελληνικά αναπτερώνει το ηθικό των πολιορκημένων',
+    46: 'Λατινικά · Ενότητα 46 — Το γενικό συμφέρον μπαίνει πριν από το ατομικό',
+    47: 'Λατινικά · Ενότητα 47 — Ο Αύγουστος και η φιλαρέσκεια της κόρης του, της Ιουλίας',
+    48: 'Λατινικά · Ενότητα 48 — Το ελάφι του Σερτώριου',
+    49: 'Λατινικά · Ενότητα 49 — Η Πορκία και ο Βρούτος',
+    50: 'Λατινικά · Ενότητα 50 — Η φτώχεια και η απληστία είναι κακοί σύμβουλοι της εξουσίας'
+  };
+
+  function _appBase() { return window.APP_BASE || (new URL('./', location.href).href); }
+  var OVID = 'latin-texts-overlay';
+
+  function closeLatinText() {
+    var ov = document.getElementById(OVID);
+    if (ov) {
+      ov.classList.remove('active');
+      var fr = ov.querySelector('iframe');
+      if (fr) fr.src = 'about:blank';   // stop the inner React app + free memory
+    }
+    document.body.style.overflow = '';
+  }
+  window.closeLatinText = closeLatinText;
+
+  function openLatinText(n, title) {
+    n = parseInt(n, 10) || 16;
+    title = title || UNITS[n] || ('Λατινικά · Ενότητα ' + n);
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = document.getElementById(OVID);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = OVID;
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      ov.innerHTML =
+        '<div class="overlay-topbar">' +
+          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+          '<span class="overlay-title"></span>' +
+          '<span style="width:64px;display:inline-block"></span>' +
+        '</div>' +
+        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+          '<iframe title="" allow="fullscreen" ' +
+            'style="width:100%;height:100%;border:none;display:block;background:#e7e0cf"></iframe>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    }
+    ov.querySelector('.overlay-title').textContent = title;
+    var fr = ov.querySelector('iframe');
+    fr.title = title;
+    fr.src = _appBase() + 'games/latin-texts/enotita.html?unit=' + n;
+    fr.addEventListener('load', function _l() {
+      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
+      fr.removeEventListener('load', _l);
+    });
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+  }
+  window.openLatinText = openLatinText;
+
+  // Per-unit openers (one global per published Ενότητα, à la openIliadaVoyage).
+  Object.keys(UNITS).forEach(function (n) {
+    window['openLatinText' + n] = function () { openLatinText(n, UNITS[n]); };
+  });
+  window.LATIN_TEXT_UNITS = UNITS;
+
+  // ── Ανάλυση Κειμένων picker — one entry that opens a grouped grid of Ενότητες 16–50.
+  //    Selecting a card opens that text's analysis panel (openLatinText); closing it
+  //    returns here. Keeps the Γ΄ Λυκείου subject to a handful of tiles. ──
+  function _tpInjectCSS() {
+    if (document.getElementById('latin-tp-css')) return;
+    var s = document.createElement('style');
+    s.id = 'latin-tp-css';
+    s.textContent =
+      '#latin-textpicker-overlay .tp-wrap{overflow-y:auto;height:calc(100% - 56px);padding:22px 20px 60px;max-width:1040px;margin:0 auto;box-sizing:border-box}' +
+      '#latin-textpicker-overlay .tp-group{font-family:Georgia,serif;color:#8a5a3a;font-size:14px;letter-spacing:.05em;text-transform:uppercase;margin:22px 4px 10px;border-bottom:1px solid rgba(140,90,60,.25);padding-bottom:6px}' +
+      '#latin-textpicker-overlay .tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}' +
+      '#latin-textpicker-overlay .tp-card{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 15px;border:1px solid rgba(120,90,60,.28);border-radius:13px;background:rgba(255,252,245,.9);cursor:pointer;transition:.15s;font-family:inherit;color:#2a231a}' +
+      '#latin-textpicker-overlay .tp-card:hover{border-color:#c96a45;transform:translateY(-2px);box-shadow:0 12px 26px -16px rgba(60,40,20,.5)}' +
+      '#latin-textpicker-overlay .tp-num{flex:0 0 auto;width:38px;height:38px;border-radius:9px;background:#efe6d6;color:#8a5a3a;font-family:Georgia,serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center}' +
+      '#latin-textpicker-overlay .tp-title{font-size:14px;line-height:1.3}' +
+      '@media(prefers-color-scheme:dark){#latin-textpicker-overlay .tp-card{background:rgba(40,36,30,.9);color:#e8dcc8;border-color:rgba(150,110,80,.3)}#latin-textpicker-overlay .tp-num{background:#3a3025;color:#d9a56a}}';
+    document.head.appendChild(s);
+  }
+  function openLatinTextPicker() {
+    _tpInjectCSS();
+    var ov = document.getElementById('latin-textpicker-overlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'latin-textpicker-overlay';
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      var groups = {};
+      Object.keys(UNITS).forEach(function (k) { var n = parseInt(k, 10); var lo = Math.floor((n - 1) / 10) * 10 + 1; (groups[lo] = groups[lo] || []).push(n); });
+      var html = '<div class="overlay-topbar">' +
+        '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+        '<span class="overlay-title">Λατινικά · Ανάλυση Κειμένων</span>' +
+        '<span style="width:64px;display:inline-block"></span></div>' +
+        '<div class="tp-wrap">';
+      Object.keys(groups).map(Number).sort(function (a, b) { return a - b; }).forEach(function (lo) {
+        html += '<div class="tp-group">Ενότητες ' + lo + '–' + (lo + 9) + '</div><div class="tp-grid">';
+        groups[lo].sort(function (a, b) { return a - b; }).forEach(function (n) {
+          var full = UNITS[n] || ('Ενότητα ' + n);
+          var title = full.indexOf('—') >= 0 ? full.split('—').slice(1).join('—').trim() : full;
+          html += '<button class="tp-card" type="button" data-n="' + n + '">' +
+            '<span class="tp-num">' + n + '</span><span class="tp-title">' + title + '</span></button>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      ov.innerHTML = html;
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', function () { ov.classList.remove('active'); document.body.style.overflow = ''; });
+      ov.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.tp-card');
+        if (b) openLatinText(parseInt(b.getAttribute('data-n'), 10));
+      });
+    }
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  window.openLatinTextPicker = openLatinTextPicker;
+
+  // Εισαγωγή — standalone interactive introduction chapter (not a unit panel).
+  // Reuses the same overlay shell but loads eisagogi.html instead of enotita.html.
+  function openLatinIntro() {
+    var title = 'Λατινικά · Εισαγωγή στη Ρωμαϊκή Λογοτεχνία';
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = document.getElementById(OVID);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = OVID;
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      ov.innerHTML =
+        '<div class="overlay-topbar">' +
+          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+          '<span class="overlay-title"></span>' +
+          '<span style="width:64px;display:inline-block"></span>' +
+        '</div>' +
+        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+          '<iframe title="" allow="fullscreen" ' +
+            'style="width:100%;height:100%;border:none;display:block;background:#ecede7"></iframe>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    }
+    ov.querySelector('.overlay-title').textContent = title;
+    var fr = ov.querySelector('iframe');
+    fr.title = title;
+    fr.src = _appBase() + 'games/latin-texts/eisagogi.html';
+    fr.addEventListener('load', function _l() {
+      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
+      fr.removeEventListener('load', _l);
+    });
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+  }
+  window.openLatinIntro = openLatinIntro;
+
+  // Θεωρία Συντακτικού — standalone interactive syntax-theory chapters (like the Εισαγωγή).
+  // Each is a self-contained HTML page (games/latin-texts/<slug>.html) opened in the overlay.
+  var SYNTAX = {
+    'syntax-domi': 'Λατινικά · Θεωρία Συντακτικού — Η Δομή της Πρότασης',
+    'syntax-deuterevouses': 'Λατινικά · Θεωρία Συντακτικού — Οι Δευτερεύουσες Προτάσεις',
+    'syntax-cum': 'Λατινικά · Θεωρία Συντακτικού — Ο Σύνδεσμος Cum',
+    'syntax-gerund': 'Λατινικά · Θεωρία Συντακτικού — Γερούνδιο · Σουπίνο · Γερουνδιακό',
+    'syntax-plagios': 'Λατινικά · Θεωρία Συντακτικού — Ο Πλάγιος Λόγος',
+    'morphologia': 'Λατινικά · Θεωρία Μορφολογίας'
+  };
+  function openLatSyntax(slug, title) {
+    title = title || SYNTAX[slug] || 'Λατινικά · Θεωρία Συντακτικού';
+    if (window.SymLoader && typeof SymLoader.show === 'function') { try { SymLoader.show(); } catch (_) {} }
+    var ov = document.getElementById(OVID);
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = OVID;
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      ov.innerHTML =
+        '<div class="overlay-topbar">' +
+          '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+          '<span class="overlay-title"></span>' +
+          '<span style="width:64px;display:inline-block"></span>' +
+        '</div>' +
+        '<div class="overlay-frame" style="padding:0;overflow:hidden">' +
+          '<iframe title="" allow="fullscreen" ' +
+            'style="width:100%;height:100%;border:none;display:block;background:#ecede7"></iframe>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', closeLatinText);
+    }
+    ov.querySelector('.overlay-title').textContent = title;
+    var fr = ov.querySelector('iframe');
+    fr.title = title;
+    fr.src = _appBase() + 'games/latin-texts/' + slug + '.html';
+    fr.addEventListener('load', function _l() {
+      if (window.SymLoader && typeof SymLoader.hide === 'function') { try { SymLoader.hide(); } catch (_) {} }
+      fr.removeEventListener('load', _l);
+    });
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { if (window.SymLoader && SymLoader.hide) { try { SymLoader.hide(); } catch (_) {} } }, 2500);
+  }
+  window.openLatSyntax = openLatSyntax;
+  window.openLatSyntaxDomi = function () { openLatSyntax('syntax-domi'); };
+  window.openLatSyntaxDeuterevouses = function () { openLatSyntax('syntax-deuterevouses'); };
+  window.openLatSyntaxCum = function () { openLatSyntax('syntax-cum'); };
+  window.openLatSyntaxGerund = function () { openLatSyntax('syntax-gerund'); };
+  window.openLatSyntaxPlagios = function () { openLatSyntax('syntax-plagios'); };
+  window.openLatMorphologia = function () { openLatSyntax('morphologia'); };
+})();

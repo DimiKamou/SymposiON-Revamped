@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Λατινικά · Θεωρία Συντακτικού — Ο Πλάγιος Λόγος</title>
+<link rel="stylesheet" href="fonts.css" />
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Θεωρία Συντακτικού — Ο Σύνδεσμος Cum (αυτόνομη σελίδα)
+   Ίδια παλέτα/τυπογραφία με την Εισαγωγή & τα panels ανάλυσης.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --font-display:'EB Garamond',Georgia,serif;
+  --font-body:'EB Garamond',Georgia,serif;
+  --font-ui:'Commissioner',system-ui,sans-serif;
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168);
+  --accent-soft:color-mix(in oklab, var(--accent) 12%, var(--panel));
+  --wine:oklch(0.47 0.13 20);
+  --wine-soft:color-mix(in oklab, var(--wine) 12%, var(--panel));
+  --gold:oklch(0.66 0.11 78);
+  --ok:oklch(0.55 0.13 150); --bad:oklch(0.55 0.15 25);
+  --shadow:0 14px 34px -20px rgba(20,30,20,.45);
+  --radius:16px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+    --muted:#9ba695; --line:#363d33;
+    --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+    --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#191c17; --panel:#212620; --panel2:#2a2f28; --ink:#e8ece3;
+  --muted:#9ba695; --line:#363d33;
+  --accent:oklch(0.78 0.12 165); --wine:oklch(0.72 0.12 22); --gold:oklch(0.78 0.12 80);
+  --shadow:0 16px 40px -22px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --bg:#ecede7; --panel:#fbfcf8; --panel2:#eff1ea; --ink:#20261e;
+  --muted:#5f6b5b; --line:#dae0d3;
+  --accent:oklch(0.47 0.10 168); --wine:oklch(0.47 0.13 20); --gold:oklch(0.66 0.11 78);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.6; font-size:17px; -webkit-font-smoothing:antialiased}
+.wrap{display:flex; min-height:100vh; align-items:stretch}
+nav.side{width:250px; flex:0 0 250px; background:var(--panel); border-right:1px solid var(--line); position:sticky; top:0; height:100vh; overflow-y:auto; padding:22px 16px}
+nav.side .brand{font-family:var(--font-display); font-weight:700; letter-spacing:.03em; color:var(--wine); font-size:15px; text-transform:uppercase; margin:0 0 4px}
+nav.side .sub{color:var(--muted); font-size:12.5px; margin:0 0 18px}
+nav.side a{display:flex; gap:9px; align-items:baseline; text-decoration:none; color:var(--muted); padding:8px 10px; border-radius:10px; font-size:14.5px; transition:.15s; margin-bottom:2px}
+nav.side a .n{font-family:var(--font-display); font-size:12px; color:var(--wine); min-width:20px; opacity:.8}
+nav.side a:hover{background:var(--panel2); color:var(--ink)}
+nav.side a.on{background:var(--accent-soft); color:var(--ink); font-weight:600}
+nav.side a.on .n{opacity:1}
+main{flex:1 1 auto; min-width:0; max-width:920px; margin:0 auto; padding:34px 30px 90px}
+header.hero{margin-bottom:30px}
+header.hero .kick{color:var(--wine); font-family:var(--font-display); letter-spacing:.14em; font-size:12px; text-transform:uppercase; margin-bottom:8px}
+header.hero h1{font-family:var(--font-display); font-weight:700; font-size:31px; line-height:1.15; margin:0 0 10px; color:var(--ink)}
+header.hero h1 .la{font-style:italic; color:var(--wine)}
+header.hero p.lead{color:var(--muted); font-size:16px; margin:0; max-width:64ch}
+.progress{margin-top:18px; height:7px; background:var(--panel2); border-radius:99px; overflow:hidden; border:1px solid var(--line)}
+.progress > i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--wine)); transition:width .35s ease}
+section.sec{scroll-margin-top:16px; margin:38px 0; animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+section.sec > h2{font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--ink); display:flex; align-items:center; gap:12px; margin:0 0 4px; padding-bottom:12px; border-bottom:2px solid var(--line)}
+section.sec > h2 .rn{font-size:14px; color:var(--wine); border:1.5px solid color-mix(in oklab,var(--wine) 40%,transparent); border-radius:8px; padding:3px 9px; font-family:var(--font-display)}
+h3.subh{font-family:var(--font-display); font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--wine); margin:24px 0 10px}
+p{margin:0 0 13px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); margin:16px 0}
+.callout{border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:12px; padding:14px 18px; margin:16px 0; font-size:15.5px}
+.callout.wine{border-left-color:var(--wine); background:var(--wine-soft)}
+.callout b{color:var(--ink)}
+.la{font-style:italic; color:var(--wine)}
+@media(prefers-color-scheme:dark){.la{color:var(--gold)}}
+:root[data-theme="dark"] .la{color:var(--gold)}
+:root[data-theme="light"] .la{color:var(--wine)}
+.tag{display:inline-block; font-family:var(--font-ui); font-size:12px; font-weight:600; color:var(--wine); background:var(--wine-soft); border:1px solid color-mix(in oklab,var(--wine) 25%,var(--line)); border-radius:99px; padding:1px 10px; vertical-align:middle}
+
+/* ── classification diagram (cum → έγκλιση → είδη) ── */
+.cumtree{margin:20px 0 8px}
+.cumtree .root{display:flex; justify-content:center; margin-bottom:6px}
+.cumtree .node{font-family:var(--font-display); font-weight:700; text-align:center; border-radius:12px; padding:9px 16px; border:1.5px solid var(--line); background:var(--panel)}
+.cumtree .node.cum{font-size:20px; color:var(--wine); border-color:color-mix(in oklab,var(--wine) 45%,transparent); background:var(--wine-soft)}
+.cumtree .branches{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px}
+.cumtree .limb{border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--panel2)}
+.cumtree .limb > .mood{display:block; text-align:center; font-family:var(--font-ui); font-size:12.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:10px}
+.cumtree .limb > .mood b{color:var(--ink); font-family:var(--font-display); font-size:14px; text-transform:none; letter-spacing:0}
+.cumtree .kinds{display:flex; flex-direction:column; gap:8px}
+.cumtree .kind{display:flex; align-items:center; gap:9px; background:var(--panel); border:1.5px solid var(--line); border-radius:10px; padding:8px 12px; font-size:14.5px; text-decoration:none; color:var(--ink); transition:.14s}
+.cumtree .kind:hover{border-color:var(--accent); transform:translateX(3px)}
+.cumtree .kind .dot{width:9px; height:9px; border-radius:50%; background:var(--accent); flex:0 0 auto}
+.cumtree .kind.hist .dot{background:var(--wine)}
+.cumtree .kind b{font-family:var(--font-display)}
+
+/* ── example boxes ── */
+.exbox{border:1px solid var(--line); border-left:4px solid var(--gold); border-radius:12px; padding:13px 16px; margin:12px 0; background:var(--panel)}
+.exbox .la{font-style:italic; color:var(--wine); font-size:16px}
+.exbox .la u{text-decoration-color:var(--accent); text-underline-offset:3px}
+.exbox .gr{color:var(--muted); font-size:15px; margin-top:4px}
+.exbox .ref{float:right; font-family:var(--font-ui); font-size:11.5px; font-weight:600; color:var(--muted); background:var(--panel2); border:1px solid var(--line); border-radius:99px; padding:1px 9px; margin-left:8px}
+.rulegrid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0}
+.rulegrid .rc{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+.rulegrid .rc h4{margin:0 0 5px; font-family:var(--font-display); font-size:14.5px; color:var(--wine)}
+.rulegrid .rc p{margin:0; font-size:14px; color:var(--muted)}
+
+/* ── Exercises (identical machinery to Εισαγωγή) ── */
+.opts{display:flex; flex-direction:column; gap:8px}
+.opt{display:flex; align-items:center; gap:10px; padding:10px 14px; border:1.5px solid var(--line); border-radius:11px; cursor:pointer; background:var(--panel2); transition:.14s; font-size:15px}
+.opt:hover{border-color:var(--accent)}
+.opt.correct{border-color:var(--ok); background:color-mix(in oklab,var(--ok) 15%,var(--panel)); color:var(--ink)}
+.opt.wrong{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 13%,var(--panel))}
+.opt .mk{margin-left:auto; font-weight:700}
+.tf{display:flex; gap:10px}
+.tf .opt{flex:1; justify-content:center; font-family:var(--font-display); font-size:14px}
+.quiz{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:16px 0; box-shadow:var(--shadow)}
+.qitem{padding:16px 0; border-bottom:1px solid var(--line)}
+.qitem:last-child{border-bottom:0; padding-bottom:2px}
+.qitem .q{font-weight:600; margin:0 0 12px; font-size:16px}
+.qitem .q .qn{color:var(--wine); font-family:var(--font-display); margin-right:6px}
+.explain{margin-top:9px; font-size:14px; color:var(--muted); display:none; padding:9px 12px; background:var(--panel2); border-radius:9px; border-left:3px solid var(--accent)}
+.explain.show{display:block; animation:fade .3s ease both}
+.match{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.match .col{display:flex; flex-direction:column; gap:8px}
+.match .col h5{margin:0 0 3px; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-family:var(--font-display)}
+.mtile{padding:10px 13px; border:1.5px solid var(--line); border-radius:11px; background:var(--panel2); cursor:pointer; transition:.14s; font-size:14.5px}
+.mtile .la{font-style:italic}
+.mtile:hover{border-color:var(--accent)}
+.mtile.active{border-color:var(--wine); background:var(--wine-soft); box-shadow:0 0 0 2px color-mix(in oklab,var(--wine) 30%,transparent)}
+.mtile.done{cursor:default; opacity:.62}
+.mtile.done .badge{float:right; font-family:var(--font-display); font-size:12px; color:var(--wine)}
+.mtile.miss{border-color:var(--bad); background:color-mix(in oklab,var(--bad) 12%,var(--panel))}
+.controls{display:flex; gap:10px; align-items:center; margin-top:16px; flex-wrap:wrap}
+button.btn{font-family:inherit; font-size:14.5px; padding:9px 18px; border-radius:11px; border:1.5px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer; transition:.15s; font-weight:600}
+button.btn.ghost{background:transparent; color:var(--accent)}
+button.btn.ghost:hover{background:var(--accent-soft)}
+.score{font-family:var(--font-display); font-weight:700; color:var(--wine)}
+.score.big{font-size:16px}
+.toTop{position:fixed; right:20px; bottom:20px; width:44px; height:44px; border-radius:50%; background:var(--wine); color:#fff; border:none; cursor:pointer; box-shadow:var(--shadow); font-size:19px; opacity:0; pointer-events:none; transition:.25s}
+.toTop.show{opacity:1; pointer-events:auto}
+.footnote{color:var(--muted); font-size:13px; margin-top:30px; padding-top:16px; border-top:1px solid var(--line)}
+@media (max-width:880px){
+  .wrap{flex-direction:column}
+  nav.side{position:static; width:100%; height:auto; border-right:0; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:4px; padding:12px}
+  nav.side .brand,nav.side .sub{width:100%}
+  nav.side a{padding:6px 10px; font-size:13px}
+  main{padding:22px 16px 80px}
+  .cumtree .branches,.rulegrid,.match{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="side" id="nav"></nav>
+  <main id="main">
+    <header class="hero">
+      <div class="kick">Λατινικά · Θεωρία Συντακτικού</div>
+      <h1>Ο Πλάγιος Λόγος</h1>
+      <p class="lead">Πώς τα λόγια ή οι σκέψεις κάποιου μεταφέρονται εξαρτημένα (oratio obliqua): η μετατροπή κύριων και δευτερευουσών προτάσεων, οι ευθείες & πλάγιες ερωτήσεις και οι μεταβολές σε εγκλίσεις, χρόνους και αντωνυμίες — με παραδείγματα από τα κείμενα.</p>
+      <div class="progress"><i id="pbar"></i></div>
+    </header>
+    <div id="content"></div>
+    <p class="footnote">Θεωρία Συντακτικού · Λατινικά Γ΄ Λυκείου — τα παραδείγματα προέρχονται από την ανάλυση των σχολικών κειμένων (ο αριθμός «κείμ. Ν» δηλώνει την ενότητα).</p>
+  </main>
+</div>
+<button class="toTop" id="toTop" title="Πάνω">↑</button>
+<script>
+const NAV = [{"id":"plagios-genika","n":"I","t":"Πλάγιος Λόγος — Γενικά & Μετατροπή Κυρίων Προτάσεων"},{"id":"plagios-deuter","n":"II","t":"Οι Δευτερεύουσες Προτάσεις στον Πλάγιο Λόγο"},{"id":"plagios-metaboles","n":"III","t":"Αντωνυμίες · Χρόνοι · Άλλες Μεταβολές"},{"id":"eutheies-erot","n":"IV","t":"Οι Ευθείες Ερωτήσεις"},{"id":"askiseis","n":"✎","t":"Ασκήσεις"}];
+const TF = [{"q":"Στον πλάγιο λόγο των Λατινικών υπάρχει πάντοτε ή υποτακτική ή απαρέμφατο.","a":true,"ex":"Σε αντίθεση με τα αρχαία ελληνικά (οριστική, υποτακτική, ευκτική, απαρέμφατο), ο λατινικός πλάγιος λόγος περιορίζεται σε υποτακτική ή απαρέμφατο."},{"q":"Οι δευτερεύουσες προτάσεις που στον ευθύ λόγο εκφέρονται με οριστική, στον πλάγιο λόγο τρέπονται σε υποτακτική.","a":true,"ex":"Ακριβώς — στην ίδια χρονική βαθμίδα, εφαρμόζοντας τους κανόνες της ακολουθίας των χρόνων."},{"q":"Στον πλάγιο (εξαρτημένο) υποθετικό λόγο η υπόθεση (si/nisi) εκφέρεται με υποτακτική, λόγω έλξης της έγκλισης.","a":true,"ex":"Η απόδοση δεν είναι πια ανεξάρτητη κύρια, γι' αυτό και η υπόθεση παρασύρεται σε υποτακτική."},{"q":"Οι ευθείες ερωτήσεις είναι κύριες προτάσεις και τίθενται χωρίς εξάρτηση από ρήμα.","a":true,"ex":"Σωστό· η ερώτηση εκφράζεται απευθείας από αυτόν που ρωτάει."},{"q":"Οι κύριες προτάσεις κρίσεως τρέπονται στον πλάγιο λόγο σε δευτερεύουσα βουλητική πρόταση.","a":false,"ex":"Οι κύριες κρίσεως (οριστική) τρέπονται σε ειδικό απαρέμφατο. Σε βουλητική τρέπονται οι κύριες επιθυμίας."},{"q":"Οι δευτερεύουσες προτάσεις που στον ευθύ λόγο εκφέρονται με υποτακτική, στον πλάγιο λόγο τρέπονται σε οριστική.","a":false,"ex":"Λάθος· διατηρούν την υποτακτική ως έγκλιση — μπορεί να αλλάξει μόνο ο χρόνος τους."},{"q":"Η υποτακτική Παρακειμένου ή Υπερσυντελίκου της υπόθεσης, στον ευθύ λόγο, τρέπεται σε οριστική Ενεστώτα.","a":false,"ex":"Τρέπεται σε οριστική Συντελεσμένου Μέλλοντα (η υποτ. Ενεστώτα → οριστ. Μέλλοντα)."},{"q":"Το μόριο num εισάγει ερώτηση που περιμένει καταφατική απάντηση.","a":false,"ex":"Λάθος· το num περιμένει αρνητική απάντηση. Καταφατική περιμένει το nonne."},{"q":"Κατά την τροπή του ευθέος λόγου σε πλάγιο λαμβάνεται υπόψη ο χρόνος του ρήματος εξάρτησης.","a":false,"ex":"Δεν λαμβάνεται υπόψη: το dicit και το dixit δίνουν το ίδιο αποτέλεσμα στο ειδικό απαρέμφατο."},{"q":"Οι υποθετικές προτάσεις ακολουθούν τους ίδιους ακριβώς κανόνες τροπής με τις υπόλοιπες δευτερεύουσες προτάσεις.","a":false,"ex":"Λάθος· εξαιρούνται και εξετάζονται χωριστά ως πλάγιοι (εξαρτημένοι) υποθετικοί λόγοι."},{"q":"Ο λανθάνων υποθετικός λόγος κρύβεται μέσα σε μια υποθετική μετοχή.","a":true,"ex":"Π.χ. interceptā epistulā = si epistula intercepta sit/erit."},{"q":"Οι ερωτήσεις μερικής άγνοιας αφορούν όλο το περιεχόμενο της πρότασης.","a":false,"ex":"Λάθος· η μερική άγνοια αφορά μέρος μόνο του περιεχομένου· όλο το περιεχόμενο αφορά η ολική άγνοια."}];
+const MC = [{"q":"Η κύρια πρόταση επιθυμίας «Sperate salutem» στον πλάγιο λόγο (με ρήμα adhortor) τρέπεται σε:","o":["δευτερεύουσα βουλητική (ut + υποτακτική)","ειδικό απαρέμφατο","πλάγια ερώτηση","κύρια πρόταση με οριστική"],"a":0,"ex":"Οι κύριες επιθυμίας με ρήματα όπως adhortor τρέπονται σε βουλητική πρόταση: Cicero milites adhortatur ut salutem sperent (45)."},{"q":"Στη φράση «Mater interrogavit filium qui potuisset populari eam terram», η αναφορική «qui potuisset…» εκφέρεται με:","o":["υποτακτική υπερσυντελίκου (προτερόχρονο στο παρελθόν)","οριστική παρακειμένου","υποτακτική ενεστώτα","οριστική παρατατικού"],"a":0,"ex":"Ευθύς: οριστική παρακ. (potuisti) → πλάγιος: υποτ. υπερσ. λόγω εξάρτησης από ιστορικό χρόνο (interrogavit), για να δηλωθεί το προτερόχρονο."},{"q":"Στο «nisi vos ipsi patriae consulueritis» (κείμ. 25) η υπόθεση του πλάγιου υποθετικού λόγου εκφέρεται με:","o":["υποτακτική Παρακειμένου","οριστική Μέλλοντα","υποτακτική Ενεστώτα","οριστική Παρακειμένου"],"a":0,"ex":"consulueritis = υποτακτική Παρακειμένου· στον ευθύ γίνεται οριστική Συντελεσμένου Μέλλοντα."},{"q":"Ποιο μόριο εισάγει ερώτηση ολικής άγνοιας που περιμένει καταφατική απάντηση;","o":["nonne","num","-ne","utrum"],"a":0,"ex":"Το nonne συνδέεται με προσδοκία καταφατικής απάντησης (ρητορική)· το num με αρνητική."},{"q":"Με ποιο ρήμα εξάρτησης η κύρια επιθυμίας τρέπεται σε τελικό απαρέμφατο και όχι σε βουλητική;","o":["iubeo","persuadeo","rogo","moneo"],"a":0,"ex":"Τα iubeo, impero, constituo συντάσσουν την κύρια επιθυμίας με τελικό απαρέμφατο (π.χ. Cicero milites sperare salutem iubet)."},{"q":"Ποιες υποτακτικές των δευτ. προτάσεων παραμένουν αναλλοίωτες στον πλάγιο λόγο, όποια κι αν είναι η εξάρτηση;","o":["Παρατατικού, υπερσυντελίκου και -urus essem","Ενεστώτα και παρακειμένου","Μόνο του μέλλοντα","Καμία"],"a":0,"ex":"Όπως και οι δυνητικές εγκλίσεις στα αρχαία ελληνικά, μένουν αναλλοίωτες."},{"q":"Υποτακτική Ενεστώτα στην υπόθεση ενός πλάγιου υποθετικού λόγου, κατά τη μετατροπή στον ευθύ, γίνεται:","o":["οριστική Μέλλοντα","οριστική Συντελεσμένου Μέλλοντα","υποτακτική Παρακειμένου","οριστική Ενεστώτα"],"a":0,"ex":"υποτ. Ενεστώτα → οριστ. Μέλλοντα· υποτ. Παρακ./Υπερσ. → οριστ. Συντ. Μέλλοντα."},{"q":"Πώς εισάγονται οι διμελείς ερωτήσεις ολικής άγνοιας;","o":["utrum … an, -ne … an, ή μόνο an","μόνο με num","με ερωτηματικές αντωνυμίες","πάντα χωρίς μόριο"],"a":0,"ex":"Οι διμελείς εισάγονται με utrum … an, -ne … an ή μόνο an· το «ή όχι» με an non."}];
+const MATCH = [{"l":"Κύρια πρόταση κρίσεως","r":"Ειδικό απαρέμφατο"},{"l":"Οριστ. ενεστ./παρατ. (εξάρτηση ιστορικός)","r":"υποτακτική παρατατικού"},{"l":"si / nisi + υποτακτική","r":"υπόθεση εξαρτημένου υποθετικού λόγου"},{"l":"-ne","r":"δε γνωρίζουμε την απάντηση"},{"l":"Κύρια πρόταση επιθυμίας","r":"Βουλητική / τελικό απαρέμφατο"},{"l":"Οριστ. παρακ./υπερσ. (εξάρτηση ιστορικός)","r":"υποτακτική υπερσυντελίκου"},{"l":"ειδικό/τελικό απαρέμφατο ή δευτ. πρόταση","r":"απόδοση στον πλάγιο λόγο"},{"l":"num","r":"περιμένουμε αρνητική απάντηση (ρητορική)"},{"l":"Κύρια ευθεία ερώτηση","r":"Πλάγια ερώτηση"},{"l":"Οριστ. μέλλοντα (εξάρτηση αρκτικός)","r":"υποτ. ενεστ. περιφρ. συζυγίας (-urus sim)"}];
+const esc = s => String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+document.getElementById('content').innerHTML = "\n<section class=\"sec\" id=\"plagios-genika\">\n  <h2><span class=\"rn\">I</span> Πλάγιος Λόγος — Γενικά &amp; Μετατροπή Κυρίων Προτάσεων <span class=\"tag\">εγκλίσεις</span></h2>\n  <div class=\"card\">\n    <p><b>Πλάγιο λόγο</b> έχουμε όταν τα λόγια ή τις σκέψεις κάποιου δεν τα πληροφορούμαστε όπως ακριβώς τα είπε ή τα σκέφτηκε, αλλά μας ανακοινώνονται <b>εξαρτημένα</b> από ένα ρήμα λεκτικό, δοξαστικό, κελευστικό, προτρεπτικό ή ερωτηματικό (<span class=\"la\">dico, sentio, rogo</span> κ.λπ.) και <b>τροποποιημένα</b> ως προς τις εγκλίσεις, τους χρόνους, τις αντωνυμίες και ορισμένα επιρρήματα.</p><p>Γενικός κανόνας: στον πλάγιο λόγο υπάρχει πάντα ή <b>υποτακτική</b> ή <b>απαρέμφατο</b> (ενώ στα αρχαία ελληνικά έχουμε οριστική, υποτακτική, ευκτική ή απαρέμφατο).</p><p>Για την τροπή διακρίνουμε τις προτάσεις ως προς το περιεχόμενό τους. Συνοπτικά:<br><b>Κύρια κρίσεως</b> → ειδικό απαρέμφατο<br><b>Κύρια επιθυμίας</b> → δευτ. βουλητική / τελικό απαρέμφατο<br><b>Κύρια ευθεία ερώτηση</b> → πλάγια ερώτηση<br><b>Δευτερεύουσα</b> (οριστική ή υποτακτική) → δευτερεύουσα με <b>υποτακτική</b></p>\n    <div class=\"rulegrid\"><div class=\"rc\"><h4>Κύριες προτάσεις κρίσεως → ειδικό απαρέμφατο</h4><p>Εκφέρονται με <b>Οριστική</b> και τρέπονται σε <b>ειδικό απαρέμφατο</b>, εξαρτώμενο από λεκτικό (<span class=\"la\">dico, narro</span>), δοξαστικό/γνωστικό (<span class=\"la\">scio, cognosco</span>) ή αισθητικό ρήμα (<span class=\"la\">audio, sentio</span>). Ως προς τον χρόνο: Οριστ. Ενεστ. → απαρ. Ενεστ.· Οριστ. Παρατ./Παρακ./Υπερσ. → απαρ. Παρακ.· Οριστ. Μέλλ. → απαρ. Μέλλ.</p></div><div class=\"rc\"><h4>Υποκείμενο του ειδικού απαρεμφάτου</h4><p>Το υποκείμενο και οι ομοιόπτωτοι προσδιορισμοί του μπαίνουν πάντα σε <b>αιτιατική</b> όταν εξαρτώνται από ενεργητικό ρήμα, ακόμη και σε ταυτοπροσωπία (λατινισμός, με <span class=\"la\">se</span>). Μόνο σε εξάρτηση από <b>παθητικό</b> λεκτικό/δοξαστικό ρήμα με ταυτοπροσωπία αίρεται ο λατινισμός και το υποκείμενο τίθεται σε ονομαστική.</p></div><div class=\"rc\"><h4>Κύριες προτάσεις επιθυμίας</h4><p>Εκφέρονται με προστακτική ή υποτακτική (και <span class=\"la\">noli/nolite</span> + απαρ. ή <span class=\"la\">ne</span> + υποτ. Παρακ. στην απαγόρευση). Τρέπονται σε δευτ. <b>βουλητική</b> (<span class=\"la\">ut/ne</span> + υποτακτική) με ρήματα όπως <span class=\"la\">hortor, incito, rogo, oro, persuadeo, moneo, curo, constituo</span>, ή σε <b>τελικό απαρέμφατο</b> με τα <span class=\"la\">iubeo, impero, constituo</span>.</p></div><div class=\"rc\"><h4>Αντωνυμίες &amp; επιρρήματα</h4><p>Αλλάζουν κατά την τροπή:<br><span class=\"la\">ego</span> → <span class=\"la\">se (ipse)</span> · <span class=\"la\">meus</span> → <span class=\"la\">suus</span> · <span class=\"la\">tu</span> → <span class=\"la\">ille</span> · <span class=\"la\">hic, iste</span> → <span class=\"la\">ille, is</span><br><span class=\"la\">nunc</span> → <span class=\"la\">tunc/tum</span> · <span class=\"la\">hodie</span> → <span class=\"la\">illo die</span> · <span class=\"la\">cras</span> → <span class=\"la\">postero die</span> · <span class=\"la\">hic</span> → <span class=\"la\">ibi</span>.<br>Το <span class=\"la\">se</span> χρησιμοποιείται όταν τρέπουμε σε απαρέμφατο, το <span class=\"la\">ipse</span> όταν τρέπουμε σε δευτερεύουσα πρόταση.</p></div><div class=\"rc\"><h4>Δύο βασικές παρατηρήσεις</h4><p>1) Η <b>κλητική προσφώνηση</b> του ευθέος λόγου τρέπεται σε <b>αντικείμενο</b> του ρήματος εξάρτησης (<span class=\"la\">«ego, pater, ...» → ... respondit patri se ...</span>).<br>2) Κατά την τροπή <b>δεν λαμβάνεται υπόψη ο χρόνος του ρήματος εξάρτησης</b> (π.χ. <span class=\"la\">dicit / dixit</span> δίνουν το ίδιο αποτέλεσμα στο απαρέμφατο).</p></div></div>\n    <div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 29</span>«Domi satis salutationum talium <u>audio</u>.» → Caesar dixit domi satis salutationum talium <u>se audire</u>.</div><div class=\"gr\">«Ακούω αρκετά τέτοιους χαιρετισμούς στο σπίτι.» → «Ο Καίσαρας είπε ότι ακούει αρκετούς τέτοιους χαιρετισμούς στο σπίτι.»</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Κύρια κρίσεως (οριστ. ενεστ.) → ειδικό απαρέμφατο ενεστ.· υποκείμενο <span class=\"la\">se</span> σε αιτιατική (λατινισμός λόγω ταυτοπροσωπίας).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 23</span>«Bene <u>quievit</u>, libenter cibum <u>sumpsit</u>.» → Arria respondit puerum bene <u>quievisse</u>, libenter cibum <u>sumpsisse</u>.</div><div class=\"gr\">«Κοιμήθηκε ήσυχα, έφαγε πρόθυμα το φαγητό.» → «Η Αρρία απάντησε ότι το παιδί κοιμήθηκε ήσυχα και έφαγε πρόθυμα το φαγητό.»</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Οριστική Παρακειμένου → ειδικό απαρέμφατο Παρακειμένου· υποκείμενο <span class=\"la\">puerum</span> σε αιτιατική.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 47</span>«<u>ego</u>, pater, cana esse malo» → Iulia respondit <u>patri</u> <u>se</u> canam esse malle.</div><div class=\"gr\">«εγώ, πατέρα, προτιμώ να είμαι ασπρομάλλα» → «Η Ιουλία απάντησε στον πατέρα της ότι προτιμούσε να είναι ασπρομάλλα.»</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Η κλητική <span class=\"la\">pater</span> → αντικείμενο <span class=\"la\">patri</span>· <span class=\"la\">ego</span> → <span class=\"la\">se</span>.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 45</span>«<u>Sperate</u> salutem.» → Cicero milites <u>adhortatur ut</u> salutem <u>sperent</u>.</div><div class=\"gr\">«Να ελπίζετε στη σωτηρία.» → «Ο Κικέρωνας προτρέπει τους στρατιώτες να ελπίζουν στη σωτηρία.»</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Κύρια επιθυμίας (προστακτική) → δευτ. βουλητική (<span class=\"la\">ut</span> + υποτακτική).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 45</span>Cicero milites <u>sperare</u> salutem <u>iubet</u>.</div><div class=\"gr\">Ο Κικέρωνας διατάζει τους στρατιώτες να ελπίζουν στη σωτηρία.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Η ίδια κύρια επιθυμίας με ρήμα <span class=\"la\">iubeo</span> → <b>τελικό απαρέμφατο</b> (αντί βουλητικής).</div></div>\n  </div>\n</section>\n\n<section class=\"sec\" id=\"plagios-deuter\">\n  <h2><span class=\"rn\">II</span> Οι Δευτερεύουσες Προτάσεις στον Πλάγιο Λόγο <span class=\"tag\">υποτακτική</span></h2>\n  <div class=\"card\">\n    <p>Στον <b>πλάγιο λόγο</b> μεταφέρονται και οι <b>δευτερεύουσες προτάσεις</b> του ευθέος λόγου (αναφορικές, χρονικές, αιτιολογικές, συμπερασματικές, εναντιωματικές κ.λπ.). Η μεταβολή τους εξαρτάται από την <b>έγκλιση</b> με την οποία εκφέρονταν στον ευθύ λόγο.</p><p>Αν στον ευθύ λόγο εκφέρονται με <b>οριστική</b> (κάτι το πραγματικό), στον πλάγιο τρέπονται σε <b>υποτακτική</b>, στην ίδια χρονική βαθμίδα, σύμφωνα με τους κανόνες της <b>ακολουθίας των χρόνων</b>. Αν εκφέρονται ήδη με <b>υποτακτική</b>, <b>διατηρούν την υποτακτική</b> ως έγκλιση· μπορεί μόνο να αλλάξει ο χρόνος της, ώστε να μείνει ίδια η χρονική βαθμίδα.</p><p>Εξαιρούνται οι <b>υποθετικές προτάσεις</b>, που εξετάζονται χωριστά ως πλάγιοι (εξαρτημένοι) υποθετικοί λόγοι.</p>\n    <div class=\"rulegrid\"><div class=\"rc\"><h4>δ1. Ευθύς με οριστική → Πλάγιος με υποτακτική</h4><p>Όσες δευτ. προτάσεις στον ευθύ λόγο εκφέρονται με <b>οριστική</b>, στον πλάγιο τρέπονται σε <b>υποτακτική</b>, στην ίδια χρονική βαθμίδα (σύγχρονο–προτερόχρονο–υστερόχρονο), ανάλογα με τον χρόνο του ρήματος εξάρτησης (αρκτικός/ιστορικός):<br><b>ενεστ./παρατ.</b> → υποτ. <b>ενεστ.</b> (αρκτ.) / <b>παρατ.</b> (ιστ.)<br><b>παρακ./υπερσ./συντ. μέλλ.</b> → υποτ. <b>παρακ.</b> (αρκτ.) / <b>υπερσ.</b> (ιστ.)<br><b>μέλλ.</b> → <span class=\"la\">-urus sim</span> (αρκτ.) / <span class=\"la\">-urus essem</span> (ιστ.)</p></div><div class=\"rc\"><h4>δ2. Ευθύς με υποτακτική → Πλάγιος με υποτακτική</h4><p>Η <b>υποτακτική διατηρείται</b> ως έγκλιση· μπορεί να αλλάξει μόνο ο χρόνος της, ώστε να μείνει ίδια η χρονική βαθμίδα:<br><b>ενεστ.</b> → ενεστ. (αρκτ.) / παρατ. (ιστ.)<br><b>παρακ.</b> → παρακ. (αρκτ.) / υπερσ. (ιστ.)<br><b>μέλλ.</b> → <span class=\"la\">-urus sim</span> / <span class=\"la\">-urus essem</span></p></div><div class=\"rc\"><h4>Προσοχή — αναλλοίωτες υποτακτικές</h4><p>Οι υποτακτικές <b>παρατατικού</b>, <b>υπερσυντελίκου</b> και <b>παρατατικού της ενεργ. περιφρ. συζυγίας</b> (<span class=\"la\">-urus essem</span>) των δευτ. προτάσεων παραμένουν <b>αναλλοίωτες</b> στον πλάγιο λόγο, όποια κι αν είναι η εξάρτησή τους (όπως και οι δυνητικές εγκλίσεις στα αρχαία ελληνικά).</p></div><div class=\"rc\"><h4>Σπάνια διατήρηση της οριστικής</h4><p>Η οριστική <b>διατηρείται</b> σε σπάνιες περιπτώσεις, όταν η πρόταση θεωρείται ότι λειτουργεί <b>ανεξάρτητα</b> από τον πλάγιο λόγο. Στα εξεταζόμενα κείμενα αυτό συμβαίνει σε <b>αναφορικές</b> προτάσεις (πρβλ. κείμενα 27, 42).</p></div><div class=\"rc\"><h4>Εξαίρεση: υποθετικές προτάσεις</h4><p>Από τους κανόνες τροπής (ευθύς↔πλάγιος) <b>εξαιρούνται οι υποθετικές προτάσεις</b>, οι οποίες, μαζί με την απόδοσή τους, σχηματίζουν τους <b>πλάγιους (εξαρτημένους) υποθετικούς λόγους</b> και εξετάζονται χωριστά.</p></div></div>\n    <div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 43</span>«Qui potuisti populari hanc terram, <u>quae te genuit atque aluit</u>?» → Mater interrogavit filium qui potuisset populari eam terram <u>quae illum genuisset atque aluisset</u>.</div><div class=\"gr\">«Πώς μπόρεσες να λεηλατήσεις αυτή τη χώρα, που σε γέννησε και σε ανέθρεψε;» — Στον πλάγιο λόγο οι αναφορικές (ευθύς: οριστική παρακ.) τρέπονται σε υποτακτική υπερσυντελίκου, ώστε να διατηρήσουν το προτερόχρονο στο παρελθόν (εξάρτηση από ιστορικό χρόνο, interrogavit).</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Οριστική → υποτακτική (δ1): αναφορικές προτάσεις.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 27</span>Meliora enim fore spero, <u>quae</u> deinceps <u>scribam</u>.</div><div class=\"gr\">«Ελπίζω δηλαδή ότι όσα θα γράψω στο εξής θα είναι καλύτερα.» — Η αναφορική διατηρεί την οριστική (scribam), γιατί λειτουργεί ανεξάρτητα από τον πλάγιο λόγο (απόδοση το ειδικό απαρέμφατο fore).</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Σπάνια διατήρηση της οριστικής παρά τον πλάγιο λόγο.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 42</span>Nunc intellego, si iste in Manliana castra pervenerit, <u>quo intendit</u>, neminem tam stultum fore […].</div><div class=\"gr\">«Τώρα καταλαβαίνω, αν αυτός φτάσει στο στρατόπεδο του Μανλίου, όπου κατευθύνεται, κανείς δεν θα είναι τόσο ανόητος…» — Η αναφορική (quo intendit) διατηρεί την οριστική, αν και προσδιορίζει όρο της πλαγιωμένης υποθετικής.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Σπάνια διατήρηση της οριστικής (αναφορική).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 31</span>«Congrediamur, ut singularis proelii eventu <u>cernatur</u>, quanto miles Latinus Romano virtute <u>antecellat</u>.» → Dux hostium petivit ab adulescente ut congrederentur, ut … <u>cerneretur</u> … <u>antecelleret</u>.</div><div class=\"gr\">«Ας μονομαχήσουμε, για να φανεί από την έκβαση της μονομαχίας πόσο ο Λατίνος στρατιώτης υπερέχει του Ρωμαίου σε ανδρεία.» — Οι υποτακτικές ενεστώτα (cernatur, antecellat) γίνονται υποτακτικές παρατατικού (cerneretur, antecelleret) λόγω εξάρτησης από ιστορικό χρόνο (petivit)· η έγκλιση παραμένει υποτακτική.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Υποτακτική → υποτακτική (δ2): αλλάζει μόνο ο χρόνος.</div></div>\n  </div>\n</section>\n\n<section class=\"sec\" id=\"plagios-metaboles\">\n  <h2><span class=\"rn\">III</span> Αντωνυμίες · Χρόνοι · Άλλες Μεταβολές <span class=\"tag\">υποθετικός λόγος</span></h2>\n  <div class=\"card\">\n    <p>Όταν ένας ολόκληρος <b>υποθετικός λόγος</b> εξαρτηθεί (μπει στον πλάγιο λόγο), μιλάμε για <b>πλάγιο</b> ή <b>εξαρτημένο υποθετικό λόγο</b>. Η <b>απόδοση</b> (η κύρια πρόταση) μετατρέπεται σε <span class=\"la\">ειδικό</span> ή <span class=\"la\">τελικό απαρέμφατο</span> ή σε δευτερεύουσα πρόταση (βουλητική, πλάγια ερώτηση, συμπερασματική).</p><p>Επειδή η απόδοση δεν είναι πια ανεξάρτητη κύρια πρόταση, η <b>υπόθεση</b> (<span class=\"la\">si / nisi</span>) παρασύρεται και εκφέρεται με <b>υποτακτική</b> (έλξη της έγκλισης). Ο χρόνος της υποτακτικής ρυθμίζεται από την ακολουθία των χρόνων.</p><p>Στα υπό εξέταση κείμενα οι πλάγιοι υποθετικοί λόγοι ανήκουν στο <b>α΄ είδος</b> (πραγματικό / ανοικτή υπόθεση για το μέλλον): αναλυόμενοι στον ευθύ λόγο δίνουν <b>si (nisi) + οριστική Συντελεσμένου Μέλλοντα → οριστική Μέλλοντα</b>.</p>\n    <div class=\"rulegrid\"><div class=\"rc\"><h4>Απόδοση στον πλάγιο λόγο</h4><p>Η απόδοση του υποθετικού λόγου, όταν εξαρτηθεί, γίνεται <span class=\"la\">ειδικό</span> ή <span class=\"la\">τελικό απαρέμφατο</span>, ή δευτερεύουσα πρόταση (βουλητική, πλάγια ερώτηση, συμπερασματική).</p></div><div class=\"rc\"><h4>Η υπόθεση παίρνει υποτακτική</h4><p>Επειδή η απόδοση εξαρτάται πλέον, η υπόθεση εκφέρεται με υποτακτική (έλξη έγκλισης):<br><b>Υπόθεση</b> = <span class=\"la\">si (nisi)</span> + Υποτακτική<br><b>Απόδοση</b> = δευτ. πρόταση ή ειδικό/τελικό απαρέμφατο</p></div><div class=\"rc\"><h4>Μετατροπή χρόνων στον ευθύ</h4><p>Η υποτακτική της υπόθεσης, όταν ο λόγος γίνει ευθύς, τρέπεται σε οριστική:<br>• υποτακτική <b>Ενεστώτα</b> → οριστική <b>Μέλλοντα</b><br>• υποτακτική <b>Παρακειμένου / Υπερσυντελίκου</b> → οριστική <b>Συντελεσμένου Μέλλοντα</b></p></div><div class=\"rc\"><h4>Η απόδοση στον ευθύ λόγο</h4><p>Η εξαρτημένη απόδοση επανέρχεται σε κύρια πρόταση: το ειδικό απαρέμφατο → κύρια <b>κρίσεως</b> (οριστική), η βουλητική/τελικό απαρέμφατο → κύρια <b>επιθυμίας</b>, η πλάγια ερώτηση → <b>ευθεία ερώτηση</b>.</p></div><div class=\"rc\"><h4>Λανθάνων υποθετικός λόγος</h4><p>Μια <b>υποθετική μετοχή</b> (συχνά αφαιρετική απόλυτη, π.χ. <span class=\"la\">interceptā epistulā</span>) κρύβει υπόθεση· αναλύεται σε υποθετική πρόταση και, αν η απόδοση είναι εξαρτημένη, η υπόθεση παίρνει υποτακτική.</p></div><div class=\"rc\"><h4>Αντωνυμίες &amp; πρόσωπα</h4><p>Κατά τη μετάβαση στον πλάγιο λόγο το α΄ και β΄ πρόσωπο τρέπονται σε γ΄: <span class=\"la\">ego → se</span>, <span class=\"la\">tu → se / ille</span>, <span class=\"la\">meus/tuus → suus</span>· αντιστρόφως, στον ευθύ λόγο επανέρχονται στο αρχικό πρόσωπο.</p></div></div>\n    <div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 25</span>Neminem credideritis patriae <u>consulturum esse</u>, <u>nisi</u> vos ipsi patriae <u>consulueritis</u>.</div><div class=\"gr\">Κανείς να μην πιστέψετε ότι θα φροντίσει για την πατρίδα, αν εσείς οι ίδιοι δεν φροντίσετε για την πατρίδα.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Πλάγιος υποθετικός λόγος. Υπόθεση: nisi … consulueritis (υποτ. Παρακειμένου)· απόδοση: ειδικό απαρέμφατο consulturum esse (εξάρτ. από credideritis). Ευθύς: nisi … consulueritis (οριστ. Συντ. Μέλλοντα) — nemo consulet (οριστ. Μέλλοντα): ανοικτή υπόθεση για το μέλλον.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 42</span>Nunc intellego, <u>si</u> iste in Manliāna castra <u>pervenerit</u>, neminem tam stultum <u>fore</u>…</div><div class=\"gr\">Τώρα καταλαβαίνω πως, αν αυτός φτάσει στο στρατόπεδο του Μανλίου, κανείς δεν θα είναι τόσο ανόητος…</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Απόδοση = ειδικό απαρέμφατο (fore, εξάρτ. από intellego)· γι' αυτό η υπόθεση si … pervenerit εκφέρεται με υποτακτική Παρακειμένου. Ευθύς: Si … pervenerit (οριστ. Συντ. Μέλλ.) — nemo tam stultus erit (οριστ. Μέλλ.).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 49</span>Experiri enim volui, quam aequo animo me ferro <u>essem interemptura</u>, <u>si</u> tibi consilium non ex sententiā <u>cessisset</u>.</div><div class=\"gr\">Θέλησα δηλαδή να δοκιμάσω με πόση αταραξία θα σκοτωνόμουν με σιδερένιο όπλο, αν το σχέδιο δεν σου πήγαινε κατ' ευχήν.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Απόδοση = πλάγια ερώτηση (quam … essem interemptura)· υπόθεση si … cessisset (υποτ. Υπερσυντελίκου). Ευθύς: si … cesserit (οριστ. Συντ. Μέλλ.) — Quam aequo animo me ferro interimam; (ευθεία ερώτηση, οριστ. Μέλλ.).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 37</span>In eum locum res deducta est, <u>ut</u>, <u>nisi</u> qui deus vel casus aliqui <u>subvenerit</u>, salvi esse <u>nequeamus</u>.</div><div class=\"gr\">Σε τέτοιο σημείο έχουν οδηγηθεί τα πράγματα, ώστε, αν δεν βοηθήσει κάποιος θεός ή κάποιο τυχαίο περιστατικό, να μην μπορούμε να είμαστε σώοι.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Εδώ η απόδοση είναι δευτ. συμπερασματική πρόταση (ut … nequeamus)· η υπόθεση nisi … subvenerit εκφέρεται με υποτακτική Παρακειμένου. Ευθύς: nisi … subvenerit (οριστ. Συντ. Μέλλ.) — salvi esse nequimus.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 45</span>Curat et providet <u>ne</u>, <u>interceptā epistulā</u>, nostra consilia ab hostibus <u>cognoscantur</u>.</div><div class=\"gr\">Φροντίζει και προνοεί, ώστε, αν αρπάξουν την επιστολή, τα σχέδιά μας να μη μαθευτούν από τους εχθρούς.</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Λανθάνων υποθετικός λόγος: η αφαιρετική απόλυτη μετοχή interceptā epistulā κρύβει υπόθεση. Ανάλυση: si epistula intercepta sit (πλάγιος, υποτ. Παρακ.) — απόδοση η βουλητική ne … cognoscantur. Ευθύς: si epistula intercepta erit (οριστ. Συντ. Μέλλ.).</div></div>\n  </div>\n</section>\n\n<section class=\"sec\" id=\"eutheies-erot\">\n  <h2><span class=\"rn\">IV</span> Οι Ευθείες Ερωτήσεις <span class=\"tag\">κύριες</span></h2>\n  <div class=\"card\">\n    <p>Οι <b>ευθείες ερωτήσεις</b> είναι <b>κύριες</b> προτάσεις. Η ερώτηση που περιέχουν εκφράζεται απευθείας από αυτόν που ρωτάει, <b>χωρίς εξάρτηση</b> από κάποιο ρήμα.</p><p>Ανάλογα με την πρόθεση του ερωτώντος διακρίνονται σε <b>πραγματικές</b> (ο ερωτών περιμένει απάντηση) και <b>ρητορικές</b> (ισοδυναμούν με έντονη άρνηση, κατάφαση ή υπόθεση).</p><p>Εκφέρονται με <b>οριστική</b> όλων των χρόνων ή, σπανιότερα, με <b>υποτακτική</b>: απορηματική (όταν εκφράζουν απορία) ή δυνητική (όταν εκφράζουν δυνατότητα). Ως προς το περιεχόμενο εκφράζουν <b>μερική άγνοια</b> ή <b>ολική άγνοια</b>.</p>\n    <div class=\"rulegrid\"><div class=\"rc\"><h4>Ορισμός &amp; φύση</h4><p>Είναι <b>κύριες</b> προτάσεις· η ερώτηση τίθεται απευθείας, χωρίς εξάρτηση από ρήμα. Διακρίνονται σε <b>πραγματικές</b> (περιμένουν απάντηση) και <b>ρητορικές</b> (ισοδυναμούν με έντονη άρνηση, κατάφαση ή υπόθεση).</p></div><div class=\"rc\"><h4>Εκφορά</h4><p>Με <b>οριστική</b> όλων των χρόνων· ή με <b>υποτακτική</b>: <b>απορηματική</b> (όταν εκφράζουν απορία) και <b>δυνητική</b> (όταν εκφράζουν δυνατότητα).</p></div><div class=\"rc\"><h4>Μερική άγνοια</h4><p>Η ερώτηση αφορά <b>μέρος</b> μόνο του περιεχομένου. Εισάγεται με <b>ερωτηματικές αντωνυμίες & επιρρήματα</b>: <span class=\"la\">quis</span> (ποιος), <span class=\"la\">quid</span> (τι/γιατί), <span class=\"la\">qui</span> (πώς), <span class=\"la\">quantus</span> (πόσος), <span class=\"la\">ubi</span> (πού), <span class=\"la\">quando</span> (πότε), <span class=\"la\">cur</span> (γιατί), <span class=\"la\">quin</span> (γιατί δεν).</p></div><div class=\"rc\"><h4>Ολική άγνοια — απλές</h4><p>Η ερώτηση αφορά <b>όλο</b> το περιεχόμενο. Απλές ερωτήσεις εισάγονται:<br>α) με το εγκλιτικό <span class=\"la\">-ne</span>, όταν δε γνωρίζουμε την απάντηση·<br>β) με <span class=\"la\">num</span>, όταν περιμένουμε <b>αρνητική</b> απάντηση (ρητορική)·<br>γ) με <span class=\"la\">nonne</span>, όταν περιμένουμε <b>καταφατική</b> απάντηση (ρητορική)·<br>δ) <b>χωρίς κανένα μόριο</b>, όταν θέλουμε έμφαση.</p></div><div class=\"rc\"><h4>Ολική άγνοια — διμελείς</h4><p>Εισάγονται με <span class=\"la\">utrum … an</span> (πότερον … ή), με <span class=\"la\">-ne … an</span>, ή με μόνο το <span class=\"la\">an</span>. Το «ή όχι» εκφέρεται με το <span class=\"la\">an non</span>.</p></div><div class=\"rc\"><h4>Απαντήσεις (ολ. άγνοιας)</h4><p>Καταφατικά με <span class=\"la\">ita (est), sic (est), sane, certe</span>· αρνητικά με <span class=\"la\">non (vero), minime (vero)</span>.</p></div></div>\n    <div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 43</span><u>Qui</u> potuisti populari hanc terram?</div><div class=\"gr\">Πώς μπόρεσες να λεηλατήσεις αυτή τη χώρα;</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Μερική άγνοια· εισάγεται με το ερωτηματικό επίρρημα qui (= πώς).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 24</span><u>Vis</u>ne scire?</div><div class=\"gr\">Θέλεις να μάθεις;</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Ολική άγνοια, απλή· εισάγεται με το εγκλιτικό -ne (δε γνωρίζουμε την απάντηση).</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 43</span><u>Num</u> ad hostem veni?</div><div class=\"gr\">Μήπως ήλθα σε εχθρό;</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Ολική άγνοια, απλή ρητορική· το num περιμένει αρνητική απάντηση.</div></div><div class=\"exbox\"><div class=\"la\"><span class=\"ref\">κείμ. 24</span><u>Ego</u> non cognosco vocem tuam?</div><div class=\"gr\">Δεν γνωρίζω εγώ τη φωνή σου;</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Ολική άγνοια, απλή· χωρίς κανένα μόριο, για έμφαση.</div></div><div class=\"exbox\"><div class=\"la\"><u>Utrum</u> hic frater <u>an</u> amicus tuus est?</div><div class=\"gr\">Αυτός είναι ο αδελφός σου ή ο φίλος σου;</div><div class=\"gr\" style=\"font-style:italic;opacity:.85\">Ολική άγνοια, διμελής· εισάγεται με utrum … an (και ισοδύναμα -ne … an ή μόνο an).</div></div>\n  </div>\n</section>\n<section class=\"sec\" id=\"askiseis\">\n  <h2><span class=\"rn\">✎</span> Ασκήσεις</h2>\n  <p style=\"color:var(--muted)\">Δοκίμασε τον εαυτό σου — οι απαντήσεις ελέγχονται αμέσως και κρατείται σκορ.</p>\n  <h3 class=\"subh\">Α. Σωστό / Λάθος</h3><div class=\"quiz\" id=\"tf\"></div>\n  <h3 class=\"subh\">Β. Πολλαπλής επιλογής</h3><div class=\"quiz\" id=\"mc\"></div>\n  <h3 class=\"subh\">Γ. Αντιστοίχιση</h3>\n  <div class=\"quiz\" id=\"mt\">\n    <p style=\"margin:0 0 12px;color:var(--muted);font-size:14px\">Πάτησε ένα στοιχείο αριστερά και μετά το ταίρι του δεξιά.</p>\n    <div class=\"match\"><div class=\"col\" id=\"mL\"><h5>Έννοια</h5></div><div class=\"col\" id=\"mR\"><h5>Γνώρισμα</h5></div></div>\n    <div class=\"controls\"><button class=\"btn ghost\" id=\"mtReset\">Επαναφορά</button><span class=\"score\" id=\"mtScore\"></span></div>\n  </div>\n</section>";
+document.getElementById('nav').innerHTML =
+  '<div class="brand">Ο Πλάγιος Λόγος</div><div class="sub">Θεωρία Συντακτικού</div>' +
+  NAV.map(s=>`<a href="#${s.id}" data-to="${s.id}"><span class="n">${s.n}</span>${s.t}</a>`).join('');
+
+let score = {tf:0, mc:0, mt:0};
+const totals = {tf:TF.length, mc:MC.length, mt:MATCH.length};
+if(TF.length){
+  document.getElementById('tf').innerHTML = TF.map((it,i)=>`
+    <div class="qitem"><p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+      <div class="tf" data-i="${i}"><div class="opt" data-v="1">Σωστό</div><div class="opt" data-v="0">Λάθος</div></div>
+      <div class="explain" id="tfx${i}">${esc(it.ex||'')}</div></div>`).join('') + `<div class="controls"><span class="score big" id="tfScore">Σκορ: 0 / ${TF.length}</span></div>`;
+  document.querySelectorAll('#tf .tf').forEach(row=>{ const i=+row.dataset.i;
+    row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+      if(row.dataset.done) return; row.dataset.done='1';
+      const chose=o.dataset.v==='1', correct=TF[i].a;
+      row.querySelectorAll('.opt').forEach(x=>{const v=x.dataset.v==='1';
+        if(v===correct){x.classList.add('correct');x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>');}
+        else if(x===o){x.classList.add('wrong');x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>');}});
+      if(chose===correct) score.tf++;
+      if(TF[i].ex) document.getElementById('tfx'+i).classList.add('show');
+      document.getElementById('tfScore').textContent=`Σκορ: ${score.tf} / ${TF.length}`; bump();
+    }));});
+}
+if(MC.length){
+  document.getElementById('mc').innerHTML = MC.map((it,i)=>`
+    <div class="qitem"><p class="q"><span class="qn">${i+1}.</span>${esc(it.q)}</p>
+      <div class="opts" data-i="${i}">${it.o.map((op,j)=>`<div class="opt" data-j="${j}">${esc(op)}</div>`).join('')}</div>
+      <div class="explain" id="mcx${i}">${esc(it.ex||'')}</div></div>`).join('') + `<div class="controls"><span class="score big" id="mcScore">Σκορ: 0 / ${MC.length}</span></div>`;
+  document.querySelectorAll('#mc .opts').forEach(row=>{ const i=+row.dataset.i;
+    row.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+      if(row.dataset.done) return; row.dataset.done='1';
+      const j=+o.dataset.j, a=MC[i].a;
+      row.querySelectorAll('.opt').forEach(x=>{const xj=+x.dataset.j;
+        if(xj===a){x.classList.add('correct');x.insertAdjacentHTML('beforeend','<span class="mk">✓</span>');}
+        else if(x===o){x.classList.add('wrong');x.insertAdjacentHTML('beforeend','<span class="mk">✗</span>');}});
+      if(j===a) score.mc++;
+      if(MC[i].ex) document.getElementById('mcx'+i).classList.add('show');
+      document.getElementById('mcScore').textContent=`Σκορ: ${score.mc} / ${MC.length}`; bump();
+    }));});
+}
+if(MATCH.length){
+  function shuffle(arr,seed){const a=arr.slice();for(let i=a.length-1;i>0;i--){seed=(seed*9301+49297)%233280;const j=Math.floor(seed/233280*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const rights=shuffle(MATCH.map((m,i)=>({...m,i})),5);
+  const mL=document.getElementById('mL'), mR=document.getElementById('mR');
+  mL.insertAdjacentHTML('beforeend', MATCH.map((m,i)=>`<div class="mtile" data-side="L" data-i="${i}">${esc(m.l)}</div>`).join(''));
+  mR.insertAdjacentHTML('beforeend', rights.map(m=>`<div class="mtile" data-side="R" data-i="${m.i}">${esc(m.r)}</div>`).join(''));
+  let pick=null; function clearActive(){document.querySelectorAll('#mt .mtile.active').forEach(t=>t.classList.remove('active'));}
+  document.querySelectorAll('#mt .mtile').forEach(t=>t.addEventListener('click',()=>{
+    if(t.classList.contains('done'))return;
+    if(!pick){clearActive();pick=t;t.classList.add('active');return;}
+    if(pick===t){pick=null;t.classList.remove('active');return;}
+    if(pick.dataset.side===t.dataset.side){clearActive();pick=t;t.classList.add('active');return;}
+    const L=pick.dataset.side==='L'?pick:t, R=pick.dataset.side==='R'?pick:t, ok=L.dataset.i===R.dataset.i;
+    if(ok){[L,R].forEach(x=>{x.classList.add('done');x.classList.remove('active');});
+      L.insertAdjacentHTML('beforeend',' <span class="badge">✓</span>');
+      score.mt++; document.getElementById('mtScore').textContent=`Σκορ: ${score.mt} / ${MATCH.length}`;
+      if(score.mt===MATCH.length) document.getElementById('mtScore').textContent+='  — τέλεια! 🏛️'; bump();
+    } else {[L,R].forEach(x=>x.classList.add('miss')); setTimeout(()=>{[L,R].forEach(x=>x.classList.remove('miss','active'));},550);} pick=null;
+  }));
+  document.getElementById('mtReset').addEventListener('click',()=>{score.mt=0;pick=null;
+    document.querySelectorAll('#mt .mtile').forEach(t=>{t.classList.remove('done','active','miss');const b=t.querySelector('.badge');if(b)b.remove();});
+    document.getElementById('mtScore').textContent=''; bump();});
+}
+function bump(){const answered=document.querySelectorAll('#tf .tf[data-done], #mc .opts[data-done]').length+score.mt;
+  const total=(totals.tf+totals.mc+totals.mt)||1; document.getElementById('pbar').style.width=Math.round(answered/total*100)+'%';}
+const links=[...document.querySelectorAll('nav.side a')], secs=NAV.map(s=>document.getElementById(s.id));
+const spy=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;links.forEach(l=>l.classList.toggle('on',l.dataset.to===id));}});},{rootMargin:'-45% 0px -50% 0px'});
+secs.forEach(s=>s&&spy.observe(s));
+const toTop=document.getElementById('toTop');
+window.addEventListener('scroll',()=>toTop.classList.toggle('show',window.scrollY>500),{passive:true});
+toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>
