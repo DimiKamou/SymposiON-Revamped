@@ -111,6 +111,63 @@
   });
   window.LATIN_TEXT_UNITS = UNITS;
 
+  // ── Ανάλυση Κειμένων picker — one entry that opens a grouped grid of Ενότητες 16–50.
+  //    Selecting a card opens that text's analysis panel (openLatinText); closing it
+  //    returns here. Keeps the Γ΄ Λυκείου subject to a handful of tiles. ──
+  function _tpInjectCSS() {
+    if (document.getElementById('latin-tp-css')) return;
+    var s = document.createElement('style');
+    s.id = 'latin-tp-css';
+    s.textContent =
+      '#latin-textpicker-overlay .tp-wrap{overflow-y:auto;height:calc(100% - 56px);padding:22px 20px 60px;max-width:1040px;margin:0 auto;box-sizing:border-box}' +
+      '#latin-textpicker-overlay .tp-group{font-family:Georgia,serif;color:#8a5a3a;font-size:14px;letter-spacing:.05em;text-transform:uppercase;margin:22px 4px 10px;border-bottom:1px solid rgba(140,90,60,.25);padding-bottom:6px}' +
+      '#latin-textpicker-overlay .tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}' +
+      '#latin-textpicker-overlay .tp-card{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 15px;border:1px solid rgba(120,90,60,.28);border-radius:13px;background:rgba(255,252,245,.9);cursor:pointer;transition:.15s;font-family:inherit;color:#2a231a}' +
+      '#latin-textpicker-overlay .tp-card:hover{border-color:#c96a45;transform:translateY(-2px);box-shadow:0 12px 26px -16px rgba(60,40,20,.5)}' +
+      '#latin-textpicker-overlay .tp-num{flex:0 0 auto;width:38px;height:38px;border-radius:9px;background:#efe6d6;color:#8a5a3a;font-family:Georgia,serif;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center}' +
+      '#latin-textpicker-overlay .tp-title{font-size:14px;line-height:1.3}' +
+      '@media(prefers-color-scheme:dark){#latin-textpicker-overlay .tp-card{background:rgba(40,36,30,.9);color:#e8dcc8;border-color:rgba(150,110,80,.3)}#latin-textpicker-overlay .tp-num{background:#3a3025;color:#d9a56a}}';
+    document.head.appendChild(s);
+  }
+  function openLatinTextPicker() {
+    _tpInjectCSS();
+    var ov = document.getElementById('latin-textpicker-overlay');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'latin-textpicker-overlay';
+      ov.className = 'game-overlay';
+      var back = (window.SYM_LANG === 'en') ? 'Back' : 'Πίσω';
+      var groups = {};
+      Object.keys(UNITS).forEach(function (k) { var n = parseInt(k, 10); var lo = Math.floor((n - 1) / 10) * 10 + 1; (groups[lo] = groups[lo] || []).push(n); });
+      var html = '<div class="overlay-topbar">' +
+        '<button class="overlay-back" type="button">&larr; ' + back + '</button>' +
+        '<span class="overlay-title">Λατινικά · Ανάλυση Κειμένων</span>' +
+        '<span style="width:64px;display:inline-block"></span></div>' +
+        '<div class="tp-wrap">';
+      Object.keys(groups).map(Number).sort(function (a, b) { return a - b; }).forEach(function (lo) {
+        html += '<div class="tp-group">Ενότητες ' + lo + '–' + (lo + 9) + '</div><div class="tp-grid">';
+        groups[lo].sort(function (a, b) { return a - b; }).forEach(function (n) {
+          var full = UNITS[n] || ('Ενότητα ' + n);
+          var title = full.indexOf('—') >= 0 ? full.split('—').slice(1).join('—').trim() : full;
+          html += '<button class="tp-card" type="button" data-n="' + n + '">' +
+            '<span class="tp-num">' + n + '</span><span class="tp-title">' + title + '</span></button>';
+        });
+        html += '</div>';
+      });
+      html += '</div>';
+      ov.innerHTML = html;
+      document.body.appendChild(ov);
+      ov.querySelector('.overlay-back').addEventListener('click', function () { ov.classList.remove('active'); document.body.style.overflow = ''; });
+      ov.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.tp-card');
+        if (b) openLatinText(parseInt(b.getAttribute('data-n'), 10));
+      });
+    }
+    ov.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  window.openLatinTextPicker = openLatinTextPicker;
+
   // Εισαγωγή — standalone interactive introduction chapter (not a unit panel).
   // Reuses the same overlay shell but loads eisagogi.html instead of enotita.html.
   function openLatinIntro() {

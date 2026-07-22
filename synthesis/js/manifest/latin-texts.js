@@ -17,4 +17,12 @@
     M['Text Analysis — Unit ' + n]       = 'openLatinText' + n;
     M['Λατινικά · Ενότητα ' + n]          = 'openLatinText' + n;
   });
+
+  // Self-contained global openers (also defined in latin-texts-launchers.js).
+  // No js/overlay to lazy-load — synLaunch just calls the global. Registered so
+  // launchTile()'s `SYN_GAMES[fn]` gate passes and the tiles actually launch.
+  ['openLatinIntro', 'openLatinTextPicker',
+   'openLatSyntaxDomi', 'openLatSyntaxDeuterevouses', 'openLatSyntaxCum',
+   'openLatSyntaxGerund', 'openLatSyntaxPlagios', 'openLatMorphologia']
+    .forEach(function (fn) { G[fn] = entry; });
 })();
