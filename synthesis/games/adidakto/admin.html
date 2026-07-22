@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Ανθολόγιο Αδιδάκτων</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Raleway:wght@400;500;600;700&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<style>
+  :root{
+    --bg:#15110E; --bg-deep:#100C0A; --rail:#1B1611; --surface:#221C16; --surface-2:#2A231B;
+    --border:rgba(200,160,100,0.18); --border-soft:rgba(200,160,100,0.10);
+    --terra:#C8512E; --terra-soft:rgba(200,81,46,0.14); --shale:#8C7D70;
+    --bronze:#D4AE58; --bronze-soft:#B8954A; --glow:rgba(212,174,88,0.26);
+    --text:#EDE5DA; --olive:#9AA05E; --aegean:#6BA0A3; --mono:'JetBrains Mono',ui-monospace,monospace; --greek:'Cardo',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg-deep);color:var(--text);font-family:'Raleway',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(90% 70% at 18% -10%,rgba(200,81,46,.07),transparent 55%),radial-gradient(80% 60% at 95% 110%,rgba(212,174,88,.06),transparent 50%);}
+  .atlas{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr;}
+
+  .top{display:flex;align-items:center;gap:20px;padding:17px 28px;border-bottom:1px solid var(--border-soft);
+    background:linear-gradient(180deg,rgba(27,22,17,.9),rgba(21,17,14,.6));position:relative;}
+  .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--glow),transparent);}
+  .brand{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .brand .sig{width:32px;height:32px;color:var(--bronze);}
+  .brand .nm{font-family:'Cinzel',serif;font-size:16px;letter-spacing:1px;}.brand .nm b{color:var(--bronze);font-weight:600;}
+  .brand .sub{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:3px;color:var(--shale);margin-top:4px;}
+  .top-title{flex:1;}
+  .top-title h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;line-height:1;}
+  .top-title p{font-size:11px;color:var(--shale);margin-top:4px;}
+  .search{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;width:230px;}
+  .search:focus-within{border-color:var(--bronze);box-shadow:0 0 0 3px var(--glow);}
+  .search svg{width:15px;height:15px;color:var(--shale);}
+  .search input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Raleway';font-size:13px;}
+  .add-btn{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.5px;text-transform:uppercase;
+    background:var(--bronze);color:#1A140C;border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-weight:600;transition:.15s;}
+  .add-btn:hover{filter:brightness(1.08);}
+  .add-btn svg{width:15px;height:15px;}
+
+  .grid{display:grid;grid-template-columns:230px 1fr;min-height:0;}
+  .rail{background:var(--rail);border-right:1px solid var(--border-soft);padding:20px 14px;overflow-y:auto;}
+  .rail-lbl{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--shale);padding:0 10px 11px;}
+  .auth{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;cursor:pointer;border:1px solid transparent;transition:.13s;}
+  .auth:hover{background:var(--surface);}
+  .auth.on{background:var(--surface);border-color:var(--border);box-shadow:inset 2px 0 0 var(--bronze);}
+  .auth .an{flex:1;font-size:13px;font-weight:600;}
+  .auth.on .an{color:var(--bronze);}
+  .auth .ac{font-family:var(--mono);font-size:10px;color:var(--shale);}
+  .rail-div{height:1px;background:var(--border-soft);margin:16px 6px;}
+
+  .canvas{overflow-y:auto;padding:20px 28px 50px;}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .fbar{display:flex;gap:7px;}
+  .fchip{font-family:var(--mono);font-size:10px;letter-spacing:.4px;text-transform:uppercase;background:var(--surface);border:1px solid var(--border-soft);
+    border-radius:8px;padding:7px 11px;cursor:pointer;color:var(--shale);transition:.13s;}
+  .fchip:hover{border-color:var(--border);}
+  .fchip.on{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.08);}
+  .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--shale);}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:14px;}
+  .tcard{background:linear-gradient(180deg,var(--surface),rgba(34,28,22,.6));border:1px solid var(--border-soft);border-radius:14px;
+    padding:17px 18px;display:flex;flex-direction:column;gap:0;transition:.15s;position:relative;overflow:hidden;}
+  .tcard:hover{border-color:var(--border);transform:translateY(-2px);box-shadow:0 16px 38px -18px rgba(0,0,0,.7);}
+  .tcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--bronze);opacity:.55;}
+  .tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:11px;}
+  .tc-auth{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--bronze);line-height:1;}
+  .tc-work{font-style:italic;font-size:12px;color:var(--shale);margin-top:4px;}
+  .tc-src{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px;letter-spacing:.4px;text-transform:uppercase;
+    color:var(--aegean);border:1px solid rgba(107,160,163,.3);border-radius:6px;padding:4px 7px;white-space:nowrap;}
+  .tc-src.link{color:var(--olive);border-color:rgba(154,160,94,.3);}
+  .tc-src svg{width:11px;height:11px;}
+  .tc-text{font-family:var(--greek);font-size:16px;line-height:1.7;color:var(--text);background:var(--bg-deep);border:1px solid var(--border-soft);
+    border-radius:9px;padding:11px 13px;margin-bottom:12px;max-height:88px;overflow:hidden;position:relative;}
+  .tc-text::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(transparent,var(--bg-deep));}
+  .tc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .mtag{font-family:var(--mono);font-size:9px;letter-spacing:.3px;text-transform:uppercase;padding:4px 7px;border-radius:6px;border:1px solid var(--border-soft);color:var(--shale);}
+  .mtag.diff1,.mtag.diff2{color:var(--olive);border-color:rgba(154,160,94,.3);background:rgba(154,160,94,.06);}
+  .mtag.diff3{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.07);}
+  .mtag.diff4,.mtag.diff5{color:var(--terra);border-color:var(--terra-soft);background:var(--terra-soft);}
+  .tc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:11px;border-top:1px solid var(--border-soft);}
+  .tc-used{font-family:var(--mono);font-size:9.5px;color:var(--shale);}
+  .tc-used b{color:var(--bronze-soft);}
+  .tc-actions{display:flex;gap:6px;}
+  .ia{width:28px;height:28px;border-radius:7px;border:1px solid var(--border-soft);background:var(--bg-deep);color:var(--shale);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.13s;}
+  .ia:hover{color:var(--bronze);border-color:var(--border);}
+  .ia svg{width:14px;height:14px;}
+  .ia.del:hover{color:var(--terra);border-color:var(--terra-soft);}
+
+  /* add modal */
+  .modal-bg{position:fixed;inset:0;z-index:60;background:rgba(8,6,4,.66);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;padding:26px 28px;position:relative;}
+  .modal h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;margin-bottom:3px;}
+  .modal .msub{font-size:12px;color:var(--shale);margin-bottom:20px;}
+  .mclose{position:absolute;right:16px;top:16px;width:32px;height:32px;border-radius:8px;border:1px solid var(--border-soft);background:var(--bg-deep);color:var(--shale);cursor:pointer;}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;}
+  .fld label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--shale);margin-bottom:7px;}
+  .fld input,.fld select,.fld textarea{width:100%;background:var(--bg-deep);border:1px solid var(--border-soft);border-radius:9px;padding:10px 12px;
+    color:var(--text);font-family:'Raleway';font-size:13px;outline:none;transition:.14s;}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--bronze);}
+  .fld textarea{font-family:var(--greek);font-size:16px;line-height:1.7;min-height:90px;resize:vertical;}
+  .src-tabs{display:flex;gap:8px;margin-bottom:11px;}
+  .src-tabs button{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;background:var(--bg-deep);border:1px solid var(--border-soft);
+    border-radius:8px;padding:9px 14px;cursor:pointer;color:var(--shale);transition:.13s;display:flex;align-items:center;gap:7px;}
+  .src-tabs button svg{width:13px;height:13px;}
+  .src-tabs button.on{color:var(--bronze);border-color:var(--glow);background:rgba(212,174,88,.07);}
+  .drop{border:2px dashed var(--border);border-radius:11px;padding:20px;text-align:center;cursor:pointer;color:var(--shale);transition:.14s;}
+  .drop:hover{border-color:var(--bronze);color:var(--text);}
+  .drop svg{width:26px;height:26px;}
+  .drop .dt{font-size:12.5px;margin-top:7px;}
+  .src-pane{display:none;}.src-pane.on{display:block;}
+  .save-btn{width:100%;font-family:var(--mono);font-size:12px;letter-spacing:.8px;text-transform:uppercase;font-weight:600;background:var(--bronze);color:#1A140C;
+    border:none;border-radius:11px;padding:14px;cursor:pointer;margin-top:8px;transition:.14s;}
+  .save-btn:hover{filter:brightness(1.08);}
+
+  .empty{text-align:center;padding:70px 20px;color:var(--shale);grid-column:1/-1;}
+  .empty .ei{font-size:36px;opacity:.5;}
+  .empty .et{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text);margin-top:10px;}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;}.rail{display:none;}.frow{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="atlas">
+  <div class="top">
+    <div class="brand">
+      <svg class="sig" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="square">
+        <line x1="22" y1="20" x2="78" y2="20"/><line x1="22" y1="20" x2="48" y2="50"/><line x1="48" y1="50" x2="22" y2="80"/><line x1="22" y1="80" x2="78" y2="80"/>
+        <g stroke="#D97B5C" stroke-width="2.8"><circle cx="64" cy="50" r="12" stroke-dasharray="62 12" stroke-dashoffset="-7" transform="rotate(-90 64 50)"/><line x1="64" y1="39" x2="64" y2="49"/></g></svg>
+      <div><div class="nm">Symposi<b>ON</b></div><span class="sub">TARTARUS · ADMIN</span></div>
+    </div>
+    <div class="top-title"><h1>Ανθολόγιο Αδιδάκτων</h1><p>Η συλλογή αρχαίων κειμένων από όπου αντλούν τα διαγωνίσματα — ανά συγγραφέα.</p></div>
+    <div class="search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="9" r="6"/><line x1="13.5" y1="13.5" x2="17" y2="17"/></svg>
+      <input id="search" placeholder="Αναζήτηση κειμένου…"/></div>
+    <button class="add-btn" id="exportBtn" style="background:var(--surface-2);color:var(--bronze);border:1px solid var(--border);margin-right:8px;" title="Κατέβασε το corpus.js με τις αλλαγές σου"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Εξαγωγή</button>
+    <button class="add-btn" id="addBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Νέο κείμενο</button>
+  </div>
+
+  <div class="grid">
+    <aside class="rail">
+      <div class="rail-lbl">Συγγραφείς</div>
+      <div id="authRail"></div>
+      <div class="rail-div"></div>
+      <div class="rail-lbl">Είδος</div>
+      <div id="genreRail"></div>
+    </aside>
+    <main class="canvas">
+      <div class="toolbar">
+        <div class="fbar" id="diffBar">
+          <span class="fchip on" data-d="all">Όλες οι δυσκολίες</span>
+          <span class="fchip" data-d="easy">Εύκολα</span>
+          <span class="fchip" data-d="mid">Μεσαία</span>
+          <span class="fchip" data-d="hard">Πανελλήνιες+</span>
+        </div>
+        <span class="count" id="count"></span>
+      </div>
+      <div class="cards" id="cards"></div>
+    </main>
+  </div>
+</div>
+
+<!-- add modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="mclose" id="mclose">✕</button>
+    <h3>Προσθήκη αδίδακτου κειμένου</h3>
+    <div class="msub">Ανέβασε αρχείο ή δώσε σύνδεσμο πηγής. Κατηγοριοποιείται αυτόματα ανά συγγραφέα.</div>
+    <div class="frow">
+      <div class="fld"><label>Συγγραφέας</label><select id="fAuth"></select></div>
+      <div class="fld"><label>Έργο</label><input id="fWork" placeholder="π.χ. Ὑπὲρ Μαντιθέου"/></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>Είδος</label><select id="fGenre"><option>Ρητορική</option><option>Ιστοριογραφία</option><option>Φιλοσοφία</option><option>Βιογραφία</option></select></div>
+      <div class="fld"><label>Δυσκολία</label><select id="fDiff"><option value="2">Εύκολη</option><option value="3" selected>Μεσαία</option><option value="4">Πανελλήνιες</option><option value="5">Πολύ δύσκολη</option></select></div>
+    </div>
+    <div class="fld" style="margin-bottom:13px;"><label>Πηγή</label>
+      <div class="src-tabs" id="srcTabs">
+        <button class="on" data-s="upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0L8 8m4-4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Ανέβασμα</button>
+        <button data-s="link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>Σύνδεσμος</button>
+      </div>
+      <div class="src-pane on" data-s="upload"><div class="drop" id="drop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3v5h5M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><div class="dt" id="dropTxt">PDF, DOCX, TXT — κλικ ή σύρε</div><input type="file" id="fileIn" style="display:none;"/></div></div>
+      <div class="src-pane" data-s="link"><div class="fld"><input id="fLink" placeholder="https://… (π.χ. Perseus, Βικιθήκη)"/></div></div>
+    </div>
+    <div class="fld" style="margin-bottom:13px;"><label>Κείμενο (πολυτονικό)</label><textarea id="fText" placeholder="Επικόλλησε εδώ το αρχαίο κείμενο…"></textarea></div>
+    <button class="save-btn" id="saveBtn">Αποθήκευση στο ανθολόγιο</button>
+  </div>
+</div>
+
+<script src="data/corpus.js"></script>
+<script src="data/corpus-store.js"></script>
+<script>
+const LS='sym_corpus_v1';
+/* shared «Ανθολόγιο» store (bundled data/corpus.js seed + localStorage edits) */
+function load(){return AdidaktoCorpus.load();}
+function save(a){AdidaktoCorpus.save(a);}
+let CORPUS=load();
+
+let fAuthor='all',fGenre='all',fDiff='all',fSearch='';
+const DIFFMAP={2:'Εύκολη',3:'Μεσαία',4:'Πανελλήνιες',5:'Πολύ δύσκολη'};
+
+function authors(){const m={};CORPUS.forEach(t=>m[t.author]=(m[t.author]||0)+1);return m;}
+function genres(){const m={};CORPUS.forEach(t=>m[t.genre]=(m[t.genre]||0)+1);return m;}
+
+function renderRails(){
+  const A=authors();
+  document.getElementById('authRail').innerHTML=`<div class="auth ${fAuthor==='all'?'on':''}" data-a="all"><span class="an">Όλοι</span><span class="ac">${CORPUS.length}</span></div>`+
+    Object.keys(A).sort((a,b)=>a.localeCompare(b,'el')).map(a=>`<div class="auth ${fAuthor===a?'on':''}" data-a="${a}"><span class="an">${a}</span><span class="ac">${A[a]}</span></div>`).join('');
+  const G=genres();
+  document.getElementById('genreRail').innerHTML=`<div class="auth ${fGenre==='all'?'on':''}" data-g="all"><span class="an">Όλα</span><span class="ac">${CORPUS.length}</span></div>`+
+    Object.keys(G).map(g=>`<div class="auth ${fGenre===g?'on':''}" data-g="${g}"><span class="an">${g}</span><span class="ac">${G[g]}</span></div>`).join('');
+}
+function diffClass(d){return d<=2?'easy':d===3?'mid':'hard';}
+function filtered(){return CORPUS.filter(t=>{
+  if(fAuthor!=='all'&&t.author!==fAuthor)return false;
+  if(fGenre!=='all'&&t.genre!==fGenre)return false;
+  if(fDiff!=='all'&&diffClass(t.diff)!==fDiff)return false;
+  if(fSearch&&!(t.author+t.work+t.text).toLowerCase().includes(fSearch))return false;
+  return true;});}
+function renderCards(){
+  const list=filtered();
+  document.getElementById('count').textContent=list.length+' κείμεν'+(list.length===1?'ο':'α');
+  if(!list.length){document.getElementById('cards').innerHTML='<div class="empty"><div class="ei">🏺</div><div class="et">Κανένα κείμενο</div></div>';return;}
+  document.getElementById('cards').innerHTML=list.map(t=>`
+    <div class="tcard">
+      <div class="tc-top">
+        <div><div class="tc-auth">${t.author}</div><div class="tc-work">${t.work}</div></div>
+        <span class="tc-src ${t.src.type}">${t.src.type==='link'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>'}${t.src.ref.length>16?t.src.ref.slice(0,14)+'…':t.src.ref}</span>
+      </div>
+      <div class="tc-text">${t.text}</div>
+      <div class="tc-meta">
+        <span class="mtag">${t.genre}</span>
+        <span class="mtag diff${t.diff}">${DIFFMAP[t.diff]}</span>
+        <span class="mtag">${t.words} λέξεις</span>
+      </div>
+      <div class="tc-foot">
+        <span class="tc-used">σε <b>${t.used}</b> διαγωνίσματα</span>
+        <div class="tc-actions">
+          <button class="ia" title="Επεξεργασία"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+          <button class="ia del" data-del="${t.id}" title="Διαγραφή"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function renderAll(){renderRails();renderCards();}
+
+document.getElementById('authRail').addEventListener('click',e=>{const a=e.target.closest('.auth');if(a){fAuthor=a.dataset.a;renderAll();}});
+document.getElementById('genreRail').addEventListener('click',e=>{const a=e.target.closest('.auth');if(a){fGenre=a.dataset.g;renderAll();}});
+document.getElementById('diffBar').addEventListener('click',e=>{const c=e.target.closest('.fchip');if(c){document.querySelectorAll('#diffBar .fchip').forEach(x=>x.classList.remove('on'));c.classList.add('on');fDiff=c.dataset.d;renderCards();}});
+document.getElementById('search').addEventListener('input',e=>{fSearch=e.target.value.toLowerCase().trim();renderCards();});
+document.getElementById('cards').addEventListener('click',e=>{const d=e.target.closest('.del');if(d){CORPUS=CORPUS.filter(t=>t.id!=d.dataset.del);save(CORPUS);renderAll();}});
+
+/* add modal */
+const KNOWN=['Λυσίας','Δημοσθένης','Ἰσοκράτης','Αἰσχίνης','Ξενοφῶν','Θουκυδίδης','Ἡρόδοτος','Πλάτων','Ἀριστοτέλης','Πλούταρχος'];
+function fillAuthSelect(){document.getElementById('fAuth').innerHTML=KNOWN.map(a=>`<option>${a}</option>`).join('');}
+fillAuthSelect();
+let srcType='upload',uploadName='';
+document.getElementById('addBtn').addEventListener('click',()=>document.getElementById('modalBg').classList.add('open'));
+document.getElementById('mclose').addEventListener('click',()=>document.getElementById('modalBg').classList.remove('open'));
+document.getElementById('modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')e.currentTarget.classList.remove('open');});
+document.getElementById('srcTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;srcType=b.dataset.s;
+  document.querySelectorAll('#srcTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('.src-pane').forEach(p=>p.classList.toggle('on',p.dataset.s===srcType));});
+document.getElementById('drop').addEventListener('click',()=>document.getElementById('fileIn').click());
+document.getElementById('fileIn').addEventListener('change',e=>{if(e.target.files[0]){uploadName=e.target.files[0].name;document.getElementById('dropTxt').textContent='✓ '+uploadName;}});
+let editId=null;
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  const text=document.getElementById('fText').value.trim();
+  if(!text){document.getElementById('fText').style.borderColor='var(--terra)';return;}
+  const basic={author:document.getElementById('fAuth').value,work:document.getElementById('fWork').value||'—',
+    genre:document.getElementById('fGenre').value,diff:+document.getElementById('fDiff').value,
+    src:srcType==='link'?{type:'link',ref:(document.getElementById('fLink').value||'σύνδεσμος').replace(/^https?:\/\//,'')}:{type:'upload',ref:uploadName||'αρχείο.pdf'},
+    text,words:text.split(/\s+/).filter(Boolean).length};
+  if(editId!=null){const i=CORPUS.findIndex(t=>t.id==editId);if(i>=0)CORPUS[i]=Object.assign({},CORPUS[i],basic);editId=null;}
+  else{CORPUS.unshift(Object.assign({id:Date.now(),used:0},basic));fAuthor='all';fGenre='all';}
+  save(CORPUS);
+  document.getElementById('modalBg').classList.remove('open');
+  document.getElementById('fWork').value='';document.getElementById('fText').value='';document.getElementById('dropTxt').textContent='PDF, DOCX, TXT — κλικ ή σύρε';uploadName='';
+  renderAll();
+});
+/* export corpus.js (bake localStorage edits into code) */
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const txt="/* corpus.js — εξαγωγή από τον πίνακα «Ανθολόγιο Αδιδάκτων».\n   Αντικατέστησε το games/adidakto/data/corpus.js μ' αυτό και κάνε commit. */\nwindow.CORPUS_BASE = "+JSON.stringify(CORPUS,null,2)+";\n";
+  const b=new Blob([txt],{type:'text/javascript;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='corpus.js';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+});
+/* edit in place — open the modal pre-filled (apparatus preserved on save) */
+document.getElementById('cards').addEventListener('click',e=>{
+  const ed=e.target.closest('.ia:not(.del)');if(!ed)return;
+  const card=ed.closest('.tcard');const t=filtered()[[...card.parentElement.children].indexOf(card)];if(!t)return;
+  editId=t.id;
+  document.getElementById('fAuth').value=t.author;document.getElementById('fWork').value=t.work||'';
+  document.getElementById('fGenre').value=t.genre;document.getElementById('fDiff').value=t.diff;
+  document.getElementById('fText').value=t.text||'';
+  document.getElementById('modalBg').classList.add('open');
+});
+
+renderAll();
+</script>
+</body>
+</html>

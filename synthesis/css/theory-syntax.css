@@ -1,0 +1,152 @@
+/* ════════════════════════════════════════════════════════════════════
+   theory-syntax.css — Συντακτικό (Ancient Greek SYNTAX) lesson views.
+   The NEW kind:'syntax'. Rendered inside the shared .tr-overlay shell,
+   so every colour/typography token (--terra/--gold/--bone/--f-serif…)
+   is inherited from .tr (theory-lessons.css token bridge) and themes
+   automatically across all palettes. Only the genuinely-new syntax
+   interaction surfaces live here; .tr-stat/.tr-kicker/.tr-body/.tr-rule/
+   .seg/.tr-btn/.tr-chip/.tt-* are reused verbatim from theory-lessons.css.
+
+   Role FAMILIES reuse the 5 stable parsing hues (φωνή/χρόνος/έγκλιση/
+   πρόσωπο/τύπος) so colour only GROUPS families; the chip TEXT carries
+   the precise sub-category (panel critique fix).
+   ════════════════════════════════════════════════════════════════════ */
+
+/* SYX role-family hues → the existing 5 parsing-category colours */
+.syx-fam-core { --syx-h: var(--c-mood); }    /* υποκείμενο · ρήμα */
+.syx-fam-obj  { --syx-h: var(--c-person); }  /* αντικείμενο */
+.syx-fam-pred { --syx-h: var(--c-tense); }   /* κατηγορούμενο */
+.syx-fam-onom { --syx-h: var(--c-voice); }   /* ομοιόπτωτοι προσδ. */
+.syx-fam-eter { --syx-h: var(--c-form); }    /* ετερόπτωτοι · επιρρηματικοί */
+
+.syx-sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--stone); }
+
+/* ── rich Θεωρία: prose, reference tables, example boxes ──────────── */
+.syx-prose { line-height: 1.7; }
+.syx-prose p { margin: 0 0 13px; }
+.syx-prose p:last-child { margin-bottom: 0; }
+.syx-prose ul, .syx-prose ol { margin: 11px 0 15px; padding-left: 22px; }
+.syx-prose li { margin: 7px 0; line-height: 1.62; }
+.syx-prose li::marker { color: var(--gold); }
+.syx-prose b { color: var(--bone); font-weight: 600; }
+.syx-prose em { color: var(--terra); font-style: normal; }
+.syx-prose h3 { font-family: var(--f-serif); font-weight: 600; color: var(--bone); font-size: 18px; margin: 20px 0 8px; }
+.syx-th-tt { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin: 18px 0 8px; }
+.syx-th-tablewrap { overflow-x: auto; margin: 14px 0 8px; max-width: 100%; }
+.syx-th-table { border-collapse: collapse; width: 100%; max-width: 840px; font-family: var(--f-serif); }
+.syx-th-table th, .syx-th-table td { border: 1px solid var(--line); padding: 9px 13px; text-align: left; font-size: 16px; line-height: 1.45; vertical-align: top; }
+.syx-th-table thead th { background: var(--inset); color: var(--gold); font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; white-space: nowrap; }
+.syx-th-table th.rh { color: var(--bone); font-weight: 600; background: color-mix(in srgb, var(--cream) 3%, transparent); white-space: nowrap; }
+.syx-th-table td { color: color-mix(in srgb, var(--cream) 86%, transparent); }
+.syx-th-table b { color: var(--bone); font-weight: 600; }
+.syx-th-table em { color: var(--terra); font-style: normal; }
+.syx-th-table tr:hover td { background: color-mix(in srgb, var(--cream) 2%, transparent); }
+.syx-th-exs { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 6px; }
+.syx-th-ex { border-left: 2px solid var(--line-hi); padding: 7px 0 7px 16px; }
+.syx-th-ex .g { font-family: var(--f-serif); font-size: 19px; line-height: 1.45; color: var(--bone); display: block; }
+.syx-th-ex .g em { color: var(--terra); font-style: normal; }
+.syx-th-ex .g b { color: var(--gold); font-weight: 600; }
+.syx-th-ex .an { font-family: var(--f-serif); font-style: italic; font-size: 15px; color: var(--stone); display: block; margin-top: 4px; }
+
+/* ── worked-example constituent chunking (Θεωρία) ─────────────────── */
+.syx-worked { font-family: var(--f-serif); font-size: 29px; line-height: 2.2; color: var(--bone); }
+.syx-chunk { display: inline-block; vertical-align: top; padding: 3px 9px 5px; margin: 0 5px 16px; border-radius: 5px; border-bottom: 2px solid transparent; }
+.syx-chunk .lab { display: block; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 6px; opacity: 0.9; }
+
+/* ── shared interaction atoms ─────────────────────────────────────── */
+.syx-reveal { display: none; border-left: 2px solid var(--gold); padding: 11px 0 11px 16px; margin-top: 18px;
+  font-family: var(--f-serif); font-size: 17px; line-height: 1.55; color: color-mix(in srgb, var(--cream) 88%, transparent); }
+.syx-reveal.show { display: block; }
+.syx-reveal b { color: var(--gold); font-weight: 600; }
+.syx-reveal i { color: var(--terra); font-style: normal; }
+.syx-fb { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.02em; margin-top: 10px; min-height: 15px; line-height: 1.5; }
+.syx-fb.bad { color: var(--terra); }
+.syx-fb.good { color: var(--sage); }
+@keyframes syx-shake { 10%,90%{transform:translateX(-1px)} 30%,70%{transform:translateX(2px)} 50%{transform:translateX(-2px)} }
+.syx-shk { animation: syx-shake 0.34s; }
+
+.syx-progress { display: flex; align-items: center; gap: 10px; margin: 4px 0 22px; }
+.syx-pip { width: 26px; height: 4px; border-radius: 2px; background: var(--line); }
+.syx-pip.done { background: var(--terra); }
+.syx-pip.cur { background: var(--gold); }
+
+/* ── exercise card frame ──────────────────────────────────────────── */
+.syx-ex { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 24px 26px 26px; }
+.syx-ex-k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+.syx-ex-q { font-family: var(--f-serif); font-size: 19px; line-height: 1.6; color: var(--cream); margin-top: 11px; }
+.syx-opts { margin-top: 18px; }
+.syx-canvas { margin-top: 20px; }
+
+/* ── DISCRIMINATOR (hero) ─────────────────────────────────────────── */
+.syx-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+@media (max-width: 760px) { .syx-cards { grid-template-columns: 1fr; } }
+.syx-dcard { border: 1px solid var(--line); border-radius: 9px; padding: 16px 16px 18px; background: var(--inset); }
+.syx-dcard-h { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--stone); }
+.syx-sent { font-family: var(--f-serif); font-size: 23px; line-height: 1.55; color: var(--bone); margin: 11px 0 15px; }
+.syx-w { cursor: pointer; padding: 1px 3px; border-radius: 3px; border-bottom: 1px solid transparent; transition: all 0.15s; }
+.syx-w:hover { border-bottom-color: var(--stone); }
+.syx-w.syn-on { color: var(--aegean); border-bottom: 1px solid var(--aegean); }
+.syx-tgt { border-bottom: 1px dashed var(--terra); }
+.syx-prompt { font-family: var(--f-serif); font-size: 14.5px; color: var(--cream); opacity: 0.92; line-height: 1.5; }
+.syx-nb { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--bone); background: transparent;
+  border: 1px solid var(--line-hi); border-radius: 3px; padding: 9px 12px; margin-top: 11px; cursor: pointer; transition: all 0.15s; }
+.syx-nb:hover { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 8%, transparent); }
+.syx-lock { display: none; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 11px; border-radius: 3px; margin-top: 12px;
+  color: var(--syx-h, var(--gold)); border: 1px solid color-mix(in srgb, var(--syx-h, var(--gold)) 45%, transparent);
+  background: color-mix(in srgb, var(--syx-h, var(--gold)) 10%, transparent); }
+.syx-lock.show { display: inline-flex; }
+
+/* ── ROLE CANVAS ──────────────────────────────────────────────────── */
+.syx-canvas { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 18px 0 6px;
+  padding: 20px 16px; background: var(--inset); border: 1px solid var(--line); border-radius: 9px; min-height: 92px; }
+.syx-tok { display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer; }
+.syx-pill { font-family: var(--f-serif); font-size: 25px; color: var(--bone); padding: 5px 12px; border-radius: 5px;
+  border: 1px solid transparent; transition: all 0.15s; }
+.syx-tok:hover .syx-pill { border-color: var(--line-hi); }
+.syx-tok.sel .syx-pill { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.syx-tok.locked { cursor: default; }
+.syx-tok.locked .syx-pill { color: var(--syx-h, var(--terra)); background: color-mix(in srgb, var(--cream) 4%, transparent); }
+.syx-ghost .syx-pill { border: 1px dashed var(--stone); color: var(--stone); font-style: italic; }
+.syx-rlab { font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--stone); min-height: 12px; text-align: center; }
+.syx-tok.locked .syx-rlab { color: var(--syx-h, var(--terra)); }
+.syx-add { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--bone); background: transparent;
+  border: 1px dashed var(--line-hi); border-radius: 5px; padding: 9px 13px; cursor: pointer; align-self: center; }
+.syx-add:hover { border-color: var(--gold); color: var(--gold); }
+.syx-palette { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.syx-rchip { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.03em; color: var(--bone); border: 1px solid var(--line);
+  border-radius: 3px; padding: 8px 11px; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; opacity: 0.45; pointer-events: none; }
+.syx-rchip.live { opacity: 1; pointer-events: auto; }
+.syx-rchip:hover { border-color: var(--gold); }
+.syx-rchip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--syx-h, var(--stone)); }
+.syx-hint { font-family: var(--f-serif); font-style: italic; font-size: 14px; color: var(--stone); margin-top: 12px; line-height: 1.45; min-height: 18px; }
+
+/* ── CLAUSE CLASSIFIER ────────────────────────────────────────────── */
+.syx-period { font-family: var(--f-serif); font-size: 23px; line-height: 1.75; color: var(--bone); margin: 16px 0 6px; }
+.syx-cl { padding: 3px 7px; border-radius: 5px; }
+.syx-cl-main { background: color-mix(in srgb, var(--aegean) 12%, transparent); border: 1px solid color-mix(in srgb, var(--aegean) 30%, transparent); }
+.syx-cl-sub { background: color-mix(in srgb, var(--terra) 12%, transparent); border: 1px solid color-mix(in srgb, var(--terra) 30%, transparent); }
+.syx-conj { color: var(--gold); font-weight: 600; }
+.syx-gv { border-bottom: 1px dashed var(--stone); }
+.syx-diag { font-family: var(--f-serif); font-size: 14.5px; color: var(--stone); margin: 12px 0 4px; line-height: 1.5; }
+.syx-diag b { color: var(--bone); font-weight: 600; }
+
+/* ── CLOZE + option buttons (shared) ──────────────────────────────── */
+.syx-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.syx-opt { font-family: var(--f-serif); font-size: 18px; color: var(--bone); border: 1px solid var(--line-hi);
+  border-radius: 4px; padding: 9px 16px; cursor: pointer; transition: all 0.15s; }
+.syx-opt:hover { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 6%, transparent); }
+.syx-opt.ok { border-color: var(--sage); color: var(--sage); background: color-mix(in srgb, var(--sage) 10%, transparent); }
+.syx-opt.no { border-color: var(--terra); color: var(--terra); }
+.syx-gap { color: var(--terra); border-bottom: 2px solid var(--terra); padding: 0 14px; }
+
+/* ── EXAM (Εξέταση) categorical — reuses .tt- but NO score bar ────── */
+.syx-tally { display: inline-flex; align-items: center; gap: 9px; font-family: var(--f-mono); font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--sage);
+  border: 1px solid color-mix(in srgb, var(--sage) 45%, transparent); background: color-mix(in srgb, var(--sage) 10%, transparent);
+  padding: 7px 13px; border-radius: 3px; }
+.syx-claim { display: flex; gap: 11px; padding: 9px 0; font-family: var(--f-serif); font-size: 16px; line-height: 1.45;
+  border-bottom: 1px solid color-mix(in srgb, var(--cream) 6%, transparent); }
+.syx-claim .mk { flex: none; margin-top: 3px; font-size: 14px; }
+.syx-claim .ph { color: var(--bone); font-weight: 600; }

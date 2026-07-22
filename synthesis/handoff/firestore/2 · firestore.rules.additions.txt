@@ -1,0 +1,79 @@
+// ════════════════════════════════════════════════════════════════════
+//  firestore.rules — ADDITIONS to merge into paideia/firestore.rules
+//  Paste these match blocks inside the existing
+//  `match /databases/{database}/documents { … }`.
+//  Assumes role/tier are mirrored to custom claims (setUserClaims Fn);
+//  fall back to get(users/$(uid)).data.role if you skip claims.
+// ════════════════════════════════════════════════════════════════════
+
+function isSignedIn()  { return request.auth != null; }
+function uid()         { return request.auth.uid; }
+function isAdmin()     { return request.auth.token.role == 'admin'; }
+function isTeacher()   { return request.auth.token.role in ['teacher','admin']; }
+
+// —— users: self read/write; admin all; guardian/teacher limited read ——
+match /users/{u} {
+  allow read:  if isSignedIn() && (uid() == u || isAdmin()
+                 || request.auth.token.email == resource.data.guardianEmail);
+  // self may write only "safe" fields; kleos/streak/tier are server-only
+  allow update: if isSignedIn() && uid() == u
+                 && !request.resource.data.diff(resource.data).affectedKeys()
+                      .hasAny(['kleos','level','tier','role','streak']);
+  allow create: if isSignedIn() && uid() == u;
+
+  // subcollections owned by the user
+  match /{sub}/{doc} {
+    allow read:  if isSignedIn() && (uid() == u || isAdmin()
+                   || request.auth.token.email == get(/databases/$(database)/documents/users/$(u)).data.guardianEmail);
+    allow write: if isSignedIn() && uid() == u;   // mastery/srs/daily/notifications/adidaktoAttempts
+  }
+}
+
+// —— corpus: anyone signed-in reads; only admins write ——
+match /corpus/{id} {
+  allow read:  if isSignedIn();
+  allow write: if isAdmin();
+}
+
+// —— narration manifest: read all signed-in; write admin only ——
+match /narration/{id} {
+  allow read:  if isSignedIn();
+  allow write: if isAdmin();
+}
+
+// —— exams: owner only; grade{} is written by the gradeExam Function
+//     (Admin SDK bypasses rules), so clients can't fake a grade ——
+match /exams/{eid} {
+  allow read:   if isSignedIn() && resource.data.uid == uid();
+  allow create: if isSignedIn() && request.resource.data.uid == uid();
+  allow update: if isSignedIn() && resource.data.uid == uid()
+                 && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['grade']);
+}
+
+// —— leaderboards: read-only to clients; written by scheduled Function ——
+match /leaderboards/{scope}/{gradeKey} {
+  allow read:  if isSignedIn();
+  allow write: if false;            // Admin SDK only
+}
+
+// —— append-only event streams: client may create, never read/edit ——
+match /kleos_events/{e} {
+  allow create: if isSignedIn() && request.resource.data.uid == uid();
+  allow read, update, delete: if false;
+}
+match /game_events/{e} {
+  allow create: if isSignedIn();
+  allow read, update, delete: if isAdmin();
+}
+
+// —— analytics rollups: admin read; Function writes ——
+match /analytics_daily/{day} {
+  allow read:  if isAdmin();
+  allow write: if false;
+}
+
+// —— B2B contact leads: anyone may create; admin reads ——
+match /b2bLeads/{id} {
+  allow create: if true;
+  allow read, update, delete: if isAdmin();
+}

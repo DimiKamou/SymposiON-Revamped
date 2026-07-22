@@ -59,6 +59,12 @@ service cloud.firestore {
       allow create, update, delete:  if false;   // Admin SDK only
     }
 
+    // Per-user AI-grader rate-limit counters (written by the gradeAnswer
+    // function via Admin SDK; never touched by clients).
+    match /grader_usage/{uid} {
+      allow read, write:             if false;   // Admin SDK only
+    }
+
 
     // ══════════════════════════════════════════════════════════
     //  USERS
@@ -72,10 +78,21 @@ service cloud.firestore {
                  && request.auth.uid == uid
                  && request.resource.data.role == 'free';
 
+      // Self-update may NOT change entitlement fields — those are written only
+      // by the Admin SDK (adminGrantAccess / the future Stripe webhook). Without
+      // this, any signed-in user could set plan:'pro', classes:[…], expiresAt
+      // on their own doc and unlock all paid content for free (the role pin
+      // alone was insufficient). Admins (can('users')) may still write freely.
       allow update: if request.auth != null
                  && (
                    (request.auth.uid == uid
-                    && request.resource.data.role == resource.data.role)
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.get('plan',      null) == resource.data.get('plan',      null)
+                    && request.resource.data.get('tier',      null) == resource.data.get('tier',      null)
+                    && request.resource.data.get('classes',   null) == resource.data.get('classes',   null)
+                    && request.resource.data.get('expiresAt', null) == resource.data.get('expiresAt', null)
+                    && request.resource.data.get('grantedBy', null) == resource.data.get('grantedBy', null)
+                    && request.resource.data.get('grantedAt', null) == resource.data.get('grantedAt', null))
                    || can('users')
                  );
 
@@ -133,9 +150,14 @@ service cloud.firestore {
 
     match /custom_games/{docId} {
       allow read: if true;
+      // A user may create their own game but may NOT self-publish it: published
+      // games are merged into every user's library (gp-content.js), so going
+      // live requires a content-admin update. Closes a site-wide content-injection
+      // vector with no moderation gate.
       allow create: if request.auth != null
                  && request.resource.data.creatorId == request.auth.uid
-                 && request.resource.data.questions.size() <= 50;
+                 && request.resource.data.questions.size() <= 50
+                 && request.resource.data.get('published', false) == false;
       allow delete: if request.auth != null
                  && (resource.data.creatorId == request.auth.uid || can('content'));
       allow update: if can('content');
@@ -155,6 +177,48 @@ service cloud.firestore {
       allow write: if can('content');
     }
 
+    // Theory lesson OVERRIDES (ISSUE 8). A content-admin edits a theory
+    // prototype's pedagogical chrome (intro/badges/example/cards) via the
+    // "Πρότυπα Θεωρίας" editor; the patch is stored here and merged over the
+    // dataset-sourced lesson (theory-data.js applyTheoryOverride). World-readable
+    // so every student sees the corrected lesson; content-admin write only.
+    match /lesson_overrides/{lessonId} {
+      allow read:  if true;
+      allow write: if can('content');
+    }
+
+    // ── THEORY TEXT READER («Κείμενα · Μεταφράσεις», theory-text.js) ──
+    // The public doc is the STUDENT-SAFE text (srcLines, glosses, meter,
+    // commentary, hasRef/hasSyntax) — world-readable like the other content
+    // collections. The reference translation/syntax lives in the private
+    // subdoc below, which is DENIED to every client: it is read ONLY by the
+    // revealTextReference / gradeTranslation / translationHint Cloud
+    // Functions via the Admin SDK (which bypasses these rules). Content-admins
+    // author both the public doc and the private reference from the in-place
+    // curator editor, so writes are gated to can('content').
+    match /texts/{id} {
+      allow read:  if true;
+      allow write: if can('content');
+      match /private/{doc} {
+        allow read:  if false;            // reference never reaches a client
+        allow write: if can('content');   // curator authors it; read via Fn
+      }
+    }
+
+    // ── AUTHORED THEORY LESSONS (Q&A + Παράλληλο Κείμενο) ──
+    // Public doc holds only student-safe fields (Q&A kind:'qa' → {q,note};
+    // parallel → index-aligned segments). Reference Q&A answers live in the
+    // private/answers subdoc, denied to clients and reached ONLY by the
+    // revealQAItem / gradeQAItem Cloud Functions.
+    match /authored_lessons/{id} {
+      allow read:  if true;
+      allow write: if can('content');
+      match /private/{doc} {
+        allow read:  if false;
+        allow write: if can('content');
+      }
+    }
+
     match /banners/{bannerId} {
       allow read:  if true;
       allow write: if can('content');
@@ -166,8 +230,11 @@ service cloud.firestore {
     // ══════════════════════════════════════════════════════════
 
     // Coupon validation: % must be 1–100, maxUses must be ≥ 0.
+    // Read is admin-only (finance/super): public read let anyone enumerate every
+    // active promo code + discount. Checkout validates a single code server-side
+    // (the public app never lists this collection).
     match /coupons/{code} {
-      allow read: if true;
+      allow read: if can('subs');
       allow write: if can('subs')
                 && (request.method == 'delete'
                     || (pctOk(request.resource.data.discount)
@@ -198,6 +265,29 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // AI reference corpus — admin-uploaded books/files the grader grounds its
+    // answers in. Content-admin only (the grader reads it via the Admin SDK, so
+    // it is NOT world-readable). Each doc holds one text chunk.
+    // NOTE: Rules' string .size() counts CHARACTERS, not bytes. Firestore's hard
+    // limit is 1,048,576 BYTES per document; Greek code points are 2 bytes in
+    // UTF-8, so the cap must guarantee < 1 MiB even when every char is 2 bytes:
+    // 480000 chars × 2 = 960000 bytes, leaving headroom for the other fields.
+    match /ai_corpus/{docId} {
+      allow read:           if can('content');
+      allow create, update: if can('content')
+                         && request.resource.data.text is string
+                         && request.resource.data.text.size() <= 480000;
+      allow delete:         if can('content');
+    }
+    // Ιστορία (History) per-course content packs. World-readable so the
+    // istoria game renders the admin's latest pack from Firestore on any
+    // device; static JS (window.ISTORIA_CONTENT) is the offline fallback.
+    // Writes go ONLY through the Admin SDK (adminSaveHistoryContent).
+    match /historyContent/{course} {
+      allow read:  if true;
+      allow write: if false;
+    }
+
     match /subscriptions/{docId} {
       allow read:  if true;
       allow write: if can('subs');
@@ -214,7 +304,10 @@ service cloud.firestore {
     // ══════════════════════════════════════════════════════════
 
     match /feedback/{docId} {
-      allow create: if request.resource.data.message is string
+      // Require sign-in: an unauthenticated create was an open spam/injection
+      // channel into the support console.
+      allow create: if request.auth != null
+                 && request.resource.data.message is string
                  && request.resource.data.message.size() > 0
                  && request.resource.data.message.size() <= 2000;
       allow read, delete: if can('support');
@@ -225,6 +318,29 @@ service cloud.firestore {
       allow read: if request.auth != null
                && (can('users') || resource.data.teacherUid == request.auth.uid);
       allow write: if can('users');
+    }
+
+    // Access grants written by the admin Grant Access panel (single + bulk CSV).
+    // (Without this, grant writes were silently denied → localStorage-only.)
+    match /accessGrants/{docId} {
+      allow read:  if can('users');
+      allow write: if can('users');
+    }
+
+    // Kleos grants written by the admin "Grant Kleos" panel (ISSUE 5b). The doc
+    // id is the target student's lowercased email; `pending` accumulates via
+    // FieldValue.increment. Admins (can('users')) write freely. The target
+    // student may READ their own doc and may only zero `pending` after they
+    // claim it (they cannot self-credit — the amount is set by the admin).
+    match /kleosGrants/{email} {
+      allow read:  if can('users')
+                || (request.auth != null && request.auth.token.email == email);
+      allow write: if can('users');
+      // Self-claim: the student may only set pending to 0, changing nothing else.
+      allow update: if request.auth != null
+                 && request.auth.token.email == email
+                 && request.resource.data.pending == 0
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending']);
     }
 
 
@@ -240,7 +356,9 @@ service cloud.firestore {
                  && request.resource.data.score    >= 0
                  && request.resource.data.configId is string
                  && request.resource.data.configId.size() <= 100
-                 && request.resource.data.username is string;
+                 && request.resource.data.username is string
+                 && request.resource.data.username.size() <= 40
+                 && request.resource.data.score    <= 100000000;
       allow update: if false;
       allow delete: if isSuper();
     }
@@ -277,9 +395,14 @@ service cloud.firestore {
                    && uid                         == request.auth.uid
                    && request.resource.data.uid   == request.auth.uid
                    && request.resource.data.score == 0;
+        // A player may update only their OWN doc and may raise their own score by
+        // at most one correct-answer award (+100) per write — so a participant
+        // can't self-award an arbitrary score (the client increments by 100; the
+        // host, who owns scoring/leaderboard, may write freely).
         allow update: if request.auth != null
                    && (
-                     uid == request.auth.uid
+                     (uid == request.auth.uid
+                      && request.resource.data.get('score', 0) <= resource.data.get('score', 0) + 100)
                      || get(/databases/$(database)/documents/live_arenas/$(pin))
                           .data.hostUid == request.auth.uid
                    );
@@ -296,15 +419,73 @@ service cloud.firestore {
       }
     }
 
+    // Friendly Battle · 1v1 duel room (parallel to live_arenas, capacity 2).
+    // Host mints the PIN + seeds the shared bank; one guest claims the empty
+    // seat via the ?join=PIN&duel=1 invite. Each player is self-paced through
+    // the same bank and writes only their own player doc (friendly, low-stakes
+    // → no per-write score cap, unlike the class arena).
+    match /duels/{pin} {
+      function isDuelHost() {
+        return request.auth != null && resource.data.hostUid == request.auth.uid;
+      }
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                 && request.resource.data.status  == 'lobby'
+                 && request.resource.data.hostUid == request.auth.uid;
+      allow update: if request.auth != null
+                 && (
+                   isDuelHost()
+                   // A guest write may change ONLY guestUid (to self) — not the
+                   // bank/config/status/host. The client only ever sends
+                   // update({guestUid}) from the guest side; host start/close go
+                   // through the isDuelHost() branch. Without hasOnly, a PIN-holder
+                   // could rewrite the shared bank or flip status in the same write.
+                   || (request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['guestUid'])
+                       && request.resource.data.guestUid == request.auth.uid
+                       && (resource.data.get('guestUid', null) == null
+                           || resource.data.get('guestUid', null) == request.auth.uid))
+                 );
+      allow delete: if isSuper();
+
+      match /players/{uid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+                   && uid                         == request.auth.uid
+                   && request.resource.data.uid   == request.auth.uid
+                   && request.resource.data.score == 0;
+        // A player writes only their OWN self-paced doc; the host may write freely.
+        allow update: if request.auth != null
+                   && (
+                     uid == request.auth.uid
+                     || get(/databases/$(database)/documents/duels/$(pin)).data.hostUid == request.auth.uid
+                   );
+        allow delete: if isSuper();
+      }
+    }
+
     match /naumachia_matches/{matchId} {
-      allow read: if true;
-      allow create: if request.resource.data.status    == 'waiting'
+      // Require auth throughout — read was world-open (leaking live player ids)
+      // and update had no auth check, so anonymous clients could mutate matches.
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                   && request.resource.data.status    == 'waiting'
                    && request.resource.data.p1Id        is string
                    && request.resource.data.p1Id.size() <= 64
+                   && request.resource.data.get('p1Uid', '') == request.auth.uid
                    && request.resource.data.winner      == null;
-      allow update: if resource.data.p1Id == request.resource.data.p1Id
-                   || resource.data.p2Id  == null
-                   || resource.data.p2Id  == request.resource.data.p2Id;
+      // Only the two participants may mutate a match. p1Uid/p2Uid hold the real
+      // auth uids (p1Id/p2Id are random display ids, not identity). The joiner
+      // may set p2Uid to itself while the slot is still open. The previous rule's
+      // `p1Id == p1Id` clause was a no-op — any signed-in user could PATCH any
+      // match (force winner, flip turns).
+      allow update: if request.auth != null
+                   && (
+                     request.auth.uid == resource.data.get('p1Uid', '')
+                     || request.auth.uid == resource.data.get('p2Uid', '')
+                     || (resource.data.get('p2Uid', null) == null
+                         && request.resource.data.get('p2Uid', '') == request.auth.uid)
+                   );
       allow delete: if isSuper();
     }
 

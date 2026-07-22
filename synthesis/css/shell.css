@@ -14,6 +14,25 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ── Global keyboard focus (WCAG 2.4.7) ──────────────────────────────
+   Many controls use `outline:none` with only a faint border swap, which
+   leaves keyboard users without a visible focus indicator. Restore a
+   clear, theme-aware ring for any focusable element navigated by keyboard. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--terra-dk, #8a5a18);
+  outline-offset: 2px;
+}
+/* search field (defined in css/system.css) currently has no focus state */
+.sys-search__in:focus-visible {
+  outline: 2px solid var(--terra-dk, #8a5a18);
+  outline-offset: 2px;
+}
+
 /* ── Harness bar ─────────────────────────────────────────────────── */
 .harness {
   /* Retired: the dev "themes/tweaks" top bar is hidden in production. Theme +
@@ -84,8 +103,12 @@ body {
 /* ── Theme picker popover ────────────────────────────────────────── */
 .hpop { position: relative; }
 .theme-menu {
-  position: absolute; top: calc(100% + 9px); right: 0;
-  width: max-content; max-width: min(1320px, 97vw); max-height: 90vh; overflow: auto;
+  /* Viewport-anchored (fixed), not button-anchored, so the wide theme gallery
+     can never run off the LEFT edge (its left column was getting clipped). The
+     `top` is set from the trigger button's position in js/app.js when it opens;
+     84px is the fallback for the deep-link (?menu=themes) open. */
+  position: fixed; top: 84px; right: 14px;
+  width: max-content; max-width: min(1100px, 94vw); max-height: calc(100vh - 100px); overflow: auto;
   background: #14161b; border: 1px solid #2a2e36; border-radius: 16px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.6); padding: 16px 18px; z-index: 9500;
   opacity: 0; transform: translateY(-6px) scale(.98); pointer-events: none;
@@ -117,7 +140,7 @@ body {
 .theme-menu__sec--cursor { padding-top: 12px; margin-top: 12px; border-top: 1px solid #23262e; }
 
 /* ── Stage that holds the live home screen ───────────────────────── */
-.stage { background: var(--sym-bg, #f7f3ea); min-height: calc(100vh - 54px); transition: background .35s; }
+.stage { background: var(--sym-bg, #f7f3ea); min-height: calc(100vh - 54px); min-height: calc(100dvh - 54px); transition: background .35s; }
 #sym-home { position: relative; }
 
 /* ── Tweaks panel ────────────────────────────────────────────────── */
@@ -187,8 +210,10 @@ body.syn-game-open.symc-on .stage * { cursor: auto !important; }
 #symc-ring { transition: opacity .25s; }
 #symc-ring .rc { display: block; width: 38px; height: 38px; margin: -19px 0 0 -19px; color: color-mix(in srgb, var(--terra) 62%, transparent); transition: transform .2s; }
 #symc-ring .rc svg { display: block; width: 100%; height: 100%; }
-#symc-ring.hot .rc { transform: scale(1.55); color: var(--terra); }8s cubic-bezier(.2,.8,.2,1), background .25s, border-color .25s; }
-#symc-ring.hot .rc { transform: scale(1.7); border-color: var(--terra); background: var(--terra-soft); }
+/* Hover feedback = the ring grows + takes the accent colour. No box fill:
+   `.rc` is a square 38×38 element (no border-radius), so a background here
+   painted a square behind the circular cursor over any interactive element. */
+#symc-ring.hot .rc { transform: scale(1.7); color: var(--terra); transition: transform .8s cubic-bezier(.2,.8,.2,1); }
 #symc-glyph { color: var(--terra); transition: opacity .25s; }
 #symc-glyph svg { position: absolute; width: 22px; height: 22px; left: -11px; top: -11px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); transition: transform .2s; }
 #symc-ring.hot ~ #symc-glyph svg { transform: scale(.78) rotate(-8deg); }

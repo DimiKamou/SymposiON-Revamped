@@ -20,7 +20,7 @@ const STATE = {
   ornament: 'rich',
   accent: 'soft',
   cursor: 'laurel',
-  cursorShape: 'circle',
+  cursorShape: 'none',   // classic system cursor by default (opt into the ring in the theme·cursor panel)
   cursorIcon: 'none',
   display: 'grid',
   hero: 'monogram',
@@ -105,6 +105,10 @@ function render() {
   home.className = 'theme-' + STATE.theme + ' dir-' + STATE.direction
     + ' density-' + STATE.density + ' orn-' + STATE.ornament + ' accent-' + STATE.accent;
   document.querySelector('.stage').className = 'stage theme-' + STATE.theme;
+  // Mirror the active theme onto <body> so body-level game overlays inherit the
+  // --sym-* tokens (the shared overlay chrome adapts to the selected theme).
+  [...document.body.classList].forEach(c => { if (c.indexOf('theme-') === 0) document.body.classList.remove(c); });
+  document.body.classList.add('theme-' + STATE.theme);
   home.innerHTML = '';
 
   const ctx = {
@@ -119,6 +123,13 @@ function render() {
     setClass: (id) => { STATE.classId = id; render(); },
     activeClass: (window.SYM.classById && window.SYM.classById(STATE.classId)) || window.SYM.CLASSES.find(c => c.id === STATE.classId),
   };
+
+  // Mirror the Ver1 global the leveled-game curriculum gate + iframe launchers
+  // read, and warm the per-class curriculum cache so the grammar level pickers
+  // can filter synchronously (replaces Ver1 nav.js's prefetch-on-grade-nav).
+  // prefetch() self-dedupes per grade and no-ops until firebase is ready.
+  window.currentGradeKey = STATE.classId;
+  if (window.CurriculumGate) CurriculumGate.prefetch(STATE.classId);
 
   // Keep the admin-only dev harness in sync with the current `isAdmin` state
   // (cheap: each builder early-returns when admin gating fails).
@@ -143,20 +154,27 @@ function render() {
 window.symRender = render;
 
 // Screens that take no params and are safe to deep-link / restore from the URL hash
-const DEEPLINK = ['home','assignments','gamepanel','live','profile','levelup','temple','anodos','tartarus','anathesi','parent','settings','checkout','admin','login','subscribe','account'];
+const DEEPLINK = ['home','assignments','gamepanel','live','profile','levelup','temple','anodos','tartarus','anathesi','parent','settings','checkout','admin','login','subscribe','account','tutor'];
 function symGo(screen, param){
+  var _prevScreen = STATE.screen, _prevParam = STATE.screenParam;
   STATE.screen = screen || 'home';
   STATE.screenParam = param || null;
   if (STATE.direction !== 'synthesis') { STATE.direction = 'synthesis'; buildHarness(); }
-  // keep the URL hash in sync so a screen survives refresh & is shareable
-  try {
-    if (STATE.screen === 'tag' && STATE.screenParam && STATE.screenParam.tag) {
-      history.replaceState(null, '', '#tag-' + STATE.screenParam.tag);
-    } else if (!STATE.screenParam && DEEPLINK.indexOf(STATE.screen) >= 0) {
-      if (STATE.screen === 'home') history.replaceState(null, '', location.pathname + location.search);
-      else history.replaceState(null, '', '#' + STATE.screen);
-    }
-  } catch (_) {}
+  // History/URL is owned by SymNav (js/sym-nav.js): it pushes a real back-stack
+  // entry per navigation so Back returns to the previous screen, not home.
+  if (window.SymNav && typeof SymNav._sync === 'function') {
+    SymNav._sync(_prevScreen, _prevParam);
+  } else {
+    // Fallback before SymNav loads: legacy hash sync (replaceState).
+    try {
+      if (STATE.screen === 'tag' && STATE.screenParam && STATE.screenParam.tag) {
+        history.replaceState(null, '', '#tag-' + STATE.screenParam.tag);
+      } else if (!STATE.screenParam && DEEPLINK.indexOf(STATE.screen) >= 0) {
+        if (STATE.screen === 'home') history.replaceState(null, '', location.pathname + location.search);
+        else history.replaceState(null, '', '#' + STATE.screen);
+      }
+    } catch (_) {}
+  }
   render();
   window.scrollTo(0, 0);
 }
@@ -300,7 +318,7 @@ function buildHarness() {
   // theme picker
   const pop = el('div', { class:'hpop' });
   const cur = THEMES.find(t=>t.id===STATE.theme);
-  const tbtn = el('button', { class:'hctl', onclick:(e)=>{ e.stopPropagation(); menu.classList.toggle('open'); } }, [
+  const tbtn = el('button', { class:'hctl', onclick:(e)=>{ e.stopPropagation(); const opening=!menu.classList.contains('open'); menu.classList.toggle('open'); if(opening){ try{ const r=e.currentTarget.getBoundingClientRect(); menu.style.top=(Math.round(r.bottom)+9)+'px'; }catch(_){}}} }, [
     el('span',{class:'hctl__dot', style:`background:linear-gradient(135deg,${cur.a} 48%,${cur.b} 48%)`}),
     cur.nm
   ]);
@@ -322,7 +340,7 @@ function buildHarness() {
   // cursor picker — TWO selections: geometric SHAPE (frame) + inner ICON
   const CUR_PREMIUM = ['monsterball','invader','ghost','mushroom','pixelheart','joystick','skull','katana'];
   function cursorPrice(kind, id){ if(id==='none') return 0; if(kind==='shape' && id==='circle') return 0; if(kind==='icon' && CUR_PREMIUM.indexOf(id)>=0) return 1800; return 600; }
-  function cursorOwned(kind, id){ if(cursorPrice(kind,id)===0) return true; const def = kind==='shape'?['none','circle']:['none']; return (SymStore.get('own_cursor_'+kind, def)||[]).indexOf(id)>=0; }
+  function cursorOwned(kind, id){ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; if(cursorPrice(kind,id)===0) return true; const def = kind==='shape'?['none','circle']:['none']; return (SymStore.get('own_cursor_'+kind, def)||[]).indexOf(id)>=0; }
   function cursorRow(kind, opts){
     menu.appendChild(el('div',{class:'theme-menu__sec theme-menu__sec--cursor'}, kind==='shape'?'Δείκτης · Σχῆμα · Shape':'Δείκτης · Εικονίδιο · Icon'));
     const row = el('div',{class:'theme-menu__cursors'});
@@ -342,8 +360,8 @@ function buildHarness() {
       const btn = el('button',{ class:'cursor-opt'+(cur()===id?' active':'')+(owned?'':' locked')+(premium?' premium':''), title:nm+(owned?'':' · ⌾ '+price.toLocaleString('en-US')),
         onclick:(e)=>{ e.stopPropagation();
           if(owned){ applySel(id, e.currentTarget); return; }
-          const k=SymStore.get('kleos',0);
-          if(k>=price){ SymStore.set('kleos',k-price); const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SymStore.get(key,def).slice(); ow.push(id); SymStore.set(key,ow); const pr=e.currentTarget.querySelector('.cursor-opt__price'); if(pr) pr.remove(); e.currentTarget.classList.remove('locked'); applySel(id, e.currentTarget); }
+          const spend = (window.symSpendKleos) ? window.symSpendKleos(price) : (function(){ const k=SymStore.get('kleos',0); if(k>=price){ SymStore.set('kleos',k-price); return true; } return false; })();
+          if(spend){ const key='own_cursor_'+kind, def=kind==='shape'?['none','circle']:['none']; const ow=SymStore.get(key,def).slice(); ow.push(id); SymStore.set(key,ow); const pr=e.currentTarget.querySelector('.cursor-opt__price'); if(pr) pr.remove(); e.currentTarget.classList.remove('locked'); applySel(id, e.currentTarget); }
           else { e.currentTarget.classList.add('shake'); setTimeout(()=>e.currentTarget.classList.remove('shake'),420); } } },
         [ glm, el('span',{class:'cursor-opt__nm'}, nm) ]);
       if(!owned) btn.appendChild(el('span',{class:'cursor-opt__price'}, '⌾'+price.toLocaleString('en-US')));
@@ -367,7 +385,7 @@ function buildHarness() {
 
   function themePrice(t){ return t.lock ? 2600 : (t.group==='neon' ? 2200 : (t.group==='combo' ? 1800 : (t.group==='vivid' ? 1400 : 0))); }
   function freeThemeIds(){ return THEMES.filter(t=>themePrice(t)===0).map(t=>t.id); }
-  function themeOwned(id){ const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true;
+  function themeOwned(id){ if(window.symAllUnlocked&&window.symAllUnlocked()) return true; const t=THEMES.find(x=>x.id===id); if(!t || themePrice(t)===0) return true;
     // Member perk: themes granted to signed-up users live in STATE.unlocked.
     if (window.STATE && Array.isArray(STATE.unlocked) && STATE.unlocked.indexOf(id)>=0) return true;
     return (SymStore.get('own_theme', freeThemeIds())||[]).indexOf(id)>=0; }
@@ -387,9 +405,8 @@ function buildHarness() {
 
   function buyTheme(t, btn){
     const price = themePrice(t);
-    const k = SymStore.get('kleos', 0);
-    if(k < price){ btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),440); return; }
-    SymStore.set('kleos', k - price);
+    const spend = (window.symSpendKleos) ? window.symSpendKleos(price) : (function(){ const k=SymStore.get('kleos',0); if(k>=price){ SymStore.set('kleos',k-price); return true; } return false; })();
+    if(!spend){ btn.classList.add('shake'); setTimeout(()=>btn.classList.remove('shake'),440); return; }
     const own = SymStore.get('own_theme', freeThemeIds()); own.push(t.id); SymStore.set('own_theme', own);
     btn.classList.add('unlocking');
     const pr = btn.querySelector('.theme-opt__price'); if(pr) pr.remove();
@@ -500,7 +517,7 @@ function boot(){
   if(savedIcon)  STATE.cursorIcon = savedIcon;
   if(window.gsap && window.ScrollTrigger) gsap.registerPlugin(ScrollTrigger);
   // deep-link: restore screen from the URL hash (#temple, #admin, …)
-  try { const h = (location.hash || '').replace(/^#/, ''); if (h.indexOf('tag-') === 0) { STATE.screen = 'tag'; STATE.screenParam = { tag: h.slice(4) }; } else if (h && DEEPLINK.indexOf(h) >= 0) STATE.screen = h; } catch(_){}
+  try { const h = (location.hash || '').replace(/^#\/?/, ''); const segs = h.split('/'); const first = segs[0] || ''; if (first === 'tag' && segs[1]) { STATE.screen = 'tag'; STATE.screenParam = { tag: segs[1] }; } else if (first.indexOf('tag-') === 0) { STATE.screen = 'tag'; STATE.screenParam = { tag: first.slice(4) }; } else if (first && DEEPLINK.indexOf(first) >= 0) STATE.screen = first; } catch(_){}
   // PREVIEW bootstrap — only when ?preview params are present (used by the overview panel).
   // e.g. ?screen=admin&sec=tags&role=admin   ·   ?screen=tag&tag=tragedies
   try {
@@ -514,12 +531,56 @@ function boot(){
       if (q.get('chrome') === '0') document.documentElement.classList.add('preview-nochrome');
     }
   } catch(_){}
-  window.addEventListener('hashchange', () => {
-    const h = (location.hash || '').replace(/^#/, '');
-    if (h.indexOf('tag-') === 0) { const id = h.slice(4); if (STATE.screen !== 'tag' || !STATE.screenParam || STATE.screenParam.tag !== id) { STATE.screen = 'tag'; STATE.screenParam = { tag: id }; render(); window.scrollTo(0, 0); } return; }
-    const s = (h && DEEPLINK.indexOf(h) >= 0) ? h : 'home';
-    if (s !== STATE.screen) { STATE.screen = s; STATE.screenParam = null; render(); window.scrollTo(0, 0); }
-  });
+  // Live Arena invite deeplink (?join=PIN): the engine is lazy, so nothing reads
+  // the PIN at boot. Lazy-load it (synLaunch injects la-overlay + the engine);
+  // live-arena.js's own _checkUrlJoin then reads ?join= and opens the join screen.
+  try {
+    var _jpin = (new URLSearchParams(location.search)).get('join');
+    if (_jpin && /^\d{4,8}$/.test(_jpin) && window.synLaunch) setTimeout(function () { try { window.synLaunch('openLiveArena'); } catch (_) {} }, 0);
+  } catch (_) {}
+  // Combined-content deep link (?game=<openFn>&ds=<dataset>&levels=<csv>): a
+  // scanned QR from the engine setup screen opens the EXACT combined selection.
+  // Build the merged bank via SymMix and launch the engine with it (same
+  // injection path as the Start button → window.launchEngineWithBank). Guarded:
+  // a malformed/absent param is a silent no-op (engines without a setup also
+  // launch with whatever the launcher passes). Mirrors the ?join= handler.
+  try {
+    var _q = new URLSearchParams(location.search);
+    var _g = _q.get('game'), _ds = _q.get('ds'), _lv = _q.get('levels'), _picks = _q.get('picks');
+    var _inj = (_g && window.SymMix && window.SymMix.ENGINE_INJECTION && window.SymMix.ENGINE_INJECTION[_g]) || null;
+    // (a) VS multi-source share (?game=&picks=<base64url JSON of [{id,levelIds}]>):
+    //     a scanned VS QR opens the EXACT same content mix via SymMix.bankMulti.
+    if (_g && _picks && window.SymMix && typeof window.SymMix.bankMulti === 'function'
+        && typeof window.injectBankAndLaunch === 'function'
+        && window.SYN_GAMES && window.SYN_GAMES[_g]) {
+      try {
+        var _b = _picks.replace(/-/g, '+').replace(/_/g, '/');
+        while (_b.length % 4) _b += '=';
+        var _sel = JSON.parse(decodeURIComponent(escape(atob(_b))));
+        if (Array.isArray(_sel) && _sel.length) {
+          setTimeout(function () {
+            try {
+              Promise.resolve(window.SymMix.bankMulti(_sel)).then(function (qs) {
+                window.injectBankAndLaunch(_g, _inj, qs || [], '');
+              });
+            } catch (_) {}
+          }, 0);
+        }
+      } catch (_) {}
+    }
+    // (b) single-dataset share (?game=&ds=&levels=<csv>) — the original shape.
+    else if (_g && _ds && _lv && window.SymMix && typeof window.launchEngineWithBank === 'function'
+        && window.SYN_GAMES && window.SYN_GAMES[_g]) {
+      var _ids = _lv.split(',').map(function (s) { var n = parseInt(s, 10); return isNaN(n) ? s.trim() : n; })
+                    .filter(function (v) { return v !== '' && v != null; });
+      if (_ids.length) {
+        setTimeout(function () { try { window.launchEngineWithBank(_g, _inj, _ds, _ids, ''); } catch (_) {} }, 0);
+      }
+    }
+  } catch (_) {}
+  // History/back-button navigation is owned by SymNav (js/sym-nav.js) via a
+  // popstate-driven back-stack. The legacy hashchange restorer is retired so
+  // the two don't double-handle the same Back press.
   // Agora auto-update: re-render the open Agora when new content is added,
   // in this tab (custom event) or another (native 'storage' event).
   function agoraSync(key){
@@ -542,7 +603,7 @@ function boot(){
   // PREVIEW: optionally auto-open the theme/cursor picker (used by the overview panel)
   try { const q = new URLSearchParams(location.search); if (q.get('menu') === 'themes') setTimeout(()=>{ const m=document.querySelector('.theme-menu'); if(m) m.classList.add('open'); }, 60); } catch(_){}
   if(window.SymSeasons){ SymSeasons.apply(STATE.season); SymSeasons.applyCosmetic(SymStore.get('cosm_particle', null)); }
-  if(window.SymCursor){ SymCursor.init(); SymCursor.setShape(STATE.cursorShape); SymCursor.setIcon(STATE.cursorIcon); }
+  if(window.SymCursor){ SymCursor.init(); SymCursor.setShape(STATE.cursorShape || 'none'); SymCursor.setIcon(STATE.cursorIcon || 'none'); }
   if(window.SymMouseFX){ SymMouseFX.init(); SymMouseFX.set(SymStore.get('mousefx','none')); }
   // STUDENT layer: mount the Guide FAB; run consent gate → first-visit onboarding (suppressed in ?screen= preview mode)
   if (window.SymGuide) SymGuide.mount();
@@ -568,6 +629,7 @@ if (document.readyState !== 'loading') boot(); else document.addEventListener('D
 /* ── SymLoader · branded loading overlay (login / async) ─────────────── */
 window.SymLoader = (function () {
   let ov;
+  const SYM_VARIANTS = ['ignite', 'meander', 'kylix', 'laurel', 'inscribe'];
   function ensure() {
     if (ov) return ov;
     ov = document.createElement('div'); ov.className = 'sym-loader'; ov.setAttribute('aria-hidden', 'true');
@@ -577,7 +639,38 @@ window.SymLoader = (function () {
     box.appendChild(mark); box.appendChild(txt); ov.appendChild(box);
     document.body.appendChild(ov); return ov;
   }
-  function show(msg) { const o = ensure(); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…'); requestAnimationFrame(() => o.classList.add('on')); return o; }
-  function hide() { if (ov) ov.classList.remove('on'); }
+  // Render a freshly-randomised SymLoaders variant into .sym-loader__mark.
+  // Falls back to the static brandMark if window.SymLoaders is unavailable.
+  function renderMark(o) {
+    const mark = o.querySelector('.sym-loader__mark');
+    if (!mark) return;
+    if (window.SymLoaders && typeof window.SymLoaders.mount === 'function') {
+      mark.innerHTML = ''; // clear so variants don't stack
+      // The variant brings its OWN spin; neutralise the host .sym-loader__mark's
+      // sym-spin + fixed 60px box so the mark doesn't double-rotate or overflow.
+      mark.style.animation = 'none';
+      mark.style.width = 'auto'; mark.style.height = 'auto';
+      const variant = SYM_VARIANTS[Math.floor(Math.random() * SYM_VARIANTS.length)];
+      window.SymLoaders.mount(mark, { variant: variant, size: 56 });
+    } else if (!mark.firstChild) {
+      mark.appendChild(brandMark('sym-loader__svg'));
+    }
+  }
+  let _safety = 0, _showTok = 0;
+  function show(msg) {
+    const o = ensure(); renderMark(o); o.querySelector('.sym-loader__txt').textContent = msg || (window.SYM_LANG === 'en' ? 'Loading…' : 'Φόρτωση…');
+    // Token guards the deferred class-add: if hide() lands before this rAF
+    // fires (instant cache-hit relaunches), the stale add must NOT run — it
+    // would re-veil the UI with the safety timer already cleared.
+    const tok = ++_showTok;
+    requestAnimationFrame(() => { if (tok === _showTok) o.classList.add('on'); });
+    // Safety net: the loader has pointer-events:auto while .on, so if a lazy-load
+    // ever HANGS (e.g. a game engine + Firebase that never resolves), synLaunch's
+    // finally→hide never runs and the loader silently blocks EVERY click. Force a
+    // hide after 10s so the UI is never permanently frozen.
+    clearTimeout(_safety); _safety = setTimeout(hide, 10000);
+    return o;
+  }
+  function hide() { _showTok++; clearTimeout(_safety); if (ov) ov.classList.remove('on'); }
   return { show, hide };
 })();

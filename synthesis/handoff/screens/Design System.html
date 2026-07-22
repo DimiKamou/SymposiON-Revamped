@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SymposiON · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=JetBrains+Mono:wght@400;500&family=Cardo:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    /* student-facing (Synthesis · marble) */
+    --bg:#F7F3EA; --card:#FFFFFF; --ink:#1E1810; --stone:#8C7F6B;
+    --terra:#C5572F; --terra-dk:#9C3F1F; --gold:#A2862F; --sage:#5B7544; --aegean:#2F6F8E;
+    /* admin (Command Atlas · bronze) */
+    --atlas-bg:#15110E; --atlas-surface:#221C16; --atlas-bronze:#D4AE58; --atlas-terra:#C8512E; --atlas-text:#EDE5DA;
+    --line:color-mix(in srgb,var(--ink) 13%,transparent);
+    --line-soft:color-mix(in srgb,var(--ink) 7%,transparent);
+    --sink:color-mix(in srgb,var(--ink) 5%,var(--bg));
+    --gold-soft:color-mix(in srgb,var(--gold) 16%,transparent);
+    --terra-soft:color-mix(in srgb,var(--terra) 14%,transparent);
+    --sage-soft:color-mix(in srgb,var(--sage) 15%,transparent);
+    --aegean-soft:color-mix(in srgb,var(--aegean) 13%,transparent);
+    --disp:'Oswald',sans-serif; --sans:'Montserrat',system-ui,sans-serif; --serif:'Alegreya',Georgia,serif; --greek:'Cardo',Georgia,serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 60% at 50% -10%,var(--gold-soft),transparent 55%);}
+
+  /* layout */
+  .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+  .rail{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--line-soft);padding:26px 18px;background:color-mix(in srgb,var(--card) 60%,var(--bg));}
+  .rail .logo{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:4px;}
+  .rail .logo .m{width:32px;height:32px;border-radius:9px;background:var(--terra-soft);color:var(--terra);display:grid;place-items:center;font-family:var(--disp);font-weight:700;}
+  .rail .logo b{color:var(--terra);}
+  .rail .tag{font-family:var(--disp);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin:0 0 24px 42px;}
+  .rail a{display:block;font-size:13px;font-weight:600;color:var(--stone);text-decoration:none;padding:9px 12px;border-radius:9px;transition:.13s;}
+  .rail a:hover{color:var(--ink);background:var(--sink);}
+  .rail a.on{color:var(--terra);background:var(--terra-soft);}
+  .rail .rl{font-family:var(--disp);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--stone);margin:18px 12px 8px;}
+
+  .doc{padding:46px 56px 90px;max-width:1000px;}
+  .hero-h{font-family:var(--serif);font-size:46px;font-weight:700;line-height:1;}
+  .hero-p{font-size:15px;color:var(--stone);margin-top:14px;max-width:560px;line-height:1.6;}
+  .hero-meta{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+  .hm{font-family:var(--mono);font-size:11px;color:var(--stone);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;}
+  .hm b{color:var(--terra);}
+
+  section{margin-top:56px;scroll-margin-top:24px;}
+  .sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;}
+  .sec-h h2{font-family:var(--serif);font-size:28px;font-weight:700;}
+  .sec-h .no{font-family:var(--disp);font-size:13px;font-weight:600;color:var(--terra);}
+  .sec-d{font-size:13px;color:var(--stone);margin-bottom:22px;line-height:1.5;max-width:600px;}
+  .grid{display:grid;gap:14px;}
+
+  /* color */
+  .pal{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  .sw{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--card);}
+  .sw .chip{height:74px;}
+  .sw .meta{padding:11px 13px;}
+  .sw .meta .n{font-size:12.5px;font-weight:700;}
+  .sw .meta .h{font-family:var(--mono);font-size:10.5px;color:var(--stone);margin-top:2px;}
+  .pal-grp{font-family:var(--disp);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--stone);font-weight:600;margin:22px 0 10px;}
+
+  /* type */
+  .type-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:12px;}
+  .type-card .lbl{font-family:var(--mono);font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;gap:14px;flex-wrap:wrap;}
+  .type-card .lbl b{color:var(--terra);}
+  .scale-row{display:flex;align-items:baseline;gap:18px;padding:11px 0;border-bottom:1px solid var(--line-soft);}
+  .scale-row:last-child{border-bottom:none;}
+  .scale-row .sz{font-family:var(--mono);font-size:11px;color:var(--stone);width:62px;flex-shrink:0;}
+
+  /* component cards */
+  .demo{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;}
+  .demo-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+  .demo + .demo{margin-top:14px;}
+  .demo-lbl{font-family:var(--disp);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--stone);font-weight:600;margin-bottom:16px;}
+
+  /* buttons */
+  .btn{font-family:var(--disp);font-size:13px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;border-radius:11px;padding:13px 20px;cursor:pointer;border:1px solid transparent;transition:.14s;}
+  .btn-prim{background:var(--terra);color:#fff;}.btn-prim:hover{background:var(--terra-dk);}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-ghost{background:var(--card);color:color-mix(in srgb,var(--ink) 70%,transparent);border-color:var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-sage{background:var(--sage);color:#fff;}
+
+  /* badges/pills */
+  .pill{font-family:var(--disp);font-size:11px;letter-spacing:.6px;text-transform:uppercase;font-weight:600;padding:6px 12px;border-radius:999px;}
+  .pill.done{color:var(--sage);background:var(--sage-soft);}
+  .pill.pend{color:var(--gold);background:var(--gold-soft);}
+  .pill.late{color:var(--terra);background:var(--terra-soft);}
+  .pill.info{color:var(--aegean);background:var(--aegean-soft);}
+  .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;padding:4px 8px;border-radius:6px;border:1px solid var(--line);color:var(--stone);}
+
+  /* progress */
+  .pbar{height:9px;border-radius:99px;background:var(--sink);overflow:hidden;border:1px solid var(--line-soft);width:200px;}
+  .pbar i{display:block;height:100%;border-radius:99px;}
+  .ring{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--terra) 0 68%,var(--line) 68% 100%);}
+  .ring::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--card);}
+  .ring b{position:relative;font-family:var(--serif);font-weight:700;font-size:18px;}
+
+  /* card sample */
+  .gcard{width:260px;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+  .gcard .art{height:96px;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,var(--terra-soft),transparent 70%),var(--sink);}
+  .gcard .art .g{font-family:var(--greek);font-size:38px;color:var(--gold);}
+  .gcard .bd{padding:14px 16px 16px;}
+  .gcard .ct{font-family:var(--mono);font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--terra);font-weight:600;}
+  .gcard h4{font-family:var(--serif);font-size:18px;font-weight:600;margin:5px 0 6px;}
+  .gcard p{font-size:12px;color:var(--stone);line-height:1.45;}
+
+  /* states */
+  .state-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));}
+  .state{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;min-height:200px;display:flex;flex-direction:column;}
+  .state .scaption{font-family:var(--mono);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--stone);margin-bottom:14px;}
+  /* empty */
+  .empty-demo{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;}
+  .empty-demo .ei{font-size:34px;opacity:.55;}
+  .empty-demo .et{font-family:var(--serif);font-size:18px;font-weight:600;}
+  .empty-demo .es{font-size:12px;color:var(--stone);}
+  .empty-demo .eb{margin-top:8px;font-family:var(--disp);font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;color:#fff;background:var(--terra);border:none;border-radius:9px;padding:9px 14px;cursor:pointer;}
+  /* skeleton */
+  .sk{border-radius:8px;background:linear-gradient(90deg,var(--sink) 25%,color-mix(in srgb,var(--ink) 9%,var(--bg)) 37%,var(--sink) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;}
+  @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:-100% 0;}}
+  .sk-card{display:flex;gap:13px;align-items:center;}
+  .sk-line{height:11px;}
+  /* loading spinner */
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--terra);border-radius:50%;animation:rot .8s linear infinite;}
+  @keyframes rot{to{transform:rotate(360deg);}}
+
+  /* toasts */
+  .toast-row{display:flex;flex-direction:column;gap:10px;max-width:340px;}
+  .toast{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:0 12px 30px -16px rgba(40,20,0,.3);}
+  .toast .ti{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex-shrink:0;}
+  .toast.ok .ti{background:var(--sage-soft);} .toast.warn .ti{background:var(--gold-soft);} .toast.err .ti{background:var(--terra-soft);} .toast.info .ti{background:var(--aegean-soft);}
+  .toast .tx{font-size:12.5px;line-height:1.4;padding-top:5px;}
+  .toast .tx b{font-weight:700;}
+
+  /* atlas (admin) swatch */
+  .atlas-demo{background:var(--atlas-bg);border:1px solid color-mix(in srgb,var(--atlas-bronze) 18%,transparent);border-radius:16px;padding:24px;color:var(--atlas-text);}
+  .atlas-demo .ah{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;}
+  .atlas-demo .asub{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--atlas-bronze);margin-top:4px;}
+  .atlas-demo .arow{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+  .atlas-chip{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--atlas-text);background:var(--atlas-surface);border:1px solid color-mix(in srgb,var(--atlas-bronze) 18%,transparent);border-radius:8px;padding:9px 13px;}
+  .atlas-chip.prim{background:var(--atlas-bronze);color:#1A140C;border-color:transparent;}
+
+  /* screens gallery */
+  .screens{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
+  .screen{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;color:inherit;transition:.16s;display:block;}
+  .screen:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:0 18px 40px -22px rgba(40,20,0,.4);}
+  .screen .thumb{height:104px;display:grid;place-items:center;position:relative;overflow:hidden;}
+  .screen .thumb .ico{font-size:30px;}
+  .screen .sb{padding:12px 14px;}
+  .screen .sb .st{font-size:13px;font-weight:700;}
+  .screen .sb .sd{font-size:11px;color:var(--stone);margin-top:2px;line-height:1.35;}
+  .screen .sb .who{display:inline-block;margin-top:8px;font-family:var(--mono);font-size:8.5px;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:5px;}
+  .who.student{background:var(--terra-soft);color:var(--terra);}
+  .who.admin{background:#2a2018;color:var(--gold);}
+  .who.parent{background:var(--aegean-soft);color:var(--aegean);}
+  .who.system{background:var(--sage-soft);color:var(--sage);}
+
+  .princ{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));}
+  .pr{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+  .pr .pn{font-family:var(--disp);font-size:11px;font-weight:700;color:var(--terra);letter-spacing:.5px;}
+  .pr h4{font-family:var(--serif);font-size:18px;font-weight:600;margin:6px 0 7px;}
+  .pr p{font-size:12.5px;color:var(--stone);line-height:1.5;}
+
+  @media(max-width:820px){.shell{grid-template-columns:1fr;}.rail{position:static;height:auto;display:none;}.doc{padding:30px 24px 70px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail">
+    <div class="logo"><span class="m">Σ</span>Symposi<b>ON</b></div>
+    <div class="tag">Design System</div>
+    <a href="#principles">Principles</a>
+    <a href="#color">Color</a>
+    <a href="#type">Typography</a>
+    <div class="rl">Components</div>
+    <a href="#buttons">Buttons &amp; pills</a>
+    <a href="#progress">Progress &amp; cards</a>
+    <div class="rl">Patterns</div>
+    <a href="#states">Empty · loading</a>
+    <a href="#toasts">Toasts &amp; feedback</a>
+    <div class="rl">System</div>
+    <a href="#atlas">Admin · Atlas</a>
+    <a href="#screens">All screens</a>
+  </aside>
+
+  <main class="doc">
+    <h1 class="hero-h">SymposiON Design System</h1>
+    <p class="hero-p">One classical-studies playground, two surfaces: the student-facing <b>Synthesis</b> (warm marble) and the admin <b>Command Atlas</b> (dark bronze). Greek terms always set in a polytonic serif. This page is the single source of truth.</p>
+    <div class="hero-meta">
+      <span class="hm"><b>2</b> themes</span><span class="hm"><b>5</b> type roles</span>
+      <span class="hm"><b>14</b> screens</span><span class="hm">WCAG <b>AA</b></span>
+    </div>
+
+    <section id="principles">
+      <div class="sec-h"><span class="no">01</span><h2>Principles</h2></div>
+      <p class="sec-d">What every screen should honour.</p>
+      <div class="grid princ">
+        <div class="pr"><div class="pn">Α</div><h4>Classical, not costume</h4><p>Greek motifs (meander, marble, urns) are restrained and editorial — never kitsch or emoji-Greek.</p></div>
+        <div class="pr"><div class="pn">Β</div><h4>Bilingual by default</h4><p>Greek terms appear inline in the serif, glossed in plain language. The script is the hero, not decoration.</p></div>
+        <div class="pr"><div class="pn">Γ</div><h4>Calm density</h4><p>Generous spacing, one or two accents per view. Data earns its place — no stat slop.</p></div>
+        <div class="pr"><div class="pn">Δ</div><h4>Accessible &amp; instant</h4><p>Every control works offline, by keyboard, at AA contrast. The most vulnerable user hits the least friction.</p></div>
+      </div>
+    </section>
+
+    <section id="color">
+      <div class="sec-h"><span class="no">02</span><h2>Color</h2></div>
+      <p class="sec-d">Terracotta leads, gold rewards, sage confirms, aegean informs. Neutrals are warm marble, never grey.</p>
+      <div class="pal-grp">Student · Synthesis</div>
+      <div class="grid pal" id="palStudent"></div>
+      <div class="pal-grp">Semantic</div>
+      <div class="grid pal" id="palSemantic"></div>
+    </section>
+
+    <section id="type">
+      <div class="sec-h"><span class="no">03</span><h2>Typography</h2></div>
+      <p class="sec-d">Alegreya for display &amp; serif body, Oswald for labels, Montserrat for UI, Cardo for Greek.</p>
+      <div class="type-card">
+        <div class="lbl"><span>Display · <b>Alegreya</b> 700</span></div>
+        <div style="font-family:var(--serif);font-size:42px;font-weight:700;line-height:1.05;">Ο Πίνακας της Δόξας</div>
+      </div>
+      <div class="type-card">
+        <div class="lbl"><span>Greek · <b>Cardo</b> (polytonic)</span></div>
+        <div style="font-family:var(--greek);font-size:30px;line-height:1.5;">μῆνιν ἄειδε, θεά, Πηληϊάδεω Ἀχιλῆος</div>
+      </div>
+      <div class="type-card">
+        <div class="lbl"><span>Type scale · <b>Montserrat</b> / Oswald labels</span></div>
+        <div class="scale-row"><span class="sz">46 / 700</span><span style="font-family:var(--serif);font-size:32px;font-weight:700">Page title</span></div>
+        <div class="scale-row"><span class="sz">28 / 700</span><span style="font-family:var(--serif);font-size:23px;font-weight:700">Section heading</span></div>
+        <div class="scale-row"><span class="sz">15 / 400</span><span style="font-size:15px">Body copy — the readable default for paragraphs and descriptions.</span></div>
+        <div class="scale-row"><span class="sz">11 / 600</span><span style="font-family:var(--disp);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600">Eyebrow label</span></div>
+        <div class="scale-row"><span class="sz">11 / mono</span><span style="font-family:var(--mono);font-size:11px">data · meta · codes</span></div>
+      </div>
+    </section>
+
+    <section id="buttons">
+      <div class="sec-h"><span class="no">04</span><h2>Buttons &amp; pills</h2></div>
+      <p class="sec-d">Terracotta is the primary action. Gold is reserved for rewards/economy. Status pills follow the semantic palette.</p>
+      <div class="demo">
+        <div class="demo-lbl">Buttons</div>
+        <div class="demo-row">
+          <button class="btn btn-prim">Primary</button>
+          <button class="btn btn-gold">Reward</button>
+          <button class="btn btn-sage">Confirm</button>
+          <button class="btn btn-ghost">Ghost</button>
+        </div>
+      </div>
+      <div class="demo">
+        <div class="demo-lbl">Status pills &amp; tags</div>
+        <div class="demo-row">
+          <span class="pill done">Ολοκληρώθηκε</span>
+          <span class="pill pend">Εκκρεμεί</span>
+          <span class="pill late">Εκπρόθεσμη</span>
+          <span class="pill info">Νέο</span>
+          <span class="tag">Β΄ Λυκείου</span>
+          <span class="tag">Αδίδακτο</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="progress">
+      <div class="sec-h"><span class="no">05</span><h2>Progress &amp; cards</h2></div>
+      <p class="sec-d">Bars, rings and the game card — the repeating units across mastery, streaks and the catalog.</p>
+      <div class="demo">
+        <div class="demo-lbl">Progress</div>
+        <div class="demo-row" style="gap:26px">
+          <div class="pbar"><i style="width:62%;background:var(--sage)"></i></div>
+          <div class="pbar"><i style="width:38%;background:linear-gradient(90deg,var(--gold),var(--terra))"></i></div>
+          <div class="ring"><b>68%</b></div>
+        </div>
+      </div>
+      <div class="demo">
+        <div class="demo-lbl">Game card</div>
+        <div class="demo-row">
+          <div class="gcard"><div class="art"><span class="g">Λύω</span></div><div class="bd"><div class="ct">Ancient Greek · L4</div><h4>Conjugation Quest</h4><p>Master the present tense of <span style="font-family:var(--greek);color:var(--terra-dk)">λύω</span> as you sail home.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="states">
+      <div class="sec-h"><span class="no">06</span><h2>Empty &amp; loading</h2></div>
+      <p class="sec-d">Never a blank screen. Every list has a warm empty state; every fetch shows a skeleton or spinner, never a spinner-only flash.</p>
+      <div class="grid state-grid">
+        <div class="state"><div class="scaption">Empty state</div>
+          <div class="empty-demo"><div class="ei">🏺</div><div class="et">Κανένα αδίδακτο ακόμη</div><div class="es">Πρόσθεσε το πρώτο σου κείμενο για εξάσκηση.</div><button class="eb">Πρόσθεσε κείμενο</button></div>
+        </div>
+        <div class="state"><div class="scaption">Skeleton (content loading)</div>
+          <div style="display:flex;flex-direction:column;gap:14px;flex:1;justify-content:center">
+            <div class="sk-card"><div class="sk" style="width:40px;height:40px;border-radius:11px"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="sk sk-line" style="width:70%"></div><div class="sk sk-line" style="width:45%"></div></div></div>
+            <div class="sk-card"><div class="sk" style="width:40px;height:40px;border-radius:11px"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="sk sk-line" style="width:85%"></div><div class="sk sk-line" style="width:55%"></div></div></div>
+            <div class="sk-card"><div class="sk" style="width:40px;height:40px;border-radius:11px"></div><div style="flex:1;display:flex;flex-direction:column;gap:7px"><div class="sk sk-line" style="width:60%"></div><div class="sk sk-line" style="width:40%"></div></div></div>
+          </div>
+        </div>
+        <div class="state"><div class="scaption">Spinner (action in flight)</div>
+          <div class="empty-demo"><div class="spin"></div><div class="es" style="margin-top:10px">Δημιουργία διαγωνίσματος…</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="toasts">
+      <div class="sec-h"><span class="no">07</span><h2>Toasts &amp; feedback</h2></div>
+      <p class="sec-d">Every action confirms itself. Four tones — success, warning, error, info — bottom-right, auto-dismiss ~3s, polite ARIA live.</p>
+      <div class="demo">
+        <div class="toast-row">
+          <div class="toast ok"><div class="ti">✓</div><div class="tx"><b>Αποθηκεύτηκε.</b> Η μετάφρασή σου καταχωρήθηκε.</div></div>
+          <div class="toast warn"><div class="ti">⏰</div><div class="tx">Σου μένουν <b>2 ώρες</b> για το σερί σου.</div></div>
+          <div class="toast err"><div class="ti">⚠</div><div class="tx"><b>Δεν συνδέθηκε.</b> Το Neural TTS δεν είναι διαθέσιμο.</div></div>
+          <div class="toast info"><div class="ti">◷</div><div class="tx">Νέο αδίδακτο ανατέθηκε από τον καθηγητή σου.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="atlas">
+      <div class="sec-h"><span class="no">08</span><h2>Admin · Command Atlas</h2></div>
+      <p class="sec-d">The admin surface inverts the palette: dark bronze, Cinzel/Cormorant display, JetBrains Mono data. Same components, darker skin.</p>
+      <div class="atlas-demo">
+        <div class="ah">Φωνητικό Στούντιο</div>
+        <div class="asub">Tartarus · Admin</div>
+        <div class="arow">
+          <span class="atlas-chip prim">Pre-render</span>
+          <span class="atlas-chip">Ηχογράφηση</span>
+          <span class="atlas-chip">Upload</span>
+          <span class="atlas-chip" style="color:var(--atlas-terra)">● Neural TTS</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="screens">
+      <div class="sec-h"><span class="no">09</span><h2>All screens</h2></div>
+      <p class="sec-d">Everything built so far, by audience. Click to open.</p>
+      <div class="grid screens" id="screens"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* palette */
+const STUDENT=[['Terracotta','#C5572F','terra'],['Terra dark','#9C3F1F','terra-dk'],['Gold','#A2862F','gold'],['Sage','#5B7544','sage'],['Aegean','#2F6F8E','aegean'],['Ink','#1E1810','ink'],['Stone','#8C7F6B','stone'],['Marble','#F7F3EA','bg']];
+const SEM=[['Success','#5B7544'],['Warning','#A2862F'],['Error','#C5572F'],['Info','#2F6F8E']];
+document.getElementById('palStudent').innerHTML=STUDENT.map(c=>`<div class="sw"><div class="chip" style="background:${c[1]}"></div><div class="meta"><div class="n">${c[0]}</div><div class="h">${c[1]}</div></div></div>`).join('');
+document.getElementById('palSemantic').innerHTML=SEM.map(c=>`<div class="sw"><div class="chip" style="background:${c[1]}"></div><div class="meta"><div class="n">${c[0]}</div><div class="h">${c[1]}</div></div></div>`).join('');
+
+/* screens registry — relative links to the built files */
+const SCREENS=[
+  ['Mastery & Daily Practice.html','Χάρτης Μάθησης','Mastery map + adaptive queue','student','📊','var(--terra-soft)'],
+  ['Daily Streak & Goal.html','Το Σερί σου','Streak, goal, freezes','student','🔥','var(--terra-soft)'],
+  ['Αδίδακτο Workspace.html','Αδίδακτο','Parse + translate + comprehension','student','📜','var(--gold-soft)'],
+  ['Panhellenic Exam Simulator.html','Προσομοίωση','Full timed paper + AI','student','🏛','var(--gold-soft)'],
+  ['Polytonic Keyboard & Audio.html','Πληκτρολόγιο','Polytonic + pronunciation','student','⌨','var(--aegean-soft)'],
+  ['Global Leaderboards.html','Κατάταξη','Fair global ranking','student','🏆','var(--gold-soft)'],
+  ['Notifications & Reminders.html','Ειδοποιήσεις','Center + reminders','student','🔔','var(--terra-soft)'],
+  ['Iris Accessibility - Revamp.html','Iris','Accessibility bar','system','◉','var(--sage-soft)'],
+  ['Error Pages.html','Σφάλματα','404 · 500 · offline …','system','🚧','var(--sage-soft)'],
+  ['Parent View Profile.html','Γονικό Προφίλ','Read-only child view','parent','👪','var(--aegean-soft)'],
+  ['Admin · Game Analytics.html','Στατιστικά','Most played / exited','admin','📈','#2a2018'],
+  ['Admin · Unseen Corpus.html','Ανθολόγιο','Texts by author','admin','🏺','#2a2018'],
+  ['Admin · Narration Studio.html','Φωνητικό Στούντιο','Pre-render / record','admin','🎙','#2a2018'],
+];
+const WHO={student:'Μαθητής',admin:'Admin',parent:'Γονέας',system:'System'};
+document.getElementById('screens').innerHTML=SCREENS.map(s=>`
+  <a class="screen" href="${encodeURI(s[0])}">
+    <div class="thumb" style="background:radial-gradient(circle at 50% 40%,${s[5]},transparent 72%),var(--sink)"><span class="ico">${s[4]}</span></div>
+    <div class="sb"><div class="st">${s[1]}</div><div class="sd">${s[2]}</div><span class="who ${s[3]}">${WHO[s[3]]}</span></div>
+  </a>`).join('');
+
+/* rail active on scroll */
+const links=[...document.querySelectorAll('.rail a')];
+const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id='#'+e.target.id;links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')===id));}});},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>s&&obs.observe(s));
+</script>
+</body>
+</html>

@@ -2,12 +2,47 @@
    Millionaire-style tier ladder reimagined as the climb to Olympus.
    Answer to climb a rung; safe sanctuaries bank your ascent; a wrong
    answer casts you down to the last sanctuary. Reach the Throne of Zeus.
+
+   2026 visual revamp — "from the foothill mists to the gold of the aether":
+   gameplay/scoring untouched; everything below the rules is presentation.
+   The sky itself tracks your altitude (--ao-alt 0→1): clouds thin, divine
+   light shafts and the ambrosial aura intensify as you near the Throne.
+   Thunder cracks (procedural lightning SVG + flash + shake) punish errors;
+   sanctuary milestones flare gold. All particles are overlay-scoped
+   (SymFX body layers sit under .sym-overlay z-1000, so juice lives in
+   #ao-fxhost). Reduced-motion collapses all ambience.
+
    API:  Olympus.open()   Olympus.close()
    Reads window.SYM_QUESTIONS and window.siteLang ('gr'|'en').
 ═════════════════════════════════════════════════════════════════════ */
 const Olympus = (() => {
 
   const L = () => (window.siteLang === 'en' ? 'en' : 'gr');
+  const RMQ = (window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null);
+  const RM = () => !!(RMQ && RMQ.matches);
+  // weak-device heuristic (presentation only): thinner star field, fewer
+  // clouds/motes and cheaper blurs on phones and low-memory hardware
+  const LITE = (() => {
+    try { return matchMedia('(pointer:coarse)').matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4; }
+    catch (_) { return false; }
+  })();
+
+  // Pick the language string from a question's `q`, tolerating {gr,en},
+  // bare strings, {q:{gr,en}} wrappers and object-valued langs — so the
+  // card never renders the literal "[object Object]" (host/picker banks may
+  // deliver q as a bilingual object rather than a plain string).
+  const QT = (q) => {
+    if (q == null) return '';
+    if (typeof q === 'string') return q;
+    if (typeof q === 'object') {
+      const v = q[L()] != null ? q[L()] : (q.gr != null ? q.gr : q.en);
+      if (typeof v === 'string') return v;
+      if (v && typeof v === 'object') return QT(v);
+      if (q.q !== undefined) return QT(q.q);
+    }
+    return String(q);
+  };
+
   const T = (gr, en) => (L() === 'en' ? en : gr);
 
   const _gpPool = () => {
@@ -15,7 +50,22 @@ const Olympus = (() => {
     return (Array.isArray(g) && g.length) ? g : (window.SYM_QUESTIONS || []);
   };
 
-  // Ascent length is chosen at the start. Rungs are generated; ⛩ marks a banked sanctuary.
+  /* ── inline SVG glyphs (procedural, no assets) ── */
+  const ICO = {
+    temple: '<svg viewBox="0 0 14 12" width="12" height="10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2 4.2L7 1.4l5 2.8"/><path d="M2.4 5.4h9.2" opacity="0.8"/><path d="M3.2 6.6v3M7 6.6v3M10.8 6.6v3"/><path d="M1.6 11h10.8"/></svg>',
+    bolt:   '<svg viewBox="0 0 10 14" width="9" height="13" fill="currentColor"><path d="M6.2 0.8L1.6 7.6h2.9L3.1 13.4 8.6 5.9H5.4L7.8 0.8z"/></svg>',
+    lyre:   '<svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M2.6 1.2c-.3 3.4.9 5.4 2.4 5.9M11.4 1.2c.3 3.4-.9 5.4-2.4 5.9"/><path d="M5 7.4v3.2M7 7.6v3M9 7.4v3.2"/><path d="M4 12.6h6"/><path d="M5.5 1.6h3" opacity="0.7"/></svg>',
+    eye:    '<svg viewBox="0 0 14 10" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M1 5c2.2-2.8 4.2-4 6-4s3.8 1.2 6 4c-2.2 2.8-4.2 4-6 4S3.2 7.8 1 5z"/><circle cx="7" cy="5" r="1.7" fill="currentColor" stroke="none"/></svg>',
+    climber:'<svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.6" cy="2.7" r="1.45" fill="currentColor" stroke="none"/><path d="M8 4.3L6.2 7.9"/><path d="M7.8 4.9l3.3-1.8"/><path d="M7.9 5.5L5.5 6.4"/><path d="M6.2 7.9l2.3 1.4-.5 2.4"/><path d="M6.2 7.9l-2 2.3.4 2.1"/></svg>',
+  };
+  const LVLICO = {
+    short:  '<svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18L12 7l7 8 5-6 14 9"/></svg>',
+    normal: '<svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18L16 3l6 7 4-4 12 12"/><path d="M13 8l3 3 3-3" opacity="0.7"/></svg>',
+    epic:   '<svg viewBox="0 0 40 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 18L14 5l5 6 3-3 16 10" opacity="0.55"/><path d="M22 2l-5 9h4l-2 7 7-10h-4l3-6z" fill="currentColor" stroke="none"/></svg>',
+  };
+  const INL_TEMPLE = '<span class="ao-inl">' + ICO.temple + '</span>';
+
+  // Ascent length is chosen at the start. Rungs are generated; a temple mark = banked sanctuary.
   const LEVELS = {
     short:  { n:12, label:{gr:'ΣΥΝΤΟΜΗ',en:'SHORT'},  sub:{gr:'12 ερωτήσεις',en:'12 questions'} },
     normal: { n:24, label:{gr:'ΚΑΝΟΝΙΚΗ',en:'NORMAL'}, sub:{gr:'24 ερωτήσεις',en:'24 questions'} },
@@ -37,7 +87,89 @@ const Olympus = (() => {
 
   let st = {};
 
-  function _fx(type, detail){ try{ window.dispatchEvent(new CustomEvent('ao:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){} }
+  function _fx(type, detail){
+    try{ window.dispatchEvent(new CustomEvent('ao:fx', { detail: Object.assign({ type }, detail||{}) })); }catch(_){}
+    try{ _sound(type); }catch(_){}
+  }
+
+  /* ── procedural audio flourish (lazy ctx, quiet, fail-safe; no assets) ── */
+  let _ac = null, _amaster = null;
+  function _actx(){
+    if (_ac) return _ac;
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+      _ac = new C(); _amaster = _ac.createGain();
+      _amaster.gain.value = 0.15; _amaster.connect(_ac.destination);
+    } catch(_) { _ac = null; }
+    return _ac;
+  }
+  function _tone(f0, o){
+    const a = _actx(); if (!a) return;
+    try {
+      if (a.state === 'suspended') a.resume();
+      o = o || {};
+      const t0 = a.currentTime + (o.at || 0), d = o.d || 0.22;
+      const osc = a.createOscillator(), v = a.createGain();
+      osc.type = o.type || 'sine';
+      osc.frequency.setValueAtTime(f0, t0);
+      if (o.f1) osc.frequency.exponentialRampToValueAtTime(Math.max(24, o.f1), t0 + d);
+      v.gain.setValueAtTime(0.0001, t0);
+      v.gain.exponentialRampToValueAtTime(o.g || 0.2, t0 + 0.015);
+      v.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      osc.connect(v); v.connect(_amaster);
+      osc.start(t0); osc.stop(t0 + d + 0.03);
+    } catch(_){}
+  }
+  function _rumble(at, dur){
+    const a = _actx(); if (!a) return;
+    try {
+      if (a.state === 'suspended') a.resume();
+      const t0 = a.currentTime + (at || 0), d = dur || 0.9;
+      const n = Math.floor(a.sampleRate * d), buf = a.createBuffer(1, n, a.sampleRate), ch = buf.getChannelData(0);
+      for (let i = 0; i < n; i++){ const k = i / n; ch[i] = (Math.random()*2 - 1) * Math.pow(1 - k, 1.6); }
+      const src = a.createBufferSource(); src.buffer = buf;
+      const lp = a.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(640, t0);
+      lp.frequency.exponentialRampToValueAtTime(65, t0 + d);
+      const v = a.createGain();
+      v.gain.setValueAtTime(0.5, t0);
+      v.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+      src.connect(lp); lp.connect(v); v.connect(_amaster);
+      src.start(t0); src.stop(t0 + d);
+    } catch(_){}
+  }
+  function _sound(kind){
+    switch(kind){
+      case 'correct': {           // rising bronze pluck, a step higher per rung
+        const up = Math.min(st.rung || 0, 10) * 14;
+        _tone(392 + up, { d:.14, type:'triangle', g:.15 });
+        _tone(523 + up, { d:.2,  type:'triangle', g:.17, at:.07 });
+        _tone(1568,     { d:.3,  type:'sine',     g:.045, at:.1 });
+        break;
+      }
+      case 'sanct':               // temple bell — the ascent is banked
+        _tone(659,  { d:.5, type:'sine', g:.15 });
+        _tone(988,  { d:.7, type:'sine', g:.11, at:.09 });
+        _tone(1976, { d:.8, type:'sine', g:.035, at:.09 });
+        break;
+      case 'wrong':               // Zeus answers: thunder + falling sub
+        _rumble(0, 1.0);
+        _tone(90, { d:.7, type:'sine', g:.22, f1:38 });
+        break;
+      case 'muse': case 'oracle': // airy lyre tick
+        _tone(1175, { d:.1,  type:'sine', g:.07 });
+        _tone(1568, { d:.16, type:'sine', g:.05, at:.05 });
+        break;
+      case 'win':                 // summit triad shimmer
+        [523, 659, 784, 1047].forEach((f, i) => _tone(f, { d:.5, type:'triangle', g:.13, at:i*.12 }));
+        _tone(2093, { d:1.1, type:'sine', g:.045, at:.5 });
+        break;
+      case 'lose':                // the long fall
+        _tone(196, { d:.8,  type:'sine', g:.13 });
+        _tone(147, { d:1.0, type:'sine', g:.11, at:.15 });
+        break;
+    }
+  }
 
   /* ───────── public ───────── */
   function open(gp) {
@@ -59,13 +191,13 @@ const Olympus = (() => {
     if (document.getElementById('ao-overlay')) return;
     const ov = document.createElement('div');
     ov.id = 'ao-overlay';
-    ov.className = 'sym-overlay';
+    ov.className = 'sym-overlay' + (LITE ? ' ao-lite' : '');
     ov.innerHTML =
       '<div class="overlay-topbar">' +
-        '<button class="overlay-back" onclick="closeOlympus()">\u2039 <span>' + T('\u03a0\u0399\u03a3\u03a9','BACK') + '</span></button>' +
-        '<div class="overlay-title">' + ((gp && gp.title) || '\u0391\u039d\u0391\u0392\u0391\u03a3\u0399\u03a3') + '</div>' +
+        '<button class="overlay-back" onclick="closeOlympus()">‹ <span>' + T('ΠΙΣΩ','BACK') + '</span></button>' +
+        '<div class="overlay-title">' + ((gp && gp.title) || 'ΑΝΑΒΑΣΙΣ') + '</div>' +
         '<div class="overlay-lang ov-lang">' +
-          '<button data-lang="gr" class="' + (L()==='en'?'':'on') + '">\u0395\u039b</button>' +
+          '<button data-lang="gr" class="' + (L()==='en'?'':'on') + '">ΕΛ</button>' +
           '<button data-lang="en" class="' + (L()==='en'?'on':'') + '">EN</button>' +
         '</div>' +
       '</div>' +
@@ -83,10 +215,24 @@ const Olympus = (() => {
   /* ───────── build ───────── */
   function build() {
     document.getElementById('ao-wrap').innerHTML = `
+<!-- AMBIENT SKY (altitude-reactive: --ao-alt 0..1) -->
+<div class="ao-sky" id="ao-sky" aria-hidden="true">
+  <div class="ao-stars" id="ao-stars"></div>
+  <div class="ao-aura"></div>
+  <div class="ao-shafts"><i></i><i></i><i></i></div>
+  <div class="ao-range" id="ao-range"></div>
+  <div class="ao-clouds" id="ao-clouds"></div>
+  <div class="ao-motes" id="ao-motes"></div>
+  <div class="ao-bank ao-bank-l"></div>
+  <div class="ao-bank ao-bank-r"></div>
+  <div class="ao-lowair"></div>
+  <div class="ao-mist"></div>
+</div>
+
 <!-- INTRO -->
 <div id="ao-screen-intro" class="ao-screen">
   ${mountainSVG('ao-mtn')}
-  <div class="ao-logo">ΑΝΑΒΑΣΙΣ</div>
+  <div class="ao-logo" id="ao-logo">ΑΝΑΒΑΣΙΣ</div>
   <div class="ao-logo-en" data-i18n="subtitle"></div>
   <div class="ao-intro-txt" data-i18n="intro"></div>
   <div class="ao-levels" id="ao-levels"></div>
@@ -95,22 +241,26 @@ const Olympus = (() => {
 <!-- GAME -->
 <div id="ao-screen-game" class="ao-screen">
   <div class="ao-arena">
-    <aside class="ao-ladder" id="ao-ladder"></aside>
+    <aside class="ao-path">
+      <div class="ao-meter" aria-hidden="true"><i id="ao-meter-fill"></i><span class="ao-meter-peak">${ICO.bolt}</span></div>
+      <div class="ao-ladder" id="ao-ladder"></div>
+    </aside>
     <div class="ao-main">
       <div class="ao-q-meta">
         <span class="ao-q-num" id="ao-qnum"></span>
         <span class="ao-q-line"></span>
+        <span class="ao-glorybox" id="ao-glorybox">✦ <span class="ao-glory-lb" id="ao-glory-lb"></span> <b id="ao-glory">0</b></span>
         <span class="ao-altitude" id="ao-altitude"></span>
       </div>
-      <div class="ao-q-card"><div class="ao-q-text" id="ao-qtext"></div></div>
+      <div class="ao-q-card" id="ao-qcard"><div class="ao-q-text" id="ao-qtext"></div><div class="ao-q-fret" aria-hidden="true"></div></div>
       <div class="ao-answers" id="ao-answers"></div>
       <div class="ao-feedback" id="ao-feedback"></div>
       <div class="ao-lifelines">
         <button class="ao-life" id="ao-life-muse" onclick="Olympus._muse()">
-          <span class="ao-life-ic">𓏲</span><span class="ao-life-tx" data-i18n="muse"></span>
+          <span class="ao-life-ic">${ICO.lyre}</span><span class="ao-life-tx" data-i18n="muse"></span>
         </button>
         <button class="ao-life" id="ao-life-oracle" onclick="Olympus._oracle()">
-          <span class="ao-life-ic">◓</span><span class="ao-life-tx" data-i18n="oracle"></span>
+          <span class="ao-life-ic">${ICO.eye}</span><span class="ao-life-tx" data-i18n="oracle"></span>
         </button>
       </div>
     </div>
@@ -127,12 +277,115 @@ const Olympus = (() => {
     <button class="sym-btn" onclick="Olympus._start()" data-i18n="again"></button>
     <button class="sym-btn ghost" onclick="Olympus.close()" data-i18n="exit"></button>
   </div>
-</div>`;
+</div>
+
+<!-- OVERLAY-SCOPED FX LAYERS -->
+<div class="ao-stormveil" id="ao-storm" aria-hidden="true"></div>
+<div class="ao-flash" id="ao-flash" aria-hidden="true"></div>
+<div class="ao-fxhost" id="ao-fxhost" aria-hidden="true"></div>`;
+    buildAmbient();
+    kineticLogo();
+  }
+
+  /* ── ambient: stars (one box-shadow field), drifting clouds, rising motes ── */
+  function buildAmbient() {
+    const stars = document.getElementById('ao-stars');
+    if (stars) {
+      const sh = [];
+      for (let i = 0; i < (LITE ? 40 : 72); i++) {
+        const tint = Math.random() < 0.2 ? '227,199,102' : (Math.random() < 0.12 ? '127,176,188' : '240,235,224');
+        sh.push(`${(Math.random()*100).toFixed(1)}vw ${(Math.random()*72).toFixed(1)}vh 0 ${(Math.random()<0.22?1:0)}px rgba(${tint},${(0.2+Math.random()*0.6).toFixed(2)})`);
+      }
+      stars.style.boxShadow = sh.join(',');
+    }
+    const cl = document.getElementById('ao-clouds');
+    if (cl) {
+      for (let i = 0; i < (LITE ? 4 : 9); i++) {
+        const c = document.createElement('i'); c.className='ao-cloud';
+        const w = 220 + Math.random()*340;
+        c.style.width = w.toFixed(0)+'px';
+        c.style.height = (w*0.28).toFixed(0)+'px';
+        c.style.left = (Math.random()*92 - 6).toFixed(1)+'%';
+        c.style.top = (6 + Math.random()*70).toFixed(1)+'%';
+        c.style.opacity = (0.09 + Math.random()*0.11).toFixed(3);
+        c.style.animationDuration = (26 + Math.random()*32).toFixed(1)+'s';
+        c.style.animationDelay = (-Math.random()*30).toFixed(1)+'s';
+        cl.appendChild(c);
+      }
+    }
+    buildRange();
+    const mo = document.getElementById('ao-motes');
+    if (mo && !RM()) {
+      for (let i = 0; i < (LITE ? 9 : 22); i++) {
+        const m = document.createElement('i'); m.className='ao-mote';
+        const s = 1.8 + Math.random()*2;
+        m.style.width = m.style.height = s.toFixed(1)+'px';
+        m.style.left = (Math.random()*100).toFixed(1)+'%';
+        m.style.setProperty('--dx', ((Math.random()-0.5)*90).toFixed(0)+'px');
+        m.style.animationDuration = (9 + Math.random()*11).toFixed(1)+'s';
+        m.style.animationDelay = (-Math.random()*16).toFixed(1)+'s';
+        mo.appendChild(m);
+      }
+    }
+  }
+
+  /* ── the flanks of Olympus: three parallax ridge layers (procedural SVG).
+     Each layer sinks at its own rate as --ao-alt rises — you climb PAST
+     the rock. Tiny shrine lights twinkle on the mid ridge. ── */
+  function buildRange() {
+    const host = document.getElementById('ao-range'); if (!host) return;
+    const W = 1200, H = 340;
+    // jagged skyline: alternating peak/valley vertices; env(t) shapes height
+    function skyline(baseY, amp, seg, env) {
+      const pts = [[0, baseY + (Math.random()-0.5)*18]];
+      for (let i = 1; i <= seg; i++) {
+        const t = i/seg, e = env ? env(t) : 1;
+        const y = (i % 2 === 1)
+          ? baseY - amp*e*(0.6 + Math.random()*0.4)
+          : baseY - amp*e*(0.05 + Math.random()*0.2);
+        pts.push([W*t, Math.max(26, y)]);
+      }
+      return pts;
+    }
+    const path = (pts) => {
+      let d = `M0 ${H} L${pts[0][0].toFixed(0)} ${pts[0][1].toFixed(0)}`;
+      for (let i = 1; i < pts.length; i++) d += ` L${pts[i][0].toFixed(0)} ${pts[i][1].toFixed(0)}`;
+      return d + ` L${W} ${H} Z`;
+    };
+    const far  = skyline(206, 128, 9);
+    const mid  = skyline(250, 152, 7);
+    const near = skyline(294, 214, 8, t => 0.25 + Math.pow(Math.abs(Math.cos(Math.PI*t)), 0.8)*0.75);
+    let shrines = '';
+    for (let i = 2; i < mid.length - 1; i += 2) {
+      if (Math.random() < 0.6) {
+        const x = mid[i][0], y = mid[i][1] + 14 + Math.random()*20;
+        shrines += `<circle class="ao-shrine" cx="${x.toFixed(0)}" cy="${Math.min(H-14, y).toFixed(0)}" r="1.6" style="animation-delay:${(-Math.random()*6).toFixed(1)}s"/>`;
+      }
+    }
+    host.innerHTML =
+      `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="aorg-f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B486D"/><stop offset="1" stop-color="#141B30"/></linearGradient>
+          <linearGradient id="aorg-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#242E4D"/><stop offset="1" stop-color="#0D1223"/></linearGradient>
+          <linearGradient id="aorg-n" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#161C31"/><stop offset="1" stop-color="#070A14"/></linearGradient>
+        </defs>
+        <g class="ao-rg ao-rg-far"><path d="${path(far)}" fill="url(#aorg-f)" stroke="rgba(214,226,248,0.10)" stroke-width="1.1"/></g>
+        <g class="ao-rg ao-rg-mid"><path d="${path(mid)}" fill="url(#aorg-m)" stroke="rgba(246,231,176,0.12)" stroke-width="1.1"/>${shrines}</g>
+        <g class="ao-rg ao-rg-near"><path d="${path(near)}" fill="url(#aorg-n)" stroke="rgba(206,220,244,0.06)" stroke-width="1"/></g>
+      </svg>`;
+  }
+
+  /* ── kinetic gold logotype: letters rise in staggered ── */
+  function kineticLogo() {
+    const logo = document.getElementById('ao-logo');
+    if (!logo) return;
+    const txt = logo.textContent;
+    logo.innerHTML = txt.split('').map((c,i)=>`<span style="animation-delay:${90+i*55}ms">${c}</span>`).join('');
   }
 
   const I18N = {
     subtitle:{ gr:'Η ανάβαση στον Όλυμπο', en:'The Ascent of Olympus' },
-    intro:   { gr:'Κάθε σωστή απάντηση σε ανεβάζει μία βαθμίδα προς τον <b>Θρόνο του Διός</b>. Τα <b>τεμένη</b> (⛩) κατοχυρώνουν την άνοδό σου· ένα λάθος σε ρίχνει στο τελευταίο τέμενος. Φτάσε στην κορυφή.', en:'Each correct answer lifts you one rung toward the <b>Throne of Zeus</b>. <b>Sanctuaries</b> (⛩) bank your ascent; a wrong answer casts you back to the last one. Reach the summit.' },
+    intro:   { gr:'Κάθε σωστή απάντηση σε ανεβάζει μία βαθμίδα προς τον <b>Θρόνο του Διός</b>. Τα <b>τεμένη</b> ('+INL_TEMPLE+') κατοχυρώνουν την άνοδό σου· ένα λάθος σε ρίχνει στο τελευταίο τέμενος. Φτάσε στην κορυφή.', en:'Each correct answer lifts you one rung toward the <b>Throne of Zeus</b>. <b>Sanctuaries</b> ('+INL_TEMPLE+') bank your ascent; a wrong answer casts you back to the last one. Reach the summit.' },
     begin:   { gr:'ΑΡΧΙΣΕ ΤΗΝ ΑΝΑΒΑΣΗ', en:'BEGIN THE ASCENT' },
     muse:    { gr:'ΜΟΥΣΑ · 50:50', en:'MUSE · 50:50' },
     oracle:  { gr:'ΜΑΝΤΕΙΟ · ΟΡΑΜΑ', en:'ORACLE · VISION' },
@@ -146,7 +399,7 @@ const Olympus = (() => {
     });
     renderLevels();
     if (st && st.cur && document.getElementById('ao-screen-game').classList.contains('active')) {
-      document.getElementById('ao-qtext').textContent = st.cur.q[L()];
+      document.getElementById('ao-qtext').textContent = QT(st.cur.q);
       renderLadder(); renderMeta();
     }
   }
@@ -154,11 +407,17 @@ const Olympus = (() => {
     const wrap=document.getElementById('ao-levels'); if(!wrap) return;
     wrap.innerHTML = Object.keys(LEVELS).map(k=>{
       const lv=LEVELS[k];
-      return `<button class="ao-level" onclick="Olympus._level('${k}')"><span class="ao-level-name">${lv.label[L()]}</span><span class="ao-level-sub">${lv.sub[L()]}</span></button>`;
+      return `<button class="ao-level" onclick="Olympus._level('${k}')"><span class="ao-level-ic">${LVLICO[k]||''}</span><span class="ao-level-name">${lv.label[L()]}</span><span class="ao-level-sub">${lv.sub[L()]}</span></button>`;
     }).join('');
   }
   function _level(k){ st.levelKey=k; _start(); }
-  function show(id){ document.querySelectorAll('#ao-wrap .ao-screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); _fx('screen',{id}); }
+  function show(id){
+    document.querySelectorAll('#ao-wrap .ao-screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const sky=document.getElementById('ao-sky');
+    if (sky && id==='ao-screen-intro') sky.classList.remove('ao-part');
+    _fx('screen',{id});
+  }
 
   /* ───────── start ───────── */
   function _start() {
@@ -169,8 +428,10 @@ const Olympus = (() => {
       rung:0, lastSafe:0, qNum:0, answered:false, glory:0,
       pool: shuffle([..._gpPool()]), idx:0,
       muse:true, oracle:true, fiftyHidden:[],
+      _gloryShown:0,
     };
     show('ao-screen-game');
+    const sky=document.getElementById('ao-sky'); if(sky) sky.classList.add('ao-part');
     document.getElementById('ao-life-muse').classList.remove('spent');
     document.getElementById('ao-life-oracle').classList.remove('spent');
     nextQ();
@@ -192,12 +453,12 @@ const Olympus = (() => {
       if (i<st.rung) cls.push('passed');
       if (r.safe) cls.push('safe');
       if (r.summit) cls.push('summit');
-      const mark = r.summit ? '♕' : (r.safe ? '⛩' : '');
+      const mark = r.summit ? ICO.bolt : (r.safe ? ICO.temple : '');
       items.push(`<div class="${cls.join(' ')}">
         <span class="ao-rung-n">${String(i).padStart(2,'0')}</span>
         <span class="ao-rung-name">${r[L()]}</span>
         <span class="ao-rung-mark">${mark}</span>
-        ${i===st.rung?'<span class="ao-climber">▲</span>':''}
+        ${i===st.rung?'<span class="ao-climber">'+ICO.climber+'</span>':''}
       </div>`);
     }
     items.reverse();
@@ -209,18 +470,39 @@ const Olympus = (() => {
   function renderMeta() {
     document.getElementById('ao-qnum').textContent = T('ΕΡΩΤΗΣΗ ','QUESTION ')+st.qNum;
     document.getElementById('ao-altitude').textContent = T('ΒΑΘΜΙΔΑ ','RUNG ')+st.rung+' / '+TOP;
+    const lb=document.getElementById('ao-glory-lb'); if(lb) lb.textContent=T('ΔΟΞΑ','GLORY');
+    const g=document.getElementById('ao-glory');
+    if (g) {
+      const shown = st._gloryShown||0;
+      if (st.glory !== shown) {
+        countUp(g, shown, st.glory, 700);
+        st._gloryShown = st.glory;
+        if (window.SymFX) SymFX.pop(document.getElementById('ao-glorybox'), 1.15);
+      } else g.textContent = st.glory;
+    }
+    // altitude drives the ambient sky (aura, shafts, clouds, mist, stars)
+    const wrap=document.getElementById('ao-wrap');
+    const alt = TOP ? (st.rung/TOP) : 0;
+    if (wrap) wrap.style.setProperty('--ao-alt', alt.toFixed(3));
+    const mf=document.getElementById('ao-meter-fill');
+    if (mf) mf.style.height = (alt*100).toFixed(1)+'%';
   }
 
   /* ───────── loop ───────── */
   function nextQ() {
     st.answered=false; st.cur=getQ(); st.qNum++; st.fiftyHidden=[];
-    document.getElementById('ao-qtext').textContent = st.cur.q[L()];
+    const qt=document.getElementById('ao-qtext');
+    qt.textContent = QT(st.cur.q);
+    qt.classList.remove('in'); void qt.offsetWidth; qt.classList.add('in');
+    const qc=document.getElementById('ao-qcard');
+    if (qc) { qc.classList.remove('in'); void qc.offsetWidth; qc.classList.add('in'); }
     const fb=document.getElementById('ao-feedback'); fb.textContent=''; fb.className='ao-feedback';
-    const wrap=document.getElementById('ao-answers'); wrap.innerHTML='';
+    const wrap=document.getElementById('ao-answers'); wrap.innerHTML=''; wrap.classList.remove('done');
     const keys=['Α','Β','Γ','Δ'];
     st.cur.a.forEach((opt,i)=>{
       const b=document.createElement('button'); b.className='ao-ans'; b.dataset.i=i;
-      b.innerHTML=`<span class="ao-ans-key">${keys[i]}</span><span>${opt}</span>`;
+      b.style.animationDelay=(i*70)+'ms';
+      b.innerHTML=`<span class="ao-ans-key">${keys[i]}</span><span class="ao-ans-tx">${opt}</span>`;
       b.onclick=()=>answer(i,b); wrap.appendChild(b);
     });
     renderLadder(); renderMeta();
@@ -229,13 +511,18 @@ const Olympus = (() => {
   function answer(chosen, btn) {
     if (st.answered) return; st.answered=true;
     document.querySelectorAll('#ao-answers .ao-ans').forEach((b,i)=>{ b.disabled=true; if(i===st.cur.c) b.classList.add('correct'); });
+    document.getElementById('ao-answers').classList.add('done');
     const fb=document.getElementById('ao-feedback');
     if (chosen===st.cur.c) {
-      st.rung++; st.glory += 100 + st.rung*20;
+      st.rung++; const gain = 100 + st.rung*20; st.glory += gain;
       if (RUNGS[st.rung].safe) st.lastSafe = st.rung;
       _fx('correct',{el:btn});
+      sparksAt(btn, { count:18 });
+      floatDelta('+'+gain+' '+T('ΔΟΞΑ','GLORY'), 'ok', btn);
+      climbFeel();
       if (st.rung>=TOP) {
         fb.textContent=T('ΕΦΤΑΣΕΣ ΤΗΝ ΚΟΡΥΦΗ','YOU REACHED THE SUMMIT'); fb.className='ao-feedback ao-fb-ok';
+        sparksAt(btn, { count:26, power:11, colors:['#F6E7B0','#E3C766','#FFF'] });
         renderLadder(); renderMeta();
         return setTimeout(()=>end(true), 1100);
       }
@@ -244,9 +531,11 @@ const Olympus = (() => {
                               : T('ΣΩΣΤΟ — ανεβαίνεις','CORRECT — you climb');
       fb.className='ao-feedback ao-fb-ok';
       renderLadder(); renderMeta();
+      if (banked) sanctFlare();
       setTimeout(nextQ, 1150);
     } else {
       btn.classList.add('wrong'); _fx('wrong',{el:btn});
+      thunder(btn);
       const fell = st.rung - st.lastSafe;
       st.rung = st.lastSafe;
       if (fell<=0) {
@@ -257,6 +546,7 @@ const Olympus = (() => {
       fb.textContent=T(`ΛΑΘΟΣ — πέφτεις στο τέμενος (βαθμ. ${st.lastSafe})`,`WRONG — you fall to the sanctuary (rung ${st.lastSafe})`);
       fb.className='ao-feedback ao-fb-bad';
       renderLadder(); renderMeta();
+      fallFeel();
       setTimeout(nextQ, 1600);
     }
   }
@@ -269,6 +559,7 @@ const Olympus = (() => {
     shuffle(wrong); const hide=[wrong[0],wrong[1]];
     document.querySelectorAll('#ao-answers .ao-ans').forEach(b=>{ if(hide.includes(+b.dataset.i)){ b.classList.add('hidden'); b.disabled=true; } });
     _fx('muse');
+    sparksAt(document.getElementById('ao-life-muse'), { count:10, colors:['#7FB0BC','#F0EBE0'] });
   }
   function _oracle() {
     if (!st.oracle || st.answered) return; st.oracle=false;
@@ -276,6 +567,7 @@ const Olympus = (() => {
     const b = document.querySelector(`#ao-answers .ao-ans[data-i="${st.cur.c}"]`);
     if (b) b.classList.add('vision');
     _fx('oracle');
+    sparksAt(document.getElementById('ao-life-oracle'), { count:10, colors:['#7FB0BC','#F0EBE0'] });
     const fb=document.getElementById('ao-feedback');
     fb.textContent=T('Η Πυθία ψιθυρίζει…','The Pythia whispers…'); fb.className='ao-feedback ao-fb-hint';
   }
@@ -287,29 +579,265 @@ const Olympus = (() => {
     document.getElementById('ao-end-art').innerHTML = won ? boltSVG('ao-end-bolt') : mountainSVG('ao-end-mtn');
     const title=document.getElementById('ao-end-title'), sub=document.getElementById('ao-end-sub');
     if (won) {
-      title.textContent=T('ΑΘΑΝΑΣΙΑ','IMMORTALITY'); title.className='ao-end-title win';
+      const tt=T('ΑΘΑΝΑΣΙΑ','IMMORTALITY');
+      title.textContent=tt; title.className='ao-end-title win';
       sub.textContent=T('Ανέβηκες στον Θρόνο του Διός και κάθισες ανάμεσα στους αθανάτους. Δόξα αἰώνιος.','You climbed to the Throne of Zeus and sat among the immortals. Glory everlasting.');
+      if (window.SymFX && !RM()) SymFX.scramble(title, tt, { duration:850 });
+      goldFlash(); goldRain();
     } else {
       title.textContent=T('Η ΠΤΩΣΗ','THE FALL'); title.className='ao-end-title lose';
       sub.textContent=T(`Έφτασες ως τη βαθμίδα «${RUNGS[st.rung][L()]}». Ο Όλυμπος περιμένει την επόμενη ανάβαση.`,`You reached "${RUNGS[st.rung][L()]}". Olympus awaits your next ascent.`);
     }
     document.getElementById('ao-end-rung').innerHTML =
-      `<div class="ao-end-glory">${T('ΔΟΞΑ','GLORY')} <b>${st.glory}</b></div>
+      `<div class="ao-end-glory">${T('ΔΟΞΑ','GLORY')} <b id="ao-end-gn">0</b></div>
        <div class="ao-end-rungname">${T('Υψηλότερη βαθμίδα','Highest rung')}: ${RUNGS[won?TOP:st.rung][L()]}</div>`;
+    countUp(document.getElementById('ao-end-gn'), 0, st.glory, 1100);
   }
 
-  /* ───────── art ───────── */
-  function mountainSVG(cls){ return `<svg class="${cls}" viewBox="0 0 140 120" fill="none">
-    <defs><linearGradient id="ao-m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E3C766"/><stop offset="1" stop-color="#8E7322"/></linearGradient>
-    <linearGradient id="ao-m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E5A1E"/><stop offset="1" stop-color="#3A2F12"/></linearGradient></defs>
-    <path d="M8 112L52 28l20 34 14-22 38 72z" fill="url(#ao-m2)" stroke="#2A2210" stroke-width="2"/>
-    <path d="M52 28l-14 30h28z" fill="#F3ECDC"/><path d="M86 40l-9 18h18z" fill="#F3ECDC"/>
-    <path d="M70 2l4 12 12-2-8 10 8 10-12-2-4 12-4-12-12 2 8-10-8-10 12 2z" fill="url(#ao-m1)" opacity="0.95"/>
+  /* ═════════ presentation FX (overlay-scoped; gameplay untouched) ═════════ */
+
+  function _host(){ return document.getElementById('ao-fxhost'); }
+
+  function countUp(el, from, to, ms) {
+    if (!el) return;
+    if (RM() || from === to) { el.textContent = to; return; }
+    const t0 = performance.now();
+    (function f(t){
+      const k = Math.min(1, (t - t0) / ms);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      if (k < 1) requestAnimationFrame(f);
+    })(t0);
+  }
+
+  /* particle scatter at an element, inside the overlay (above the stage) */
+  function sparksAt(el, o) {
+    const host=_host(); if (!host || !el || RM()) return;
+    o = Object.assign({ count:16, colors:['#E3C766','#F0EBE0','#C4A448'], power:8, size:5, life:900 }, o||{});
+    if (LITE) o.count = Math.ceil(o.count/2);
+    const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const cx=r.left+r.width/2-hr.left, cy=r.top+r.height/2-hr.top;
+    for (let i=0;i<o.count;i++){
+      const p=document.createElement('i'); p.className='ao-spark';
+      const c=o.colors[(Math.random()*o.colors.length)|0];
+      const s=2+Math.random()*o.size;
+      p.style.width=p.style.height=s.toFixed(1)+'px';
+      p.style.background=c; p.style.boxShadow=`0 0 8px ${c}`;
+      p.style.left=cx+'px'; p.style.top=cy+'px';
+      host.appendChild(p);
+      const a=Math.random()*Math.PI*2, sp=o.power*(6+Math.random()*16);
+      const dx=Math.cos(a)*sp, dy=Math.sin(a)*sp-30;
+      const dur=o.life*(0.7+Math.random()*0.6);
+      p.animate([
+        { transform:'translate(-50%,-50%)', opacity:1 },
+        { transform:`translate(calc(-50% + ${(dx*0.7).toFixed(0)}px), calc(-50% + ${dy.toFixed(0)}px))`, opacity:1, offset:0.5 },
+        { transform:`translate(calc(-50% + ${dx.toFixed(0)}px), calc(-50% + ${(dy+70).toFixed(0)}px)) scale(.4)`, opacity:0 },
+      ], { duration:dur, easing:'cubic-bezier(.2,.7,.4,1)', fill:'forwards' });
+      setTimeout(()=>p.remove(), dur+60);
+    }
+  }
+
+  /* floating "+N GLORY" delta above an element */
+  function floatDelta(txt, cls, el) {
+    const host=_host(); if (!host || !el) return;
+    const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const d=document.createElement('div');
+    d.className='ao-float '+(cls||'');
+    d.textContent=txt;
+    d.style.left=(r.left+r.width/2-hr.left)+'px';
+    d.style.top=(r.top-hr.top)+'px';
+    host.appendChild(d);
+    if (RM()) { setTimeout(()=>d.remove(), 900); return; }
+    d.animate([
+      { transform:'translate(-50%,0) scale(.7)', opacity:0 },
+      { transform:'translate(-50%,-26px) scale(1.08)', opacity:1, offset:0.3 },
+      { transform:'translate(-50%,-72px) scale(1)', opacity:0 },
+    ], { duration:1150, easing:'cubic-bezier(.2,.8,.3,1)', fill:'forwards' });
+    setTimeout(()=>d.remove(), 1200);
+  }
+
+  /* expanding gold ring (sanctuary milestone) */
+  function ringAt(el) {
+    const host=_host(); if (!host || !el || RM()) return;
+    const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const d=document.createElement('div'); d.className='ao-ring';
+    d.style.left=(r.left+r.width/2-hr.left)+'px';
+    d.style.top=(r.top+r.height/2-hr.top)+'px';
+    host.appendChild(d);
+    d.animate([
+      { transform:'translate(-50%,-50%) scale(.25)', opacity:1 },
+      { transform:'translate(-50%,-50%) scale(1.6)', opacity:0 },
+    ], { duration:720, easing:'cubic-bezier(.2,.7,.3,1)', fill:'forwards' });
+    setTimeout(()=>d.remove(), 780);
+  }
+
+  /* divine wrath: white-blue flash + procedural lightning crack + shake + storm veil */
+  function thunder(el) {
+    const veil=document.getElementById('ao-storm');
+    if (veil) { veil.classList.add('on'); setTimeout(()=>veil.classList.remove('on'), 700); }
+    if (window.SymFX) SymFX.shake(9, .5, document.querySelector('#ao-screen-game .ao-arena'));
+    if (RM()) return;
+    const flash=document.getElementById('ao-flash');
+    if (flash) flash.animate(
+      [{opacity:0},{opacity:.9,offset:.08},{opacity:.22,offset:.4},{opacity:0}],
+      { duration:520, easing:'ease-out' });
+    const host=_host(); if (!host || !el) return;
+    const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const x1=r.left+r.width/2-hr.left, y1=Math.max(30, r.top-hr.top);
+    const x0=x1+(Math.random()-0.5)*140, segs=7;
+    let d=`M${x0.toFixed(1)} 0`;
+    for (let i=1;i<=segs;i++){
+      const t=i/segs;
+      const px=x0+(x1-x0)*t+(Math.random()-0.5)*46*(1-t*0.5);
+      d+=` L${px.toFixed(1)} ${(y1*t).toFixed(1)}`;
+    }
+    const NS='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('class','ao-crack');
+    svg.setAttribute('width',hr.width); svg.setAttribute('height',hr.height);
+    const path=document.createElementNS(NS,'path');
+    path.setAttribute('d',d); path.setAttribute('fill','none');
+    path.setAttribute('stroke','#EAF4FF'); path.setAttribute('stroke-width','2.4');
+    path.setAttribute('stroke-linejoin','miter');
+    svg.appendChild(path); host.appendChild(svg);
+    try {
+      const len=path.getTotalLength();
+      path.style.strokeDasharray=len; path.style.strokeDashoffset=len;
+      path.animate([{strokeDashoffset:len},{strokeDashoffset:0}], { duration:130, easing:'ease-in', fill:'forwards' });
+    } catch(_){}
+    svg.animate([{opacity:1},{opacity:1,offset:.55},{opacity:0}], { duration:620, fill:'forwards' });
+    setTimeout(()=>svg.remove(), 680);
+    emberFall(el);
+  }
+
+  /* rising wind streaks at the flanks — the world drops away as you climb */
+  function windRise() {
+    const host=_host(); if (!host || RM()) return;
+    const hr=host.getBoundingClientRect();
+    for (let i=0;i<9;i++){
+      const s=document.createElement('i'); s.className='ao-streak';
+      s.style.height=(50+Math.random()*110).toFixed(0)+'px';
+      s.style.left=(Math.random()<0.5 ? 3+Math.random()*24 : 72+Math.random()*25).toFixed(1)+'%';
+      s.style.top=(52+Math.random()*42).toFixed(1)+'%';
+      host.appendChild(s);
+      const dy=-(hr.height*0.45+Math.random()*hr.height*0.35);
+      const dur=470+Math.random()*360, delay=Math.random()*150;
+      s.animate([
+        { transform:'translateY(0) scaleY(.4)', opacity:0 },
+        { opacity:.8, offset:.25 },
+        { transform:`translateY(${dy.toFixed(0)}px) scaleY(1.15)`, opacity:0 },
+      ], { duration:dur, delay, easing:'cubic-bezier(.2,.6,.3,1)', fill:'both' });
+      setTimeout(()=>s.remove(), dur+delay+90);
+    }
+  }
+
+  /* dying embers scattered by the bolt — they fall, as you did */
+  function emberFall(el) {
+    const host=_host(); if (!host || !el || RM()) return;
+    const hr=host.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const cx=r.left+r.width/2-hr.left, cy=r.top+r.height/2-hr.top;
+    for (let i=0;i<12;i++){
+      const p=document.createElement('i'); p.className='ao-spark';
+      const c=['#E08577','#B8C6E8','#D96A5A'][(Math.random()*3)|0];
+      const s=1.8+Math.random()*3;
+      p.style.width=p.style.height=s.toFixed(1)+'px';
+      p.style.background=c; p.style.boxShadow=`0 0 7px ${c}`;
+      p.style.left=cx+'px'; p.style.top=cy+'px';
+      host.appendChild(p);
+      const dx=(Math.random()-0.5)*150, dy=90+Math.random()*170;
+      const dur=650+Math.random()*450;
+      p.animate([
+        { transform:'translate(-50%,-50%)', opacity:1 },
+        { transform:`translate(calc(-50% + ${(dx*0.55).toFixed(0)}px), calc(-50% + ${(dy*0.35).toFixed(0)}px))`, opacity:.9, offset:.4 },
+        { transform:`translate(calc(-50% + ${dx.toFixed(0)}px), calc(-50% + ${dy.toFixed(0)}px)) scale(.5)`, opacity:0 },
+      ], { duration:dur, easing:'cubic-bezier(.45,.05,.7,.5)', fill:'forwards' });
+      setTimeout(()=>p.remove(), dur+60);
+    }
+  }
+
+  /* camera settle on climb / ladder judder on fall */
+  function climbFeel() {
+    const ar=document.querySelector('#ao-screen-game .ao-arena');
+    if (!ar || RM()) return;
+    ar.classList.remove('climb'); void ar.offsetWidth; ar.classList.add('climb');
+    setTimeout(()=>ar.classList.remove('climb'), 650);
+    windRise();
+  }
+  function fallFeel() {
+    const lad=document.getElementById('ao-ladder');
+    if (!lad || RM()) return;
+    lad.classList.remove('ao-fall'); void lad.offsetWidth; lad.classList.add('ao-fall');
+    setTimeout(()=>lad.classList.remove('ao-fall'), 700);
+  }
+
+  /* sanctuary banked: flare the current rung + marble-shine sweep */
+  function sanctFlare() {
+    try{ _sound('sanct'); }catch(_){}
+    const cur=document.querySelector('#ao-ladder .ao-rung.cur'); if(!cur) return;
+    if (window.SymFX) SymFX.pop(cur, 1.1);
+    sparksAt(cur, { count:14, colors:['#E3C766','#FFF6D8'] });
+    ringAt(cur);
+    if (!RM()) { cur.classList.add('banked'); setTimeout(()=>cur.classList.remove('banked'), 1300); }
+  }
+
+  /* summit celebration */
+  function goldFlash() {
+    const flash=document.getElementById('ao-flash');
+    if (!flash || RM()) return;
+    const old=flash.style.background;
+    flash.style.background='radial-gradient(120% 90% at 50% 0%, rgba(255,243,196,.95), rgba(227,199,102,.45) 45%, transparent 75%)';
+    flash.animate([{opacity:0},{opacity:.75,offset:.12},{opacity:0}], { duration:900, easing:'ease-out' });
+    setTimeout(()=>{ flash.style.background=old; }, 950);
+  }
+  function goldRain() {
+    const host=_host(); if (!host || RM()) return;
+    const hr=host.getBoundingClientRect();
+    for (let i=0;i<(LITE?16:34);i++){
+      const p=document.createElement('i'); p.className='ao-spark';
+      const s=2.5+Math.random()*3.6;
+      p.style.width=p.style.height=s.toFixed(1)+'px';
+      const c=['#E3C766','#F6E7B0','#C4A448'][(Math.random()*3)|0];
+      p.style.background=c; p.style.boxShadow=`0 0 8px ${c}`;
+      p.style.left=(Math.random()*hr.width).toFixed(0)+'px';
+      p.style.top='-8px';
+      host.appendChild(p);
+      const dist=hr.height*(0.45+Math.random()*0.45);
+      const delay=Math.random()*900, dur=1200+Math.random()*900;
+      p.animate([
+        { transform:'translateY(0)', opacity:0 },
+        { opacity:1, offset:0.12 },
+        { transform:`translateY(${dist.toFixed(0)}px) translateX(${((Math.random()-0.5)*60).toFixed(0)}px)`, opacity:0 },
+      ], { duration:dur, delay, easing:'cubic-bezier(.3,.4,.6,1)', fill:'both' });
+      setTimeout(()=>p.remove(), delay+dur+80);
+    }
+  }
+
+  /* ───────── art (procedural SVG; ids namespaced per instance) ───────── */
+  function mountainSVG(cls){ return `<svg class="${cls}" viewBox="0 0 180 140" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="${cls}-peak" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A5878"/><stop offset="0.55" stop-color="#242E4C"/><stop offset="1" stop-color="#101624"/></linearGradient>
+      <linearGradient id="${cls}-far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B3552"/><stop offset="1" stop-color="#141A2C"/></linearGradient>
+      <radialGradient id="${cls}-sun" cx="50%" cy="42%"><stop offset="0" stop-color="#FFF3C4"/><stop offset="0.55" stop-color="#E3C766"/><stop offset="1" stop-color="#8E7322"/></radialGradient>
+    </defs>
+    <circle cx="90" cy="20" r="17" fill="#E3C766" opacity="0.14"/>
+    <circle cx="90" cy="20" r="27" fill="#E3C766" opacity="0.06"/>
+    <path d="M4 132L52 66l30 38 26-34 40 46 24 16z" fill="url(#${cls}-far)" opacity="0.85"/>
+    <path d="M20 132L90 26l70 106z" fill="url(#${cls}-peak)" stroke="#0C1220" stroke-width="1.5"/>
+    <path d="M90 26L76 50l8-3 6 6 7-7 7 4z" fill="#F3ECDC"/>
+    <path d="M90 26L66 66" stroke="#E3C766" stroke-width="1.4" opacity="0.55" stroke-linecap="round"/>
+    <ellipse cx="50" cy="94" rx="30" ry="8" fill="#C9D4E4" opacity="0.15"/>
+    <ellipse cx="130" cy="80" rx="26" ry="7" fill="#C9D4E4" opacity="0.12"/>
+    <ellipse cx="92" cy="110" rx="42" ry="9" fill="#C9D4E4" opacity="0.10"/>
+    <g transform="translate(37,-5) scale(0.72)"><path d="M70 2l4 12 12-2-8 10 8 10-12-2-4 12-4-12-12 2 8-10-8-10 12 2z" fill="url(#${cls}-sun)" opacity="0.95"/></g>
   </svg>`; }
-  function boltSVG(cls){ return `<svg class="${cls}" viewBox="0 0 120 120" fill="none">
-    <defs><radialGradient id="ao-b1" cx="50%" cy="40%"><stop offset="0" stop-color="#F3ECDC"/><stop offset="0.5" stop-color="#E3C766"/><stop offset="1" stop-color="#8E7322"/></radialGradient></defs>
-    <circle cx="60" cy="58" r="50" fill="none" stroke="#C4A448" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 6"/>
-    <path d="M66 8L34 64h22l-8 48 44-66H66l10-38z" fill="url(#ao-b1)" stroke="#6E5A1E" stroke-width="2" stroke-linejoin="round"/>
+  function boltSVG(cls){ return `<svg class="${cls}" viewBox="0 0 140 140" fill="none" aria-hidden="true">
+    <defs><radialGradient id="${cls}-b1" cx="50%" cy="40%"><stop offset="0" stop-color="#FFF6D8"/><stop offset="0.5" stop-color="#E3C766"/><stop offset="1" stop-color="#8E7322"/></radialGradient></defs>
+    <circle cx="70" cy="70" r="52" fill="#E3C766" opacity="0.07"/>
+    <circle cx="70" cy="70" r="50" fill="none" stroke="#C4A448" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="4 6"/>
+    <g class="ao-rays" stroke="#C4A448" stroke-width="2" stroke-linecap="round" opacity="0.5">
+      <path d="M70 12v16M111 29l-11.3 11.3M128 70h-16M111 111l-11.3-11.3M70 128v-16M29 111l11.3-11.3M12 70h16M29 29l11.3 11.3"/>
+    </g>
+    <g transform="translate(10,10)"><path d="M66 8L34 64h22l-8 48 44-66H66l10-38z" fill="url(#${cls}-b1)" stroke="#6E5A1E" stroke-width="2" stroke-linejoin="round"/></g>
   </svg>`; }
 
   return { open, close, _start, _level, _muse, _oracle, syncLang };

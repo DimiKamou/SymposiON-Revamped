@@ -71,26 +71,9 @@
     });
   };
 
-  /* ---- Setting pills (visual state; wire to your engine if desired) ---- */
-  var TIMERS = [15, 20, 25, 30, 45], ti = 2;
-  LAX.cycleTimer = function () {
-    ti = (ti + 1) % TIMERS.length;
-    var v = el('la-set-timer-val');
-    if (v) v.textContent = TIMERS[ti] + 'ς';
-    LAX.timerSeconds = TIMERS[ti];
-  };
-  LAX.toggleShuffle = function () {
-    var p = el('la-set-shuffle');
-    if (p) { p.classList.toggle('la-pill-on'); LAX.shuffle = p.classList.contains('la-pill-on'); }
-  };
-  LAX.toggleLock = function () {
-    var p = el('la-set-lock');
-    if (!p) return;
-    var on = p.classList.toggle('la-pill-on');
-    var l = el('la-set-lock-lbl');
-    if (l) { l.setAttribute('data-gr', on ? 'Κλειδωμένο' : 'Ανοιχτό'); l.setAttribute('data-en', on ? 'Locked' : 'Open'); l.textContent = on ? 'Κλειδωμένο' : 'Ανοιχτό'; }
-    LAX.locked = on;
-  };
+  /* Match config (per-question time, shuffle, lock, duration) now lives on the
+     setup screen (curriculum-picker.js → _liveCfg) and is read by the engine
+     from _cfg.config. The old footer pills + their handlers were removed. */
 
   window.LAX = LAX;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchPin);

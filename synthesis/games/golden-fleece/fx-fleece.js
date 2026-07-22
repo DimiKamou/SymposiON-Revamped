@@ -6,6 +6,8 @@
 window.GF_FX = (function () {
   const cx = () => window.innerWidth / 2;
   const rectOf = el => el && el.getBoundingClientRect();
+  /* cheap heuristic for mid/low-end phones: thin the ambient layer there */
+  const LITE = matchMedia("(pointer:coarse)").matches || innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
   let started = false;
 
   function start() {
@@ -14,7 +16,7 @@ window.GF_FX = (function () {
     SymFX.mount({
       accent: '#C4A448', accent2: '#5E8B96',
       glow: 'rgba(196,164,72,0.5)',
-      rain: false, particles: 'motes', fieldCount: 32,
+      rain: false, particles: 'motes', fieldCount: LITE ? 14 : 32,
       scanlines: false, sweep: true, grain: false, vignette: true,
       shakeSelector: '#gf-wrap',
     });

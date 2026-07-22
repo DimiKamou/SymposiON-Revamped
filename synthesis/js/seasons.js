@@ -45,7 +45,16 @@
 
   function buildField(id, cls, cfg, color) {
     const st = stage(); if (!st) return;
-    const old = document.getElementById(id); if (old) old.remove();
+    const old = document.getElementById(id);
+    if (old) {
+      // Kill the old field's tweens BEFORE detaching it. Each particle's fall
+      // tween re-spawns itself in onComplete, so without this the chain keeps
+      // firing on detached nodes forever — every theme/season switch leaked a
+      // perpetual set of tweens (CPU climbs, never reaches idle, screenshots
+      // time out). killTweensOf stops them without firing onComplete → no respawn.
+      if (window.gsap) { try { gsap.killTweensOf(old.querySelectorAll('.season-p')); } catch (_) {} }
+      old.remove();
+    }
     if (!cfg) return;
     const layer = document.createElement('div');
     layer.id = id; layer.className = 'season-fx ' + cls; layer.setAttribute('aria-hidden', 'true');

@@ -164,4 +164,3 @@
 @keyframes winPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes modalPop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-</style>

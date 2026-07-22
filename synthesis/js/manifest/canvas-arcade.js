@@ -11,16 +11,12 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
 
   // ── canvas / arcade / engine games ─────────────────────────────────────
 
-  // EAGER: IliadaControls.js wires touch/mobile controls on DOMContentLoaded
-  // (already fired by lazy time), so the boot shim below dispatches a synthetic
-  // DOMContentLoaded after the engine loads so the controls init runs.
-  openIliadaArcade: {
-    js:      ['games/iliada-arcade/game.js', 'games/iliada-arcade/IliadaControls.js'],
-    css:     ['games/iliada-arcade/game.css'],
-    overlay: 'iliada-arcade-overlay',
-    eager:   true,
-    fb:      false
-  },
+  // Iliada / Odyssea Arcade — the combat-quiz arcade is a self-contained HTML
+  // document opened as a full-screen iframe overlay (window.openIliadaArcade /
+  // openOdysseaArcade in js/arcade-launch.js). Empty manifest so synLaunch just
+  // loads nothing and calls the opener; SymNav wraps it as a game session.
+  openIliadaArcade:  { js: [], css: [], overlay: null, eager: false, fb: false },
+  openOdysseaArcade: { js: [], css: [], overlay: null, eager: false, fb: false },
 
   // Agora Surfers (alias openTempleRun). adapter.js builds its OWN iframe
   // overlay (agora-surfers-overlay) and loads src/* inside the iframe.
@@ -61,16 +57,6 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     js:      ['games/blade/game.js'],
     css:     ['games/blade/game.css'],
     overlay: 'blade-overlay',
-    eager:   false,
-    fb:      false
-  },
-
-  // Crypto Hack — CryptoHack IIFE builds its own overlay at runtime →
-  // overlay:null. openCryptoHack shim (below) forwards to CryptoHack.open.
-  openCryptoHack: {
-    js:      ['games/crypto-hack/game.js'],
-    css:     ['games/crypto-hack/game.css'],
-    overlay: null,
     eager:   false,
     fb:      false
   },
@@ -138,6 +124,26 @@ window.SYN_GAMES = Object.assign(window.SYN_GAMES||{}, {
     overlay: 'noun-tow-overlay',
     eager:   false,
     fb:      false
+  },
+
+  // ── Ἑπτάπυλος — Connect-Four "siege of seven-gated Thebes" quiz engine ──
+  // IIFE that self-registers window.openHeptapylos/closeHeptapylos and BUILDS
+  // ITS OWN overlay shell on demand (<div id="hep-overlay" class="sym-overlay">),
+  // exactly like the pvp-pack engines — so overlay:null (synLaunch must NOT gate
+  // on / fetch an overlays/hep-overlay.html partial; the engine injects the shell
+  // itself). It reuses the shared `.sym-overlay` shell + dark "Hearth" `--sym-*`
+  // tokens which, in synthesis, live in games/pvp-shell.css — loaded FIRST so the
+  // overlay renders styled (synthesis' eager tokens.css is the LIGHT alabaster
+  // home palette and does NOT define .sym-overlay or the --sym-*-lt / font tokens
+  // this game uses). Reads its bank live from window.HEP_Q, falling back to the
+  // eagerly-seeded shared library window.SYM_QUESTIONS — so it always opens with
+  // real content, never an empty board.
+  openHeptapylos: {
+    js:      ['games/heptapylos/game.js'],
+    css:     ['games/pvp-shell.css'],
+    overlay: null,
+    eager:   true,
+    fb:      false
   }
 });
 
@@ -145,13 +151,16 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Grammar Invaders':         'openInvaders',
   'Ιλιάδα Arcade':            'openIliadaArcade',
   'Iliad Arcade':             'openIliadaArcade',
+  'Οδύσσεια Arcade':          'openOdysseaArcade',
+  'Odyssey Arcade':           'openOdysseaArcade',
+  'Odyssea Arcade':           'openOdysseaArcade',
   'Agora Surfers':            'openAgoraSurfers',
   'Mythology Memory':         'openMythMemory',
   'Epic Puzzle':              'openEpicPuzzle',
+  'epic-puzzle':              'openEpicPuzzle',
   'Odyssey 3D':               'initOdysseyJourney',
   "Grammarian's Blade":       'openBlade',
   'Ξίφος Γραμματικού':        'openBlade',
-  'Crypto Hack':              'openCryptoHack',
   'Ανασκαφή':                 'openDig',
   'Archaeological Dig':       'openDig',
   'Λαβύρινθος':               'openLabyrinth',
@@ -162,64 +171,12 @@ window.SYN_LAUNCH_MAP = Object.assign(window.SYN_LAUNCH_MAP||{}, {
   'Naumachia':                'openNaumachia',
   'Rapid Fire':               'openRapidFire',
   'Καταιγισμός':              'openRapidFire',
-  'Tug of War':               'openTow'
+  'Tug of War':               'openTow',
+  'Ἑπτάπυλος':                'openHeptapylos',
+  'Επτάπυλος':                'openHeptapylos',
+  'Heptapylos':               'openHeptapylos'
 });
 
-// ── crypto-hack shim: window.openCryptoHack → CryptoHack.open({...}) ────────
-// CryptoHack is an IIFE defined in games/crypto-hack/game.js (loaded lazily by
-// the manifest). This wrapper resolves CryptoHack at call-time and builds its
-// own overlay, so the manifest entry uses overlay:null.
-if (!window.openCryptoHack) {
-  window.openCryptoHack = async function (cfg) {
-    // CryptoHack.open() injects its UI into a pre-existing #ch-overlay/#ch-wrap
-    // shell (it reads ch-overlay.style first), so ensure that partial is in the
-    // DOM before opening. (manifest overlay is null because synLaunch shouldn't
-    // gate the lazy-load on it — we inject it here just-in-time.)
-    if (window.synEnsureOverlay) { try { await window.synEnsureOverlay('ch-overlay'); } catch (_) {} }
-    // CryptoHack is declared as a top-level `const` in game.js. Loaded via a
-    // <script> tag it becomes a lexical global (not a window property), so we
-    // resolve it via the global scope; fall back to window.CryptoHack if a
-    // future build attaches it there.
-    var CH = window.CryptoHack;
-    if (!CH) { try { CH = (0, eval)('typeof CryptoHack!=="undefined"?CryptoHack:null'); } catch (_) {} }
-    if (CH && typeof CH.open === 'function') {
-      return CH.open(cfg || {});
-    }
-    console.warn('[syn] CryptoHack not loaded');
-  };
-}
-
-// ── iliada-arcade eager-boot trap ──────────────────────────────────────────
-// IliadaControls.js registers its mobile-controls init on DOMContentLoaded,
-// which has already fired by the time the engine is lazy-loaded. We trap the
-// assignment game.js makes to window.openIliadaArcade and wrap it so the first
-// launch dispatches a synthetic DOMContentLoaded (booting the controls) before
-// calling the real opener. Idempotent and non-enumerable so it stays invisible.
-(function () {
-  var booted = false;
-  function wrap(real) {
-    if (typeof real !== 'function' || real.__synWrapped) return real;
-    var wrapped = function () {
-      if (!booted) {
-        booted = true;
-        try { document.dispatchEvent(new Event('DOMContentLoaded')); } catch (_) {}
-      }
-      return real.apply(window, arguments);
-    };
-    wrapped.__synWrapped = true;
-    return wrapped;
-  }
-  if (typeof window.openIliadaArcade === 'function') {
-    window.openIliadaArcade = wrap(window.openIliadaArcade);
-    return;
-  }
-  var stored;
-  try {
-    Object.defineProperty(window, 'openIliadaArcade', {
-      configurable: true,
-      enumerable: true,
-      get: function () { return stored; },
-      set: function (fn) { stored = wrap(fn); }
-    });
-  } catch (_) { /* if trap fails, fall back to plain assignment by game.js */ }
-})();
+// (The old iliada-arcade eager-boot trap was removed: the arcade is now a
+// self-contained iframe overlay — see js/arcade-launch.js — with no in-page
+// game.js/IliadaControls.js to boot.)

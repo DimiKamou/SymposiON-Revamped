@@ -9,11 +9,24 @@
   "functions": {
     "source": "functions",
     "runtime": "nodejs22",
-    "predeploy": ["npm --prefix functions install"]
+    "predeploy": [
+      "npm --prefix functions install"
+    ]
   },
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "functions/**", "**/*.bat", "**/*.exe", "**/*.sh", "**/*.cmd"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "**/*.bat",
+      "**/*.exe",
+      "**/*.sh",
+      "**/*.cmd",
+      "handoff/**",
+      "**/*.md"
+    ],
     "rewrites": [
       {
         "source": "/stripeWebhook",
@@ -24,28 +37,79 @@
         "function": "gradeAnswer"
       },
       {
+        "source": "/api/tts",
+        "function": "tts"
+      },
+      {
+        "source": "/api/generateSource",
+        "function": "generateSource"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
     ],
     "headers": [
       {
+        "source": "**/*.@(jpg|jpeg|png|gif|svg|webp|avif|ico|bmp|mp3|ogg|wav|m4a|aac|mp4|webm|woff|woff2|ttf|otf|eot|wasm|glb|gltf|bin|fbx|hdr|exr|ktx|ktx2|basis|obj|mtl|drc|dae)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
         "source": "**/*.@(js|css)",
-        "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
       },
       {
         "source": "**",
         "headers": [
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-          { "key": "X-XSS-Protection", "value": "1; mode=block" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
-          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-          { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" }
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=()"
+          },
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin-allow-popups"
+          }
         ]
       }
     ]
   }
 }
-

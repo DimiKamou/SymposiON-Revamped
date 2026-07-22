@@ -1,9 +1,12 @@
 /* ══════════════════ ΔΙΣΚΟΣ — The Discus (plinko) ══════════════════
    Release the discus down the pegs; edge slots reward the boldest line.
-   Palette: olive / sage + gold over dark Hearth.
+   Palette: olive / sage + bronze-gold over dark Hearth.
+   Play-scene pass: bronze pegs that ping, spinning bronze discus with a
+   motion trail, slot floors that light on approach, jackpot roar flash,
+   ghost trajectories of earlier throws.
 ═══════════════════════════════════════════════════════════════════════ */
 
-#di-overlay { --di-ink:#08100A; }
+#di-overlay { --di-ink:#08100A; --di-bronze:#C9A44A; --di-bronze-lt:#EFDDA6; --di-sage:#9DBE84; }
 #di-overlay .overlay-topbar { background:rgba(8,16,10,0.92); border-bottom:1px solid rgba(106,135,82,0.26); }
 #di-overlay .overlay-title { color:#9DBE84; text-shadow:0 0 16px rgba(106,135,82,0.4); }
 
@@ -12,6 +15,7 @@
   background:
     radial-gradient(960px 540px at 50% -10%, rgba(106,135,82,0.16), transparent 60%),
     radial-gradient(720px 560px at 50% 116%, rgba(196,164,72,0.10), transparent 60%),
+    radial-gradient(1400px 900px at 50% 50%, transparent 55%, rgba(0,0,0,0.36)),
     linear-gradient(180deg, #0C160F, #08100A);
   color:var(--sym-cream); font-family:var(--sym-sans); position:relative; overflow:hidden;
 }
@@ -32,12 +36,40 @@
 .di-top { display:flex; align-items:center; justify-content:space-between; gap:18px; max-width:860px; width:100%; margin:0 auto 14px; }
 .di-dist { display:flex; align-items:baseline; gap:10px; }
 .di-dist-lbl { font-family:var(--sym-mono); font-size:10px; letter-spacing:2px; color:var(--sym-stone); }
-.di-dist-val { font-family:var(--sym-display); font-size:30px; color:#9DBE84; line-height:1; }
+.di-dist-val { font-family:var(--sym-display); font-size:30px; color:#9DBE84; line-height:1; text-shadow:0 0 18px rgba(157,190,132,0.35); }
 .di-round { font-family:var(--sym-mono); font-size:11px; letter-spacing:2px; color:var(--sym-stone); }
 
+/* faint amphitheatre bowl behind the question loop — ties both scenes together */
+#di-screen-game::before {
+  content:''; position:absolute; left:50%; top:-330px; width:1500px; height:760px; transform:translateX(-50%);
+  z-index:-1; pointer-events:none; opacity:.75;
+  background-image:
+    radial-gradient(1.6px 1.6px at 8px 6px, rgba(240,235,224,0.10), transparent 100%),
+    radial-gradient(1.4px 1.4px at 5px 9px, rgba(232,209,138,0.07), transparent 100%),
+    repeating-radial-gradient(120% 120% at 50% 130%, rgba(240,235,224,0.045) 0 1.5px, transparent 1.5px 46px),
+    radial-gradient(60% 55% at 50% 30%, rgba(196,164,72,0.05), transparent 70%);
+  background-size:26px 17px, 37px 23px, auto, auto;
+  -webkit-mask-image:radial-gradient(120% 115% at 50% 130%, transparent 50%, rgba(0,0,0,0.85) 66%, #000 82%, transparent 99%);
+          mask-image:radial-gradient(120% 115% at 50% 130%, transparent 50%, rgba(0,0,0,0.85) 66%, #000 82%, transparent 99%);
+}
+#di-screen-game::after {   /* warm ground pool anchoring the card */
+  content:''; position:absolute; left:50%; bottom:-140px; width:900px; height:340px; transform:translateX(-50%);
+  z-index:-1; pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 50%, rgba(196,164,72,0.07), transparent 70%);
+}
+
 .di-board { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:860px; width:100%; margin:0 auto 16px; }
-.di-board-chip { display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(240,235,224,0.08); font-size:12px; }
-.di-board-chip.me { border-color:#9DBE84; background:rgba(106,135,82,0.14); }
+.di-board-chip {
+  display:flex; align-items:center; gap:7px; padding:6px 11px; border-radius:20px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.16));
+  border:1px solid rgba(240,235,224,0.08); font-size:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.25);
+}
+.di-board-chip.me { border-color:rgba(157,190,132,0.75); background:linear-gradient(180deg, rgba(106,135,82,0.22), rgba(106,135,82,0.08)); animation:di-me-pulse 3.2s ease-in-out infinite; }
+@keyframes di-me-pulse {
+  0%,100%{ box-shadow:0 2px 8px rgba(0,0,0,0.25), 0 0 0 rgba(157,190,132,0); }
+  50%    { box-shadow:0 2px 8px rgba(0,0,0,0.25), 0 0 14px rgba(157,190,132,0.35); }
+}
 .di-board-rank { font-family:var(--sym-mono); font-size:10px; color:var(--sym-stone); }
 .di-board-name { font-family:var(--sym-serif); font-size:14px; color:var(--sym-cream); }
 .di-board-d { font-family:var(--sym-mono); font-size:11px; color:#9DBE84; }
@@ -45,59 +77,339 @@
 /* ── Question ── */
 .di-qbody { max-width:860px; margin:0 auto; width:100%; flex:1; display:flex; flex-direction:column; justify-content:center; }
 .di-q-card {
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.2)), var(--sym-bg-panel);
-  border:1px solid rgba(106,135,82,0.2); border-left:3px solid var(--sym-sage);
-  border-radius:4px; padding:24px 28px; margin-bottom:18px;
+  position:relative;
+  background:
+    radial-gradient(140% 120% at 50% -30%, rgba(157,190,132,0.07), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.24)), var(--sym-bg-panel);
+  border:1px solid rgba(106,135,82,0.24); border-left:3px solid var(--sym-sage);
+  border-radius:6px; padding:26px 28px 24px; margin-bottom:18px;
+  box-shadow:0 14px 34px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.di-q-card::before {
+  content:''; position:absolute; top:6px; left:10px; right:10px; height:10px; opacity:.14; pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' viewBox='0 0 16 12'%3E%3Cpath d='M1 11V1h13M5 11V5h5M9 11V9' fill='none' stroke='%23C4A448' stroke-width='1.3'/%3E%3C/svg%3E") repeat-x left center / 16px 10px;
+  -webkit-mask-image:linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+          mask-image:linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
 }
 .di-q-text { font-family:var(--sym-serif); font-size:clamp(20px,2.9vw,28px); line-height:1.4; color:var(--sym-cream); }
 .di-answers { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
 @media (max-width:600px){ .di-answers{grid-template-columns:1fr;} }
 .di-ans {
   display:flex; align-items:center; gap:13px; text-align:left;
-  background:var(--sym-bg-panel); border:1px solid rgba(240,235,224,0.12); border-radius:3px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.18)), var(--sym-bg-panel);
+  border:1px solid rgba(240,235,224,0.12); border-radius:4px;
   padding:15px 17px; cursor:pointer; color:var(--sym-cream);
   font-family:var(--sym-sans); font-size:16px; line-height:1.35;
-  transition:border-color .15s, background .15s, transform .1s;
+  box-shadow:0 3px 10px rgba(0,0,0,0.24);
+  transition:border-color .22s cubic-bezier(.2,.8,.3,1), background .22s cubic-bezier(.2,.8,.3,1),
+             transform .22s cubic-bezier(.2,.8,.3,1), box-shadow .22s cubic-bezier(.2,.8,.3,1);
 }
-.di-ans:hover:not(:disabled){ border-color:#9DBE84; background:rgba(106,135,82,0.08); }
-.di-ans:active:not(:disabled){ transform:scale(.99); }
-.di-ans-key { width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(106,135,82,0.45); font-family:var(--sym-display); font-size:14px; color:#9DBE84; }
-.di-ans.correct { border-color:var(--sym-gold); background:rgba(196,164,72,0.16); }
-.di-ans.correct .di-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); }
-.di-ans.wrong { border-color:var(--sym-blood); background:rgba(158,59,46,0.16); }
+.di-ans:hover:not(:disabled){ border-color:#9DBE84; background:linear-gradient(180deg, rgba(157,190,132,0.10), rgba(106,135,82,0.05)), var(--sym-bg-panel); transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.32), 0 0 16px rgba(157,190,132,0.14); }
+.di-ans:active:not(:disabled){ transform:translateY(0) scale(.99); }
+.di-ans-key {
+  width:30px; height:30px; flex-shrink:0; border-radius:50%; display:grid; place-items:center;
+  background:radial-gradient(circle at 34% 28%, rgba(239,221,166,0.22), rgba(201,164,74,0.10) 55%, transparent 80%);
+  border:1px solid rgba(106,135,82,0.5); font-family:var(--sym-display); font-size:14px; color:#9DBE84;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 5px rgba(0,0,0,0.3);
+  transition:border-color .2s, color .2s, box-shadow .2s;
+}
+.di-ans.correct { border-color:var(--sym-gold); background:linear-gradient(180deg, rgba(227,199,102,0.16), rgba(196,164,72,0.07)), var(--sym-bg-panel); animation:di-ans-win .7s cubic-bezier(.2,.8,.3,1); }
+@keyframes di-ans-win {
+  0%  { box-shadow:0 0 0 0 rgba(227,199,102,0.55); }
+  70% { box-shadow:0 0 22px 8px rgba(227,199,102,0.0); }
+  100%{ box-shadow:0 3px 10px rgba(0,0,0,0.24); }
+}
+.di-ans.correct .di-ans-key { border-color:var(--sym-gold); color:var(--sym-gold-lt); box-shadow:0 0 12px rgba(227,199,102,0.4); }
+.di-ans.wrong { border-color:var(--sym-blood); background:linear-gradient(180deg, rgba(158,59,46,0.18), rgba(158,59,46,0.06)), var(--sym-bg-panel); animation:di-ans-shake .38s cubic-bezier(.36,.07,.19,.97); }
+@keyframes di-ans-shake { 10%,90%{transform:translateX(-1px);} 20%,80%{transform:translateX(2px);} 30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);} }
 .di-ans.wrong .di-ans-key { border-color:var(--sym-blood); color:#E08577; }
 .di-feedback { text-align:center; min-height:22px; margin-top:16px; font-family:var(--sym-mono); font-size:13px; letter-spacing:2px; }
-.di-fb-ok { color:var(--sym-gold); }
-.di-fb-bad { color:#E08577; }
+.di-fb-ok  { color:var(--sym-gold); animation:di-fb-in .4s cubic-bezier(.2,.8,.3,1); text-shadow:0 0 14px rgba(227,199,102,0.4); }
+.di-fb-bad { color:#E08577; animation:di-fb-in .4s cubic-bezier(.2,.8,.3,1); }
+@keyframes di-fb-in { from{opacity:0; transform:translateY(6px); letter-spacing:6px;} to{opacity:1; transform:none; letter-spacing:2px;} }
 
-/* ── Drop field ── */
-#di-screen-drop { align-items:center; justify-content:center; text-align:center; gap:14px; }
-.di-drop-head { font-family:var(--sym-display); font-size:clamp(20px,3.4vw,30px); letter-spacing:3px; color:#9DBE84; }
-.di-field {
-  position:relative; width:min(380px,86vw); aspect-ratio:3/4;
-  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.18)), var(--sym-bg-panel);
-  border:1px solid rgba(106,135,82,0.2); border-radius:6px; overflow:hidden; cursor:crosshair; touch-action:none;
+/* ── Drop scene — the stadium wall ── */
+#di-screen-drop { align-items:center; justify-content:center; text-align:center; gap:10px; padding-top:clamp(12px,2.5vw,26px); }
+#di-screen-drop::before, #di-screen-drop::after {   /* flanking pilasters on wide screens */
+  content:''; position:absolute; top:11%; bottom:7%; width:52px; opacity:0; pointer-events:none;
+  background:
+    linear-gradient(180deg, rgba(240,235,224,0.05), rgba(240,235,224,0.015) 12%, rgba(240,235,224,0.015) 88%, rgba(240,235,224,0.05)),
+    repeating-linear-gradient(90deg, rgba(240,235,224,0.05) 0 5px, rgba(0,0,0,0.12) 5px 10px);
+  border:1px solid rgba(240,235,224,0.05); border-radius:3px;
+  box-shadow:0 0 0 3px rgba(0,0,0,0.15), 0 26px 40px rgba(0,0,0,0.4);
+  transition:opacity .6s ease;
 }
-.di-aim { position:absolute; top:0; bottom:18%; width:0; border-left:2px dashed rgba(157,190,132,0.55); transform:translateX(-50%); pointer-events:none; z-index:3; }
-.di-aimhint { font-family:var(--sym-mono); font-size:12.5px; letter-spacing:1px; color:#9DBE84; }
-.di-spark { position:absolute; width:20px; height:20px; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; z-index:5;
-  background:radial-gradient(circle, rgba(255,236,170,0.95), rgba(157,190,132,0.4) 45%, transparent 72%); }
-.di-pegs { position:absolute; inset:0; }
-.di-peg { position:absolute; width:7px; height:7px; border-radius:50%; background:#B7A887; transform:translate(-50%,-50%); box-shadow:0 0 6px rgba(183,168,135,0.3); }
-.di-token { position:absolute; font-size:24px; transform:translate(-50%,-50%); transition:top .14s linear, left .14s ease-in-out; z-index:4; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-.di-slots { position:absolute; left:0; right:0; bottom:0; height:18%; }
-.di-slot { position:absolute; bottom:0; height:100%; display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px; border-left:1px solid rgba(106,135,82,0.18); }
-.di-slot span { font-family:var(--sym-mono); font-size:12px; color:var(--sym-stone); }
-.di-slot.edge span { color:var(--sym-gold-lt); font-weight:700; }
-.di-slot.edge { background:linear-gradient(180deg, transparent, rgba(196,164,72,0.12)); }
-.di-slot.hit { background:linear-gradient(180deg, transparent, rgba(157,190,132,0.3)); }
-.di-slot.hit span { color:var(--sym-cream); }
+#di-screen-drop::before { left:8%; }
+#di-screen-drop::after  { right:8%; }
+@media (min-width:1080px){ #di-screen-drop::before, #di-screen-drop::after { opacity:.55; } }
 
-.di-outcome { min-height:74px; }
-.di-outcome-big { font-family:var(--sym-display); font-size:clamp(24px,4vw,34px); letter-spacing:2px; color:#9DBE84; }
-.di-outcome-big.edge { color:var(--sym-gold); text-shadow:0 0 22px rgba(196,164,72,0.45); }
-.di-outcome-desc { font-family:var(--sym-serif); font-style:italic; font-size:16px; color:var(--sym-stone); margin-top:6px; }
-.di-cont { margin-top:16px; }
+/* layered stadium backdrop behind the wall (parallax depth, pure CSS) */
+#di-screen-drop .di-drop-head, #di-screen-drop .di-drop-meta { position:relative; z-index:1; }
+#di-screen-drop .di-field { z-index:1; }
+.di-arena { position:absolute; inset:0; z-index:0; pointer-events:none; }
+.di-tiers {
+  position:absolute; left:-14%; right:-14%; top:-6%; height:70%; opacity:.85;
+  background-image:
+    radial-gradient(1.6px 1.6px at 8px 6px, rgba(240,235,224,0.13), transparent 100%),
+    radial-gradient(1.4px 1.4px at 5px 9px, rgba(232,209,138,0.10), transparent 100%),
+    repeating-radial-gradient(140% 120% at 50% 150%, rgba(240,235,224,0.05) 0 1.5px, transparent 1.5px 42px);
+  background-size:26px 17px, 37px 23px, auto;
+  -webkit-mask-image:radial-gradient(140% 130% at 50% 150%, transparent 52%, rgba(0,0,0,0.85) 68%, #000 84%, transparent 99%);
+          mask-image:radial-gradient(140% 130% at 50% 150%, transparent 52%, rgba(0,0,0,0.85) 68%, #000 84%, transparent 99%);
+  animation:di-tiers-sway 14s ease-in-out infinite;
+}
+@keyframes di-tiers-sway { 0%,100%{background-position:0 0, 0 0, 0 0;} 50%{background-position:3px 1px, -2px 1px, 0 0;} }
+.di-arena.roar .di-tiers { animation:di-crowd .24s ease-in-out 6 alternate; }
+@keyframes di-crowd { from{filter:brightness(1); opacity:.85;} to{filter:brightness(1.75); opacity:1;} }
+.di-sunshaft { position:absolute; inset:0; mix-blend-mode:screen;
+  background:linear-gradient(112deg, transparent 32%, rgba(232,209,138,0.055) 45%, rgba(232,209,138,0.02) 52%, transparent 63%);
+}
+/* torch braziers crowning the pilasters — light that flickers and pools */
+.di-brazier { position:absolute; top:calc(11% - 54px); left:calc(8% + 26px); width:56px; height:64px; transform:translateX(-50%); display:none; }
+.di-brazier.r { left:auto; right:calc(8% + 26px); transform:translateX(50%); }
+@media (min-width:1080px){ .di-brazier { display:block; } }
+.di-brazier-bowl { position:absolute; left:50%; bottom:8px; width:42px; height:13px; transform:translateX(-50%);
+  background:linear-gradient(180deg, #D9B15C, #8A6626 60%, #4E3A14);
+  border-radius:0 0 21px 21px / 0 0 14px 14px;
+  box-shadow:inset 0 2px 3px rgba(255,240,190,0.4), 0 4px 9px rgba(0,0,0,0.5);
+}
+.di-brazier-bowl::before { content:''; position:absolute; left:50%; top:-3px; width:52px; height:5px; transform:translateX(-50%);
+  background:linear-gradient(180deg, #EFDDA6, #9A7830); border-radius:3px; box-shadow:0 2px 4px rgba(0,0,0,0.45);
+}
+.di-flame { position:absolute; left:50%; bottom:18px; width:19px; height:33px; transform:translateX(-50%);
+  background:radial-gradient(circle at 50% 78%, #FFEBA8 0 22%, #F2B33D 46%, #C96A1D 72%, transparent 79%);
+  border-radius:50% 50% 48% 52% / 62% 62% 38% 38%;
+  filter:blur(0.6px); transform-origin:50% 100%;
+  animation:di-flame .62s ease-in-out infinite alternate;
+}
+.di-flame.f2 { width:10px; height:19px; bottom:20px; opacity:.9;
+  background:radial-gradient(circle at 50% 75%, #FFF6D8 0 30%, #FFD770 60%, transparent 82%);
+  animation:di-flame2 .45s ease-in-out infinite alternate;
+}
+@keyframes di-flame  { from{transform:translateX(-50%) scale(1,.95) rotate(-2.5deg);} to{transform:translateX(-50%) scale(.9,1.1) rotate(2.5deg);} }
+@keyframes di-flame2 { from{transform:translateX(-56%) scale(.88,1.06);} to{transform:translateX(-44%) scale(1.06,.88);} }
+.di-brazier-glow { position:absolute; left:50%; bottom:-34px; width:210px; height:170px; transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 42%, rgba(255,196,92,0.17), transparent 72%);
+  mix-blend-mode:screen; animation:di-glowflick 2.6s ease-in-out infinite;
+}
+@keyframes di-glowflick { 0%,100%{opacity:.7;} 30%{opacity:1;} 55%{opacity:.55;} 80%{opacity:.9;} }
+.di-arena.roar .di-flame { animation-duration:.26s; filter:blur(0.6px) brightness(1.35); }
+.di-arena.roar .di-brazier-glow { animation-duration:.5s; }
+
+.di-drop-head {
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  font-family:var(--sym-display); font-size:clamp(17px,2.7vw,26px); letter-spacing:4px; color:#9DBE84;
+  text-shadow:0 0 20px rgba(157,190,132,0.35);
+}
+.di-drop-head::before, .di-drop-head::after { content:''; height:1px; width:min(90px,16vw); flex-shrink:1; }
+.di-drop-head::before { background:linear-gradient(90deg, transparent, rgba(157,190,132,0.55)); }
+.di-drop-head::after  { background:linear-gradient(270deg, transparent, rgba(157,190,132,0.55)); }
+.di-drop-meta { font-family:var(--sym-mono); font-size:10px; letter-spacing:3px; color:var(--sym-stone); }
+
+.di-field {
+  position:relative; width:min(400px, 86vw, calc((100dvh - 250px) * 0.72)); aspect-ratio:3/4;
+  background:
+    radial-gradient(130% 55% at 50% -6%, rgba(214,178,94,0.14), transparent 58%),      /* sun shaft on the release line */
+    radial-gradient(120% 90% at 50% 108%, rgba(196,164,72,0.10), transparent 55%),     /* warm bounce from the sand */
+    radial-gradient(150% 120% at 50% 45%, transparent 52%, rgba(0,0,0,0.45)),          /* vignette */
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 5px),/* stone tooling */
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0 1px, transparent 1px 46px),      /* masonry courses */
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.09) 0 1px, transparent 1px 88px),     /* block joints */
+    linear-gradient(180deg, #241B10 0%, #1C150D 55%, #241A10 100%);
+  border:1px solid rgba(201,164,74,0.30); border-radius:10px; overflow:hidden; cursor:crosshair; touch-action:none;
+  box-shadow:
+    inset 0 0 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06),
+    0 22px 54px rgba(0,0,0,0.5), 0 0 38px rgba(106,135,82,0.10);
+}
+.di-field::before {   /* meander frieze under the release line */
+  content:''; position:absolute; top:9px; left:12px; right:12px; height:10px; z-index:1; opacity:.34; pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' viewBox='0 0 16 12'%3E%3Cpath d='M1 11V1h13M5 11V5h5M9 11V9' fill='none' stroke='%23C4A448' stroke-width='1.3'/%3E%3C/svg%3E") repeat-x left center / 16px 10px;
+  -webkit-mask-image:linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+          mask-image:linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+}
+
+/* trajectory ghosts of earlier throws */
+.di-ghosts { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+.di-ghosts polyline { fill:none; stroke-width:1.6px; vector-effect:non-scaling-stroke; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:1 6; }
+
+/* drifting stadium dust */
+.di-dust { position:absolute; width:3px; height:3px; border-radius:50%; z-index:2; pointer-events:none; opacity:0;
+  background:radial-gradient(circle, rgba(232,209,138,0.8), rgba(232,209,138,0) 70%);
+  animation:di-dust 12s ease-in-out infinite; }
+@keyframes di-dust {
+  0%,100% { transform:translate(0,0); opacity:0; }
+  25%     { opacity:.5; }
+  50%     { transform:translate(9px,-26px); opacity:.25; }
+  75%     { opacity:.45; }
+}
+
+/* aim beam */
+.di-aim {
+  position:absolute; top:0; bottom:18%; width:3px; transform:translateX(-50%); pointer-events:none; z-index:3; border-radius:2px;
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.30) 0 5px, transparent 5px 14px),
+    linear-gradient(180deg, rgba(157,190,132,0.05), rgba(157,190,132,0.55) 30%, rgba(201,164,74,0.75));
+  box-shadow:0 0 12px rgba(157,190,132,0.4);
+  animation:di-beam .9s linear infinite;
+}
+@keyframes di-beam { from{background-position:0 0, 0 0;} to{background-position:0 14px, 0 0;} }
+.di-aim::after { content:''; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+  border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid rgba(201,164,74,0.85);
+  filter:drop-shadow(0 0 6px rgba(201,164,74,0.6)); }
+
+.di-aimhint {
+  display:inline-block; font-family:var(--sym-mono); font-size:12px; letter-spacing:1px; color:#BCD3A8;
+  background:rgba(8,16,10,0.74); border:1px solid rgba(157,190,132,0.4); border-radius:999px; padding:7px 15px;
+  backdrop-filter:blur(4px); box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  animation:di-hint 2.2s ease-in-out infinite;
+}
+@keyframes di-hint { 0%,100%{opacity:.75;} 50%{opacity:1;} }
+
+/* impact glint at the disc */
+.di-spark { position:absolute; width:20px; height:20px; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none; z-index:5;
+  background:radial-gradient(circle, rgba(255,236,170,0.95), rgba(201,164,74,0.45) 45%, transparent 72%); }
+
+/* bronze pegs */
+.di-pegs { position:absolute; inset:0; z-index:2; }
+.di-peg { position:absolute; width:9px; height:9px; border-radius:50%; transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 32% 28%, #F4DFA6, #D2A855 42%, #8A6626 76%, #503A12);
+  box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 7px rgba(201,164,74,0.18), inset 0 -1px 1px rgba(0,0,0,0.4);
+  transition:box-shadow .28s ease, filter .28s ease;
+}
+.di-peg.lit {   /* bounce light spilling from the struck peg */
+  box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 13px rgba(239,221,166,0.55), inset 0 -1px 1px rgba(0,0,0,0.4);
+  filter:brightness(1.5); transition:box-shadow .1s ease, filter .1s ease;
+}
+.di-peg.ping { animation:di-ping .5s cubic-bezier(.2,.8,.3,1); }
+@keyframes di-ping {
+  0%  { transform:translate(-50%,-50%) scale(1);   box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 6px rgba(239,221,166,0.9); filter:brightness(2.1); }
+  40% { transform:translate(-50%,-50%) scale(1.75); box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 18px rgba(239,221,166,0.85); filter:brightness(1.9); }
+  100%{ transform:translate(-50%,-50%) scale(1);   box-shadow:0 2px 4px rgba(0,0,0,0.6), 0 0 7px rgba(201,164,74,0.18); filter:brightness(1); }
+}
+.di-ring { position:absolute; width:12px; height:12px; border-radius:50%; transform:translate(-50%,-50%) scale(.6); z-index:5; pointer-events:none;
+  border:2px solid rgba(239,221,166,0.75); box-shadow:0 0 10px rgba(239,221,166,0.45), inset 0 0 6px rgba(239,221,166,0.3);
+  animation:di-ring .6s cubic-bezier(.2,.8,.3,1) forwards; }
+@keyframes di-ring { to { transform:translate(-50%,-50%) scale(4.4); opacity:0; } }
+.di-fleck { position:absolute; width:3px; height:3px; border-radius:50%; z-index:5; pointer-events:none;
+  background:#F4DFA6; box-shadow:0 0 6px rgba(239,221,166,0.8);
+  animation:di-fleck .6s cubic-bezier(.15,.7,.3,1) forwards; }
+@keyframes di-fleck { from{opacity:1; transform:translate(-50%,-50%);} to{opacity:0; transform:translate(calc(-50% + var(--fx,10px)), calc(-50% + var(--fy,-16px))) scale(.4);} }
+
+/* the discus */
+.di-token { position:absolute; width:32px; height:32px; transform:translate(-50%,-50%); transition:top .14s linear, left .14s ease-in-out; z-index:4;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,0.6)) drop-shadow(0 0 8px rgba(201,164,74,0.25)); }
+.di-token.flying { filter:drop-shadow(0 4px 7px rgba(0,0,0,0.65)) drop-shadow(0 0 13px rgba(201,164,74,0.45)); }
+.di-token-spin { display:block; width:100%; height:100%; animation:di-spin .8s linear infinite paused; }
+.di-token.flying .di-token-spin { animation-play-state:running; }
+.di-token-spin svg { display:block; width:100%; height:100%; }
+.di-token.flying .di-token-spin svg { animation:di-wob .5s ease-in-out infinite alternate; }
+@keyframes di-spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+@keyframes di-wob  { from{transform:scale(1,.94) rotate(-3deg);} to{transform:scale(.96,1) rotate(3deg);} }
+/* travelling light: the bronze glints and lights the wall as it passes */
+.di-halo { position:absolute; left:50%; top:50%; width:120px; height:120px; transform:translate(-50%,-50%); border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(239,221,166,0.30), rgba(201,164,74,0.12) 42%, transparent 68%);
+  mix-blend-mode:screen; opacity:.35; transition:opacity .35s ease; }
+.di-token.flying .di-halo { opacity:1; animation:di-halo 1s ease-in-out infinite; }
+@keyframes di-halo { 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.18);} }
+/* comet-tail streaks aligned to the direction of travel */
+.di-trail { position:absolute; width:30px; height:13px; transform:translate(-50%,-50%) rotate(var(--a,90deg)); z-index:3; pointer-events:none; }
+.di-trail::after { content:''; display:block; width:100%; height:100%; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(255,240,190,0.75), rgba(239,221,166,0.38) 42%, rgba(157,190,132,0.18) 68%, transparent 100%);
+  animation:di-trail .52s ease-out forwards; }
+@keyframes di-trail { from{opacity:.85; transform:scale(1);} to{opacity:0; transform:scale(.28,.85);} }
+
+/* slot floors — carved bins in the sand */
+.di-slots { position:absolute; left:0; right:0; bottom:0; height:18%; z-index:2;
+  background:
+    radial-gradient(4px 4px at 12% 42%, rgba(232,209,138,0.10), transparent 60%),
+    radial-gradient(3px 3px at 44% 66%, rgba(232,209,138,0.09), transparent 60%),
+    radial-gradient(4px 4px at 76% 38%, rgba(232,209,138,0.08), transparent 60%),
+    linear-gradient(180deg, rgba(196,164,72,0.05), rgba(140,110,52,0.13));
+  border-top:1px solid rgba(201,164,74,0.22);
+  box-shadow:inset 0 8px 18px -8px rgba(0,0,0,0.6);
+}
+.di-slot { position:absolute; bottom:0; height:100%; display:flex; align-items:flex-end; justify-content:center; padding-bottom:7px;
+  transition:background .3s cubic-bezier(.2,.8,.3,1), box-shadow .3s cubic-bezier(.2,.8,.3,1); }
+.di-slot::before { content:''; position:absolute; left:-1px; top:-7px; bottom:0; width:2px;
+  background:linear-gradient(180deg, rgba(201,164,74,0), rgba(201,164,74,0.5) 55%, rgba(120,92,40,0.7));
+  box-shadow:1px 0 2px rgba(0,0,0,0.5); }
+.di-slot span {   /* engraved bronze plaque */
+  position:relative; font-family:var(--sym-mono); font-size:12px; font-weight:700; color:#2E2410;
+  background:linear-gradient(180deg, #D9BC77, #B08A3E 55%, #8A6626);
+  border:1px solid rgba(46,36,16,0.75); border-radius:4px; padding:2px 7px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,246,218,0.55), inset 0 -2px 3px rgba(46,36,16,0.35);
+  text-shadow:0 1px 0 rgba(255,246,218,0.35);
+  transition:transform .3s cubic-bezier(.2,.8,.3,1), box-shadow .3s, filter .3s, text-shadow .3s; }
+.di-slot.edge span { background:linear-gradient(180deg, #F6E7AE, #E3C766 45%, #B98F3E);
+  box-shadow:0 2px 6px rgba(0,0,0,0.5), 0 0 12px rgba(227,199,102,0.3), inset 0 1px 0 rgba(255,250,225,0.7), inset 0 -2px 3px rgba(46,36,16,0.3); }
+.di-slot.edge { background:linear-gradient(180deg, transparent 30%, rgba(196,164,72,0.14)); }
+.di-slot.edge::after { content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg, transparent 40%, rgba(227,199,102,0.16));
+  opacity:0; animation:di-edge-pulse 3s ease-in-out infinite; }
+@keyframes di-edge-pulse { 0%,100%{opacity:0;} 50%{opacity:1;} }
+.di-slot.near { background:linear-gradient(180deg, transparent 18%, rgba(157,190,132,0.24));
+  box-shadow:inset 0 -22px 30px -14px rgba(157,190,132,0.55); }
+.di-slot.near span { transform:translateY(-3px) scale(1.12); filter:brightness(1.14);
+  box-shadow:0 5px 10px rgba(0,0,0,0.5), 0 0 14px rgba(157,190,132,0.5), inset 0 1px 0 rgba(255,246,218,0.6); }
+.di-slot.edge.near { background:linear-gradient(180deg, transparent 14%, rgba(227,199,102,0.28));
+  box-shadow:inset 0 -22px 30px -14px rgba(227,199,102,0.6); }
+.di-slot.edge.near span { transform:translateY(-3px) scale(1.12); filter:brightness(1.14);
+  box-shadow:0 5px 12px rgba(0,0,0,0.5), 0 0 18px rgba(227,199,102,0.65), inset 0 1px 0 rgba(255,250,225,0.75); }
+.di-slot.hit { background:linear-gradient(180deg, transparent 8%, rgba(157,190,132,0.36));
+  box-shadow:inset 0 -26px 34px -12px rgba(157,190,132,0.7); }
+.di-slot.hit span { transform:translateY(-2px) scale(1.08); filter:brightness(1.22);
+  box-shadow:0 4px 10px rgba(0,0,0,0.5), 0 0 16px rgba(157,190,132,0.6), inset 0 1px 0 rgba(255,246,218,0.65); }
+.di-slot.edge.hit { background:linear-gradient(180deg, transparent 6%, rgba(227,199,102,0.4));
+  box-shadow:inset 0 -26px 36px -12px rgba(227,199,102,0.75); }
+.di-slot.edge.hit span { transform:translateY(-2px) scale(1.08); filter:brightness(1.3);
+  box-shadow:0 4px 12px rgba(0,0,0,0.5), 0 0 22px rgba(227,199,102,0.85), inset 0 1px 0 rgba(255,250,225,0.8); }
+.di-flare { position:absolute; left:50%; bottom:0; width:130%; height:160%; transform:translateX(-50%); z-index:1; pointer-events:none;
+  background:radial-gradient(55% 72% at 50% 100%, rgba(239,221,166,0.75), rgba(157,190,132,0.25) 55%, transparent 78%);
+  mix-blend-mode:screen; animation:di-flare .68s ease-out forwards; }
+@keyframes di-flare { 0%{opacity:0; transform:translateX(-50%) scaleY(.35);} 22%{opacity:1;} 100%{opacity:0; transform:translateX(-50%) scaleY(1.18);} }
+
+/* kicked-up sand at the landing bin */
+.di-sand { position:absolute; border-radius:50%; z-index:5; pointer-events:none;
+  animation:di-sand .6s ease-out forwards; }
+@keyframes di-sand { from{opacity:.9; transform:translate(-50%,-50%);} to{opacity:0; transform:translate(calc(-50% + var(--sx,0px)), calc(-50% + var(--sy,-24px))) scale(.5);} }
+
+/* jackpot ray fan bursting from the winning bin */
+.di-rays { position:absolute; bottom:18%; left:50%; width:0; height:0; z-index:5; pointer-events:none; transform:translateX(-50%); }
+.di-rays.on::before { content:''; position:absolute; left:-260px; top:-260px; width:520px; height:520px;
+  background:repeating-conic-gradient(from -8deg at 50% 50%, rgba(239,221,166,0.22) 0 7deg, transparent 7deg 24deg);
+  -webkit-mask-image:radial-gradient(circle, #000 0 36%, transparent 66%);
+          mask-image:radial-gradient(circle, #000 0 36%, transparent 66%);
+  mix-blend-mode:screen; animation:di-rays 1.15s cubic-bezier(.2,.8,.3,1) forwards; }
+@keyframes di-rays { 0%{opacity:0; transform:scale(.4) rotate(0deg);} 18%{opacity:1;} 100%{opacity:0; transform:scale(1.25) rotate(26deg);} }
+
+/* stadium roar flash */
+.di-fieldflash { position:absolute; inset:0; z-index:6; pointer-events:none; opacity:0;
+  background:radial-gradient(90% 70% at 50% 70%, rgba(239,221,166,0.5), rgba(201,164,74,0.18) 55%, transparent 80%);
+  mix-blend-mode:screen; }
+.di-fieldflash.on { animation:di-fflash .52s ease-out; }
+.di-fieldflash.on.strong { animation:di-fflash-strong .9s cubic-bezier(.2,.8,.3,1); }
+@keyframes di-fflash { 0%{opacity:0;} 18%{opacity:.6;} 100%{opacity:0;} }
+@keyframes di-fflash-strong { 0%{opacity:0;} 12%{opacity:1;} 34%{opacity:.55;} 48%{opacity:.85;} 100%{opacity:0;} }
+
+/* outcome plaque floats over the lower board */
+.di-outcome { position:absolute; left:50%; bottom:19.5%; transform:translateX(-50%); width:92%; z-index:7; text-align:center; pointer-events:none; }
+.di-outcome:has(.di-outcome-big) {
+  background:linear-gradient(180deg, rgba(20,26,16,0.88), rgba(10,14,9,0.9));
+  border:1px solid rgba(157,190,132,0.35); border-radius:8px; padding:16px 14px 15px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter:blur(5px);
+  animation:di-plaque .5s cubic-bezier(.2,1.2,.3,1);
+}
+.di-outcome:has(.di-outcome-big.edge) { border-color:rgba(227,199,102,0.55); box-shadow:0 16px 44px rgba(0,0,0,0.55), 0 0 30px rgba(227,199,102,0.22), inset 0 1px 0 rgba(255,255,255,0.06); }
+@keyframes di-plaque { from{opacity:0; transform:translateX(-50%) translateY(14px) scale(.94);} to{opacity:1; transform:translateX(-50%) translateY(0) scale(1);} }
+.di-outcome-big { font-family:var(--sym-display); font-size:clamp(22px,3.6vw,30px); letter-spacing:2px; color:#9DBE84;
+  text-shadow:0 0 18px rgba(157,190,132,0.45); animation:di-outpop .55s cubic-bezier(.2,1.4,.3,1); }
+.di-outcome-big.edge { color:var(--sym-gold-lt); text-shadow:0 0 24px rgba(227,199,102,0.6); }
+.di-outcome-big.edge::before { content:'✦ '; color:rgba(227,199,102,0.8); }
+.di-outcome-big.edge::after  { content:' ✦'; color:rgba(227,199,102,0.8); }
+@keyframes di-outpop { 0%{opacity:0; transform:scale(.5); filter:blur(4px);} 60%{opacity:1; filter:blur(0);} 100%{transform:scale(1);} }
+.di-outcome-desc { font-family:var(--sym-serif); font-style:italic; font-size:14.5px; color:var(--sym-stone); margin-top:5px; }
+.di-cont { margin-top:12px; pointer-events:auto; }
 
 /* ── End ── */
 #di-screen-end { align-items:center; justify-content:center; text-align:center; gap:14px; }
@@ -115,3 +427,16 @@
 .di-final-name { font-family:var(--sym-serif); font-size:17px; color:var(--sym-cream); flex:1; text-align:left; }
 .di-final-d { font-family:var(--sym-mono); font-size:14px; color:#9DBE84; }
 .di-end-btns { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:6px; }
+
+/* ── reduced motion: keep state changes, drop the flourishes ── */
+@media (prefers-reduced-motion: reduce) {
+  .di-token-spin, .di-token.flying .di-token-spin svg, .di-aim, .di-aimhint,
+  .di-board-chip.me, .di-slot.edge::after, .di-dust, .di-peg.ping,
+  .di-fieldflash.on, .di-fieldflash.on.strong,
+  .di-flame, .di-flame.f2, .di-brazier-glow, .di-tiers,
+  .di-arena.roar .di-tiers, .di-arena.roar .di-flame,
+  .di-halo, .di-token.flying .di-halo, .di-rays.on::before { animation:none !important; }
+  .di-trail, .di-ring, .di-dust, .di-fleck, .di-sand, .di-rays { display:none !important; }
+  .di-ans, .di-slot, .di-slot span, .di-peg { transition:none; }
+  .di-peg.lit { filter:none; }
+}

@@ -1,3 +1,8 @@
+<!-- Warm up the Three.js CDN connection early (game.js loads three@0.148 from
+     jsdelivr, falling back to cdnjs/unpkg) so the first byte arrives sooner on
+     mobile networks. Hints only — no eager weight. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <div id="odyssey-journey-overlay" class="game-overlay">
   <div class="overlay-topbar">
     <button class="overlay-back" onclick="closeOdysseyJourney()" data-gr="← Επιλογή Παιχνιδιού" data-en="← Game Selection">← Επιλογή Παιχνιδιού</button>

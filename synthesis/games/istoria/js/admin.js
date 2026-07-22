@@ -27,6 +27,8 @@
   let curCourse='g3', curUnit=null, curType='mc', editIdx=null;
 
   function units(){ return ISTORIA.getUnits(curCourse); }
+  function secList(){ return ISTORIA.getSections(curCourse, curUnit) || []; }
+  function secLabel(id){ const s=secList().find(x=>x.id===id); return s? ((s.part?s.part+' ':'')+(s.code?s.code+'. ':'')+s.t) : ''; }
   function type(){ return TYPES.find(t=>t.id===curType); }
   function listOf(typeId){ const v=ISTORIA.getItems(curCourse, curUnit, typeId); return Array.isArray(v)?v:[]; }
   function vidOf(){ const v=ISTORIA.getItems(curCourse, curUnit, 'vid'); return (v&&!Array.isArray(v))?v:{title:'',desc:'',url:'',q:[]}; }
@@ -52,7 +54,7 @@
     const a=listOf(curType);
     if(!a.length){ $('#adm-list').innerHTML=`<div class="adm-empty">Καμία εγγραφή ακόμη. Πρόσθεσε την πρώτη παρακάτω.</div>`; return; }
     $('#adm-list').innerHTML=a.map((it,i)=>`<div class="itemrow"><span class="ix">${i+1}</span>
-      <div class="tx">${escHtml(t.sum(it))}${curType==='mc'?`<small>Σωστή: ${'ΑΒΓΔ'[it.ans]||'-'} · ${(it.opts||[]).length} επιλογές</small>`:''}</div>
+      <div class="tx">${escHtml(t.sum(it))}${it.sec?` <span style="font-family:var(--f-mono);font-size:10px;color:var(--terra-dk);">▸ ${escHtml(secLabel(it.sec))}</span>`:''}${curType==='mc'?`<small>Σωστή: ${'ΑΒΓΔ'[it.ans]||'-'} · ${(it.opts||[]).length} επιλογές</small>`:''}</div>
       <div class="ops"><button class="iconb" title="Επεξεργασία" onclick="ADM.edit(${i})">✎</button><button class="iconb del" title="Διαγραφή" onclick="ADM.del(${i})">🗑</button></div></div>`).join('');
   }
 
@@ -78,6 +80,15 @@
       for(let i=0;i<4;i++) html+=`<div class="optrow"><input type="radio" name="correct" value="${i}" ${it.ans===i||(it.ans==null&&i===0)?'checked':''}><span class="ltr">${'ΑΒΓΔ'[i]}</span><input type="text" id="o_${i}" value="${escAttr(opts[i]||'')}" placeholder="Επιλογή ${'ΑΒΓΔ'[i]}"></div>`;
       html+=`</div>`;
     }
+    if(!t.single){
+      const secs=secList();
+      if(secs.length){
+        const cur=it.sec||'';
+        html+=`<div class="fld"><label>Κεφάλαιο (υποενότητα)</label><select id="f_sec"><option value="">— όλη η ενότητα —</option>`+
+          secs.map(s=>`<option value="${escAttr(s.id)}" ${cur===s.id?'selected':''}>${esc((s.part?s.part+' ':'')+(s.code?s.code+'. ':'')+s.t)}</option>`).join('')+
+          `</select></div>`;
+      }
+    }
     html+=`<div class="form-actions"><button class="btn primary" onclick="ADM.submitForm()">${t.single?'Αποθήκευση':(editIdx!=null?'Αποθήκευση':'Προσθήκη')}</button>${(!t.single&&editIdx!=null)?'<button class="btn ghost" onclick="ADM.cancel()">Άκυρο</button>':''}</div>`;
     $('#adm-editor').innerHTML=html;
   }
@@ -91,23 +102,57 @@
       else if(f.t==='qlist') v=v.split('\n').map(x=>x.trim()).filter(Boolean).map(line=>{ const p=line.split('|'); return {ts:(p[0]||'').trim(), q:(p.slice(1).join('|')||'').trim()}; }).filter(x=>x.q);
       obj[f.k]=v; });
     if(t.opts){ obj.opts=[0,1,2,3].map(i=>$('#o_'+i).value.trim()); obj.ans=parseInt(($$('input[name=correct]:checked')[0]||{}).value||0); }
+    const secSel=$('#f_sec'); if(secSel){ const sv=(secSel.value||'').trim(); if(sv) obj.sec=sv; }
     const first=t.fields[0];
     if(!obj[first.k] || (typeof obj[first.k]==='string' && !obj[first.k].trim())){ toast('Συμπλήρωσε τουλάχιστον το «'+first.l+'»'); return; }
     if(t.single){ ISTORIA.setItems(curCourse,curUnit,'vid',obj); toast('Αποθηκεύτηκε ✓'); }
     else { const a=listOf(curType).slice(); if(editIdx!=null) a[editIdx]=obj; else a.push(obj); ISTORIA.setItems(curCourse,curUnit,curType,a); toast(editIdx!=null?'Αποθηκεύτηκε':'Προστέθηκε ✓'); }
-    editIdx=null; renderAll();
+    editIdx=null; renderAll(); pushRemote();
   }
   function edit(i){ editIdx=i; renderAll(); $('#adm-editor').scrollIntoView({behavior:'smooth',block:'center'}); }
   function cancel(){ editIdx=null; renderAll(); }
-  function del(i){ if(!confirm('Διαγραφή εγγραφής;'))return; const a=listOf(curType).slice(); a.splice(i,1); ISTORIA.setItems(curCourse,curUnit,curType,a); if(editIdx===i)editIdx=null; renderAll(); toast('Διαγράφηκε'); }
+  function del(i){ if(!confirm('Διαγραφή εγγραφής;'))return; const a=listOf(curType).slice(); a.splice(i,1); ISTORIA.setItems(curCourse,curUnit,curType,a); if(editIdx===i)editIdx=null; renderAll(); toast('Διαγράφηκε'); pushRemote(); }
 
-  function selCourse(c){ curCourse=c; curUnit=(units()[0]||{}).id; editIdx=null; renderAll(); }
+  function selCourse(c){ curCourse=c; curUnit=(units()[0]||{}).id; editIdx=null; renderAll(); if(ISTORIA.useRemote){ ISTORIA.hydrate(curCourse); } }
   function selUnit(id){ curUnit=id; editIdx=null; renderAll(); }
   function selType(id){ curType=id; editIdx=null; renderAll(); }
 
+  /* ── cloud save status ────────────────────────────────────────────────
+     setItems()/importJSON() already mirror to Firestore via the data layer
+     (persist → ISTORIA.remote.save when useRemote). Here we re-fire the same
+     save explicitly so the owner sees an unambiguous success/failure toast
+     instead of the silent fire-and-forget in persist(). */
+  function pushRemote(){
+    if(!ISTORIA.useRemote){ return; }              // offline / no Firebase → local only
+    let slice; try{ slice=JSON.parse(ISTORIA.exportJSON(curCourse)).content; }catch(_){ slice=null; }
+    if(!slice){ return; }
+    toast('Αποθήκευση στο cloud…');
+    ISTORIA.remote.save(curCourse, slice)
+      .then(()=> toast('Αποθηκεύτηκε στο cloud ✓'))
+      .catch(()=> toast('⚠ Το cloud απέτυχε — αποθηκεύτηκε τοπικά'));
+  }
+
   /* ── import / export / reset ──────────────────────────────────────── */
   function exportJSON(){ const blob=new Blob([ISTORIA.exportJSON(curCourse)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='istoria-'+curCourse+'.json'; a.click(); toast('Εξήχθη istoria-'+curCourse+'.json'); }
-  function importJSON(file){ if(!file)return; const r=new FileReader(); r.onload=()=>{ try{ ISTORIA.importJSON(curCourse, r.result); editIdx=null; renderAll(); toast('Εισήχθη ✓'); }catch(e){ toast('Μη έγκυρο JSON'); } }; r.readAsText(file); }
+  function importJSON(file){
+    if(!file)return;
+    const r=new FileReader();
+    r.onload=()=>{
+      let parsed;
+      try{ parsed=JSON.parse(r.result); }
+      catch(e){ toast('⚠ Μη έγκυρο JSON'); return; }
+      if(!parsed || typeof parsed!=='object'){ toast('⚠ Μη έγκυρο πακέτο'); return; }
+      try{
+        // ISTORIA.importJSON accepts either { course, content } or a raw pack;
+        // it writes the editable slice into the overlay AND mirrors to Firestore.
+        ISTORIA.importJSON(curCourse, r.result);
+        editIdx=null; renderAll();
+        toast('Εισήχθη ✓');
+        pushRemote('import');                       // surface cloud status
+      }catch(e){ toast('⚠ Μη έγκυρη μορφή πακέτου'); }
+    };
+    r.readAsText(file);
+  }
   function resetAll(){ if(!confirm('Επαναφορά στο αρχικό περιεχόμενο; (χάνονται οι αλλαγές σου για αυτή την τάξη)'))return; ISTORIA.reset(curCourse); editIdx=null; renderAll(); toast('Έγινε επαναφορά'); }
 
   let tt; function toast(m){ const t=$('#adm-toast'); t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('on'),1900); }
@@ -121,6 +166,10 @@
     curCourse = ISTORIA.resolveCourse();
     curUnit = (units()[0]||{}).id;
     renderAll();
+    // When the cloud pack arrives, refresh the UI in place.
+    ISTORIA.onHydrate = (c)=>{ if(c===curCourse){ editIdx=null; renderAll(); } };
+    // Pull the latest cloud content for this course on entry.
+    if(ISTORIA.useRemote){ ISTORIA.hydrate(curCourse); }
   }
 
   window.ADM = { boot, login, selCourse, selUnit, selType, edit, cancel, del, submitForm, exportJSON, importJSON, resetAll };

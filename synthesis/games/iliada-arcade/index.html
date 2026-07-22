@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>Ιλιάδα Arcade — Παίξε</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<!-- Load Google Fonts NON-blocking: a render-blocking <link rel=stylesheet> to
+     an unreachable/slow CDN (school firewalls, offline, throttled networks)
+     stalls every following <script defer>, so the game hung on «Φόρτωση…»
+     forever. media=print → the browser fetches it without blocking scripts;
+     onload flips it live. The CSS carries generic fallbacks, so the game is
+     fully playable even if the fonts never arrive. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Cardo:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Cardo:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/></noscript>
+<link rel="stylesheet" href="play/bg-scenes.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#05060a;overflow:hidden;font-family:'Oswald',sans-serif;-webkit-user-select:none;user-select:none;}
+:root{--slip:#17110C;--terra:#C8542B;--terraLt:#DD7A45;--clay:#E2A867;--bone:#ECDAB4;--gold:#E8C96A;--ok:#9DB46A;--bad:#D2452E;--fog:#6E5C44;--boneDim:#A99572;--line:rgba(200,84,43,.30);}
+/* place-CONTENT (not just -items) — the lone grid track is sized by the 1600px
+   stage, so place-items alone leaves the stage anchored top-left and the play
+   field gets pushed off the bottom-right on any window narrower than 1600px. */
+.viewport{position:fixed;inset:0;display:grid;place-items:center;place-content:center;background:#05060a;}
+.stage{width:1600px;height:900px;position:relative;transform-origin:center center;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.7);}
+#game{position:absolute;inset:0;width:1600px;height:900px;display:block;z-index:2;}
+#bgScene{position:absolute;inset:0;z-index:0;transform-origin:center center;}
+#bgScene .caption{display:none;}
+#bgScrim{position:absolute;inset:0;z-index:1;background:rgba(8,5,4,.40);pointer-events:none;}
+#hud{position:absolute;inset:0;pointer-events:none;font-family:'Oswald',sans-serif;}
+#hud .pad{position:absolute;}
+
+/* hero hud */
+.hero-hud{top:24px;left:28px;display:flex;align-items:center;gap:13px;}
+.portrait{width:60px;height:60px;border-radius:50%;border:2.5px solid var(--terra);background:rgba(36,25,16,.8);display:grid;place-items:center;font-family:'Cardo',serif;font-size:32px;color:var(--clay);box-shadow:0 0 20px rgba(200,84,43,.35);}
+.hero-meta{min-width:236px;}
+.hero-name{font-size:13px;letter-spacing:2px;color:var(--bone);text-transform:uppercase;}
+.bar-wrap{height:13px;border-radius:3px;overflow:hidden;margin-top:4px;position:relative;background:#2A1A10;border:1px solid rgba(200,84,43,.4);}
+.bar-fill{height:100%;border-radius:2px;transition:width .18s;}
+.bar-fill.hp{background:linear-gradient(90deg,#A8431F,var(--terra));}
+.bar-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--bone);}
+.row2{display:flex;align-items:center;gap:10px;margin-top:7px;}
+.ult-tag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--gold);}
+.ult-bar{width:120px;height:8px;background:#2A1A10;border-radius:2px;overflow:hidden;border:1px solid rgba(232,201,106,.3);}
+.ult-bar>div{height:100%;background:linear-gradient(90deg,var(--terra),var(--gold));transition:width .15s;}
+.ult-bar.full{animation:ultpulse .7s infinite;}
+@keyframes ultpulse{0%,100%{box-shadow:0 0 6px rgba(232,201,106,.5);}50%{box-shadow:0 0 16px rgba(232,201,106,.95);}}
+.ammo{display:flex;gap:3px;}
+.ammo span{font-size:14px;color:#4A3A24;line-height:1;}
+.ammo span.on{color:var(--clay);}
+
+/* score */
+.score-hud{top:64px;right:28px;text-align:right;}
+.score-row{display:flex;gap:18px;justify-content:flex-end;align-items:flex-end;}
+.stat .k{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--fog);text-transform:uppercase;}
+.stat .v{font-family:'Anton',sans-serif;font-size:28px;line-height:1;color:var(--bone);}
+.stat .v.terra{color:var(--terra);}
+.combo{margin-top:7px;font-family:'Anton',sans-serif;font-size:17px;color:var(--gold);opacity:0;transition:opacity .12s,font-size .16s cubic-bezier(.2,1.6,.4,1),color .2s;transform-origin:right center;}
+.combo.show{opacity:1;}
+.combo.pop{animation:comboPop .2s cubic-bezier(.2,1.8,.4,1);}
+@keyframes comboPop{0%{transform:scale(1.45) rotate(-2.5deg);}100%{transform:scale(1) rotate(0);}}
+@media (prefers-reduced-motion: reduce){ .combo.pop{animation:none;} }
+
+/* boss bar */
+.boss-bar{top:92px;left:50%;transform:translateX(-50%);width:780px;max-width:58%;opacity:0;transition:opacity .3s;}
+.boss-bar.show{opacity:1;}
+.boss-bar .t{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.boss-bar .nm{font-family:'Anton',sans-serif;font-size:20px;letter-spacing:2px;color:var(--terraLt);}
+.boss-bar .nm small{font-family:'Cardo',serif;font-style:italic;font-size:13px;color:var(--boneDim);margin-left:8px;letter-spacing:0;}
+.boss-bar .tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--bad);}
+.boss-track{height:15px;background:#241008;border:1.5px solid rgba(210,69,46,.5);border-radius:3px;overflow:hidden;box-shadow:0 0 18px rgba(210,69,46,.25);}
+.boss-track>div{height:100%;background:linear-gradient(90deg,#8E2A18,var(--bad) 60%,#E8703A);transition:width .2s;}
+
+/* controls */
+.controls{pointer-events:none;touch-action:none;}
+.ctrl{position:absolute;pointer-events:auto;touch-action:none;display:grid;place-items:center;cursor:pointer;border-radius:50%;transition:transform .07s,background .12s,box-shadow .12s;font-family:'Oswald',sans-serif;}
+.ctrl.press{transform:scale(.9);}
+.ctrl .lbl{font-size:11px;letter-spacing:.5px;text-transform:uppercase;}
+.ctrl .ic{line-height:1;}
+.ctrl .kk{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 3px;border-radius:9px;background:#1C1208;border:1px solid var(--gold);color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:9px;display:grid;place-items:center;pointer-events:none;}
+.joy{position:absolute;left:64px;bottom:54px;width:148px;height:148px;border-radius:50%;pointer-events:auto;
+  background:radial-gradient(circle at 50% 42%,rgba(40,28,18,.74),rgba(20,13,8,.82));
+  border:1.5px solid var(--line);box-shadow:inset 0 0 26px rgba(0,0,0,.5);touch-action:none;cursor:grab;
+  display:grid;place-items:center;}
+.joy.act{cursor:grabbing;border-color:var(--terra);box-shadow:inset 0 0 26px rgba(0,0,0,.5),0 0 22px rgba(200,84,43,.4);}
+.joy-ring{position:absolute;inset:14px;border-radius:50%;border:1px dashed rgba(232,213,176,.22);}
+.joy-knob{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 40% 34%,var(--clay),#8E5A2C);
+  border:2px solid #F0B473;color:#1C1008;display:grid;place-items:center;font-size:26px;
+  box-shadow:0 6px 18px rgba(0,0,0,.5);transition:transform .04s linear;}
+.btn-sword{right:60px;bottom:64px;width:112px;height:112px;background:radial-gradient(circle at 38% 32%,#E8702F,#A8401C);color:#2A1206;border:2px solid #F0905A;box-shadow:0 8px 28px rgba(200,84,43,.5);flex-direction:column;}
+.btn-sword .ic{font-size:34px;}
+.btn-ranged{right:188px;bottom:120px;width:84px;height:84px;background:rgba(36,25,16,.84);border:1.5px solid var(--clay);color:var(--clay);flex-direction:column;}
+.btn-ranged .ic{font-size:22px;}
+.btn-ranged.press{background:var(--clay);color:#1C1008;}
+.btn-jump{right:182px;bottom:34px;width:78px;height:78px;background:rgba(36,25,16,.8);border:1.5px solid var(--line);color:var(--clay);flex-direction:column;}
+.btn-jump .ic{font-size:24px;}
+.btn-jump.press{background:var(--clay);color:#1C1008;}
+.btn-ult{right:298px;bottom:78px;width:90px;height:90px;background:rgba(28,16,8,.85);border:2px solid var(--fog);color:var(--fog);flex-direction:column;}
+.btn-ult .ic{font-family:'Cardo',serif;font-size:28px;}
+.btn-ult .lbl{font-size:9px;letter-spacing:1.5px;margin-top:1px;}
+.btn-ult.ready{border-color:var(--gold);color:var(--gold);background:radial-gradient(circle at 40% 34%,rgba(232,201,106,.28),rgba(28,16,8,.9));box-shadow:0 0 24px rgba(232,201,106,.55);animation:ultpulse 1s infinite;}
+.btn-block{right:170px;bottom:44px;width:80px;height:80px;background:rgba(30,28,36,.82);border:1.5px solid #9DB4C8;color:#9DB4C8;flex-direction:column;}
+.btn-block .ic{font-size:24px;}
+.btn-block.press{background:#9DB4C8;color:#10141A;box-shadow:0 0 18px rgba(157,180,200,.6);}
+.btn-ranged{right:280px;bottom:120px;}
+.btn-jump{right:286px;bottom:30px;}
+.btn-ult{right:404px;bottom:96px;}
+/* potions */
+.pots{left:50%;transform:translateX(-50%);bottom:36px;display:flex;gap:16px;}
+.pot{pointer-events:auto;touch-action:none;width:60px;height:60px;border-radius:14px;cursor:pointer;display:grid;place-items:center;position:relative;background:rgba(36,25,16,.82);border:1.5px solid var(--line);transition:transform .07s,background .12s;}
+.pot.press{transform:scale(.9);}
+.pot.hp{border-color:var(--bad);} .pot.rage{border-color:var(--clay);}
+.pot .ic{font-family:'Anton',sans-serif;font-size:22px;}
+.pot.hp .ic{color:var(--bad);} .pot.rage .ic{color:var(--clay);}
+.pot .ct{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#1C1208;border:1.5px solid var(--gold);color:var(--gold);font-family:'Anton',sans-serif;font-size:12px;display:grid;place-items:center;}
+.pot .ky{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--fog);}
+.pot.empty{opacity:.35;}
+/* mod chip */
+.mod-chip{left:28px;top:104px;display:none;flex-direction:column;gap:1px;padding:7px 13px;border-radius:8px;background:rgba(20,13,7,.9);border:1.5px solid var(--fog);max-width:230px;}
+.mod-chip.show{display:flex;}
+.mod-chip.buff{border-color:var(--ok);} .mod-chip.debuff{border-color:var(--bad);}
+.mod-chip .mt{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;}
+.mod-chip.buff .mt{color:var(--ok);} .mod-chip.debuff .mt{color:var(--bad);}
+.mod-chip .md{font-family:'Cardo',serif;font-size:12px;color:var(--boneDim);}
+.mod-chip .mt b{font-family:'JetBrains Mono',monospace;font-size:11px;margin-left:4px;}
+.mod-chip .mtimer{margin-top:5px;height:4px;border-radius:2px;background:rgba(255,255,255,.10);overflow:hidden;}
+.mod-chip .mtimer i{display:block;height:100%;border-radius:2px;transition:width .2s linear;}
+.mod-chip.buff .mtimer i{background:var(--ok);}
+.mod-chip.debuff .mtimer i{background:var(--bad);}
+.wave-row{display:flex;gap:5px;align-items:center;background:rgba(12,9,6,.66);backdrop-filter:blur(12px);border:1px solid rgba(232,201,106,.16);border-radius:999px;padding:4px 4px 4px 12px;}
+.wave-row .lab{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--fog);margin-right:3px;}
+.wave-btn{font-family:'Anton',sans-serif;font-size:13px;width:30px;height:30px;border-radius:50%;border:none;background:none;color:#9a8a6a;cursor:pointer;transition:.16s;}
+.wave-btn:hover{color:var(--gold);}
+.wave-btn.on{background:linear-gradient(180deg,#E8C96A,#C8a23c);color:#1c1208;}
+.kbd{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.5px;color:rgba(232,213,176,.34);text-align:center;}
+
+/* rotate-to-landscape prompt (portrait phones) */
+.rotate{position:fixed;inset:0;z-index:999;background:#0A0704;display:none;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:30px;}
+.rotate .ph{width:64px;height:104px;border:3px solid var(--clay);border-radius:12px;position:relative;animation:rot 1.8s ease-in-out infinite;}
+.rotate .ph::after{content:'';position:absolute;left:50%;bottom:7px;width:18px;height:3px;border-radius:2px;background:var(--clay);transform:translateX(-50%);}
+@keyframes rot{0%,40%{transform:rotate(0);}70%,100%{transform:rotate(-90deg);}}
+.rotate .rt{font-family:'Anton',sans-serif;font-size:24px;letter-spacing:2px;color:var(--gold);}
+.rotate .rs{font-family:'Cardo',serif;font-style:italic;font-size:16px;color:var(--boneDim);max-width:280px;line-height:1.5;}
+@media (max-width:900px) and (orientation:portrait){ .rotate{display:flex;} }
+/* touch devices: drop the keyboard hint, enlarge tap targets a touch */
+@media (pointer:coarse){ .kbd{display:none;} .joy{left:48px;bottom:42px;} }
+
+/* toast */
+.toast{position:absolute;top:180px;left:50%;transform:translateX(-50%);font-family:'Anton',sans-serif;font-size:36px;letter-spacing:2px;color:var(--gold);text-shadow:0 4px 22px rgba(0,0,0,.7);opacity:0;pointer-events:none;white-space:nowrap;}
+.toast.show{animation:toastpop 1.4s ease-out;}
+@keyframes toastpop{0%{opacity:0;transform:translateX(-50%) scale(.6);}18%{opacity:1;transform:translateX(-50%) scale(1.05);}80%{opacity:1;}100%{opacity:0;}}
+
+/* quiz */
+.quiz{position:absolute;inset:0;z-index:40;background:rgba(10,6,3,.82);backdrop-filter:blur(3px);display:grid;place-items:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.quiz.show{opacity:1;pointer-events:auto;}
+.quiz-card{width:620px;max-width:92%;background:#241910;border:1.5px solid var(--terra);box-shadow:0 0 60px rgba(200,84,43,.3);padding:26px 28px;}
+.quiz-card .top{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--fog);margin-bottom:12px;}
+.quiz-q{font-family:'Cardo',serif;font-style:italic;font-size:23px;color:var(--bone);line-height:1.4;margin-bottom:18px;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.quiz-opt{display:flex;align-items:center;gap:11px;padding:13px 15px;background:#2D2013;border:1px solid var(--line);cursor:pointer;transition:.12s;touch-action:manipulation;}
+.quiz-opt:hover{border-color:var(--clay);background:#352513;}
+.quiz-opt.right{background:rgba(157,180,106,.18);border-color:var(--ok);}
+.quiz-opt.wrong{background:rgba(210,69,46,.18);border-color:var(--bad);}
+.quiz-opt .k{font-family:'Anton',sans-serif;font-size:15px;color:var(--clay);width:16px;}
+.quiz-opt .o{font-family:'Cardo',serif;font-size:16px;color:var(--boneDim);}
+
+/* end card */
+.endcard{position:absolute;inset:0;z-index:45;background:rgba(8,5,3,.86);backdrop-filter:blur(4px);display:grid;place-items:center;opacity:0;pointer-events:none;transition:opacity .35s;}
+.endcard.show{opacity:1;pointer-events:auto;}
+.end-inner{text-align:center;}
+.end-title{font-family:'Anton',sans-serif;font-size:80px;letter-spacing:3px;line-height:1;}
+.end-sub{font-family:'Cardo',serif;font-style:italic;font-size:19px;color:var(--boneDim);margin-top:12px;}
+.end-stats{display:flex;gap:28px;justify-content:center;margin-top:26px;flex-wrap:wrap;}
+.end-stats .k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--fog);}
+.end-stats .v{font-family:'Anton',sans-serif;font-size:34px;color:var(--clay);}
+.end-cta{margin-top:28px;font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;border:1.5px solid var(--gold);display:inline-block;padding:12px 30px;border-radius:999px;}
+
+/* top bar */
+.topbar{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;align-items:center;gap:7px;}
+.camp-row{display:flex;gap:6px;background:rgba(12,9,6,.74);backdrop-filter:blur(14px);border:1px solid rgba(232,201,106,.2);border-radius:999px;padding:5px;}
+.camp-btn{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8a6a;background:none;border:none;padding:7px 18px;border-radius:999px;cursor:pointer;transition:.16s;}
+.camp-btn.on{background:linear-gradient(180deg,#E8C96A,#C8a23c);color:#1c1208;}
+.rhap-bar{position:static;top:auto;left:auto;transform:none;z-index:auto;display:flex;gap:5px;background:rgba(12,9,6,.66);backdrop-filter:blur(12px);border:1px solid rgba(232,201,106,.16);border-radius:999px;padding:4px;}
+.rhap-btn{font-family:'Cardo',serif;font-size:17px;width:34px;height:34px;border-radius:50%;border:none;background:none;color:#9a8a6a;cursor:pointer;transition:.16s;}
+.rhap-btn:hover{color:var(--gold);}
+.rhap-btn.on{background:linear-gradient(180deg,#E8C96A,#C8a23c);color:#1c1208;}
+.lab2{margin-left:10px;padding-left:10px;border-left:1px solid rgba(232,201,106,.2);}
+.diff-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9a8a6a;background:none;border:none;padding:6px 11px;border-radius:999px;cursor:pointer;transition:.16s;}
+.diff-btn:hover{color:var(--gold);}
+.diff-btn.on{background:linear-gradient(180deg,#E8C96A,#C8a23c);color:#1c1208;}
+.quiz-timer{display:flex;align-items:center;gap:10px;margin:2px 0 14px;}
+.quiz-timer .qt-track{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;}
+.quiz-timer .qt-track i{display:block;height:100%;width:100%;border-radius:4px;background:linear-gradient(90deg,var(--terra),var(--gold));transition:width .12s linear;}
+.quiz-timer .qt-track i.low{background:var(--bad);}
+.quiz-timer .qt-num{font-family:'Anton',sans-serif;font-size:18px;color:var(--clay);min-width:24px;text-align:right;}
+
+/* system buttons (pause / mute / help) */
+.sys-row{position:fixed;top:14px;right:16px;z-index:62;display:flex;gap:7px;}
+.sys-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(232,201,106,.28);background:rgba(12,9,6,.74);backdrop-filter:blur(14px);color:var(--clay);font-family:'Cardo',serif;font-size:19px;cursor:pointer;display:grid;place-items:center;transition:.16s;-webkit-tap-highlight-color:transparent;}
+.sys-btn:hover{border-color:var(--gold);color:var(--gold);}
+.sys-btn.muted{color:var(--fog);border-color:rgba(110,92,68,.5);text-decoration:line-through;}
+
+/* overlays (help / pause) — flex + margin:auto so tall cards SCROLL on short
+   phone screens instead of clipping the ΑΡΧΙΣΤΕ button off both ends. */
+.overlay{position:fixed;inset:0;z-index:80;background:rgba(8,5,3,.86);backdrop-filter:blur(6px);display:none;padding:24px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.overlay.show{display:flex;}
+.oc-inner{max-width:640px;width:100%;margin:auto;text-align:center;background:linear-gradient(180deg,rgba(36,25,16,.96),rgba(20,13,7,.96));border:1.5px solid var(--terra);border-radius:14px;padding:30px 34px;box-shadow:0 30px 90px rgba(0,0,0,.6);}
+.oc-title{font-family:'Anton',sans-serif;font-size:40px;letter-spacing:2px;color:var(--gold);}
+.oc-sub{font-family:'Cardo',serif;font-style:italic;font-size:17px;color:var(--boneDim);margin-top:6px;}
+.oc-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:22px 0 6px;text-align:left;}
+.oc-item{display:flex;align-items:center;gap:12px;padding:10px 13px;background:rgba(20,13,7,.6);border:1px solid var(--line);border-radius:9px;}
+.oc-ic{width:38px;height:38px;flex-shrink:0;border-radius:9px;display:grid;place-items:center;font-size:20px;background:rgba(36,25,16,.9);border:1px solid var(--line);color:var(--clay);font-family:'Cardo',serif;}
+.oc-ic.atk{color:#F0905A;border-color:#A8401C;}.oc-ic.blk{color:#9DB4C8;border-color:#5A6A7A;}.oc-ic.ult{color:var(--gold);border-color:var(--gold);}.oc-ic.hp{color:var(--bad);border-color:var(--bad);font-family:'Anton',sans-serif;}.oc-ic.move{color:var(--clay);}
+.oc-item b{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.5px;color:var(--bone);text-transform:uppercase;display:block;}
+.oc-item small{font-family:'Cardo',serif;font-size:13px;color:var(--boneDim);}
+.oc-cta{margin-top:22px;display:inline-block;font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:2px;color:#1c1208;text-transform:uppercase;background:linear-gradient(180deg,#E8C96A,#C8a23c);padding:13px 36px;border-radius:999px;cursor:pointer;}
+.oc-cta:hover{filter:brightness(1.08);}
+.oc-hint{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--fog);}
+
+/* boss entrance banner */
+.boss-banner-fx{position:absolute;inset:0;z-index:38;display:none;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:2px;}
+.boss-banner-fx.show{display:flex;animation:bbIn 2.2s ease forwards;}
+@keyframes bbIn{0%{opacity:0;}10%{opacity:1;}82%{opacity:1;}100%{opacity:0;}}
+.boss-banner-fx::before,.boss-banner-fx::after{content:'';position:absolute;left:0;right:0;height:120px;background:rgba(10,6,3,.66);}
+.boss-banner-fx::before{top:calc(50% - 120px);}.boss-banner-fx::after{bottom:calc(50% - 120px);}
+.bb-diamond{position:relative;font-size:26px;color:var(--bad);text-shadow:0 0 18px rgba(210,69,46,.8);}
+.bb-name{position:relative;font-family:'Anton',sans-serif;font-size:74px;letter-spacing:4px;color:var(--terraLt);text-shadow:0 0 40px rgba(210,69,46,.7);line-height:1;animation:bbName 2.2s ease;}
+@keyframes bbName{0%{letter-spacing:24px;opacity:0;}16%{letter-spacing:4px;opacity:1;}}
+.bb-en{position:relative;font-family:'Cardo',serif;font-style:italic;font-size:20px;color:var(--boneDim);}
+.bb-tag{position:relative;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:6px;color:var(--bad);margin-top:6px;}
+
+/* end-card extras */
+.end-record{font-family:'Anton',sans-serif;font-size:15px;letter-spacing:2px;color:var(--gold);margin-top:14px;display:none;animation:ultpulse 1s infinite;}
+.end-record.show{display:block;}
+
+/* ── COMPACT: landscape phones (short viewports). The 1600×900 stage shrinks to
+   ~0.42×, so HUD text and touch targets are enlarged IN STAGE UNITS to stay
+   ≥40px / legible on screen. Desktop (≥560px tall) is untouched.
+   NOTE: must stay LAST in this stylesheet — same specificity as the base rules,
+   so source order is what lets these win. ── */
+@media (max-height:560px){
+  .kbd{display:none;}
+  /* settings bar → single left-aligned scrollable row that clears the HUD */
+  .topbar{flex-direction:row;align-items:center;gap:6px;left:10px;right:auto;top:10px;transform:none;
+    max-width:calc(100vw - 160px);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .topbar::-webkit-scrollbar{display:none;}
+  .camp-row,.rhap-bar,.wave-row{flex:0 0 auto;}
+  .camp-btn,.diff-btn{min-height:40px;}
+  .rhap-btn{width:40px;height:40px;}
+  .wave-btn{width:40px;height:40px;}
+  .sys-row{top:10px;right:10px;}
+  .sys-btn{width:44px;height:44px;}
+  /* HUD drops below the fixed chrome and scales up */
+  .hero-hud{top:150px;left:24px;}
+  .portrait{width:84px;height:84px;font-size:44px;}
+  .hero-meta{min-width:300px;}
+  .hero-name{font-size:26px;letter-spacing:2.5px;}
+  .bar-wrap{height:24px;margin-top:6px;}
+  .bar-num{font-size:16px;}
+  .row2{gap:12px;margin-top:9px;}
+  .ult-tag{font-size:14px;}
+  .ult-bar{width:160px;height:12px;}
+  .ammo span{font-size:20px;}
+  .score-hud{top:150px;right:24px;}
+  .stat .k{font-size:15px;}
+  .stat .v{font-size:42px;}
+  .combo{font-size:24px;}
+  .boss-bar{top:150px;max-width:40%;}
+  .boss-bar .nm{font-size:30px;}
+  .boss-bar .nm small{font-size:16px;}
+  .boss-track{height:22px;}
+  .mod-chip{top:264px;left:24px;max-width:300px;}
+  .mod-chip .mt{font-size:16px;}
+  .mod-chip .md{font-size:15px;}
+  .toast{top:280px;font-size:44px;}
+  /* touch controls: every button ≥ ~104 stage px ⇒ ≥ ~44px on screen */
+  .joy{width:180px;height:180px;left:40px;bottom:40px;}
+  .joy-knob{width:80px;height:80px;font-size:32px;}
+  .btn-sword{width:128px;height:128px;right:36px;bottom:60px;}
+  .btn-sword .ic{font-size:44px;}
+  .btn-block{width:104px;height:104px;right:176px;bottom:28px;}
+  .btn-block .ic{font-size:34px;}
+  .btn-ranged{width:104px;height:104px;right:176px;bottom:148px;}
+  .btn-ranged .ic{font-size:30px;}
+  .btn-jump{width:104px;height:104px;right:296px;bottom:56px;}
+  .btn-jump .ic{font-size:32px;}
+  .btn-ult{width:110px;height:110px;right:416px;bottom:118px;}
+  .btn-ult .ic{font-size:36px;}
+  .ctrl .lbl{font-size:14px;}
+  .btn-ult .lbl{font-size:12px;}
+  .ctrl .kk{display:none;}
+  .pots{bottom:30px;gap:26px;}
+  .pot{width:100px;height:100px;border-radius:18px;}
+  .pot .ic{font-size:36px;}
+  .pot .ct{width:30px;height:30px;font-size:16px;}
+  .pot .ky{display:none;}
+  /* quiz & end card: counter-scale (engine sets --ovb from the stage scale) so
+     answers land ≥44px tall and ≥14px text on a phone */
+  .quiz-card,.end-inner{transform:scale(var(--ovb,1));transform-origin:center center;}
+  .oc-inner{padding:22px 20px;}
+  .oc-grid{gap:8px;}
+}
+@media (max-width:640px){ .oc-grid{grid-template-columns:1fr;} }
+
+/* ── LITE devices (engine adds html.lite): drop the continuous compositing
+   costs — backdrop blurs are the big one on low-end phones. ── */
+html.lite .camp-row,html.lite .rhap-bar,html.lite .wave-row,html.lite .sys-btn{backdrop-filter:none;background:rgba(12,9,6,.92);}
+html.lite .quiz,html.lite .endcard,html.lite .overlay{backdrop-filter:none;}
+html.lite .stage{box-shadow:none;}
+</style>
+</head>
+<body>
+  <style>
+    #ia-boot{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#05060a;color:#ECDAB4;font-family:'Oswald',system-ui,sans-serif}
+    #ia-boot.gone{opacity:0;pointer-events:none;transition:opacity .35s}
+    .ia-boot-mark{width:46px;height:46px;border:3px solid rgba(232,201,106,.22);border-top-color:#E8C96A;border-radius:50%;animation:ia-spin .9s linear infinite}
+    .ia-boot-txt{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#C8A23C}
+    @keyframes ia-spin{to{transform:rotate(360deg)}}
+  </style>
+  <div id="ia-boot" aria-hidden="true"><div class="ia-boot-mark"></div><div class="ia-boot-txt">Φόρτωση…</div></div>
+  <div class="rotate"><div class="ph"></div><div class="rt">ΓΥΡΙΣΕ ΤΗ ΣΥΣΚΕΥΗ</div><div class="rs">Η μάχη παίζεται οριζόντια — γύρισε το κινητό σου στο πλάι.</div></div>
+  <div class="topbar">
+    <div class="camp-row">
+      <button class="camp-btn on" data-camp="iliada">ΙΛΙΑΔΑ</button>
+      <button class="camp-btn" data-camp="odysseia">ΟΔΥΣΣΕΙΑ</button>
+    </div>
+    <div class="rhap-bar" id="rhapBar"></div>
+    <div class="wave-row">
+      <span class="lab">ΚΥΜΑΤΑ</span>
+      <button class="wave-btn" data-n="3">3</button>
+      <button class="wave-btn on" data-n="5">5</button>
+      <button class="wave-btn" data-n="8">8</button>
+      <button class="wave-btn" data-n="12">12</button>
+      <button class="wave-btn" data-n="0" title="Ατέρμονα κύματα — αυξανόμενη ζημιά">∞</button>
+      <span class="lab lab2">ΕΠΙΠΕΔΟ</span>
+      <button class="diff-btn" data-diff="easy">Εύκολο</button>
+      <button class="diff-btn on" data-diff="med">Μέτριο</button>
+      <button class="diff-btn" data-diff="hard">Δύσκολο</button>
+    </div>
+  </div>
+  <div class="sys-row">
+    <button class="sys-btn" id="btnHelp" title="Πώς παίζεται">?</button>
+    <button class="sys-btn" id="btnMute" title="Ήχος">♪</button>
+    <button class="sys-btn" id="btnPause" title="Παύση">Ⅱ</button>
+  </div>
+  <div class="overlay help-card" id="helpCard">
+    <div class="oc-inner">
+      <div class="oc-title">Πώς παίζεται</div>
+      <div class="oc-sub">Καθάρισε τα κύματα, νίκα το αφεντικό — και απάντα στις ερωτήσεις.</div>
+      <div class="oc-grid">
+        <div class="oc-item"><span class="oc-ic move">⇆</span><div><b>Κίνηση</b><small>Τζόιστικ / ←→ · AD</small></div></div>
+        <div class="oc-item"><span class="oc-ic">⤒</span><div><b>Άλμα</b><small>Πήδα πάνω από δόρατα · ↑ W Space</small></div></div>
+        <div class="oc-item"><span class="oc-ic atk">⚔</span><div><b>Ξίφος</b><small>Κοντινή επίθεση · Q</small></div></div>
+        <div class="oc-item"><span class="oc-ic">➶</span><div><b>Τόξο / Δόρυ</b><small>Μακρινή βολή · E</small></div></div>
+        <div class="oc-item"><span class="oc-ic blk">⛉</span><div><b>Ασπίδα</b><small>Μπλοκάρει · τέλειο timing = ΠΑΡΥ · R</small></div></div>
+        <div class="oc-item"><span class="oc-ic ult">Ϟ</span><div><b>Οργή</b><small>Οταν γεμίσει, τεράστια ζημιά · F</small></div></div>
+        <div class="oc-item"><span class="oc-ic hp">+</span><div><b>Φιάλες</b><small>Ζωή · G/1 · Οργή · 2</small></div></div>
+        <div class="oc-item"><span class="oc-ic">❔</span><div><b>Κουίζ</b><small>2–3 ερωτήσεις μετά το κύμα · σωστό = buff</small></div></div>
+      </div>
+      <div class="oc-cta" id="helpCta">▶ Αρχίστε</div>
+    </div>
+  </div>
+  <div class="overlay pause-overlay" id="pauseOverlay">
+    <div class="oc-inner">
+      <div class="oc-title">ΠΑΥΣΗ</div>
+      <div class="oc-sub">Η μάχη σταμάτησε.</div>
+      <div class="oc-cta" id="resumeCta">▶ Συνέχεια</div>
+      <div class="oc-hint">Esc / P για παύση</div>
+    </div>
+  </div>
+  <div class="viewport">
+    <div class="stage">
+      <div class="scene" id="bgScene"></div>
+      <div id="bgScrim"></div>
+      <canvas id="game"></canvas>
+      <div id="hud" data-screen-label="Play">
+        <div class="pad hero-hud">
+          <div class="portrait" id="portrait">Α</div>
+          <div class="hero-meta">
+            <div class="hero-name" id="heroName">Αχιλλεύς</div>
+            <div class="bar-wrap"><div class="bar-fill hp" id="hpFill" style="width:100%"></div><div class="bar-num"><span id="hpNum">100</span> / 100</div></div>
+            <div class="row2"><span class="ult-tag" id="ultName">ΟΡΓΗ</span><div class="ult-bar" id="ultBar"><div id="ultFill" style="width:0%"></div></div>
+              <span class="ammo" id="ammoPips"></span></div>
+          </div>
+        </div>
+        <div class="pad score-hud">
+          <div class="score-row">
+            <div class="stat"><div class="k">Κύμα</div><div class="v" id="waveV">1/3</div></div>
+            <div class="stat"><div class="k">Σκορ</div><div class="v terra" id="scoreV">0</div></div>
+          </div>
+          <div class="combo" id="comboV">×0 COMBO</div>
+        </div>
+        <div class="pad boss-bar" id="bossBar">
+          <div class="t"><div class="nm"><span id="bossName">ΕΚΤΩΡ</span> <small id="bossEn">Hector</small></div><div class="tag">◆ BOSS</div></div>
+          <div class="boss-track"><div id="bossFill" style="width:100%"></div></div>
+        </div>
+
+        <div class="pad mod-chip" id="modChip"></div>
+
+        <div class="controls">
+          <div class="joy" id="joy"><div class="joy-ring"></div><div class="joy-knob">⇆</div></div>
+          <div class="ctrl btn-block" id="btnBlock"><span class="ic">⛉</span><span class="lbl">Ασπίδα</span><span class="kk">R</span></div>
+          <div class="ctrl btn-jump" id="btnJump"><span class="ic">⤒</span><span class="lbl">Άλμα</span><span class="kk">↑</span></div>
+          <div class="ctrl btn-ult" id="btnUlt"><span class="ic">Ϟ</span><span class="lbl">ΟΡΓΗ</span><span class="kk">F</span></div>
+          <div class="ctrl btn-ranged" id="btnRanged"><span class="ic">➶</span><span class="lbl">ΤΟΞΟ</span><span class="kk">E</span></div>
+          <div class="ctrl btn-sword" id="btnSword"><span class="ic">⚔</span><span class="lbl">Ξίφος</span><span class="kk">Q</span></div>
+        </div>
+        <div class="pad pots">
+          <div class="pot hp" id="potHp"><span class="ic">+</span><span class="ct" id="potHpN">2</span><span class="ky">1 · ΖΩΗ</span></div>
+          <div class="pot rage" id="potRage"><span class="ic">Ϟ</span><span class="ct" id="potRageN">1</span><span class="ky">2 · ΟΡΓΗ</span></div>
+        </div>
+        <div class="kbd">⌨ ←→/AD κίνηση · ↑/W/SPACE άλμα · Q ξίφος · E βλήμα · R ασπίδα/πάρυ · F οργή · G/1 ζωή · 2 οργή</div>
+
+        <div class="toast" id="toast"></div>
+        <div class="boss-banner-fx" id="bossBanner"><div class="bb-diamond">◆</div><div class="bb-name">ΕΚΤΩΡ</div><div class="bb-en">Hector</div><div class="bb-tag">BOSS</div></div>
+
+        <div class="quiz" id="quiz">
+          <div class="quiz-card">
+            <div class="top quiz-prog">ΚΥΜΑ ΤΕΛΕΙΩΣΕ</div>
+            <div class="quiz-timer"><div class="qt-track"><i id="quizTimerBar"></i></div><span class="qt-num" id="quizTimerNum">12</span></div>
+            <div class="quiz-q"></div>
+            <div class="quiz-opts"></div>
+          </div>
+        </div>
+
+        <div class="endcard" id="endcard">
+          <div class="end-inner">
+            <div class="end-title">ΝΙΚΗ</div>
+            <div class="end-sub" id="endSub"></div>
+            <div class="end-stats">
+              <div><div class="k">ΣΚΟΡ</div><div class="v" id="endScore">0</div></div>
+              <div><div class="k">ΦΟΝΟΙ</div><div class="v" id="endKills">0</div></div>
+              <div><div class="k">ΣΩΣΤΕΣ</div><div class="v" id="endAcc">0/0</div></div>
+              <div><div class="k">ΡΕΚΟΡ</div><div class="v" id="endBest">0</div></div>
+            </div>
+            <div class="end-record" id="endRecord">★ ΝΕΟ ΡΕΚΟΡ ★</div>
+            <div class="end-cta">▶ Παίξε Ξανά</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- defer: download in parallel, execute in document order (config→…→engine),
+       so the 8 deps don't block sequentially on a slow/high-latency server. -->
+  <script defer src="play/config.js"></script>
+  <script defer src="play/data.js"></script>
+  <script defer src="play/quiz.js"></script>
+  <script defer src="play/override.js"></script>
+  <script defer src="play/draw.js"></script>
+  <script defer src="battle-bg/bg.js"></script>
+  <script defer src="play/sfx.js"></script>
+  <script defer src="play/engine.js"></script>
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="200" fill="#17110C"/>
+      <path d="M86 56 Q100 36 114 56 Q100 66 86 56 Z" fill="#E8C96A"/>
+      <line x1="58" y1="104" x2="150" y2="86" stroke="#C8542B" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="100" cy="150" r="26" fill="none" stroke="#C8542B" stroke-width="6"/>
+    </svg>
+  </template>
+</body>
+</html>

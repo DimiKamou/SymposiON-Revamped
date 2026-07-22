@@ -1,20 +1,29 @@
-<div id="invaders-overlay" class="game-overlay" style="display:none; flex-direction:column; position:fixed; inset:0; z-index:1000; background:#0D0A06;">
-  <div class="overlay-topbar" style="display:flex; justify-content:space-between; padding:15px; background:#16110A; border-bottom:1px solid #3d3020;">
-    <button class="overlay-back" onclick="closeInvaders()">← Πίσω</button>
-    <div class="overlay-title" style="color:#c9a44a; font-family:'Cormorant Garamond', serif;">Space Invaders — Γραμματική</div>
-    <div style="display:flex; align-items:center; gap:12px;">
-      <button class="overlay-back" id="inv-theme-btn" title="Άλλαξε εικαστικό" onclick="
+<div id="invaders-overlay" class="game-overlay inv-overlay" style="display:none;">
+  <div class="inv-topbar overlay-topbar">
+    <button class="overlay-back inv-back" onclick="closeInvaders()"><span class="inv-back-arw">←</span> Πίσω</button>
+
+    <div class="inv-title-wrap">
+      <div class="inv-title overlay-title" data-text="SPACE INVADERS">SPACE INVADERS</div>
+      <div class="inv-subtitle">Γραμματική · Grammar Arcade</div>
+    </div>
+
+    <div class="inv-right">
+      <button class="overlay-back inv-theme-btn" id="inv-theme-btn" title="Άλλαξε εικαστικό / Change skin" onclick="
         (function(){
           const t = window.INVADERS_THEMES, n = t[(t.indexOf(window.getInvadersTheme())+1)%t.length];
           window.setInvadersTheme(n);
-          this.textContent = ({nyx:'✦ Νυκτομαχία',melan:'⚱ Μελανόμορφος',abyssos:'≈ Ἄβυσσος'})[n];
-        }).call(this)">✦ Νυκτομαχία</button>
-      <div id="invaders-score-display" style="color:#e8dcc8; font-family:'Inter',sans-serif; font-size:0.9rem;">Score: 0 | Lives: ♥♥♥</div>
+          this.textContent = (window.INVADERS_THEME_LABELS||{})[n] || n;
+        }).call(this)">▚ Φωσφόρος</button>
+      <div id="invaders-score-display" class="inv-scorechip"><span class="inv-hud-lbl">SCORE</span><span class="inv-hud-score">0</span><span class="inv-hud-sep">·</span><span class="inv-hud-hearts">♥♥♥</span></div>
     </div>
   </div>
-  <div class="overlay-frame" id="invaders-wrap" style="flex:1; overflow:hidden; position:relative; display:flex; justify-content:center; align-items:center; padding:0;">
+
+  <div class="overlay-frame inv-frame" id="invaders-wrap">
     <canvas id="invaders-canvas"></canvas>
+    <div class="inv-scanlines" aria-hidden="true"></div>
+    <div class="inv-vignette" aria-hidden="true"></div>
   </div>
+
   <!-- Touch controls — shown on touch devices via openInvaders() -->
   <div id="invaders-touch" style="display:none;">
     <button class="inv-t-btn" data-tc="left"  aria-label="Κινήσου αριστερά">◀<span>ΑΡΙΣΤ</span></button>

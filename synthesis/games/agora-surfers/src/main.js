@@ -4,6 +4,11 @@
 import { Game } from './game.js';
 import { readInjected, getInjectedTitle } from './questions.js';
 import { PU_TYPES, puColor } from './builders-actors.js';
+import { QUALITY } from './quality.js';
+
+// LITE devices: body.lite lets the stylesheet drop the fullscreen blend
+// layer + backdrop blurs (see index.html) — presentation only.
+if (QUALITY.weak) document.body.classList.add('lite');
 
 const hex6 = (n) => '#' + (n >>> 0).toString(16).padStart(6, '0').slice(-6);
 

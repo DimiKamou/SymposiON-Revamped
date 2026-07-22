@@ -2,7 +2,7 @@
    SymposiON — synthesis PvP/Game-Panel shared overlay shell  (pvp-shell.css)
 
    The PvP-pack games (krypteia, hegemonia, discus, toxotes, agora — and the
-   existing golden-fleece / halieia / crypto-hack) build a `.sym-overlay`
+   existing golden-fleece / halieia) build a `.sym-overlay`
    shell on demand and rely on:
      (a) the shared `.sym-overlay / .overlay-* / .sym-btn` shell, and
      (b) the DARK "Hearth" `--sym-*` token values.

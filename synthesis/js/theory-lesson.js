@@ -168,7 +168,14 @@
     var cs = { idx: 0, flipped: false, mastered: [] };
 
     function mnemoBtn() {
-      return (typeof navToStudy === 'function')
+      // Only offer the "full Mnemosyne deck" handoff when this lesson id is an
+      // actually-registered GP dataset — otherwise navToStudy(L.id) dead-ends in
+      // a "Content module not found" toast (e.g. 'epitheta', which has curated
+      // cards but no GP_DATASETS deck). Mirrors navToStudy's own resolution.
+      var hasDeck = (typeof navToStudy === 'function')
+        && (typeof GP_DATASETS !== 'undefined')
+        && GP_DATASETS.some(function (d) { return d && d.id === L.id; });
+      return hasDeck
         ? '<div class="tr-cap" style="margin-top:22px;text-align:center"><button class="tr-btn tr-btn--ghost" data-act="full">▶ Πλήρης μελέτη (Μνημοσύνη)</button></div>'
         : '';
     }
@@ -303,6 +310,12 @@
   function openTheoryLesson(datasetId) {
     var ds = (window.GP_CONTENT && window.GP_CONTENT.find && window.GP_CONTENT.find(datasetId)) ||
              (typeof GP_DATASETS !== 'undefined' && GP_DATASETS.find(function (d) { return d.id === datasetId; })) || null;
+    // dispatch the Συντακτικό kind to its own engine (built-in, client-side)
+    if (((ds && ds.kind === 'syntax') || (typeof window.canSyntaxLesson === 'function' && window.canSyntaxLesson(datasetId))) &&
+        typeof window.openSyntaxLesson === 'function') { window.openSyntaxLesson(datasetId); return; }
+    // dispatch the Έκθεση & Λογοτεχνία kind to its own engine (built-in, client-side)
+    if (((ds && ds.kind === 'neg') || (typeof window.canNegLesson === 'function' && window.canNegLesson(datasetId))) &&
+        typeof window.openNegLesson === 'function') { window.openNegLesson(datasetId); return; }
     // dispatch authored Q&A / Parallel kinds to their own views
     if (ds && ds.kind === 'qa' && typeof window.openQALesson === 'function') { window.openQALesson(datasetId); return; }
     if (ds && ds.kind === 'parallel' && typeof window.openParallelLesson === 'function') { window.openParallelLesson(datasetId); return; }
@@ -335,4 +348,13 @@
 
   window.openTheoryLesson = openTheoryLesson;
   window.closeTheoryLesson = closeTheoryLesson;
+
+  // Register with the syn-launch manifest so ASSIGNED theory tiles
+  // (syn-assignments.js → synLaunch('openTheoryLesson', datasetId)) can dispatch.
+  // Without an entry, synLaunch bails with "no manifest entry" and the tile is
+  // inert. This file is eager-loaded (the theory library calls openTheoryLesson
+  // directly), so the entry needs no lazy js/css — synLaunch just calls the global.
+  window.SYN_GAMES = Object.assign(window.SYN_GAMES || {}, {
+    openTheoryLesson: { js: [], css: [], overlay: null }
+  });
 })();

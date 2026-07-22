@@ -42,6 +42,17 @@
       tier: 'free'
     },
     {
+      id: 'heptapylos',
+      label: 'Ἑπτάπυλος',
+      subtitle: 'Connect Four — Οι Επτά Πύλες των Θηβών',
+      icon: '🏰',
+      bg: 'linear-gradient(135deg,#0B0F12,#20303A)',
+      desc: 'Απάντησε σωστά και ρίξε χάλκινη σφραγίδα σε μια από τις επτά πύλες — παράταξε τέσσερις στη σειρά και ράγισε το τείχος.',
+      tags: ['Στρατηγική', 'Solo'],
+      multiplayer: false,
+      tier: 'free'
+    },
+    {
       id: 'invaders',
       label: 'Space Invaders',
       subtitle: 'Γραμματική Invaders',
@@ -62,18 +73,6 @@
       tags: ['Puzzle', 'Solo'],
       multiplayer: false,
       tier: 'free'
-    },
-    {
-      id: 'myth-memory',
-      label: 'Mythology Memory',
-      subtitle: 'Ζεύγη Μυθολογίας',
-      icon: '🃏',
-      bg: 'linear-gradient(135deg,#160A22,#321658)',
-      desc: 'Βρες τα ζεύγη καρτών — αντιστοίχισε έννοιες, ήρωες και ορισμούς.',
-      tags: ['Memory', 'Solo'],
-      multiplayer: false,
-      tier: 'free',
-      allowedCategories: ['Ομηρική Ποίηση']
     },
     {
       id: 'phalanx',
@@ -100,8 +99,8 @@
     },
     {
       id: 'tow',
-      label: 'Tug of War',
-      subtitle: 'Αγώνας Διελκυστίνδας',
+      label: 'Διελκυστίνδα',
+      subtitle: 'Αγώνας Διελκυστίνδας · Tug of War',
       icon: '⚔️',
       bg: 'linear-gradient(135deg,#1E0806,#440E08)',
       desc: 'Παιχνίδι διελκυστίνδας — απάντα σωστά για να σπρώξεις τον αντίπαλο!',
@@ -193,7 +192,7 @@
     {
       id: 'krypteia',
       label: 'Κρυπτεία',
-      subtitle: 'Crypto Hack — Σπαρτιατική Κρυπτογραφία',
+      subtitle: 'Σπαρτιατική Κρυπτογραφία',
       icon: '🗝️',
       bg: 'linear-gradient(135deg,#1A0E08,#3A1810)',
       desc: 'Λύσε τους γρίφους, σπάσε τις σκυτάλες των αντιπάλων και άρπαξε τον θησαυρό τους.',
@@ -374,7 +373,7 @@
       sublabel: 'Turn-based · Formation',
       icon: '🛡️',
       accent: '#4A6B28',
-      ids: ['phalanx', 'agora', 'parthenon', 'olympus', 'oracle']
+      ids: ['phalanx', 'heptapylos', 'agora', 'parthenon', 'olympus', 'oracle']
     },
     {
       id: 'puzzle',
@@ -390,7 +389,7 @@
       sublabel: 'Memory · Flashcards',
       icon: '🃏',
       accent: '#5B3A8A',
-      ids: ['myth-memory', 'mnemosyne', 'mnemosyne-memory']
+      ids: ['mnemosyne', 'mnemosyne-memory']
     },
     {
       id: 'fortune',

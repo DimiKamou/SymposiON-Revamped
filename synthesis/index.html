@@ -18,6 +18,8 @@
 <link rel="stylesheet" href="css/student.css"/>
 <!-- ══ THEORY lesson subsystem (ported from Ver1) ══ -->
 <link rel="stylesheet" href="css/theory-lessons.css"/>
+<link rel="stylesheet" href="css/theory-syntax.css"/>
+<link rel="stylesheet" href="css/theory-neg.css"/>
 <link rel="stylesheet" href="css/system.css"/>
 <link rel="stylesheet" href="css/auth-skin.css"/>
 <!-- Shared game-overlay container chrome (restored from Ver1 main.css so
@@ -26,7 +28,12 @@
 <!-- Shared grammar-game screen styles (.lyo-screen/.lcard/.lopts-grid…) — used by ALL
      grammar games (Greek + Latin). Loaded eagerly because their manifest css:[] is empty;
      lyo/game.css is purely game-scoped (no global/body rules), so it never touches the home. -->
-<link rel="stylesheet" href="games/lyo/game.css"/>
+<link rel="stylesheet" href="games/lyo/game.css?v=2"/>
+<!-- Ἑπτάπυλος (Connect-Four siege quiz). game.css is overlay-scoped (#hep-overlay
+     / .hep-*), so it never touches the home — safe to link eagerly. The shared
+     .sym-overlay shell + dark-Hearth --sym-* tokens it relies on come from
+     games/pvp-shell.css, lazy-loaded FIRST by the manifest entry on launch. -->
+<link rel="stylesheet" href="games/heptapylos/game.css?v=1"/>
 <!-- ══════════ ADMIN (Command Center) — admin-only, lazy-visible ══════════
      Ver1 admin styles. Scoped to #page-admin so they never touch the shell.
      The overlay host (#page-admin) is added below; SYM_SCREENS.admin shows it. -->
@@ -38,12 +45,20 @@
      css/admin-synthesis.css styles the sc-admin2 light admin + the real
      Access-Control matrix rendered by js/admin-synthesis.js (loaded below,
      after syn-admin.js, so it wins SYM_SCREENS.admin). -->
-<link rel="stylesheet" href="css/admin-synthesis.css"/>
+<link rel="stylesheet" href="css/admin-synthesis.css?v=3"/>
 <!-- ══════════ TRIVIA-PANEL + TEACHER WIZARD (Ver1 port) ══════════
      anathesi.css = LIGHT alabaster teacher-wizard shell (scoped to .an-*).
      The trivia-panel's own chrome (games/trivia-panel/panel.css) is
      lazy-loaded by its manifest fragment, so it is NOT linked here. -->
 <link rel="stylesheet" href="css/anathesi.css"/>
+<!-- ══════════ SITE BANNERS (announcement strip) ══════════
+     Drop-in CSS from the design handoff. Styles the sticky #site-banners-wrap
+     bar rendered by js/banner-bar.js + the live preview in js/banner-admin.js. -->
+<link rel="stylesheet" href="css/site-banners.css?v=2"/>
+<!-- ══════════ FLAPPY "while you wait" SLOT ══════════
+     Styles ONLY the small outer card chrome (.sym-flappy-*) that wraps the
+     Shadow-DOM-isolated <flappy-waiting-game> on multiplayer waiting screens. -->
+<link rel="stylesheet" href="css/flappy-slot.css?v=1"/>
 <style id="syn-admin-host-css">
   /* Full-screen overlay host for the admin Command Center. Hidden until the
      admin screen activates it (SYM_SCREENS.admin). Synthesis has no Ver1
@@ -85,11 +100,11 @@
      inherits the revamp's token tree, and .sym-auth-skin for the on-brand
      skin in css/auth-skin.css. -->
 <div id="auth-modal" class="auth-modal-overlay sym-auth-skin theme-alabaster" onclick="if(event.target===this)closeAuthModal()">
-  <div class="auth-modal-box sym-auth">
+  <div class="auth-modal-box sym-auth" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
 
     <div class="auth-modal-top">
-      <div class="auth-modal-logo">Symposi<span>ON</span></div>
-      <button class="auth-close-btn" onclick="closeAuthModal()">✕</button>
+      <div class="auth-modal-logo" id="auth-modal-title">Symposi<span>ON</span></div>
+      <button class="auth-close-btn" onclick="closeAuthModal()" aria-label="Κλείσιμο" title="Κλείσιμο">✕</button>
     </div>
 
     <div class="auth-tabs">
@@ -126,6 +141,7 @@
     <div id="auth-view-login" style="display:flex;flex-direction:column;gap:10px;">
       <input class="auth-input" type="email"    id="auth-email"    placeholder="Email" autocomplete="email"/>
       <input class="auth-input" type="password" id="auth-password" placeholder="Κωδικός" autocomplete="current-password"/>
+      <button type="button" class="auth-forgot-link" style="background:none;border:0;align-self:flex-end;cursor:pointer;font:inherit;color:inherit;opacity:.82;padding:0;margin:-4px 2px 2px;text-decoration:underline;" onclick="sendPasswordReset()">Ξέχασες τον κωδικό;</button>
       <button class="auth-submit-btn" id="auth-submit-btn" data-label="Είσοδος →" onclick="signInWithEmail()">Είσοδος →</button>
       <p class="auth-switch-link">Δεν έχεις λογαριασμό; <span onclick="switchAuthTab('signup')">Εγγραφή</span></p>
     </div>
@@ -139,16 +155,16 @@
       <p class="auth-switch-link">Έχεις ήδη λογαριασμό; <span onclick="switchAuthTab('login')">Είσοδος</span></p>
     </div>
 
-    <div class="auth-error" id="auth-error" style="display:none;"></div>
+    <div class="auth-error" id="auth-error" role="alert" style="display:none;"></div>
   </div>
 </div>
 
 <!-- ══════════ SIGN-OUT CONFIRMATION MODAL ══════════ -->
 <div id="signout-modal" class="sym-confirm-overlay sym-auth-skin theme-alabaster" onclick="if(event.target===this)closeSignoutModal()">
-  <div class="sym-confirm-box">
+  <div class="sym-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="signout-title" aria-describedby="signout-msg">
     <div class="sym-confirm-icon">↩</div>
-    <div class="sym-confirm-title">Έξοδος από τον λογαριασμό</div>
-    <div class="sym-confirm-msg">Θέλεις σίγουρα να αποσυνδεθείς;</div>
+    <div class="sym-confirm-title" id="signout-title">Έξοδος από τον λογαριασμό</div>
+    <div class="sym-confirm-msg" id="signout-msg">Θέλεις σίγουρα να αποσυνδεθείς;</div>
     <div class="sym-confirm-btns">
       <button class="sym-confirm-btn sym-confirm-cancel" onclick="closeSignoutModal()">Άκυρο</button>
       <button class="sym-confirm-btn sym-confirm-yes" onclick="_doSignOut()">Ναι, έξοδος</button>
@@ -182,17 +198,29 @@
 <script src="js/auth.js"></script>
 
 <script src="js/store.js"></script>
+<!-- Effective Kleos + admin (dimikamou) infinite-Kleos override (items still
+     show locked so the admin can exercise the unlock flow). -->
+<script src="js/sym-kleos.js?v=2"></script>
 <script src="js/seasons.js"></script>
-<script src="js/data.js"></script>
+<script src="js/data.js?v=2"></script>
 <script src="js/previews.js"></script>
 <script src="js/info-panels.js"></script>
 <script src="js/dir-stoa.js"></script>
 <script src="js/dir-agora.js"></script>
 <script src="js/dir-akropolis.js"></script>
 <script src="js/dir-synthesis.js"></script>
+<!-- Global share-QR modal: window.showQR(title, opts). Eager so it exists
+     everywhere (level-select "Share to class" + in-game share buttons). -->
+<script src="js/share-qr.js?v=1"></script>
 <script src="js/screens.js"></script>
 <script src="js/screens-2.js"></script>
-<script src="js/screens-learn.js"></script>
+<script src="js/screens-learn.js?v=2"></script>
+<!-- Admin-assigned template tiles: window.synAssignedTiles(class,subject), merged
+     into subject grids by screens-learn.js. Read-only consumer of SymStore. -->
+<script src="js/syn-assignments.js?v=3"></script>
+<!-- Student-facing AI tutor (Q&A grounded in admin-uploaded books).
+     Registers window.SYM_SCREENS.tutor; talks to the askTutor callable. -->
+<script src="js/ai-tutor.js?v=1"></script>
 <!-- ══════════ TEACHER WIZARD (Ver1 anathesi port) ══════════
      Re-registers window.SYM_SCREENS.anathesi AFTER screens-2.js so the richer
      all-modes wizard (driven by window.GP_ENGINES) WINS over the simple one. -->
@@ -241,8 +269,43 @@
 <script src="js/voyage-launchers.js"></script>
 <script src="js/voyage-progress.js"></script>
 <script src="js/manifest/voyage.js"></script>
+<!-- cultural 3D experiences (Hagia Sophia 537 interactive museum) -->
+<script src="js/manifest/experiences.js"></script>
+<!-- "Κείμενα · Μεταφράσεις" — registers openParallelLesson for synLaunch. -->
+<script src="js/manifest/texts-parallel.js"></script>
+<!-- "Διδαγμένο Κείμενο" (Αρχαία Γ΄ Λυκείου) — self-contained study module in
+     games/gnwsto/, mounted as an iframe overlay by js/gnwsto-launch.js. -->
+<script src="js/manifest/gnwsto.js"></script>
+<script src="js/gnwsto-launch.js"></script>
+<!-- "Συντακτικό" (games/syntaktiko/) — self-contained syntax-practice module,
+     iframe overlay via js/syntaktiko-launch.js (openSyntaktiko(topic)). -->
+<script src="js/manifest/syntaktiko.js"></script>
+<script src="js/syntaktiko-launch.js"></script>
+<!-- ΑΔΙΔΑΚΤΟ pillar (games/adidakto/) — unseen-text workspace + Panhellenic
+     exam simulator + corpus admin, iframe overlays via js/adidakto-launch.js. -->
+<script src="js/manifest/adidakto.js"></script>
+<script src="js/adidakto-launch.js"></script>
+<!-- ══════════ ADMIN AUTHORING TEMPLATES (Trivia & History Synthesis) ══════════
+     Self-contained React/Babel composer + live-preview tools that export JSON
+     configs, under games/{trivia,history}-synthesis/. template-launchers.js
+     opens each in a full-screen overlay iframe (admin "Πρότυπα / Templates"). -->
+<script src="js/template-launchers.js?v=2"></script>
+<!-- ══════════ ΛΑΤΙΝΙΚΑ · ΚΕΙΜΕΝΑ (Latin text-analysis panels) ══════════
+     Per-Ενότητα study panels under games/latin-texts/enotita.html — a
+     self-contained React 18 app (vendored React, no CDN). launcher opens each
+     in a full-screen overlay iframe (same pattern as Voyage). The manifest
+     reads window.LATIN_TEXT_UNITS, so the launcher must load first. -->
+<script src="js/latin-texts-launchers.js"></script>
+<script src="js/manifest/latin-texts.js"></script>
 <!-- iframe/board/study launchers extracted from Ver1 nav.js (openIstoria, launchGame, navToStudy, openSymposion…) -->
-<script src="js/trivia-iframe-launchers.js"></script>
+<script src="js/trivia-iframe-launchers.js?v=3"></script>
+
+<!-- Phase 2 · multi-select content mixing. window.SymMix.bank(ds, ids) builds a
+     merged engine-ready question bank; the engine setup screen (js/screens.js)
+     and the ?game=&ds=&levels= deep link (js/app.js) consume it. Loads AFTER
+     gp-levels/gp-content (providers + raw-DB loaders) and trivia-iframe-launchers
+     (window._gpNormalizeQuestions), BEFORE js/app.js (boot deep-link handler). -->
+<script src="js/syn-mix.js?v=2"></script>
 
 <!-- ══════════ ADMIN COMMAND CENTER (admin-only) ══════════
      Ver1 admin engine. admin.js = backend handlers; admin-cc.js = the
@@ -250,12 +313,16 @@
      optional tabs (guarded — they stub out when their backends are absent in
      synthesis). syn-admin.js registers SYM_SCREENS.admin to mount + show the
      #page-admin overlay. All gated on the global isAdmin (auth.js). -->
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=2"></script>
 <!-- Site Studio + Curator's Realm backends (synthesis-native; SymStore-backed,
      Firestore-mirrored when available). Provide window.ContentSource / RealmStore
      so admin-studio.js / admin-realm.js are functional. Must load BEFORE them. -->
 <script src="js/realm.js"></script>
 <script src="js/content-source.js"></script>
+<!-- The 20 PvP/Live game modes (window.PVP_MODES / PVP_DUEL_MODES) — Live host setup. -->
+<script src="js/pvp-modes.js"></script>
+<!-- Curriculum drill-down picker (S.curriculum) — admin-content by stage→grade→subject→game. -->
+<script src="js/curriculum-picker.js"></script>
 <script src="js/admin-realm.js"></script>
 <script src="js/admin-studio.js"></script>
 <script src="js/admin-cc.js"></script>
@@ -268,7 +335,10 @@
      and keeps a "Classic Command Center" button that opens the old #page-admin.
      Adds the real Access-Control matrix (SymStore 'access_control' + guarded
      Firestore config/accessControl). Gated on the bare global isAdmin. -->
-<script src="js/admin-synthesis.js"></script>
+<!-- Access-tier registry (Free/Student/Teacher/Pro + admin-created custom tiers).
+     Single source the admin grant / access / pricing surfaces read from. -->
+<script src="js/syn-tiers.js?v=2"></script>
+<script src="js/admin-synthesis.js?v=3"></script>
 
 <!-- ══════════ HUMAN-VERIFICATION + ANTI-BOT (self-contained) ══════════
      Exposes window.SymHumanVerify(opts) and window.SymAntiBot. Loaded
@@ -284,13 +354,122 @@
      first (provides window.TheoryEd); theory-data before codex/lesson. -->
 <script src="js/theory-edit-shared.js"></script>
 <script src="js/theory-data.js"></script>
+<!-- ISSUE 8: defines the previously-missing theory override hooks
+     (theoryIsCurator / loadTheoryOverride / saveTheoryOverride /
+     clearTheoryOverride / openTheoryEditor). After theory-data + edit-shared. -->
+<script src="js/theory-editor.js?v=1"></script>
 <script src="js/theory-codex.js"></script>
 <script src="js/theory-lesson.js"></script>
 <script src="js/theory-text.js"></script>
+<!-- Syntax-role vocabulary + shared tokeniser for the Παράλληλο Κείμενο σύνταξη feature. -->
+<script src="js/parallel-roles.js"></script>
 <script src="js/theory-parallel.js"></script>
 <script src="js/theory-qa.js"></script>
+<!-- ══ Συντακτικό (Ancient Greek syntax) — built-in, client-side course.
+     data → data2/data3 (register into window.SYNTAX) → mastery → engine.
+     theory-syntax-theory.js + theory-syntax-banks.js are lazy-loaded by the
+     engine on first open (ensureExtras), so they are NOT script-tagged here. -->
+<script src="js/theory-syntax-data.js"></script>
+<script src="js/theory-syntax-data2.js"></script>
+<script src="js/theory-syntax-data3.js"></script>
+<script src="js/theory-syntax-mastery.js"></script>
+<script src="js/theory-syntax.js"></script>
+<!-- ══ Έκθεση & Λογοτεχνία (Πανελλήνιες) — built-in, client-side course.
+     data (registers window.NEG) → data2-5 → θεματικές ενότητες → παλιά
+     θέματα → engine. 49 lessons; surfaced in the Έκθεση (gram-neo) track. -->
+<script src="js/theory-neg-data.js"></script>
+<script src="js/theory-neg-data2.js"></script>
+<script src="js/theory-neg-data3.js"></script>
+<script src="js/theory-neg-data4.js"></script>
+<script src="js/theory-neg-data5.js"></script>
+<script src="js/theory-neg-data6.js"></script>
+<script src="js/theory-neg-data7.js"></script>
+<script src="js/theory-neg-data8.js"></script>
+<script src="js/theory-neg-data9.js"></script>
+<script src="js/theory-neg-data10.js"></script>
+<script src="js/neg-themata-data1.js"></script>
+<script src="js/neg-themata-data2.js"></script>
+<script src="js/neg-themata-data3.js"></script>
+<script src="js/neg-themata-data4.js"></script>
+<script src="js/neg-themata-data5.js"></script>
+<script src="js/neg-themata-data6.js"></script>
+<script src="js/neg-pasttests-2020.js"></script>
+<script src="js/neg-pasttests-2021.js"></script>
+<script src="js/neg-pasttests-2022.js"></script>
+<script src="js/neg-pasttests-2023.js"></script>
+<script src="js/neg-pasttests-2024.js"></script>
+<script src="js/neg-pasttests-2025.js"></script>
+<script src="js/theory-neg.js"></script>
+<!-- Curator editor for the Συντακτικό (window.SYNTAX) & Έκθεση/ΝΕΓ (window.NEG)
+     lesson registries + their override-merge. Loads after both engines. -->
+<script src="js/theory-syx-editor.js"></script>
+
+<!-- ══════════ SITE BANNERS (announcement strip) ══════════
+     banner-bar.js: live sticky bar at the top of the page (reads Firestore
+       `banners` where active==true, guarded; degrades to SymStore 'site_banners'
+       then the bundled seed; filters dismissed + expired). Self-inits on DOM
+       ready and exposes window.BannerBar. Loaded BEFORE js/app.js.
+     banner-admin.js: self-contained window.BannerAdmin.render(pane) component
+       (create form + live preview + edit/toggle list + seed). The lead mounts
+       it from the admin 'banners' section. Backend lives in js/admin.js. -->
+<script src="js/banner-bar.js?v=2"></script>
+<!-- Admin content persistence: mirror admin SymStore content to Firestore
+     (config/adminMirror) + hydrate it back at boot, so owner-created content
+     reaches students on any device and survives a Hosting redeploy. -->
+<script src="js/syn-hydrate.js?v=1"></script>
+<script src="js/banner-admin.js?v=2"></script>
+
+<!-- SymposiON loading marks: self-injects CSS + exposes window.SymLoaders.
+     Loaded BEFORE js/app.js so SymLoader can mount a random variant. -->
+<script src="js/sym-loaders.js?v=1"></script>
+
+<!-- ══════════ FLAPPY "while you wait" mini-game ══════════
+     flappy-waiting-game.js eagerly registers the <flappy-waiting-game> custom
+     element + window.FlappyWaiting, so it's ready before any lazily-loaded
+     waiting screen (Live Arena lobby / Naumachia matchmaking) mounts it.
+     flappy-slot.js exposes window.SymFlappy.{mount,unmount} — a single shared
+     instance that follows the active waiting screen. -->
+<script src="games/flappy/flappy-waiting-game.js?v=1"></script>
+<script src="js/flappy-slot.js?v=1"></script>
 
 <script src="js/app.js"></script>
+<!-- In-app "exit the game?" modal (replaces window.confirm); used by sym-nav. -->
+<script src="js/leave-warning.js"></script>
+<!-- History-based routing + in-game exit guard. Loaded after app.js (symGo,
+     STATE, symRender) and syn-launch.js (synLaunch) so it can own the back-stack. -->
+<script src="js/sym-nav.js"></script>
+<!-- Iliada / Odyssea Arcade: effective default content (admin-editor baseline)
+     + the iframe-overlay launcher (opener + close globals). -->
+<script src="js/arcade-defaults.js"></script>
+<script src="js/arcade-launch.js"></script>
+
+<!-- ══════════ HYDRATED BOOT LOADER GATEWAY (ported from Ver1) ══════════
+     Show the branded SymLoader (the real one is defined in app.js, loaded just
+     above — its earlier loader.js namesake is shadowed) at boot, then hide it
+     once Firebase auth resolves so the shell paints in its final signed-in/out
+     state (no logged-out→in flash). Fail-open: if the Firebase CDN is blocked/
+     offline, the polls give up after ~3s and a 4s hard fail-safe reveals the
+     app regardless. -->
+<script>
+(function () {
+  if (typeof SymLoader === 'undefined' || !SymLoader.show) return;
+  SymLoader.show();
+  var _hidden = false, _tries = 0;
+  function _hide(){ if (_hidden) return; _hidden = true; setTimeout(function(){ SymLoader.hide(); }, 180); }
+  var gate = setInterval(function () {
+    _tries++;
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length
+        && (typeof _firebaseReady === 'undefined' || _firebaseReady)) {
+      clearInterval(gate);
+      try { firebase.auth().onAuthStateChanged(function () { _hide(); }); }
+      catch (e) { _hide(); }
+    } else if (_tries > 60) {        // ~3s — Firebase never came up (CDN blocked / offline)
+      clearInterval(gate); _hide();
+    }
+  }, 50);
+  setTimeout(function () { clearInterval(gate); _hide(); }, 4000);   // absolute fail-safe
+})();
+</script>
 </body>
 </html>
 

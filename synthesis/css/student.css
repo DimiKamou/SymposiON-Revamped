@@ -62,6 +62,9 @@
 .ob-guide-row__d { font-size:12.5px; color:var(--fg-70); margin-top:2px; }
 .ob-switch { flex:none; width:50px; height:28px; border-radius:999px; border:0; background:var(--line-bold);
   position:relative; cursor:pointer; transition:background .18s; }
+@media (pointer: coarse) {
+  .ob-switch::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100%; height:44px; }
+}
 .ob-switch::after { content:''; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
   background:#fff; transition:transform .2s cubic-bezier(.2,.7,.2,1); box-shadow:0 2px 5px rgba(0,0,0,.3); }
 .ob-switch.on { background:var(--terra); } .ob-switch.on::after { transform:translateX(22px); }
@@ -127,6 +130,12 @@
   background:var(--card); color:var(--fg); box-shadow:0 14px 34px var(--shadow); font-family:var(--sans);
   font-weight:700; font-size:14px; transition:transform .16s, border-color .16s; }
 .guide-fab:hover { transform:translateY(-2px); border-color:var(--terra); }
+/* While a full-screen game overlay is open, hide the floating guide button so it
+   never overlaps a game's own on-screen (touch) controls in the bottom-right.
+   :has() is supported on our mobile targets; older engines simply keep the FAB. */
+body:has(.game-overlay.active) .guide-fab,
+body:has(.game-overlay[style*="display: flex"]) .guide-fab,
+body:has(.game-overlay[style*="display:flex"]) .guide-fab { display:none !important; }
 .guide-fab.on { background:var(--terra-dk); color:#fff; border-color:var(--terra-dk); }
 .guide-fab__q { display:grid; place-items:center; width:26px; height:26px; border-radius:50%;
   background:var(--terra-soft); color:var(--terra-dk); font-family:var(--serif); font-weight:800; font-size:15px; }
@@ -141,6 +150,10 @@
   text-transform:uppercase; color:var(--muted); flex:1; }
 .guide-tip__x { background:none; border:0; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; padding:0 2px; }
 .guide-tip__x:hover { color:var(--fg); }
+@media (pointer: coarse) {
+  .guide-tip__x { position: relative; }
+  .guide-tip__x::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:44px; height:44px; }
+}
 .guide-tip__t { font-family:var(--serif); font-weight:700; font-size:16px; margin:0 0 5px; }
 .guide-tip__d { font-size:13.5px; line-height:1.5; color:var(--fg-70); margin:0 0 12px; }
 .guide-tip__foot { display:flex; align-items:center; gap:10px; }
@@ -172,7 +185,7 @@
 .syn-mentor__pop { position:absolute; top:calc(100% + 12px); right:0; width:290px; z-index:80;
   background:var(--card); color:var(--fg); border:1px solid var(--line-bold); border-radius:16px; padding:15px 16px;
   box-shadow:0 24px 56px var(--shadow); opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity .16s, transform .16s; }
-.syn-mentor-wrap:hover .syn-mentor__pop, .syn-mentor:focus-visible ~ .syn-mentor__pop { opacity:1; transform:none; pointer-events:auto; }
+.syn-mentor-wrap:hover .syn-mentor__pop, .syn-mentor:focus-visible ~ .syn-mentor__pop, .syn-mentor-wrap:focus-within .syn-mentor__pop { opacity:1; transform:none; pointer-events:auto; }
 .syn-mentor__pop::before { content:''; position:absolute; top:-6px; right:15px; width:12px; height:12px; background:var(--card);
   border-left:1px solid var(--line-bold); border-top:1px solid var(--line-bold); transform:rotate(45deg); }
 .syn-mentor__phd { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
@@ -246,7 +259,7 @@
 }
 
 /* ── CONSENT / AGE-GATE / COOKIES ───────────────────────────────── */
-.cg-year { width:100%; font-family:var(--sans); font-weight:600; font-size:15px; padding:13px 15px;
+.cg-year { width:100%; font-family:var(--sans); font-weight:600; font-size:16px; padding:13px 15px;
   border-radius:14px; border:1.5px solid var(--line-bold); background:var(--bg); color:var(--fg); margin-bottom:18px; }
 .cg-year:focus { outline:none; border-color:var(--terra); }
 .cg-err { border-color:#C2553A; }
@@ -289,10 +302,11 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
 
 /* ════════════════════════════════════════════════════════════════
    SymposiON · Level-Up Banner  (Grand variant)
-   Reuses the existing Hearth tokens (--gold, --gold-light,
-   --dark-panel, --alabaster, --stone …). The fallbacks below let it
-   work even if a token is missing. Driven by showLevelUp() in
-   js/progression.js.
+   Reskinned onto the live Synthesis theme tokens (--disp/--serif/--sans
+   for type; --gold/--fg/--card/--muted for colour) so the banner follows
+   the active theme instead of a hardcoded dark-bronze. Fallbacks inside
+   each var() keep it legible if a token is ever missing. Driven by
+   showLevelUp() in js/progression.js.
    ════════════════════════════════════════════════════════════════ */
 #lvlup {
   position: fixed; inset: 0; z-index: 9200;
@@ -317,8 +331,8 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
   width: min(420px, 90vw);
   padding: 3.2rem 3rem 2.4rem;
   text-align: center;
-  background: linear-gradient(180deg, #2C2014 0%, var(--dark-panel, #241910) 100%);
-  border: 1px solid rgba(196,164,72,0.20);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 6%, var(--card)) 0%, var(--card) 100%);
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent);
   box-shadow: 0 40px 90px -30px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,0,0,0.4);
   transform: translateY(34px) scale(0.92);
   opacity: 0;
@@ -333,7 +347,7 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
 /* corner ticks — SymposiON frame motif */
 .lu-card::before, .lu-card::after {
   content: ""; position: absolute; width: 14px; height: 14px;
-  border: 1px solid var(--gold-light, #C4A448); opacity: .6;
+  border: 1px solid var(--gold, #C4A448); opacity: .6;
 }
 .lu-card::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
 .lu-card::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
@@ -354,18 +368,18 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
   position: absolute; inset: -34px; pointer-events: none; opacity: 0;
   background:
     conic-gradient(from 0deg,
-      var(--gold-light,#C4A448) 0 3deg, transparent 3deg 30deg,
-      var(--gold-light,#C4A448) 30deg 33deg, transparent 33deg 60deg,
-      var(--gold-light,#C4A448) 60deg 63deg, transparent 63deg 90deg,
-      var(--gold-light,#C4A448) 90deg 93deg, transparent 93deg 120deg,
-      var(--gold-light,#C4A448) 120deg 123deg, transparent 123deg 150deg,
-      var(--gold-light,#C4A448) 150deg 153deg, transparent 153deg 180deg,
-      var(--gold-light,#C4A448) 180deg 183deg, transparent 183deg 210deg,
-      var(--gold-light,#C4A448) 210deg 213deg, transparent 213deg 240deg,
-      var(--gold-light,#C4A448) 240deg 243deg, transparent 243deg 270deg,
-      var(--gold-light,#C4A448) 270deg 273deg, transparent 273deg 300deg,
-      var(--gold-light,#C4A448) 300deg 303deg, transparent 303deg 330deg,
-      var(--gold-light,#C4A448) 330deg 333deg, transparent 333deg 360deg);
+      var(--gold,#C4A448) 0 3deg, transparent 3deg 30deg,
+      var(--gold,#C4A448) 30deg 33deg, transparent 33deg 60deg,
+      var(--gold,#C4A448) 60deg 63deg, transparent 63deg 90deg,
+      var(--gold,#C4A448) 90deg 93deg, transparent 93deg 120deg,
+      var(--gold,#C4A448) 120deg 123deg, transparent 123deg 150deg,
+      var(--gold,#C4A448) 150deg 153deg, transparent 153deg 180deg,
+      var(--gold,#C4A448) 180deg 183deg, transparent 183deg 210deg,
+      var(--gold,#C4A448) 210deg 213deg, transparent 213deg 240deg,
+      var(--gold,#C4A448) 240deg 243deg, transparent 243deg 270deg,
+      var(--gold,#C4A448) 270deg 273deg, transparent 273deg 300deg,
+      var(--gold,#C4A448) 300deg 303deg, transparent 303deg 330deg,
+      var(--gold,#C4A448) 330deg 333deg, transparent 333deg 360deg);
   -webkit-mask: radial-gradient(circle, transparent 40%, #000 42%, #000 72%, transparent 76%);
           mask: radial-gradient(circle, transparent 40%, #000 42%, #000 72%, transparent 76%);
 }
@@ -383,7 +397,7 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
   display: flex; align-items: center; justify-content: center;
   box-shadow: inset 0 1px 0 rgba(255,235,180,0.08), 0 6px 18px rgba(0,0,0,0.5);
 }
-.lu-disc svg { width: 52px; height: 52px; color: var(--gold-light, #C4A448); }
+.lu-disc svg { width: 52px; height: 52px; color: var(--gold, #C4A448); }
 #lvlup.is-in .lu-disc { animation: lu-stamp .6s .1s cubic-bezier(.2,1.4,.3,1) both; }
 @keyframes lu-stamp {
   0%   { transform: scale(2.1) rotate(-10deg); opacity: 0; }
@@ -393,33 +407,33 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
 
 /* ── Text block ── */
 .lu-eyebrow {
-  font-family: 'Cinzel', serif; font-weight: 600;
+  font-family: var(--disp, 'Cinzel', serif); font-weight: 600;
   font-size: 12px; letter-spacing: 5px; text-transform: uppercase;
-  color: var(--gold-light, #C4A448); margin-bottom: 0.2rem;
+  color: var(--gold, #C4A448); margin-bottom: 0.2rem;
 }
 .lu-eyebrow .en {
-  display: block; font-family: 'Inter', sans-serif; font-weight: 500;
-  font-size: 9.5px; letter-spacing: 3.5px; color: var(--stone, #867660); margin-top: 4px;
+  display: block; font-family: var(--sans, 'Inter', sans-serif); font-weight: 500;
+  font-size: 9.5px; letter-spacing: 3.5px; color: var(--muted, #867660); margin-top: 4px;
 }
 .lu-line {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   margin: 0.7rem 0 0.1rem;
 }
 .lu-line .rule { width: 26px; height: 1px; background: rgba(196,164,72,0.20); }
-.lu-line .dot  { width: 4px; height: 4px; background: var(--gold-light,#C4A448); transform: rotate(45deg); }
+.lu-line .dot  { width: 4px; height: 4px; background: var(--gold,#C4A448); transform: rotate(45deg); }
 .lu-number {
-  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-family: var(--serif, 'Cormorant Garamond', serif); font-weight: 300;
   font-size: clamp(82px, 16vw, 116px); line-height: 0.9; letter-spacing: -4px;
-  color: var(--alabaster, #F6F2EB);
+  color: var(--fg, #F6F2EB);
   text-shadow: 0 2px 30px rgba(196,164,72,0.25);
 }
 .lu-title {
-  font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 500;
-  font-size: 24px; color: var(--gold-light, #C4A448); margin-top: 0.1rem;
+  font-family: var(--serif, 'Cormorant Garamond', serif); font-style: italic; font-weight: 500;
+  font-size: 24px; color: var(--gold, #C4A448); margin-top: 0.1rem;
 }
 .lu-title .gr { font-style: normal; }
 .lu-flavor {
-  font-size: 12.5px; color: var(--stone, #867660); line-height: 1.5; margin-top: 0.5rem;
+  font-size: 12.5px; color: var(--muted, #867660); line-height: 1.5; margin-top: 0.5rem;
 }
 
 /* ── Reward chips ── */
@@ -429,20 +443,20 @@ body.ck-bar-open { padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px)
   padding: 8px 14px;
   background: rgba(196,164,72,0.06);
   border: 1px solid rgba(196,164,72,0.20);
-  font-size: 13px; font-weight: 600; color: var(--cream, #F0EBE0);
+  font-size: 13px; font-weight: 600; color: var(--fg, #F0EBE0);
   opacity: 0; transform: translateY(10px);
 }
 #lvlup.is-in .lu-chip { animation: lu-chip .5s cubic-bezier(0.16,1,0.3,1) both; }
 #lvlup.is-in .lu-chip:nth-child(1) { animation-delay: .42s; }
 #lvlup.is-in .lu-chip:nth-child(2) { animation-delay: .54s; }
 @keyframes lu-chip { to { opacity: 1; transform: translateY(0); } }
-.lu-chip .ic { color: var(--gold-light,#C4A448); display: flex; }
+.lu-chip .ic { color: var(--gold,#C4A448); display: flex; }
 .lu-chip .ic svg { width: 15px; height: 15px; }
-.lu-chip b { color: var(--gold-light, #C4A448); }
+.lu-chip b { color: var(--gold, #C4A448); }
 
 .lu-hint {
   margin-top: 1.5rem; font-size: 10.5px; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--stone, #867660);
+  text-transform: uppercase; color: var(--muted, #867660);
   opacity: 0; transition: opacity .4s ease .8s;
 }
 #lvlup.is-in .lu-hint { opacity: .75; }

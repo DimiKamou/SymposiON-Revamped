@@ -9,7 +9,7 @@ window.PVP = window.PVP || {};
    The four the user prioritised (Krypteia, Gold Quest, Halieia, Moirai)
    carry the heaviest weight so they appear most often. */
 PVP.MODES = [
-  { id:'krypteia',  gr:'ΚΡΥΠΤΕΙΑ',            en:'Crypto Hack',     glyph:'Λ', accent:'--sym-terra',  weight:5,
+  { id:'krypteia',  gr:'ΚΡΥΠΤΕΙΑ',            en:'Krypteia',        glyph:'Λ', accent:'--sym-terra',  weight:5,
     blurb:{gr:'Σπάσε τις σκυτάλες των αντιπάλων.', en:'Crack rivals\u2019 ciphers.'} },
   { id:'fleece',    gr:'ΧΡΥΣΟΜΑΛΛΟΝ ΔΕΡΑΣ',    en:'Gold Quest',      glyph:'☉', accent:'--sym-gold',   weight:5,
     blurb:{gr:'Άνοιξε πίθους — απόφυγε την Πανδώρα.', en:'Open jars \u2014 dodge Pandora.'} },

@@ -89,6 +89,13 @@
     const olEn = document.getElementById('ol-en');
     if (olGr) olGr.classList.toggle('active', lang === 'gr');
     if (olEn) olEn.classList.toggle('active', lang === 'en');
+    // Deliver any admin content edit (gameContent/<id>, hydrated by content-
+    // source.js) onto the freshly-assigned banks before the engine reads them.
+    // Keyed by the active game id (odyssey reuses this engine via launchGame).
+    try {
+      var _gid = (window._triviaGameId === 'odyssey-trivia') ? 'odyssey-trivia' : 'iliada-trivia';
+      if (window.ContentSource && ContentSource.applyLiveGameOverride) ContentSource.applyLiveGameOverride(_gid);
+    } catch (_) {}
     if (typeof initGame === 'function') initGame(lang);
   }
 
@@ -134,11 +141,18 @@
     if (typeof goTo === 'function') goTo('home');
   }
 
-  // ── ISTORIA Γ΄ ΛΥΚΕΙΟΥ (iframe → games/istoria/index.html?course=g3) ──
-  function openIstoria() {
+  // ── ISTORIA Γ΄ ΛΥΚΕΙΟΥ (iframe → games/istoria/index.html?course=g3[&unit=…]) ──
+  // Optional `unit` scopes the panel to a single exam theme (oikonomia / politika
+  // / prosfygiko / kritiko / pontiako) so each home tile opens straight into it.
+  function openIstoria(course, unit) {
+    course = course || 'g3';   // default preserves the old no-arg behavior
     const wrap = document.getElementById('istoria-wrap');
-    if (wrap && !wrap.querySelector('iframe')) {
-      wrap.innerHTML = '<iframe src="' + _appBase() + 'games/istoria/index.html?course=g3" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+    if (wrap) {
+      let want = _appBase() + 'games/istoria/index.html?course=' + encodeURIComponent(course);
+      if (unit) want += '&unit=' + encodeURIComponent(unit);
+      const ifr = wrap.querySelector('iframe');
+      if (!ifr) wrap.innerHTML = '<iframe src="' + want + '" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+      else if (ifr.getAttribute('src') !== want) ifr.setAttribute('src', want);   // re-scope to the requested course
     }
     const ov = document.getElementById('istoria-overlay');
     if (ov) { ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
@@ -161,6 +175,25 @@
   }
   function closeHistoryGame() {
     const ov = document.getElementById('history-game-overlay');
+    if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; }
+  }
+
+  // ── RECREATION OF KEY HISTORICAL BATTLES (iframe; one chronicle per era) ──
+  // era: 'ancient' (Ιστορία Α΄) | 'byzantine' (Ιστορία Β΄) | 'revolution' (Ιστορία Γ΄)
+  function openBattles(era) {
+    const files = { ancient: 'ancient.html', byzantine: 'byzantine.html', revolution: 'revolution.html' };
+    const src = _appBase() + 'games/battles/' + (files[era] || files.ancient);
+    const wrap = document.getElementById('battles-wrap');
+    if (wrap) {
+      const ifr = wrap.querySelector('iframe');
+      if (!ifr) wrap.innerHTML = '<iframe src="' + src + '" style="width:100%;height:100%;border:none;display:block;"></iframe>';
+      else if (ifr.getAttribute('src') !== src) ifr.setAttribute('src', src);   // re-scope to the requested era
+    }
+    const ov = document.getElementById('battles-overlay');
+    if (ov) { ov.classList.add('active'); document.body.style.overflow = 'hidden'; }
+  }
+  function closeBattles() {
+    const ov = document.getElementById('battles-overlay');
     if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; }
   }
 
@@ -456,6 +489,8 @@
   window.closeIstoria      = closeIstoria;
   window.openHistoryGame   = openHistoryGame;
   window.closeHistoryGame  = closeHistoryGame;
+  window.openBattles       = openBattles;
+  window.closeBattles      = closeBattles;
   window.navToStudy        = navToStudy;
   window.closeStudyOverlay = closeStudyOverlay;
 })();

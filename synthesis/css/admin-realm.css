@@ -28,7 +28,7 @@
   --sym-hairline:color-mix(in srgb, var(--sym-ink, #1E1810) 13%, transparent);
   --hair:var(--sym-hairline);
   --gold-grad:linear-gradient(135deg,var(--sym-gold-lt) 0%,var(--sym-gold) 46%,var(--sym-gold-dk) 100%);
-  position:relative; width:100%; height:calc(100vh - 60px); min-height:560px;
+  position:relative; width:100%; height:calc(100vh - 60px); height:calc(100dvh - 60px); min-height:560px;
   display:grid; grid-template-columns:248px 1fr;
   background:var(--sym-bg); color:var(--sym-fg); overflow:hidden;
   font-family:var(--t-sans); border:1px solid var(--hair);

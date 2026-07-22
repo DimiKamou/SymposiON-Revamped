@@ -1,6 +1,8 @@
 // ============================================================
 //  Χρονολόγιο — Epic Sequence Puzzle
 //  Click Iliad / Odyssey events in chronological order
+//  Presentation: "Night Gallery of the Epics" — museum-exhibit
+//  plaques on a bronze timeline spine. Game logic unchanged.
 // ============================================================
 
 // ── DATA ──
@@ -132,6 +134,7 @@ window.openEpicPuzzle = function (packId) {
   document.body.style.overflow = 'hidden';
   _ep.lang = window.siteLang || 'gr';
   if (!document.getElementById('ep-screen-menu')) _epBuild();
+  _epAmbientStart();
   _ep.score = 0; _ep.round = 0; _ep.pack = null; _ep.phase = 'play';
   if (packId) {
     const idx = EP_PACKS.findIndex(p => p.id === packId);
@@ -149,6 +152,7 @@ window.openEpicPuzzle = function (packId) {
 window.closeEpicPuzzle = function () {
   const ov = document.getElementById('epic-puzzle-overlay');
   if (ov) { ov.classList.remove('active'); document.body.style.overflow = ''; }
+  _epAmbientStop();
 };
 
 // ── BUILD SHELL ──
@@ -157,8 +161,10 @@ function _epBuild() {
   if (!wrap) return;
   wrap.innerHTML = `
 <div id="ep-screen-menu" class="ep-screen">
-  <div class="ep-title">Χρονολόγιο</div>
-  <div class="ep-subtitle">ΕΠΙΛΕΞΕ ΕΠΙΚΟ ΠΟΙΗΜΑ</div>
+  <div class="ep-kicker" id="ep-menu-kicker">ΑΙΘΟΥΣΑ ΤΩΝ ΕΠΩΝ</div>
+  <div class="ep-title" aria-label="Χρονολόγιο"><span aria-hidden="true">${_epKinetic('Χρονολόγιο')}</span></div>
+  <div class="ep-meander" aria-hidden="true">${_epMeander(7)}</div>
+  <div class="ep-subtitle" id="ep-menu-sub">ΕΠΙΛΕΞΕ ΕΚΘΕΜΑ</div>
   <div class="ep-pack-grid" id="ep-pack-grid"></div>
 </div>
 <div id="ep-screen-game" class="ep-screen">
@@ -169,16 +175,24 @@ function _epBuild() {
   </div>
   <div class="ep-progress-row" id="ep-progress-row"></div>
   <div class="ep-instruction" id="ep-instruction"></div>
+  <div class="ep-slot-rail" id="ep-slot-rail" aria-hidden="true"></div>
   <div class="ep-cards" id="ep-cards"></div>
   <div class="ep-actions" id="ep-actions"></div>
 </div>
 <div id="ep-screen-end" class="ep-screen">
-  <div class="ep-end-icon" id="ep-end-icon"></div>
-  <div class="ep-end-title" id="ep-end-title"></div>
-  <div class="ep-end-score" id="ep-end-score"></div>
-  <div class="ep-end-stars" id="ep-end-stars"></div>
-  <div class="ep-end-btns" id="ep-end-btns"></div>
+  <div class="ep-end-plaque">
+    <div class="ep-end-kicker" id="ep-end-kicker"></div>
+    <div class="ep-end-medal">
+      <div class="ep-end-icon" id="ep-end-icon"></div>
+      <div class="ep-end-score" id="ep-end-score"></div>
+    </div>
+    <div class="ep-end-title" id="ep-end-title"></div>
+    <div class="ep-end-stars" id="ep-end-stars"></div>
+    <div class="ep-meander ep-meander-sm" aria-hidden="true">${_epMeander(5)}</div>
+    <div class="ep-end-btns" id="ep-end-btns"></div>
+  </div>
 </div>`;
+  _epBindFx(wrap);
   _epPopulateMenu();
 }
 
@@ -187,9 +201,15 @@ function _epPopulateMenu() {
   const grid = document.getElementById('ep-pack-grid');
   if (!grid) return;
   const l = _ep.lang;
+  const kicker = document.getElementById('ep-menu-kicker');
+  if (kicker) kicker.textContent = l === 'en' ? 'HALL OF THE EPICS' : 'ΑΙΘΟΥΣΑ ΤΩΝ ΕΠΩΝ';
+  const sub = document.getElementById('ep-menu-sub');
+  if (sub) sub.textContent = l === 'en' ? 'CHOOSE AN EXHIBIT' : 'ΕΠΙΛΕΞΕ ΕΚΘΕΜΑ';
+  const tags = l === 'en' ? ['I', 'II', 'III', 'IV'] : ['Α', 'Β', 'Γ', 'Δ'];
   grid.innerHTML = EP_PACKS.map((p, i) => `
-    <div class="ep-pack-card" onclick="_epSelectPack(${i})">
-      <div class="ep-pack-icon">${p.icon}</div>
+    <div class="ep-pack-card" onclick="_epSelectPack(${i})" style="--ep-d:${i * 120}ms">
+      <div class="ep-pack-tag">${l === 'en' ? 'Exhibit' : 'Έκθεμα'} ${tags[i] || (i + 1)}</div>
+      <div class="ep-pack-icon">${_epPackIcon(p.id)}</div>
       <div class="ep-pack-name">${l === 'en' ? p.nameEn : p.name}</div>
       <div class="ep-pack-desc">${l === 'en' ? p.descEn : p.desc}</div>
       <div class="ep-pack-meta">${p.rounds.length} ${l === 'en' ? 'rounds · 5 events each' : 'γύροι · 5 γεγονότα'}</div>
@@ -230,6 +250,9 @@ function _epStartRound() {
 
   // Progress dots
   _epRenderDots();
+
+  // Timeline slot frieze (presentation only)
+  _epRenderSlots();
 
   // Instruction
   document.getElementById('ep-instruction').textContent =
@@ -274,13 +297,39 @@ function _epRenderCards(events) {
 window._epClickCard = function (displayIdx) {
   if (_ep.phase === 'result') return;
   const pos = _ep.placed.indexOf(displayIdx);
-  if (pos !== -1) {
+  const placing = pos === -1;
+  if (!placing) {
     _ep.placed.splice(pos, 1); // deselect
   } else {
     _ep.placed.push(displayIdx); // select next slot
   }
   _epUpdateNums();
   _epRenderActions();
+  // Presentation only: seal-stamp pop + spark burst on placement
+  if (placing) {
+    const num = document.getElementById('ep-card-num-' + displayIdx);
+    if (num) {
+      num.classList.remove('ep-stamp');
+      void num.offsetWidth;
+      num.classList.add('ep-stamp');
+      _epBurst(num, ['#E8C97A', '#C9A44A', '#9C7433'], 8);
+    }
+    // stamp the matching frieze slot
+    const slot = document.getElementById('ep-slot-' + (_ep.placed.length - 1));
+    if (slot) {
+      slot.classList.remove('ep-slot-stamp');
+      void slot.offsetWidth;
+      slot.classList.add('ep-slot-stamp');
+    }
+  } else {
+    // deselected while pointer still hovers → restore the ghost preview
+    const card = document.getElementById('ep-card-' + displayIdx);
+    const num = document.getElementById('ep-card-num-' + displayIdx);
+    if (card && num && card.matches && card.matches(':hover')) {
+      num.textContent = _ep.placed.length + 1;
+      num.classList.add('ep-num-ghost');
+    }
+  }
 };
 
 function _epUpdateNums() {
@@ -288,6 +337,7 @@ function _epUpdateNums() {
     const numEl = document.getElementById('ep-card-num-' + d);
     const card  = document.getElementById('ep-card-' + d);
     if (!numEl || !card) continue;
+    numEl.classList.remove('ep-num-ghost');
     const pos = _ep.placed.indexOf(d);
     if (pos !== -1) {
       numEl.textContent = pos + 1;
@@ -299,6 +349,12 @@ function _epUpdateNums() {
       card.classList.remove('ep-card-placed');
     }
   }
+  // frieze slots fill in step with placements
+  for (let i = 0; i < 5; i++) {
+    const slot = document.getElementById('ep-slot-' + i);
+    if (!slot) continue;
+    slot.classList.toggle('ep-slot-filled', i < _ep.placed.length);
+  }
 }
 
 function _epRenderActions() {
@@ -307,7 +363,7 @@ function _epRenderActions() {
   const l = _ep.lang;
   const allPlaced = _ep.placed.length === 5;
   if (allPlaced) {
-    actions.innerHTML = `<button class="ep-check-btn" onclick="_epCheck()">${l === 'en' ? '✓ Check Order' : '✓ Ελέγξτε τη Σειρά'}</button>`;
+    actions.innerHTML = `<button class="ep-check-btn" onclick="_epCheck()"><span>${l === 'en' ? '✓ Check Order' : '✓ Ελέγξτε τη Σειρά'}</span></button>`;
   } else {
     const rem = 5 - _ep.placed.length;
     actions.innerHTML = `<div class="ep-hint">${rem === 5 ? (l === 'en' ? 'Click the first event' : 'Κλίκαρε το πρώτο γεγονός') : rem + ' ' + (l === 'en' ? 'more' : 'ακόμα')}</div>`;
@@ -355,15 +411,31 @@ window._epCheck = function () {
   const nextLabel = isLast
     ? (l === 'en' ? 'See Results →' : 'Αποτελέσματα →')
     : (l === 'en' ? 'Next Round →' : 'Επόμενος Γύρος →');
-  const ptsLabel = l === 'en'
-    ? `${pts} / 14 pts this round`
-    : `${pts} / 14 πόντοι σε αυτόν τον γύρο`;
+  const ptsTail = l === 'en'
+    ? ` / 14 pts this round`
+    : ` / 14 πόντοι σε αυτόν τον γύρο`;
 
   document.getElementById('ep-actions').innerHTML = `
-    <div class="ep-round-pts">${ptsLabel} <span class="ep-total-sep">·</span> <span class="ep-total-pts">${l === 'en' ? 'Total' : 'Σύνολο'}: ${_ep.score}</span></div>
+    <div class="ep-round-pts"><span class="ep-pts-num" id="ep-pts-num">0</span>${ptsTail} <span class="ep-total-sep">·</span> <span class="ep-total-pts">${l === 'en' ? 'Total' : 'Σύνολο'}: <span id="ep-total-num">${_ep.score - pts}</span></span></div>
     <button class="ep-next-btn" onclick="_epNext()">${nextLabel}</button>`;
 
-  document.getElementById('ep-score-badge').textContent = _ep.score + ' pts';
+  // Presentation only: frieze verdicts, curator light-sweep, count-ups + celebration
+  results.forEach(r => {
+    const s = document.getElementById('ep-slot-' + r.position);
+    if (!s) return;
+    s.style.transitionDelay = (0.08 + r.position * 0.11).toFixed(2) + 's';
+    s.classList.remove('ep-slot-filled');
+    s.classList.add(r.ok ? 'ep-slot-ok' : 'ep-slot-bad');
+  });
+  _epSweep();
+  _epCountUp(document.getElementById('ep-pts-num'), 0, pts, '', 700);
+  _epCountUp(document.getElementById('ep-total-num'), _ep.score - pts, _ep.score, '', 900);
+  _epCountUp(document.getElementById('ep-score-badge'), _ep.score - pts, _ep.score, ' pts', 900);
+  if (correct === 5) {
+    _epConfetti(26);
+    const title = document.getElementById('ep-round-title');
+    if (title) { title.classList.remove('ep-flash'); void title.offsetWidth; title.classList.add('ep-flash'); }
+  }
 };
 
 function _epOrdinal(n, lang) {
@@ -391,19 +463,26 @@ function _epShowEnd() {
   const pct   = _ep.score / maxScore;
   const stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : pct >= 0.2 ? 1 : 0;
 
-  document.getElementById('ep-end-icon').textContent =
-    pct >= 0.8 ? '🏆' : pct >= 0.5 ? '⭐' : '📜';
+  document.getElementById('ep-end-icon').innerHTML = _epWreath(stars);
 
-  document.getElementById('ep-end-title').textContent =
+  const endKicker = document.getElementById('ep-end-kicker');
+  if (endKicker) endKicker.textContent = l === 'en' ? 'THE TOUR IS COMPLETE' : 'Η ΠΕΡΙΗΓΗΣΗ ΟΛΟΚΛΗΡΩΘΗΚΕ';
+
+  const endTitleText =
     pct >= 0.8 ? (l === 'en' ? 'Excellent!' : 'Εξαιρετικό!') :
     pct >= 0.5 ? (l === 'en' ? 'Well done!'  : 'Μπράβο!') :
                  (l === 'en' ? 'Keep practicing!' : 'Συνέχισε την εξάσκηση!');
+  const endTitleEl = document.getElementById('ep-end-title');
+  endTitleEl.setAttribute('aria-label', endTitleText);
+  endTitleEl.innerHTML = `<span aria-hidden="true">${_epKinetic(endTitleText)}</span>`;
 
   document.getElementById('ep-end-score').innerHTML =
-    `<span class="ep-final-num">${_ep.score}</span><span class="ep-final-max"> / ${maxScore}</span>`;
+    `<span class="ep-final-num" id="ep-final-num">0</span><span class="ep-final-max"> / ${maxScore}</span>`;
 
   document.getElementById('ep-end-stars').innerHTML =
-    '⭐'.repeat(stars) + '<span class="ep-star-empty">☆</span>'.repeat(3 - stars);
+    Array.from({ length: 3 }, (_, i) =>
+      `<span class="ep-star ${i < stars ? '' : 'ep-star-empty'}" style="--ep-d:${400 + i * 220}ms">✦</span>`
+    ).join('');
 
   document.getElementById('ep-end-btns').innerHTML = `
     <button class="ep-btn ep-btn-primary" onclick="_epSelectPack(${_ep.packIdx})">${l === 'en' ? '▶ Play Again' : '▶ Παίξε Ξανά'}</button>
@@ -413,6 +492,8 @@ function _epShowEnd() {
   if (wrap) wrap.scrollTop = 0;
   if(typeof awardGameRewards==='function' && _ep.score > 0){ awardGameRewards('epic-puzzle', { score: _ep.score, perfect: _ep.score === maxScore }); }
   _epShowScreen('end');
+  _epCountUp(document.getElementById('ep-final-num'), 0, _ep.score, '', 1200);
+  if (stars === 3) _epConfetti(34);
 }
 
 // ── SCREENS ──
@@ -433,4 +514,361 @@ function _epShuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PRESENTATION LAYER — decorative SVG, ambience, particles.
+//  Nothing below affects game rules, scoring or data.
+// ════════════════════════════════════════════════════════════
+
+function _epReduced() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch (_) { return false; }
+}
+
+// Low-power heuristic (mid/low-end phones): fewer dust motes + a lower DPR cap
+// for the ambient canvas. Presentation only — never touches puzzle content.
+function _epLite() {
+  try {
+    return (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+           window.innerWidth < 720 || (navigator.deviceMemory || 8) <= 4;
+  } catch (_) { return false; }
+}
+
+// Kinetic typography — staggered letter spans grouped in non-wrapping words.
+function _epKinetic(text) {
+  let i = 0;
+  return String(text).split(' ').map(word =>
+    `<span class="ep-t-w">${word.split('').map(c =>
+      `<span class="ep-t-ch" style="--ep-i:${i++}">${c}</span>`).join('')}</span>`
+  ).join(' ');
+}
+
+// Timeline frieze — five numbered marble slots that fill as events are sequenced.
+function _epRenderSlots() {
+  const rail = document.getElementById('ep-slot-rail');
+  if (!rail) return;
+  const nums = _ep.lang === 'en' ? ['I', 'II', 'III', 'IV', 'V'] : ['Α', 'Β', 'Γ', 'Δ', 'Ε'];
+  rail.innerHTML = nums.map((n, i) =>
+    `<span class="ep-slot" id="ep-slot-${i}" style="--ep-sd:${i * 60}ms"><span class="ep-slot-num">${n}</span></span>`
+  ).join('<span class="ep-slot-link"></span>');
+}
+
+// Pointer-driven plaque tilt + ghost "next seal" preview (event delegation,
+// survives every innerHTML re-render; presentation only).
+function _epBindFx(wrap) {
+  if (wrap._epFxBound) return;
+  wrap._epFxBound = true;
+
+  wrap.addEventListener('pointermove', (e) => {
+    if (_epReduced()) return;
+    const card = e.target.closest && e.target.closest('.ep-card, .ep-pack-card');
+    if (!card || card.classList.contains('ep-card-correct') || card.classList.contains('ep-card-wrong')) return;
+    const big = card.classList.contains('ep-pack-card');
+    const r = card.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    card.classList.add('ep-tilt');
+    card.style.setProperty('--ep-rx', (-ny * (big ? 5 : 2.4)).toFixed(2) + 'deg');
+    card.style.setProperty('--ep-ry', (nx * (big ? 6 : 2.0)).toFixed(2) + 'deg');
+  });
+
+  wrap.addEventListener('pointerover', (e) => {
+    if (_ep.phase !== 'play') return;
+    const card = e.target.closest && e.target.closest('.ep-card');
+    if (!card || !card.id || card.id.indexOf('ep-card-') !== 0) return;
+    const d = parseInt(card.id.slice(8), 10);
+    if (isNaN(d) || _ep.placed.indexOf(d) !== -1) return;
+    const num = document.getElementById('ep-card-num-' + d);
+    if (num) { num.textContent = _ep.placed.length + 1; num.classList.add('ep-num-ghost'); }
+  });
+
+  wrap.addEventListener('pointerout', (e) => {
+    const card = e.target.closest && e.target.closest('.ep-card, .ep-pack-card');
+    if (!card || (e.relatedTarget && card.contains(e.relatedTarget))) return;
+    card.classList.remove('ep-tilt');
+    card.style.removeProperty('--ep-rx');
+    card.style.removeProperty('--ep-ry');
+    if (card.id && card.id.indexOf('ep-card-') === 0) {
+      const d = parseInt(card.id.slice(8), 10);
+      if (!isNaN(d) && _ep.placed.indexOf(d) === -1) {
+        const num = document.getElementById('ep-card-num-' + d);
+        if (num) { num.textContent = '?'; num.classList.remove('ep-num-ghost'); }
+      }
+    }
+  });
+}
+
+// Curator light-sweep down the plaques on the reveal cascade.
+function _epSweep() {
+  if (_epReduced()) return;
+  const fx = document.getElementById('ep-fx');
+  const stage = document.getElementById('ep-stage');
+  const cards = document.getElementById('ep-cards');
+  if (!fx || !stage || !cards) return;
+  const s = stage.getBoundingClientRect();
+  const c = cards.getBoundingClientRect();
+  const bar = document.createElement('div');
+  bar.className = 'ep-sweepline';
+  bar.style.left = (c.left - s.left) + 'px';
+  bar.style.width = c.width + 'px';
+  bar.style.top = (c.top - s.top) + 'px';
+  fx.appendChild(bar);
+  if (!bar.animate) { bar.remove(); return; }
+  const anim = bar.animate([
+    { transform: 'translateY(-14px)', opacity: 0 },
+    { opacity: 0.85, offset: 0.22 },
+    { transform: `translateY(${Math.max(60, c.height).toFixed(0)}px)`, opacity: 0 }
+  ], { duration: 720, easing: 'cubic-bezier(.3,.1,.3,1)' });
+  anim.onfinish = () => bar.remove();
+  setTimeout(() => { if (bar.parentNode) bar.remove(); }, 1400);
+}
+
+// Greek-key (meander) divider — n key units, stroked gold.
+function _epMeander(n) {
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const x = i * 19;
+    d += `M${x} 15 V1 H${x + 14} V10 H${x + 5} V6 H${x + 10} `;
+  }
+  const w = n * 19 - 5;
+  return `<svg viewBox="0 0 ${w} 16" width="${w}" height="16" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
+}
+
+// Black-figure pottery medallions for the pack cards.
+function _epPackIcon(id) {
+  const disc = `
+    <defs>
+      <radialGradient id="ep-terra-${id}" cx="42%" cy="36%" r="75%">
+        <stop offset="0%" stop-color="#B85A32"/>
+        <stop offset="55%" stop-color="#9C4526"/>
+        <stop offset="100%" stop-color="#6E2E18"/>
+      </radialGradient>
+    </defs>
+    <circle cx="50" cy="50" r="47" fill="url(#ep-terra-${id})"/>
+    <circle cx="50" cy="50" r="47" fill="none" stroke="#E0B25F" stroke-width="1.6" opacity="0.85"/>
+    <circle cx="50" cy="50" r="41.5" fill="none" stroke="#20150C" stroke-width="1.4" opacity="0.7"/>`;
+  if (id === 'iliada') {
+    // Corinthian helmet, front-facing, black-figure silhouette + crossed spears
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${disc}
+      <g stroke="#20150C" stroke-width="2.4" stroke-linecap="round" opacity="0.9">
+        <line x1="24" y1="76" x2="76" y2="24"/><line x1="24" y1="24" x2="76" y2="76"/>
+      </g>
+      <path d="M76 24 l6 -6 l-2 8 l-6 0 z M24 76 l-6 6 l2 -8 z" fill="#20150C"/>
+      <path d="M50 20 C36 20 29 30 29 42 L29 70 C29 73 31.5 74 33.5 72.5 L41 66.5 L41 48 C41 45.6 43.4 45 44.4 47 L47 53.5 L48.6 53.5 L48.6 42.5 C48.6 40.8 51.4 40.8 51.4 42.5 L51.4 53.5 L53 53.5 L55.6 47 C56.6 45 59 45.6 59 48 L59 66.5 L66.5 72.5 C68.5 74 71 73 71 70 L71 42 C71 30 64 20 50 20 Z" fill="#20150C"/>
+      <path d="M50 14 C41 14 35 17.5 32.5 21.5 C38 18.5 43.5 17.4 50 17.4 C56.5 17.4 62 18.5 67.5 21.5 C65 17.5 59 14 50 14 Z" fill="#20150C" opacity="0.85"/>
+    </svg>`;
+  }
+  // Odyssey: black-figure ship with sail and oars over a wave band
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${disc}
+    <g fill="#20150C">
+      <path d="M24 60 C32 66 68 66 78 58 L74 66 C66 72 36 72 28 66 Z"/>
+      <path d="M24 60 L20 52 C22 56 26 58 30 59 Z"/>
+      <path d="M78 58 L84 46 C82 52 80 55 76 57 Z"/>
+      <rect x="49" y="26" width="2.6" height="34" rx="1"/>
+      <path d="M52 28 C63 30 68 36 69 44 L52 44 Z"/>
+      <path d="M48 28 C39 30 34 35 33 43 L48 43 Z" opacity="0.92"/>
+    </g>
+    <g stroke="#20150C" stroke-width="2" stroke-linecap="round">
+      <line x1="34" y1="63" x2="30" y2="72"/><line x1="44" y1="65" x2="41" y2="74"/>
+      <line x1="56" y1="65" x2="54" y2="74"/><line x1="66" y1="63" x2="65" y2="72"/>
+    </g>
+    <path d="M22 79 q4 -4 8 0 t8 0 t8 0 t8 0 t8 0 t8 0 t8 0" fill="none" stroke="#20150C" stroke-width="2" opacity="0.8"/>
+  </svg>`;
+}
+
+// Laurel wreath for the end screen; fuller + brighter with more stars.
+function _epWreath(stars) {
+  const cx = 100, cy = 92, R = 74;
+  const tone = stars >= 3 ? '#E3C06A' : stars >= 2 ? '#C9A44A' : '#96803F';
+  let leaves = '';
+  let li = 0;
+  [-1, 1].forEach(side => {
+    for (let i = 0; i < 10; i++) {
+      const t = i / 9;
+      const aDeg = 90 + side * (26 + 122 * t);
+      const a = aDeg * Math.PI / 180;
+      const lx = cx + R * Math.cos(a);
+      const ly = cy + R * Math.sin(a);
+      const rot = aDeg + 90 + side * 28;
+      const len = 15 - 5 * t;
+      const wid = 5.2 - 1.6 * t;
+      const op = 0.55 + 0.45 * (1 - t * 0.5);
+      leaves += `<ellipse class="ep-leaf" style="animation-delay:${120 + li * 46}ms" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${len.toFixed(1)}" ry="${wid.toFixed(1)}" transform="rotate(${rot.toFixed(1)} ${lx.toFixed(1)} ${ly.toFixed(1)})" fill="${tone}" opacity="${op.toFixed(2)}"/>`;
+      if (i % 3 === 1) {
+        const bx = cx + (R - 9) * Math.cos(a), by = cy + (R - 9) * Math.sin(a);
+        leaves += `<circle class="ep-leaf" style="animation-delay:${160 + li * 46}ms" cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="2.1" fill="${tone}" opacity="0.75"/>`;
+      }
+      li++;
+    }
+  });
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M ${cx - R * Math.sin(0.45)} ${cy + R * Math.cos(0.45)} A ${R} ${R} 0 1 1 ${cx + R * Math.sin(0.45)} ${cy + R * Math.cos(0.45)}"
+          fill="none" stroke="${tone}" stroke-width="2" opacity="0.45"/>
+    ${leaves}
+  </svg>`;
+}
+
+// ── Ambient dust motes + hall parallax (canvas, reduced-motion aware) ──
+const _epAmb = { on: false, raf: 0, motes: [], resize: null, parallax: null };
+
+function _epAmbientStart() {
+  if (_epAmb.on) return;
+  const cv = document.getElementById('ep-dust');
+  const stage = document.getElementById('ep-stage');
+  if (!cv || !stage || _epReduced()) return;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  _epAmb.on = true;
+
+  const _lite = _epLite();
+  function size() {
+    const d = Math.min(window.devicePixelRatio || 1, _lite ? 1.5 : 2);
+    cv.width = Math.max(1, stage.clientWidth * d);
+    cv.height = Math.max(1, stage.clientHeight * d);
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+  size();
+  _epAmb.resize = size;
+  window.addEventListener('resize', size);
+
+  // gentle spotlight parallax following the pointer
+  const parallax = (e) => {
+    const r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    stage.style.setProperty('--ep-px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+    stage.style.setProperty('--ep-py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+  };
+  stage.addEventListener('pointermove', parallax);
+  _epAmb.parallax = parallax;
+
+  if (!_epAmb.motes.length) {
+    const _moteN = _lite ? 24 : 46;
+    for (let i = 0; i < _moteN; i++) {
+      _epAmb.motes.push({
+        x: Math.random(), y: Math.random(),
+        r: 0.5 + Math.random() * 1.5,
+        vx: (Math.random() - 0.5) * 0.045,
+        vy: -(0.015 + Math.random() * 0.05),
+        p: Math.random() * Math.PI * 2,
+        ps: 0.4 + Math.random() * 0.9
+      });
+    }
+  }
+
+  function frame(t) {
+    if (!_epAmb.on) return;
+    const w = stage.clientWidth, h = stage.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    for (const m of _epAmb.motes) {
+      m.x += m.vx / 100; m.y += m.vy / 100;
+      if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
+      if (m.x < -0.02) m.x = 1.02;
+      if (m.x > 1.02) m.x = -0.02;
+      const tw = 0.5 + 0.5 * Math.sin(m.p + t * 0.001 * m.ps);
+      // brighter inside the central spotlight pool
+      const cxd = Math.abs(m.x - 0.5) * 2;
+      const a = (0.05 + 0.16 * tw) * (1 - cxd * 0.55) * (1 - m.y * 0.35);
+      if (a <= 0.005) continue;
+      ctx.beginPath();
+      ctx.arc(m.x * w, m.y * h, m.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(236, 213, 158,' + a.toFixed(3) + ')';
+      ctx.fill();
+    }
+    _epAmb.raf = requestAnimationFrame(frame);
+  }
+  _epAmb.raf = requestAnimationFrame(frame);
+}
+
+function _epAmbientStop() {
+  _epAmb.on = false;
+  if (_epAmb.raf) cancelAnimationFrame(_epAmb.raf);
+  _epAmb.raf = 0;
+  if (_epAmb.resize) { window.removeEventListener('resize', _epAmb.resize); _epAmb.resize = null; }
+  const stage = document.getElementById('ep-stage');
+  if (_epAmb.parallax) {
+    if (stage) stage.removeEventListener('pointermove', _epAmb.parallax);
+    _epAmb.parallax = null;
+  }
+  if (stage) { stage.style.removeProperty('--ep-px'); stage.style.removeProperty('--ep-py'); }
+  const cv = document.getElementById('ep-dust');
+  if (cv) { const c = cv.getContext('2d'); if (c) c.clearRect(0, 0, cv.width, cv.height); }
+}
+
+// ── Spark burst at an element (Web Animations API) ──
+function _epBurst(el, colors, count) {
+  if (_epReduced()) return;
+  const fx = document.getElementById('ep-fx');
+  const stage = document.getElementById('ep-stage');
+  if (!fx || !stage || !el || !el.getBoundingClientRect) return;
+  const r = el.getBoundingClientRect();
+  const s = stage.getBoundingClientRect();
+  const cx = r.left + r.width / 2 - s.left;
+  const cy = r.top + r.height / 2 - s.top;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'ep-spark';
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    p.style.background = colors[i % colors.length];
+    fx.appendChild(p);
+    if (!p.animate) { p.remove(); continue; }
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 16 + Math.random() * 32;
+    const anim = p.animate([
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${(Math.cos(ang) * dist).toFixed(1)}px), calc(-50% + ${(Math.sin(ang) * dist - 8).toFixed(1)}px)) scale(0.15)`, opacity: 0 }
+    ], { duration: 420 + Math.random() * 280, easing: 'cubic-bezier(.15,.85,.4,1)' });
+    anim.onfinish = () => p.remove();
+    setTimeout(() => { if (p.parentNode) p.remove(); }, 900);
+  }
+}
+
+// ── Gold-leaf confetti fall across the stage ──
+function _epConfetti(count) {
+  if (_epReduced()) return;
+  const fx = document.getElementById('ep-fx');
+  const stage = document.getElementById('ep-stage');
+  if (!fx || !stage) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  const colors = ['#E8C97A', '#C9A44A', '#7C9A62', '#B85A32', '#EFE6D4'];
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'ep-confetti';
+    const x = Math.random() * w;
+    p.style.left = x + 'px';
+    p.style.top = '-14px';
+    p.style.background = colors[i % colors.length];
+    if (i % 3 === 0) p.style.borderRadius = '50% 0 50% 50%'; // leaf-ish
+    fx.appendChild(p);
+    if (!p.animate) { p.remove(); continue; }
+    const drift = (Math.random() - 0.5) * 120;
+    const fall = h * (0.55 + Math.random() * 0.45);
+    const rot = (Math.random() - 0.5) * 720;
+    const dur = 1300 + Math.random() * 900;
+    const anim = p.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${drift.toFixed(0)}px, ${fall.toFixed(0)}px) rotate(${rot.toFixed(0)}deg)`, opacity: 0 }
+    ], { duration: dur, delay: Math.random() * 240, easing: 'cubic-bezier(.3,.05,.6,1)', fill: 'forwards' });
+    anim.onfinish = () => p.remove();
+    setTimeout(() => { if (p.parentNode) p.remove(); }, 2800);
+  }
+}
+
+// ── Numeric count-up (falls back to instant when reduced motion) ──
+function _epCountUp(el, from, to, suffix, dur) {
+  if (!el) return;
+  if (_epReduced() || !window.requestAnimationFrame || from === to) {
+    el.textContent = to + suffix;
+    return;
+  }
+  const t0 = performance.now();
+  function tick(t) {
+    const k = Math.min(1, (t - t0) / dur);
+    const eased = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(from + (to - from) * eased) + suffix;
+    if (k < 1 && el.isConnected) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }

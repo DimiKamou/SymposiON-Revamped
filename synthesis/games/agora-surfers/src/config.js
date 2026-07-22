@@ -51,6 +51,18 @@ export const PAL = {
   verdigris: 0x4FB39A,   // oxidised copper-green accents
   talosEye:  0xFF7A2E,   // molten orange glow
 
+  // Minotaur — bull of the labyrinth (dark umber hide + charcoal fur so he
+  // reads distinct from golden Talos in daylight AND at night)
+  minoHide:   0x6B4226,
+  minoHideLt: 0x84552E,
+  minoHideDk: 0x472B17,
+  minoFur:    0x352A20,
+  minoFurDk:  0x241C15,
+  minoHorn:   0xDACBA4,  // bone
+  minoHornDk: 0x8A7350,
+  minoHoof:   0x2B2018,
+  minoEye:    0xFF3318,  // furious ember-red glare
+
   // collectibles
   drachma:   0xF4C64A,
   drachmaDk: 0xB98A22,
@@ -128,10 +140,11 @@ export const G = {
   PU_CHARIOT:   8.5,
   MAGNET_RADIUS: 6,
 
-  // camera
-  CAM_Y: 5.8,
-  CAM_Z: 11.0,
-  CAM_LOOK_Y: 1.0,
+  // camera — low & tight for the Subway-Surfers punch (runner reads big,
+  // road fills the lower frame, horizon rides high)
+  CAM_Y: 4.9,
+  CAM_Z: 9.8,
+  CAM_LOOK_Y: 1.35,
   CAM_LOOK_Z: -24,
 };
 

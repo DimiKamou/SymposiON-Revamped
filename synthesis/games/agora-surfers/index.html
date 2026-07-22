@@ -6,7 +6,11 @@
 <title>Agora Surfers · Αρχαία Αγορά</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<!-- three.js comes from unpkg per open — open the connection immediately.
+     (The modulepreload links live AFTER the import map below: preloading a
+     module before the map registers can poison bare-specifier resolution.) -->
+<link rel="preconnect" href="https://unpkg.com" crossorigin/>
 <style>
   :root{
     --ink:#2B2218; --ink2:#5A4A36;
@@ -180,15 +184,52 @@
   #danger.d1{opacity:.45} #danger.d2{opacity:.7;animation:dpulse .55s ease-in-out infinite alternate}
   @keyframes dpulse{from{opacity:.5}to{opacity:.82}}
 
-  /* speed lines — radial motion streaks that bloom in at high velocity */
+  /* ── Near-miss whoosh streaks (left / right / centre) ─ */
+  #whoosh{position:absolute;inset:0;pointer-events:none;z-index:8;opacity:0}
+  #whoosh.go-l{animation:whooshL .42s ease-out}
+  #whoosh.go-r{animation:whooshR .42s ease-out}
+  #whoosh.go-c{animation:whooshC .38s ease-out}
+  #whoosh::before{content:'';position:absolute;inset:0}
+  #whoosh.go-l::before{background:linear-gradient(90deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 22%,transparent 40%)}
+  #whoosh.go-r::before{background:linear-gradient(270deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 22%,transparent 40%)}
+  #whoosh.go-c::before{background:linear-gradient(0deg,rgba(255,255,255,.6),rgba(255,255,255,.12) 26%,transparent 46%)}
+  @keyframes whooshL{0%{opacity:0;transform:translateX(30px)}22%{opacity:1}100%{opacity:0;transform:translateX(-40px)}}
+  @keyframes whooshR{0%{opacity:0;transform:translateX(-30px)}22%{opacity:1}100%{opacity:0;transform:translateX(40px)}}
+  @keyframes whooshC{0%{opacity:0;transform:translateY(26px)}25%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
+
+  /* ── Kinetic score floaters ("+250", "ΠΑΡΑ ΤΡΙΧΑ") ─── */
+  #floaters{position:absolute;top:0;left:0;right:0;height:100%;pointer-events:none;z-index:13}
+  #floaters .fl{position:absolute;top:44%;transform:translate(-50%,0);
+    font-family:var(--fDisp);font-weight:900;font-size:clamp(19px,3.4vw,30px);letter-spacing:2px;
+    color:var(--goldDk);white-space:nowrap;
+    text-shadow:0 2px 0 rgba(255,255,255,.85),0 4px 14px rgba(40,30,15,.25);
+    animation:flUp 1.15s cubic-bezier(.22,.9,.36,1) forwards}
+  @keyframes flUp{0%{opacity:0;transform:translate(-50%,26px) scale(.55)}
+    16%{opacity:1;transform:translate(-50%,0) scale(1.14)}
+    34%{transform:translate(-50%,-10px) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-86px) scale(.92)}}
+
+  /* score pop when a question lands */
+  #hud-score.bump{animation:scoreBump .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes scoreBump{40%{transform:scale(1.22);color:var(--goldDk)}}
+
+  @media (prefers-reduced-motion: reduce){
+    #speedfx{display:none}
+    #danger.d2,#chase.peril{animation:none}
+    #floaters .fl{animation-duration:.7s}
+  }
+
+  /* speed lines — radial motion streaks that bloom in at high velocity.
+     Confined to the frame edges (big clear centre) so they whip past the
+     periphery instead of laying a white veil over the whole scene. */
   #speedfx{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;
     transition:opacity .25s ease;mix-blend-mode:screen;
     background:
       repeating-conic-gradient(from 0deg at 50% 52%,
-        rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 2.2deg,
-        rgba(255,255,255,.5) 2.6deg, rgba(255,255,255,0) 3.0deg);
-    -webkit-mask:radial-gradient(ellipse 42% 38% at 50% 52%, transparent 60%, #000 100%);
-    mask:radial-gradient(ellipse 42% 38% at 50% 52%, transparent 60%, #000 100%)}
+        rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 2.3deg,
+        rgba(255,255,255,.42) 2.62deg, rgba(255,255,255,0) 2.94deg);
+    -webkit-mask:radial-gradient(ellipse 56% 50% at 50% 52%, transparent 62%, #000 105%);
+    mask:radial-gradient(ellipse 56% 50% at 50% 52%, transparent 62%, #000 105%)}
   #speedfx.on{animation:spin 3s linear infinite}
   @keyframes spin{to{transform:rotate(2deg) scale(1.04)}}
 
@@ -199,7 +240,8 @@
   .overlay.hidden{display:none}
   .ov-card{position:relative;width:94%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--paper);
     border-radius:22px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(40,30,15,.35);
-    padding:24px 30px 18px;text-align:center;animation:rise .4s ease}
+    padding:24px 30px 18px;text-align:center;animation:rise .4s ease;
+    touch-action:pan-y;-webkit-overflow-scrolling:touch}
   .ov-card::before{content:'';position:absolute;top:0;left:18%;right:18%;height:4px;border-radius:4px;
     background:linear-gradient(90deg,transparent,var(--gold),var(--terra),var(--gold),transparent)}
   @keyframes rise{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
@@ -213,6 +255,8 @@
   .ov-pitch{font-family:var(--fSerif);font-size:14px;color:var(--ink2);max-width:430px;
     line-height:1.45;margin:10px auto 0}
   .ov-pitch b{color:var(--terraDk)}
+  .ov-pitch small{display:block;margin-top:5px;font-family:var(--fSans);font-size:11px;
+    letter-spacing:.2px;color:var(--ink2);opacity:.85}
   .glyph{display:flex;justify-content:center;margin-bottom:2px}
 
   .ctrl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 auto 6px;
@@ -310,8 +354,43 @@
     #hud-score{font-size:30px}
     .q-opts{gap:6px} .q-opt{padding:8px} .q-text{font-size:16px}
     .stat-row{grid-template-columns:repeat(2,1fr)}
-    .ctrl-grid{grid-template-columns:1fr}
+    .ctrl-grid{grid-template-columns:1fr 1fr}
+    .ov-card{padding:18px 16px 14px}
+    .pu-legend{grid-template-columns:repeat(3,1fr)}
+    .hero-pick{grid-template-columns:1fr;gap:8px}
   }
+  /* portrait phones: quiz options stack — full-width tap targets beat three
+     cramped 110px columns (game.js sets the column count inline, hence !important) */
+  @media (max-width:560px) and (orientation:portrait){
+    .q-opts{grid-template-columns:1fr !important}
+    .q-opt{padding:9px 12px}
+  }
+  /* touch ergonomics — every control comfortably >= 44px */
+  @media (pointer:coarse){
+    .icon-btn{width:44px;height:44px}
+    .tb-back{padding:10px 14px}
+    .q-opt{min-height:44px;align-items:center}
+    .q-hint{display:none}          /* keyboard hint means nothing on touch */
+    .hero-opt{min-height:56px}
+  }
+  /* very narrow screens: tighten the HUD so score / chips / chase gauge
+     never collide across the top row */
+  @media (max-width:400px){
+    #hud-score{font-size:26px}
+    .chase-track{width:64px}
+    .chip{padding:5px 10px}
+    .chip .v{font-size:15px}
+    #chase .ti{font-size:10px}
+    .brand .sb{display:none}
+    #scorewrap{left:12px} #rightwrap{right:12px}
+  }
+  /* LITE devices (body.lite, set from QUALITY.weak): drop the fullscreen
+     blend layer and backdrop blurs — the two priciest DOM effects on
+     low-end phone GPUs. Visuals stay intact via solid fallbacks. */
+  body.lite #speedfx{display:none}
+  body.lite .pill,body.lite #chase{backdrop-filter:none;-webkit-backdrop-filter:none}
+  body.lite .overlay{backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:radial-gradient(ellipse at 50% 30%,rgba(255,250,235,0.88),rgba(186,214,236,0.93))}
 </style>
 <script type="importmap">
 { "imports": {
@@ -319,6 +398,20 @@
   "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
 }}
 </script>
+<!-- kick the heavy CDN module fetches off the moment the head parses,
+     instead of after main.js → game.js → post.js discover them -->
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/build/three.module.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/environments/RoomEnvironment.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/EffectComposer.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/RenderPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/UnrealBloomPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/ShaderPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/OutputPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/Pass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/postprocessing/MaskPass.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/CopyShader.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/LuminosityHighPassShader.js"/>
+<link rel="modulepreload" href="https://unpkg.com/three@0.158.0/examples/jsm/shaders/OutputShader.js"/>
 </head>
 <body>
 <div id="stage" data-screen-label="Agora Surfers">
@@ -351,7 +444,7 @@
     <span class="chip"><span class="ic coin">δ</span><span class="v" id="hud-coins">0</span></span>
     <span class="chip"><span class="ic dist">▸</span><span class="v sm" id="hud-dist">0m</span></span>
     <span class="chip"><span class="ic mult">×</span><span class="v sm" id="hud-mult">×1</span></span>
-    <div id="chase"><span class="ti">ΤΑΛΩΣ</span><div class="chase-track"><div id="chase-fill"></div></div></div>
+    <div id="chase"><span class="ti" id="chase-name">ΤΑΛΩΣ</span><div class="chase-track"><div id="chase-fill"></div></div></div>
   </div>
 
   <!-- Power-up badges -->
@@ -370,7 +463,9 @@
   <!-- FX layers -->
   <div id="flash"></div>
   <div id="toast"></div>
+  <div id="floaters"></div>
   <div id="danger"></div>
+  <div id="whoosh"></div>
   <div id="speedfx"></div>
 
   <!-- Mobile controls -->
@@ -396,20 +491,28 @@
       </div>
       <h1 class="ov-title" id="start-title">AGORA SURFERS</h1>
       <div class="ov-sub">Τρέξε στην αρχαία αγορά</div>
-      <div class="ov-pitch">Γλίστρα στους μαρμάρινους δρόμους, μάζεψε <b>δραχμές</b> και απάντησε σωστά για να κρατήσεις μακριά τον χάλκινο <b>Τάλω</b> — που σε προλαβαίνει αν αργήσεις.</div>
+      <div class="ov-pitch">Γλίστρα στους μαρμάρινους δρόμους, μάζεψε <b>δραχμές</b> και απάντησε σωστά για να ξεφύγεις — σε κάθε δρόμο ένας κυνηγός παίρνει τα ίχνη σου: ο χάλκινος <b>Τάλως</b> ή ο ανήμερος <b>Μινώταυρος</b>.<small>Every run, a random hunter takes up the chase — the bronze Talos or the Minotaur.</small></div>
 
       <div class="ov-label">Διάλεξε ήρωα</div>
       <div class="hero-pick">
         <div class="hero-opt" data-sex="male">
           <span class="av">
-            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round">
+            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round" stroke-linecap="round">
               <ellipse cx="20" cy="42" rx="11" ry="2.2" fill="rgba(40,30,15,.18)" stroke="none"/>
-              <rect x="14" y="20" width="12" height="16" rx="4" fill="#FBF6EA"/>
-              <path d="M14 24 L26 30" stroke="#1E6FB8" stroke-width="3" fill="none"/>
-              <circle cx="20" cy="13" r="6" fill="#E0A878"/>
-              <path d="M13 11a7 7 0 0 1 14 0z" fill="#4A3526"/>
-              <path d="M12 12 Q20 7 28 12" stroke="#6E8B3C" stroke-width="2" fill="none"/>
-              <rect x="11" y="34" width="5" height="8" rx="2" fill="#E0A878"/><rect x="24" y="34" width="5" height="8" rx="2" fill="#E0A878"/>
+              <rect x="14.6" y="31.6" width="4.6" height="9.2" rx="2.3" fill="#E0A878"/>
+              <rect x="20.8" y="31.6" width="4.6" height="9.2" rx="2.3" fill="#E0A878"/>
+              <path d="M14.6 39.6h4.6M20.8 39.6h4.6" stroke="#8C5A33" stroke-width="1.6"/>
+              <path d="M14 20 Q13.4 27 11.8 33 Q20 36.4 28.2 33 Q26.6 27 26 20 Q20 17.6 14 20Z" fill="#FBF6EA"/>
+              <path d="M12.2 31.2 Q20 34.4 27.8 31.2" stroke="#1E6FB8" stroke-width="2.2" fill="none"/>
+              <path d="M14.6 20.8 L26 27.4" stroke="#1E6FB8" stroke-width="2.6" fill="none"/>
+              <circle cx="20" cy="12.4" r="6.4" fill="#E0A878"/>
+              <path d="M13.6 12 a6.4 6.4 0 0 1 12.8 0 q-1.2-3-3.2-3.4 q-3.6-1-6.4.2 q-2.4.8-3.2 3.2Z" fill="#4A3526"/>
+              <circle cx="14.8" cy="10.2" r="1.9" fill="#4A3526"/><circle cx="25.2" cy="10.2" r="1.9" fill="#4A3526"/>
+              <circle cx="18" cy="7.9" r="2" fill="#4A3526"/><circle cx="22.4" cy="7.7" r="2.1" fill="#4A3526"/>
+              <path d="M13.8 10.6 Q20 7.4 26.2 10.6" stroke="#6E8B3C" stroke-width="1.7" fill="none"/>
+              <circle cx="17.6" cy="12.8" r="1" fill="#2A1B10"/><circle cx="22.4" cy="12.8" r="1" fill="#2A1B10"/>
+              <circle cx="17.9" cy="12.5" r=".4" fill="#fff"/><circle cx="22.7" cy="12.5" r=".4" fill="#fff"/>
+              <path d="M18.4 15.4 Q20 16.6 21.6 15.4" stroke="#A34D38" stroke-width="1.1" fill="none"/>
             </g></svg>
           </span>
           <span class="nm">ΝΕΑΝΙΑΣ<small>Young man</small></span>
@@ -417,15 +520,22 @@
         </div>
         <div class="hero-opt" data-sex="female">
           <span class="av">
-            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round">
+            <svg width="40" height="44" viewBox="0 0 40 44"><g stroke-linejoin="round" stroke-linecap="round">
               <ellipse cx="20" cy="42" rx="11" ry="2.2" fill="rgba(40,30,15,.18)" stroke="none"/>
-              <rect x="14" y="20" width="12" height="16" rx="4" fill="#F7EFE0"/>
-              <path d="M14 28 Q20 30 26 28" stroke="#D9573D" stroke-width="2.4" fill="none"/>
-              <circle cx="20" cy="13" r="6" fill="#E0A878"/>
-              <path d="M13 12a7 7 0 0 1 14 0 q0 6 -3 9 l-2 -1 q2 -4 1 -8 z" fill="#3A2818"/>
-              <path d="M22 18 q5 1 4 8" stroke="#3A2818" stroke-width="3" fill="none"/>
-              <path d="M13 11 Q20 8 27 11" stroke="#EAC44A" stroke-width="1.6" fill="none"/>
-              <rect x="11" y="34" width="5" height="8" rx="2" fill="#E0A878"/><rect x="24" y="34" width="5" height="8" rx="2" fill="#E0A878"/>
+              <rect x="14.6" y="32" width="4.6" height="8.8" rx="2.3" fill="#E0A878"/>
+              <rect x="20.8" y="32" width="4.6" height="8.8" rx="2.3" fill="#E0A878"/>
+              <path d="M14.6 39.6h4.6M20.8 39.6h4.6" stroke="#8C5A33" stroke-width="1.6"/>
+              <path d="M14.2 20 Q13.6 26 11.4 33.6 Q20 37 28.6 33.6 Q26.4 26 25.8 20 Q20 17.6 14.2 20Z" fill="#F7EFE0"/>
+              <path d="M11.9 31.8 Q20 35.2 28.1 31.8" stroke="#C24E35" stroke-width="2.4" fill="none"/>
+              <path d="M13.5 24.2 Q20 26.4 26.5 24.2" stroke="#D9573D" stroke-width="2.2" fill="none"/>
+              <circle cx="20" cy="12.4" r="6.4" fill="#E0A878"/>
+              <path d="M13.6 12.6 a6.4 6.4 0 0 1 12.8 0 q0-4.4-3.4-5.6 q-3.2-1.2-6.2.1 q-3.2 1.4-3.2 5.5Z" fill="#3A2818"/>
+              <path d="M25.2 9 q4.4 2.6 3.4 9.4 q-.8 4.4-3 6.4 l-1.9-1.4 q2.1-2.6 2.3-6 q.2-4.4-1.9-7Z" fill="#3A2818"/>
+              <path d="M13.9 9.9 Q20 6.9 26.1 9.9" stroke="#EAC44A" stroke-width="1.5" fill="none"/>
+              <circle cx="17.6" cy="12.6" r="1" fill="#2A1B10"/><circle cx="22.4" cy="12.6" r="1" fill="#2A1B10"/>
+              <circle cx="17.9" cy="12.3" r=".4" fill="#fff"/><circle cx="22.7" cy="12.3" r=".4" fill="#fff"/>
+              <circle cx="15.6" cy="14.4" r=".9" fill="rgba(238,144,120,.55)"/><circle cx="24.4" cy="14.4" r=".9" fill="rgba(238,144,120,.55)"/>
+              <path d="M18.5 15.5 Q20 16.6 21.5 15.5" stroke="#A34D38" stroke-width="1.1" fill="none"/>
             </g></svg>
           </span>
           <span class="nm">ΚΟΡΑΣΙΔΑ<small>Young woman</small></span>

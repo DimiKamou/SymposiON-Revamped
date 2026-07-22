@@ -10,15 +10,30 @@
    ════════════════════════════════════════════════════════════════════ */
 (function(){
 
+  // The grader Function now requires a Firebase ID token (denial-of-wallet
+  // guard). This kit runs in the same-origin istoria iframe, so it can read
+  // the signed-in user's token from the parent window's Firebase. Signed-out
+  // users send no token → the Function returns 401 → we fall back to local().
+  async function _idToken(){
+    try{
+      const fb = (window.parent && window.parent.firebase) || window.firebase;
+      if (fb && fb.auth && fb.auth().currentUser) return await fb.auth().currentUser.getIdToken();
+    }catch(_){/* cross-frame / not signed in */}
+    return null;
+  }
+
   // ── AI grader ──────────────────────────────────────────────────────
   async function grade(p){
     // p: { question, model, points[], answer, rubric?, subject? }
     // subject sets the grader persona server-side (defaults to Ιστορία) —
     // pass it when reusing SK for other subjects (αρχαία, λογοτεχνία, …).
     try{
+      const tok = await _idToken();
+      const headers = {'Content-Type':'application/json'};
+      if (tok) headers['Authorization'] = 'Bearer ' + tok;
       const resp = await fetch(SK.endpoint, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:headers,
         body:JSON.stringify({
           question:p.question||'', model:p.model||'',
           points:p.points||[], answer:p.answer||'', rubric:p.rubric||'',
@@ -69,8 +84,38 @@
         <div class="acol you"><div class="lab">${esc(opts.youLabel||'Η απάντησή σου')}</div><div class="abody">${esc(you)}</div></div>
         <div class="acol model"><div class="lab">${esc(opts.modelLabel||'Ενδεικτική απάντηση')}</div><div class="abody">${esc(model)}</div></div>
       </div>
+      ${opts.modelBook?`<div class="sk-modelbook"><div class="mb-lab">${SYM.icon('scroll')} Υπόδειγμα — Βιβλίο + Πηγή</div><div class="mb-body">${fmtMB(opts.modelBook)}</div></div>`:''}
       <div class="sk-note">${r.demo?'⚠ Λειτουργία επίδειξης (offline): αξιολόγηση με τοπικό αλγόριθμο. Στο ζωντανό περιβάλλον τη βαθμολόγηση κάνει ο AI βοηθός.':'Αξιολόγηση από τον AI βοηθό · σημασιολογική σύγκριση.'}</div>`;
   }
+  // format a modelBook: ALL-CAPS short lines become sub-headings, rest paragraphs
+  function fmtMB(t){
+    return String(t||'').split(/\n\n+/).map(b=>{
+      b=b.trim(); if(!b) return '';
+      const isH = b.length<=64 && b===b.toLocaleUpperCase('el') && /[Α-Ω]/.test(b);
+      return isH ? `<h5 class="mb-h">${esc(b)}</h5>` : `<p>${esc(b)}</p>`;
+    }).join('');
+  }
 
-  window.SK = { grade, reviewHTML, scoreColor, icon:(n)=>SYM.icon(n), endpoint:'/api/gradeAnswer' };
+  // ── AI source generator ────────────────────────────────────────────
+  // p: { unit, theme?, struggle, subject?, context:{ theory, sources:[{ref,text}] } }
+  // → { title, source, question, model, points[], disclaimer }  |  { error }
+  async function generateSource(p){
+    try{
+      const resp = await fetch(SK.genEndpoint, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          unit:p.unit||'', theme:p.theme||'', struggle:p.struggle||'',
+          subject:p.subject||'', context:p.context||{},
+        }),
+      });
+      if(resp.ok){
+        const r = await resp.json();
+        if(r && r.source){ return r; }
+      }
+      return { error: (resp.status===503?'unconfigured':'upstream') };
+    }catch(e){ return { error:'offline' }; }
+  }
+
+  window.SK = { grade, generateSource, reviewHTML, scoreColor, icon:(n)=>SYM.icon(n),
+    endpoint:'/api/gradeAnswer', genEndpoint:'/api/generateSource' };
 })();

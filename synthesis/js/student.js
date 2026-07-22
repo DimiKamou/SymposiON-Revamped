@@ -351,6 +351,7 @@
       card.appendChild(el('p',{class:'ob-sub'}, L({gr:'Βάλε τον 6ψήφιο κωδικό από τον λογαριασμό του παιδιού σου. Μπορείς και αργότερα.',
         en:'Enter the 6-character code from your child’s account. You can do this later too.'})));
       const inp = el('input',{class:'syn-join__pin', type:'text', maxlength:'6', placeholder:'ΑΛΕΞ24',
+        'aria-label':L({gr:'Κωδικός παιχνιδιού',en:'Game PIN'}),
         style:'width:100%;font-family:var(--disp);font-size:20px;letter-spacing:.3em;text-align:center;text-transform:uppercase;padding:14px;border-radius:14px;border:1.5px solid var(--line-bold);background:var(--bg);color:var(--fg);margin-bottom:20px'});
       card.appendChild(inp);
       card.appendChild(el('div',{class:'ob-foot'},[

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Διαχείριση — Συντακτικό</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=GFS+Didot&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="study.css?v=1"/>
+<style>
+  .adm-wrap{max-width:960px; margin:0 auto; padding:28px 24px 100px}
+  .adm-head{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between; margin-bottom:22px}
+  .adm-head h1{font-family:var(--serif); color:var(--gold-lt); font-size:24px; margin:0}
+  .adm-head .sub{color:var(--muted); font-size:13px; margin-top:3px}
+  .adm-toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 24px; padding:14px 16px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius)}
+  .adm-toolbar select{min-width:280px; padding:9px 12px; font-size:14px; background:var(--bg); color:var(--txt); border:1px solid var(--border); border-radius:var(--radius-sm)}
+  .adm-section{margin:0 0 26px; border:1px solid var(--border-soft); border-radius:var(--radius); overflow:hidden}
+  .adm-section>h2{margin:0; padding:13px 16px; font-family:var(--serif); font-size:16px; color:var(--gold-lt); background:color-mix(in srgb,var(--gold) 6%,var(--panel)); border-bottom:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center}
+  .adm-section>h2 .count{font-family:var(--mono); font-size:11px; color:var(--muted)}
+  .adm-body{padding:14px 16px}
+  .card{border:1px solid var(--border-soft); border-radius:var(--radius-sm); padding:12px 13px; margin-bottom:12px; background:var(--bg)}
+  .card label{display:block; font-family:var(--mono); font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:4px}
+  .adm-wrap input[type=text], .adm-wrap textarea, .adm-wrap select{ width:100%; padding:8px 11px; font-size:14px; color:var(--txt); background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--sans); }
+  .adm-wrap textarea{min-height:60px; resize:vertical; line-height:1.5}
+  .opts-grid{display:grid; grid-template-columns:auto 1fr; gap:8px 10px; align-items:center}
+  .radio-correct{display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--muted)}
+  .btn{background:var(--panel2); border:1px solid var(--border); color:var(--txt); padding:8px 14px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer}
+  .btn:hover{border-color:var(--gold); color:var(--gold-lt)}
+  .btn.primary{background:var(--fill,#463f34); color:var(--fill-ink,#f6f2e8); border:none}
+  .btn.primary:hover{background:#332e26}
+  .btn.danger{color:var(--err-lt); border-color:color-mix(in srgb,var(--err) 40%,var(--border))}
+  .btn.sm{padding:5px 10px; font-size:12px}
+  .card-actions{display:flex; justify-content:flex-end; gap:8px}
+  .save-bar{position:sticky; bottom:0; margin-top:24px; padding:14px 16px; background:color-mix(in srgb,var(--panel) 94%,var(--bg)); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-wrap:wrap; gap:10px; align-items:center; backdrop-filter:blur(6px)}
+  .save-bar .status{font-size:12.5px; color:var(--muted); margin-left:auto}
+  dialog{border:1px solid var(--border); background:var(--panel); color:var(--txt); border-radius:var(--radius); max-width:760px; width:92%; padding:0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog .dlg-head{display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border-soft)}
+  dialog textarea{width:100%; min-height:340px; margin:0; border:none; border-radius:0; font-family:var(--mono); font-size:12px}
+</style>
+</head>
+<body>
+<div class="adm-wrap">
+  <div class="adm-head">
+    <div>
+      <div class="eyebrow">Συντακτικό · Αρχαία Ελληνικά</div>
+      <h1>Πίνακας διαχείρισης</h1>
+      <div class="sub">Πρόσθεσε ή τροποποίησε θεωρία, ασκήσεις και ερωτήσεις κατανόησης. Οι αλλαγές αποθηκεύονται τοπικά· με «Εξαγωγή» παίρνεις το αρχείο για μόνιμη ενσωμάτωση.</div>
+    </div>
+    <a class="btn" href="index.html">↩ Στην εφαρμογή</a>
+  </div>
+  <div class="adm-toolbar">
+    <label style="font-family:var(--mono); font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted)">Ενότητα</label>
+    <select id="topicSel"></select>
+    <span id="ovBadge" class="gen-hint"></span>
+  </div>
+  <div id="editor"></div>
+</div>
+
+<dialog id="exportDlg">
+  <div class="dlg-head"><b>Εξαγωγή αρχείου</b> <button class="btn sm" id="dlgClose">Κλείσιμο</button></div>
+  <div style="padding:12px 16px">
+    <div class="gen-hint" style="margin-bottom:8px">Αντικατέστησε το <code>data/&lt;id&gt;.js</code> με τα παρακάτω (ή κατέβασέ το) και κάνε commit.</div>
+    <textarea id="exportText" spellcheck="false"></textarea>
+    <div class="card-actions" style="margin-top:10px">
+      <button class="btn" id="copyBtn">Αντιγραφή</button>
+      <button class="btn primary" id="downloadBtn">Λήψη αρχείου</button>
+    </div>
+  </div>
+</dialog>
+
+<script>window.SYNTAX = { topics: [] };</script>
+<script src="data/ptoseis.js?v=1"></script>
+<script src="data/metoxes.js?v=1"></script>
+<script src="data/protaseis.js?v=1"></script>
+<script src="admin.js?v=1"></script>
+</body>
+</html>

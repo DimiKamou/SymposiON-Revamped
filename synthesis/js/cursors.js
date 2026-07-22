@@ -61,7 +61,9 @@
   };
 
   const cache = new Map();
-  let ring, glyph, enabled = false, shape = 'circle', icon = 'none', season = null;
+  // Default cursor is the CLASSIC system pointer (shape:'none' + icon:'none').
+  // Users can still opt into the ring/glyph cursor from the theme·cursor panel.
+  let ring, glyph, enabled = false, shape = 'none', icon = 'none', season = null;
   let qRx, qRy, qGx, qGy;
 
   function loadGlyph(g) {
@@ -72,7 +74,17 @@
     return cache.get(key);
   }
 
+  // A follower "cursor" is meaningless on a touch device (there is no pointer to
+  // track) and, left at the origin with no mousemove, its mark bled ~19px off the
+  // left edge — nudging the layout wide enough to trigger iOS zoom-out. Skip the
+  // whole custom-cursor system on touch-primary devices (phones/tablets w/o a mouse).
+  function isTouchPrimary() {
+    try { return matchMedia('(pointer:coarse)').matches && !matchMedia('(any-pointer:fine)').matches; }
+    catch (_) { return false; }
+  }
+
   function init() {
+    if (isTouchPrimary()) return;
     const stage = document.querySelector('.stage');
     if (!stage || document.getElementById('symc-ring')) return;
     ring = document.createElement('div'); ring.id = 'symc-ring'; ring.innerHTML = '<i class="rc"></i>';
@@ -115,7 +127,17 @@
     if (open === _gameOpen) return;
     _gameOpen = open;
     document.body.classList.toggle('syn-game-open', open);
-    if (open) document.body.classList.remove('symc-show');
+    if (open) {
+      document.body.classList.remove('symc-show');
+      // Game overlays mount on <body>, outside the themed shell, so the site
+      // theme tokens (--sym-*) don't reach them. Stamp the active theme class
+      // on each open overlay so token-driven in-game UI (e.g. the alabaster
+      // level-select skin) resolves + adapts to the selected theme. Harmless to
+      // the legacy hardcoded-colour game screens (they don't read the tokens).
+      if (window.symApplyThemeClass) {
+        document.querySelectorAll('.game-overlay').forEach(function (o) { window.symApplyThemeClass(o); });
+      }
+    }
   }
   function initGameWatch() {
     if (window.__symGameWatch) return;
